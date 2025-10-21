@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Home Page{% endblock %}
+
+{% block externalCSS %}
+{% endblock %}
+
+{% block content %}
+<section class=" w-full h-full">
+    <a href="{% url 'add_customer' %}"
+        class="px-6 py-2 font-medium rounded-[6px]  bg-[#2563EB] hover:bg-[#1D4ED8] cursor-pointer ">AddCustomer
+    </a>
+</section>
+{% endblock %}
+
+{% block externalJS %}
+{% endblock %}
