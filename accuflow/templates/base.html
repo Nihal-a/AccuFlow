@@ -8,15 +8,21 @@
       href="https://unpkg.com/tailwindcss@^2.0/dist/tailwind.min.css"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+      integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
     <script src="https://cdn.tailwindcss.com"></script>
     {% block externalCSS %}{% endblock %}
     <style>
-        .nav-link.active{
-        background-color: #2b6cb0;
-        color: #ebf8ff; 
-        font-weight: bold; 
-        }
+      .nav-link.active {
+        background-color: #3b82f6;
+        color: #ebf8ff;
+        font-weight: bold;
+      }
     </style>
   </head>
   <body
@@ -36,7 +42,7 @@
     <!-- Sidebar -->
     <aside
       x-data="{ sidebarOpen: false }"
-      class="bg-white shadow-lg border-r border-gray-200 fixed inset-y-0 left-0 w-72 transform md:translate-x-0 transition-transform duration-200 ease-in-out z-50 flex flex-col"
+      class="bg-white fixed inset-y-0 left-0 w-72 transform md:translate-x-0 transition-transform duration-200 ease-in-out z-50 flex flex-col"
     >
       <!-- Mobile Header -->
       <div
@@ -52,13 +58,10 @@
       </div>
 
       <!-- Desktop Header -->
-      <div
-        class="p-6 border-b border-gray-200 flex items-center space-x-3 md:block hidden flex-shrink-0"
-      >
+      <div class="p-6 md:flex hidden items-center space-x-3 flex-shrink-0">
         <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
         <div>
-          <p class="text-gray-500 text-sm">NS TRADING</p>
-          <p class="font-semibold text-gray-800">Admin</p>
+          <p class="text-blue-500 text-md font-bold">NS TRADING</p>
         </div>
       </div>
 
@@ -66,7 +69,7 @@
       <nav class="flex-1 overflow-y-auto p-4 space-y-2">
         <!-- Master File -->
         <div class="space-y-1">
-          <div class="px-3 py-2 rounded-lg text-gray-700 font-medium">
+          <div class="px-3 py-2 rounded-lg text-gray-700 font-medium uppercase">
             Master File
           </div>
           <div class="ml-4 space-y-1 text-gray-500">
@@ -100,7 +103,7 @@
 
         <!-- Transaction -->
         <div class="space-y-1">
-          <div class="px-3 py-2 rounded-lg text-gray-700 font-medium">
+          <div class="px-3 py-2 rounded-lg text-gray-700 font-medium uppercase">
             Transaction
           </div>
           <div class="ml-4 space-y-1 text-gray-500">
@@ -124,7 +127,7 @@
 
         <!-- Stock Overview -->
         <div class="space-y-1">
-          <div class="px-3 py-2 rounded-lg text-gray-700 font-medium">
+          <div class="px-3 py-2 rounded-lg text-gray-700 font-medium uppercase">
             Stock Overview
           </div>
           <div class="ml-4 space-y-1 text-gray-500">
@@ -139,7 +142,7 @@
 
         <!-- Statement -->
         <div class="space-y-1">
-          <div class="px-3 py-2 rounded-lg text-gray-700 font-medium">
+          <div class="px-3 py-2 rounded-lg text-gray-700 font-medium uppercase">
             Statement
           </div>
           <div class="ml-4 space-y-1 text-gray-500">
@@ -157,7 +160,7 @@
 
         <!-- Collection -->
         <div class="space-y-1">
-          <div class="px-3 py-2 rounded-lg text-gray-700 font-medium">
+          <div class="px-3 py-2 rounded-lg text-gray-700 font-medium uppercase">
             Collection
           </div>
           <div class="ml-4 space-y-1 text-gray-500">
@@ -172,7 +175,7 @@
 
         <!-- Report -->
         <div class="space-y-1">
-          <div class="px-3 py-2 rounded-lg text-gray-700 font-medium">
+          <div class="px-3 py-2 rounded-lg text-gray-700 font-medium uppercase">
             Report
           </div>
           <div class="ml-4 space-y-1 text-gray-500">
@@ -187,7 +190,7 @@
 
         <!-- Utilities -->
         <div class="space-y-1">
-          <div class="px-3 py-2 rounded-lg text-gray-700 font-medium">
+          <div class="px-3 py-2 rounded-lg text-gray-700 font-medium uppercase">
             Utilities
           </div>
           <div class="ml-4 space-y-1 text-gray-500">
@@ -214,6 +217,56 @@
 
     <!-- Main Content -->
     <main class="flex-1 p-6 md:ml-72 overflow-auto">
+<div class="flex justify-between border-b border-gray-400 pb-2 mb-6 items-center">
+  <!-- Welcome Text -->
+  <div>
+    <h1 class="text-2xl font-bold text-gray-700 mb-0">Welcome, Akhil Nazim!</h1>
+    <p class="text-gray-600 text-sm mt-0 mb-2">
+      Manage your accounts, customers, and transactions easily.
+    </p>
+  </div>
+
+  
+<div class="relative flex items-center space-x-4">
+  <!-- Search Bar -->
+  <div id="searchWrapper" class="flex items-center overflow-hidden border border-gray-700 rounded-full transition-all duration-300 w-11">
+    <input
+      id="searchInput"
+      type="text"
+      placeholder="Search..."
+      class="w-0 px-2 py-1 opacity-0 bg-transparent focus:outline-none transition-all duration-300 hidden"
+    />
+    <button id="searchBtn" class="px-3 text-gray-700 p-3 focus:outline-none">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 3a7.5 7.5 0 006.15 13.65z" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- Email Icon -->
+  <button class="relative flex items-center justify-center text-gray-700 p-3 border border-gray-700 rounded-full hover:bg-gray-100 focus:outline-none">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8m0 0v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8m18 0L12 13 3 8" />
+    </svg>
+    <span class="absolute top-0 right-0 inline-block w-2 h-2 bg-red-500 rounded-full"></span>
+  </button>
+
+  <!-- Notification Icon -->
+  <button class="relative flex items-center justify-center text-gray-700 p-3 border border-gray-700 rounded-full hover:bg-gray-100 focus:outline-none">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+    </svg>
+    <!-- Optional Badge -->
+    <span class="absolute top-0 right-0 inline-block w-2 h-2 bg-red-500 rounded-full"></span>
+  </button>
+</div>
+
+
+
+
+</div>
+
+
       {% block content %} {% endblock %}
     </main>
 
@@ -221,8 +274,13 @@
       src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
       defer
     ></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="/static/js/main.js?v=2"></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+      integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script src="/static/js/main.js?v=5"></script>
 
     {% block externalJS %}{% endblock %}
   </body>
