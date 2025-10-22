@@ -8,8 +8,16 @@
       href="https://unpkg.com/tailwindcss@^2.0/dist/tailwind.min.css"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://cdn.tailwindcss.com"></script>
     {% block externalCSS %}{% endblock %}
+    <style>
+        .nav-link.active{
+        background-color: #2b6cb0;
+        color: #ebf8ff; 
+        font-weight: bold; 
+        }
+    </style>
   </head>
   <body
     class="flex h-screen bg-gray-100 font-sans"
@@ -63,25 +71,26 @@
           </div>
           <div class="ml-4 space-y-1 text-gray-500">
             <a
-              href="{% url 'demo' %}"
+              href="{% url 'customers' %}"
+              class="px-3 py-1 rounded hover:bg-gray-100 cursor-pointer block nav-link"
+              id="customerMasterLink"
+            >
+              Customer Master
+            </a>
+            <a
+              href=""
               class="px-3 py-1 rounded hover:bg-gray-100 cursor-pointer block"
             >
               Supplier Master
             </a>
             <a
-              href="{% url 'customer' %}"
-              class="px-3 py-1 rounded hover:bg-gray-100 cursor-pointer block"
-            >
-              Customer Master
-            </a>
-            <a
-              href="{% url 'demo' %}"
+              href=""
               class="px-3 py-1 rounded hover:bg-gray-100 cursor-pointer block"
             >
               Expense Master
             </a>
             <a
-              href="{% url 'demo' %}"
+              href=""
               class="px-3 py-1 rounded hover:bg-gray-100 cursor-pointer block"
             >
               Stock Master
@@ -135,10 +144,10 @@
           </div>
           <div class="ml-4 space-y-1 text-gray-500">
             <div class="px-3 py-1 rounded hover:bg-gray-100 cursor-pointer">
-              Godown Ledger
+              Customer Ledger
             </div>
             <div class="px-3 py-1 rounded hover:bg-gray-100 cursor-pointer">
-              Customer Ledger
+              Godown Ledger
             </div>
             <div class="px-3 py-1 rounded hover:bg-gray-100 cursor-pointer">
               Supplier Ledger
@@ -208,10 +217,13 @@
       {% block content %} {% endblock %}
     </main>
 
-    {% block externalJS %}{% endblock %}
     <script
       src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
       defer
     ></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="/static/js/main.js?v=2"></script>
+
+    {% block externalJS %}{% endblock %}
   </body>
 </html>

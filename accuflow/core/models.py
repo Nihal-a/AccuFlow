@@ -11,6 +11,7 @@ class Customers(models.Model):
     otc_credit = models.FloatField(default=0)
     otc_debit = models.FloatField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
     
     def __str__(self):
         return self.name

@@ -1,10 +1,59 @@
-from django.shortcuts import render
+from django.shortcuts import render,redirect, get_object_or_404
+from core.models import Customers
+from django.views import View
+from django.views.generic.edit import DeleteView
 
-# Create your views here.
+class CustomerView(View):
+    def get(self,request):
+        customers = Customers.objects.filter(is_active=True)
+        return render(request,'customer/customers.html',{'customers':customers})
 
 
-def test(request):
-    return render(request, 'supplier/customer_landning.html')
+class AddCustomerView(View):
+    def get(self,request):
+        return render(request,'customer/create.html')
+    
+    def post(self,request):
+        name = request.POST.get('name')
+        phone = request.POST.get('phone')
+        address = request.POST.get('address')
+        open_credit = request.POST.get('open_credit',0)
+        open_debit = request.POST.get('open_debit',0)
+        otc_credit = request.POST.get('otc_credit',0)
+        otc_debit = request.POST.get('otc_debit',0)
+        
+        Customers.objects.create(
+            name=name,
+            phone=phone,
+            address=address,
+            open_credit=open_credit,
+            open_debit=open_debit,
+            otc_credit=otc_credit,
+            otc_debit=otc_debit
+        )
+        return redirect('customers')
 
-def add(request):
-    return render(request, 'supplier/add_customer.html')
+class DeleteCustomerView(View):
+    def get(self, request, customer_id):
+        customer = get_object_or_404(Customers, id=customer_id)
+        customer.is_active = False 
+        customer.save()
+        return redirect('customers')
+ 
+
+class UpdateCustomerView(View):
+    def get(self, request, customer_id):
+        customer = get_object_or_404(Customers, id=customer_id)
+        return render(request, 'customer/update.html', {'customer': customer})
+
+    def post(self, request, customer_id):
+        customer = get_object_or_404(Customers, id=customer_id)
+        customer.name = request.POST.get('name')
+        customer.phone = request.POST.get('phone')
+        customer.address = request.POST.get('address')
+        customer.open_credit = request.POST.get('open_credit', 0)
+        customer.open_debit = request.POST.get('open_debit', 0)
+        customer.otc_credit = request.POST.get('otc_credit', 0)
+        customer.otc_debit = request.POST.get('otc_debit', 0)
+        customer.save()
+        return redirect('customers')
