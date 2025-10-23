@@ -33,12 +33,24 @@ table, input, textarea {
         font-weight: bold;
       }
   .custom-scrollbar {
-  scrollbar-width: none;          /* Firefox */
-  -ms-overflow-style: none;       /* Internet Explorer / Edge (old) */
+  scrollbar-width: none;         
+  -ms-overflow-style: none;      
 }
 
 .custom-scrollbar::-webkit-scrollbar {
-  display: none;                  /* Chrome, Safari, and other WebKit browsers */
+  display: none;                  
+}
+
+
+.arrow-buttons .disabled-btn i {
+    color: #3b82f661 !important;
+}
+
+.arrow-buttons .disabled-btn i:hover {
+    cursor: not-allowed !important;
+    color: #3b82f661 !important;
+}.text-theme{
+    color: #3b82f6;
 }
 
 </style>
@@ -122,28 +134,28 @@ table, input, textarea {
             <a
               href="{% url 'expenses' %}"
               class="flex items-center gap-2 px-3 py-1 rounded hover:bg-gray-100 cursor-pointer block nav-link"
-              id="supplierMasterLink"
+              id="expenseMasterLink"
             >
               <span>Expense Master</span>
             </a>
             <a
               href="{% url 'expenses' %}"
               class="flex items-center gap-2 px-3 py-1 rounded hover:bg-gray-100 cursor-pointer block nav-link"
-              id="supplierMasterLink"
+              id=""
             >
               <span>Godown Master</span>
             </a>
             <a
               href="{% url 'expenses' %}"
               class="flex items-center gap-2 px-3 py-1 rounded hover:bg-gray-100 cursor-pointer block nav-link"
-              id="supplierMasterLink"
+              id=""
             >
               <span>Cash/Bank Master</span>
             </a>
             <a
               href="{% url 'expenses' %}"
               class="flex items-center gap-2 px-3 py-1 rounded hover:bg-gray-100 cursor-pointer block nav-link"
-              id="supplierMasterLink"
+              id=""
             >
               <span>Collector Master</span>
             </a>
@@ -270,13 +282,21 @@ table, input, textarea {
         class="flex justify-between border-b border-gray-400 pb-2 mb-8 items-center"
       >
         <!-- Welcome Text -->
-        <div>
+        <div class="flex gap-4 items-center">
+          <div class="flex gap-2 arrow-buttons">
+             <a href="#" id="back-button" class=" p-2 border border-gray-400 rounded-xl" onclick="goBack();"><i
+                                                class="fa-solid fa-left-long"></i></a>
+                                        <a href="#" id="next-button" class=" p-2 border border-gray-400 rounded-xl" onclick="goNext();"><i
+                                                class="fa-solid fa-right-long"></i></a>
+          </div>
+          <div>
           <h1 class="text-2xl font-bold text-gray-700 mb-0">
-            Welcome, Akhil Nazim!
+            Welcome, <span class="text-theme">Akhil Nazim!</span>
           </h1>
           <p class="text-gray-600 text-sm mt-0 mb-2">
             Manage your accounts, customers, and transactions easily.
           </p>
+        </div>
         </div>
 
         <div class="relative flex items-center space-x-4">
@@ -306,27 +326,52 @@ table, input, textarea {
           </button>
 
           <!-- Notification Icon -->
-          <button
-            class="relative flex items-center justify-center text-gray-700 p-3 border border-gray-700 rounded-full hover:bg-gray-100 focus:outline-none"
-          >
-            <svg
-              class="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-              />
-            </svg>
-            <!-- Optional Badge -->
-            <span
-              class="absolute top-0 right-0 inline-block w-2 h-2 bg-red-500 rounded-full"
-            ></span>
-          </button>
+<div class="relative inline-block">
+  <!-- Notification Button -->
+  <button
+    id="notificationBtn"
+    class="relative flex items-center justify-center text-gray-700 p-3 border border-gray-700 rounded-full focus:outline-none  hover:bg-blue-500 hover:border-white hover:text-white"
+  >
+    <svg
+      class="w-4 h-4"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+      />
+    </svg>
+    <!-- Optional Badge -->
+    <span
+      class="absolute top-0 right-0 inline-block w-2 h-2 bg-red-500 rounded-full"
+    ></span>
+  </button>
+
+  <!-- Notification Popup -->
+  <div
+    id="notificationPopup"
+    class="hidden absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+  >
+    <div class="p-3 border-b border-gray-200 font-semibold text-gray-700">
+      Notifications
+    </div>
+    <ul class="max-h-60 overflow-y-auto">
+      <li class="p-3 text-sm text-gray-600 hover:bg-gray-50">
+        🔔 New supplier added
+      </li>
+      <li class="p-3 text-sm text-gray-600 hover:bg-gray-50">
+        ✅ Customer record updated
+      </li>
+      <li class="p-3 text-sm text-gray-600 hover:bg-gray-50">
+        📦 Delivery scheduled tomorrow
+      </li>
+    </ul>
+  </div>
+</div>
         </div>
       </div>
 
@@ -334,16 +379,17 @@ table, input, textarea {
     </main>
 
     <script
-      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
-      defer
-    ></script>
-    <script
       src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
       integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     ></script>
-    <script src="/static/js/main.js?v=6.5"></script>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+      defer
+    ></script>
+    <script src="/static/js/main.js?v=6.9"></script>
 
     {% block externalJS %}{% endblock %}
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -351,6 +397,20 @@ table, input, textarea {
   document.addEventListener("DOMContentLoaded", function () {
     lucide.createIcons(); // initialize all Lucide icons
   });
+    const btn = document.getElementById("notificationBtn");
+  const popup = document.getElementById("notificationPopup");
+
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    popup.classList.toggle("hidden");
+    btn.classList.toggle('bg-blue-500 border-white text-white');
+  });
+  document.addEventListener("click", (e) => {
+    if (!btn.contains(e.target) && !popup.contains(e.target)) {
+      popup.classList.add("hidden");
+    }
+  });
+
 </script>
 
   </body>

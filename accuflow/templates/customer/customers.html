@@ -93,10 +93,10 @@
         <td class="px-4 py-2 font-semibold uppercase">{{ customer.name }}</td>
         <td class="px-4 py-2 text-gray-700">{{ customer.phone }}</td>
         <td class="px-4 py-2 text-gray-700">{{ customer.address }}</td>
-        <td class="px-4 py-2 text-gray-700  text-right">{{ customer.open_credit }}</td>
-        <td class="px-4 py-2 text-gray-700 text-right ">{{ customer.open_debit }}</td>
-        <td class="px-4 py-2 text-gray-700 text-right">{{ customer.otc_credit }}</td>
-        <td class="px-4 py-2 text-gray-700 text-right">{{ customer.otc_debit }}</td>
+        <td class="px-4 py-2 text-gray-700  text-right font-bold">{{ customer.open_credit }}</td>
+        <td class="px-4 py-2 text-gray-700 text-right  font-bold">{{ customer.open_debit }}</td>
+        <td class="px-4 py-2 text-gray-700 text-right font-bold">{{ customer.otc_credit }}</td>
+        <td class="px-4 py-2 text-gray-700 text-right font-bold">{{ customer.otc_debit }}</td>
       </tr>
       {% endfor %}
         {% else %}

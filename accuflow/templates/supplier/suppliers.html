@@ -93,10 +93,10 @@
         <td class="px-4 py-2 font-semibold uppercase">{{ supplier.name }}</td>
         <td class="px-4 py-2 text-gray-700">{{ supplier.phone }}</td>
         <td class="px-4 py-2 text-gray-700">{{ supplier.address }}</td>
-        <td class="px-4 py-2 text-gray-700  text-right">{{ supplier.open_credit }}</td>
-        <td class="px-4 py-2 text-gray-700 text-right ">{{ supplier.open_debit }}</td>
-        <td class="px-4 py-2 text-gray-700 text-right">{{ supplier.otc_credit }}</td>
-        <td class="px-4 py-2 text-gray-700 text-right">{{ supplier.otc_debit }}</td>
+        <td class="px-4 py-2 text-gray-700  text-right font-bold">{{ supplier.open_credit }}</td>
+        <td class="px-4 py-2 text-gray-700 text-right  font-bold">{{ supplier.open_debit }}</td>
+        <td class="px-4 py-2 text-gray-700 text-right font-bold">{{ supplier.otc_credit }}</td>
+        <td class="px-4 py-2 text-gray-700 text-right font-bold">{{ supplier.otc_debit }}</td>
       </tr>
       {% endfor %}
   {% else %}

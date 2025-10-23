@@ -59,6 +59,7 @@
         <th class="px-4 py-3 text-left font-medium">#</th>
         <th class="px-4 py-3 text-left font-medium">Name</th>
         <th class="px-4 py-3 text-left font-medium">Description</th>
+        <th class="px-4 py-3 text-right font-medium">Amount</th>
       </tr>
     </thead>
     <tbody class="bg-gray-100 search-area">
@@ -87,6 +88,7 @@
         </td>
         <td class="px-4 py-2 font-semibold uppercase">{{ expense.category }}</td>
         <td class="px-4 py-2 text-gray-700">{{ expense.description }}</td>
+        <td class="px-4 py-2 text-gray-700 text-right font-bold">{{ expense.amount }}</td>
       </tr>
       {% endfor %}
         {% else %}
@@ -161,7 +163,7 @@
 {% endblock %}
  {% block externalJS %}
 <script>
-  navActive("expenseMasterLink");
+  navActive("expenseMasterLink"); 
   let deleteUrl = "";
 
   function openEditModal(expenseId) {

@@ -1,5 +1,7 @@
 
 function navActive(id) {
+  $('.nav-link').removeClass('active');
+  console.log('object')
     $('#'+id).addClass('active');
 }
 
@@ -83,5 +85,31 @@ $('td').on('click', function() {
   } else {
     selectedTag = selectedTag.filter(id => id !== rowId);
   }
-  
+  console.log(selectedTag)
+});
+
+
+
+
+function isBackAvailable() {
+  if (document.referrer === "") return false;
+  if (!document.referrer.startsWith("http://127.0.0.1:8000")) return false;
+
+  return true;
+}
+
+function goBack() {
+  if (isBackAvailable()) {
+    history.go(-1);
+  }
+}
+
+function goNext() {
+  history.go(1);
+}
+
+$(document).ready(function () {
+  if (!isBackAvailable()) {
+    $("#back-button").addClass("disabled-btn");
+  }
 });

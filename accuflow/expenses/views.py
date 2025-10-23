@@ -16,9 +16,13 @@ class AddExpenseView(View):
     def post(self,request):
         name = request.POST.get('name')
         description = request.POST.get('description')
+        amount = request.POST.get('amount',0)
+        if amount == '':
+            amount = 0
         Expenses.objects.create(
             category=name,
             description=description,
+            amount=amount
         )
         return redirect('expenses')
 
@@ -38,5 +42,6 @@ class UpdateExpenseView(View):
         expense = get_object_or_404(Expenses, id=expense_id)
         expense.category = request.POST.get('name')
         expense.description = request.POST.get('description')
+        expense.amount = request.POST.get('amount',0)
         expense.save()
         return redirect('expenses')
