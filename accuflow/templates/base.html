@@ -20,12 +20,28 @@
 
     {% block externalCSS %}{% endblock %}
     <style>
+body {
+  font-family: 'Inter', 'Roboto', 'Segoe UI', sans-serif !important;
+}
+
+table, input, textarea {
+  font-family: 'Roboto Mono', monospace !important;
+}
       .nav-link.active {
         background-color: #3b82f6;
         color: #ebf8ff;
         font-weight: bold;
       }
-    </style>
+  .custom-scrollbar {
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* Internet Explorer / Edge (old) */
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  display: none;                  /* Chrome, Safari, and other WebKit browsers */
+}
+
+</style>
   </head>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -81,7 +97,7 @@
       </div>
 
       <!-- Sidebar nav -->
-      <nav class="flex-1 overflow-y-auto p-4 space-y-2">
+      <nav class="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
         <!-- Master File -->
         <div class="space-y-1">
           <div class="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-700 font-medium uppercase">
@@ -232,9 +248,9 @@
     </div>
 
     <!-- Main Content -->
-    <main class="flex-1 p-6 md:ml-72 overflow-auto">
+    <main class="flex-1 px-14 py-7 md:ml-72 overflow-auto">
       <div
-        class="flex justify-between border-b border-gray-400 pb-2 mb-4 items-center"
+        class="flex justify-between border-b border-gray-400 pb-2 mb-8 items-center"
       >
         <!-- Welcome Text -->
         <div>
@@ -248,35 +264,7 @@
 
         <div class="relative flex items-center space-x-4">
           <!-- Search Bar -->
-          <div
-            id="searchWrapper"
-            class="flex items-center overflow-hidden border border-gray-700 rounded-full transition-all duration-300 w-11"
-          >
-            <input
-              id="searchInput"
-              type="text"
-              placeholder="Search..."
-              class="w-0 px-2 py-1 pl-5 opacity-0 bg-transparent focus:outline-none transition-all duration-300 hidden"
-            />
-            <button
-              id="searchBtn"
-              class="px-3 text-gray-700 p-3 focus:outline-none"
-            >
-              <svg
-                class="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 3a7.5 7.5 0 006.15 13.65z"
-                />
-              </svg>
-            </button>
-          </div>
+         
 
           <!-- Email Icon -->
           <button
@@ -338,7 +326,7 @@
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     ></script>
-    <script src="/static/js/main.js?v=5"></script>
+    <script src="/static/js/main.js?v=6.5"></script>
 
     {% block externalJS %}{% endblock %}
     <script src="https://unpkg.com/lucide@latest"></script>

@@ -4,6 +4,7 @@ function navActive(id) {
 }
 
   const searchInput = document.getElementById("searchInput");
+  if (searchInput){
   searchInput.addEventListener("keyup", function () {
     const filter = searchInput.value.toLowerCase();
     const rows = document.querySelectorAll(".search-area");
@@ -13,6 +14,7 @@ function navActive(id) {
       row.style.display = text.includes(filter) ? "" : "none";
     });
   });
+}
 
 
 
@@ -20,9 +22,9 @@ function navActive(id) {
   const searchWrapper = document.getElementById('searchWrapper');
 
   let expanded = false;
-
+if (searchBtn){
 searchBtn.addEventListener('click', (e) => {
-  e.stopPropagation(); // prevent document click
+  e.stopPropagation(); 
   expanded = !expanded;
 
   if (expanded) {
@@ -66,4 +68,20 @@ document.addEventListener('click', (e) => {
       searchInput.value = '';
     }, 300);
   }
+});
+}
+selectedTag = []
+$('td').on('click', function() {
+
+  if ($(this).find('button').length > 0) return;
+  var $tr = $(this).closest('tr');
+  $tr.toggleClass('hover:bg-blue-100 odd:bg-blue-100 even:bg-blue-100');
+
+  var rowId = $tr.data('id'); 
+  if ($tr.hasClass('hover:bg-blue-100 odd:bg-blue-100 even:bg-blue-100')) {
+    if (!selectedTag.includes(rowId)) selectedTag.push(rowId);
+  } else {
+    selectedTag = selectedTag.filter(id => id !== rowId);
+  }
+  
 });
