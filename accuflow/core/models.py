@@ -31,3 +31,11 @@ class Suppliers(models.Model):
     def __str__(self):
         return self.name
     
+class Expenses(models.Model):
+    category  = models.TextField(blank=True,null=True)
+    expenseId = models.TextField(blank=True,null=True)
+    description = models.TextField(blank=True,null=True) 
+    
+    def __str__(self):
+        return self.category
+    

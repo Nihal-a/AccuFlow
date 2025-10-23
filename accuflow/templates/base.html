@@ -104,6 +104,14 @@ table, input, textarea {
              <i data-lucide="user-plus" class="w-4 h-4 "></i><span>  Master File</span>
           </div>
           <div class="ml-4 space-y-1 text-gray-500">
+            </a>
+               <a
+              href="{% url 'suppliers' %}"
+              class="flex items-center gap-2 px-3 py-1 rounded hover:bg-gray-100 cursor-pointer block nav-link"
+              id="supplierMasterLink"
+            >
+              <span>Supplier Master</span>
+            </a>
             <a
               href="{% url 'customers' %}"
               class="flex items-center gap-2 px-3 py-1 rounded hover:bg-gray-100 cursor-pointer block nav-link"
@@ -112,23 +120,32 @@ table, input, textarea {
                <span>Customer Master</span>
             </a>
             <a
-              href="{% url 'suppliers' %}"
+              href="{% url 'expenses' %}"
               class="flex items-center gap-2 px-3 py-1 rounded hover:bg-gray-100 cursor-pointer block nav-link"
               id="supplierMasterLink"
-            >
-              <span>Supplier Master</span>
-            </a>
-            <a
-              href=""
-              class="flex items-center gap-2 px-3 py-1 rounded hover:bg-gray-100 cursor-pointer block"
             >
               <span>Expense Master</span>
             </a>
             <a
-              href=""
-              class="px-3 py-1 rounded hover:bg-gray-100 cursor-pointer block"
+              href="{% url 'expenses' %}"
+              class="flex items-center gap-2 px-3 py-1 rounded hover:bg-gray-100 cursor-pointer block nav-link"
+              id="supplierMasterLink"
             >
-              Stock Master
+              <span>Godown Master</span>
+            </a>
+            <a
+              href="{% url 'expenses' %}"
+              class="flex items-center gap-2 px-3 py-1 rounded hover:bg-gray-100 cursor-pointer block nav-link"
+              id="supplierMasterLink"
+            >
+              <span>Cash/Bank Master</span>
+            </a>
+            <a
+              href="{% url 'expenses' %}"
+              class="flex items-center gap-2 px-3 py-1 rounded hover:bg-gray-100 cursor-pointer block nav-link"
+              id="supplierMasterLink"
+            >
+              <span>Collector Master</span>
             </a>
           </div>
         </div>
