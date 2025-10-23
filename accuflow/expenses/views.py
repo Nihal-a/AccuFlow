@@ -5,7 +5,7 @@ from django.views.generic.edit import DeleteView
 
 class ExpenseView(View):
     def get(self,request):
-        expenses = Expenses.objects.all()
+        expenses = Expenses.objects.filter(is_active=True)
         return render(request,'expenses/expenses.html',{'expenses':expenses})
 
 
@@ -16,20 +16,17 @@ class AddExpenseView(View):
     def post(self,request):
         name = request.POST.get('name')
         description = request.POST.get('description')
-        amount = request.POST.get('amount',0)
-        if amount == '':
-            amount = 0
         Expenses.objects.create(
             category=name,
             description=description,
-            amount=amount
         )
         return redirect('expenses')
 
 class DeleteExpenseView(View):
     def get(self, request, expense_id):
         expense = get_object_or_404(Expenses, id=expense_id)
-        expense.delete()
+        expense.is_active = False 
+        expense.save()
         return redirect('expenses')
  
 
@@ -42,6 +39,5 @@ class UpdateExpenseView(View):
         expense = get_object_or_404(Expenses, id=expense_id)
         expense.category = request.POST.get('name')
         expense.description = request.POST.get('description')
-        expense.amount = request.POST.get('amount',0)
         expense.save()
         return redirect('expenses')

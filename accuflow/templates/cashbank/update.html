@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Cash/Bank{% endblock %}
+
+
+{% block externalCSS %}
+<style>
+    input.no-spinners::-webkit-outer-spin-button,
+    input.no-spinners::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    input.no-spinners {
+        -moz-appearance: textfield;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="text-3xl font-bold mb-4 text-gray-700">Update Cash/Bank</h1>
+<div class="bg-white shadow rounded-xl p-6 ">
+    <form method="post" action="{% url 'edit-cashbank' cashbank.id %}"> 
+        {% csrf_token %}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-gray-700">Name*</label>
+                <input type="text" name="name" value="{{ cashbank.name }}" class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            </div>
+            <div>
+                <label class="block text-gray-700">Descriprion</label>
+                <input type="text" name="description" value="{{ cashbank.description }}" class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" >
+            </div>
+        </div>
+        <div class="mt-6">
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Update Cash/Bank</button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
+{% block externalJS %}
+<script>
+  navActive("cashbankMasterLink");
+</script>
+{% endblock %}

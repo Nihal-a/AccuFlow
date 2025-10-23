@@ -42,3 +42,36 @@ class Expenses(models.Model):
     def __str__(self):
         return self.category
     
+
+class Godowns(models.Model):
+    name = models.TextField(blank=True,null=True)
+    godownId = models.TextField(blank=True,null=True)
+    phone = models.TextField(blank=True,null=True)
+    address = models.TextField(blank=True,null=True)
+    open_credit = models.FloatField(default=0)
+    open_debit = models.FloatField(default=0)
+    otc_credit = models.FloatField(default=0)
+    otc_debit = models.FloatField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return self.name
+    
+class CashBanks(models.Model):
+    name  = models.TextField(blank=True,null=True)
+    cashbankId = models.TextField(blank=True,null=True)
+    description = models.TextField(blank=True,null=True) 
+    created_at = models.DateTimeField(auto_now_add=True,blank=True,null=True)
+    is_active = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return self.name
+    
+class Collectors(models.Model):
+    name = models.TextField(blank=True,null=True)
+    collectorId = models.TextField(blank=True,null=True)
+    phone = models.TextField(blank=True,null=True)
+    address = models.TextField(blank=True,null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)

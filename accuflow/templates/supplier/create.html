@@ -7,7 +7,7 @@
 
 {% block content %}
 <h1 class="text-3xl font-bold mb-4 text-gray-700">Create Supplier</h1>
-<div class="bg-white shadow rounded-xl p-6 w-3/4">
+<div class="bg-white shadow rounded-xl p-6 w-full">
     <form method="post" action="{% url 'create-supplier' %}">
         {% csrf_token %}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

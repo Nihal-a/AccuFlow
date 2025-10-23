@@ -1,5 +1,5 @@
 {% extends 'base.html' %} 
-{% block title %}Expenses{% endblock %} 
+{% block title %}Godown{% endblock %} 
 {% block externalCSS %} 
 <style>
   tbody{
@@ -16,7 +16,7 @@
       <input
         type="text"
         id="searchInput"
-        placeholder="Search expenses..."
+        placeholder="Search godown..."
         class="w-full bg-white rounded-xl px-4 py-2 pl-10 focus:outline-none focus:ring-1 focus:ring-white"
       />
       <svg
@@ -38,9 +38,9 @@
 <div class="bg-white rounded-xl p-6 mt-3">
 <div class="flex justify-between items-center">
 
-  <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">Expense Management</h1>
+  <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">Godown Management</h1>
 <a
-  href="{% url 'create-expense' %}"
+  href="{% url 'create-godown' %}"
   class="float-end mb-4 inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-300"
 >
   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
@@ -48,7 +48,7 @@
     <path stroke-linecap="round" stroke-linejoin="round"
           d="M12 4v16m8-8H4" />
   </svg>
-  Create Expense
+  Create Godown
 </a>
 </div>
     <div class="overflow-x-auto mt-5 w-full">
@@ -58,25 +58,29 @@
         <th class="px-4 py-3 text-left font-medium">Actions</th>
         <th class="px-4 py-3 text-left font-medium">#</th>
         <th class="px-4 py-3 text-left font-medium">Name</th>
-        <th class="px-4 py-3 text-left font-medium">Description</th>
-        <th class="px-4 py-3 text-right font-medium">Amount</th>
+        <th class="px-4 py-3 text-left font-medium">Phone</th>
+        <th class="px-4 py-3 text-left font-medium">Address</th>
+        <th class="px-4 py-3 text-right font-medium">Open Credit</th>
+        <th class="px-4 py-3 text-right font-medium">Open Debit</th>
+        <th class="px-4 py-3 text-right font-medium">OTC Credit</th>
+        <th class="px-4 py-3 text-right font-medium">OTC Debit</th>
       </tr>
     </thead>
     <tbody class="bg-gray-100 search-area">
-      {% if expenses %}
-      {% for expense in expenses %}
+      {% if godowns %}
+      {% for godown in godowns %}
       <tr class="hover:bg-gray-50  divide-x divide-y divide-gray-300 odd:bg-white even:bg-gray-100">
         
         <td class="px-4 py-2 w-1">
           <div class="flex gap-2">
             <button
-              onclick="openEditModal('{{ expense.id }}')"
+              onclick="openEditModal('{{ godown.id }}')"
               class="bg-blue-500 text-white px-3 py-1.5 rounded hover:bg-blue-600 text-sm"
             >
               <i class="fa-solid fa-pen"></i>
             </button>
             <button
-              onclick="openModal('{{ expense.id }}')"
+              onclick="openModal('{{ godown.id }}')"
               class="bg-red-500 text-white px-3 py-1.5 rounded hover:bg-red-600 text-sm"
             >
               <i class="fa-solid fa-trash"></i>
@@ -86,9 +90,13 @@
         <td class="px-4 py-2 w-1">
           {{forloop.counter}}
         </td>
-        <td class="px-4 py-2 font-semibold uppercase">{{ expense.category }}</td>
-        <td class="px-4 py-2 text-gray-700">{{ expense.description }}</td>
-        <td class="px-4 py-2 text-gray-700 text-right font-bold">{{ expense.amount }}</td>
+        <td class="px-4 py-2 font-semibold uppercase">{{ godown.name }}</td>
+        <td class="px-4 py-2 text-gray-700">{{ godown.phone }}</td>
+        <td class="px-4 py-2 text-gray-700">{{ godown.address }}</td>
+        <td class="px-4 py-2 text-gray-700  text-right font-bold">{{ godown.open_credit }}</td>
+        <td class="px-4 py-2 text-gray-700 text-right  font-bold">{{ godown.open_debit }}</td>
+        <td class="px-4 py-2 text-gray-700 text-right font-bold">{{ godown.otc_credit }}</td>
+        <td class="px-4 py-2 text-gray-700 text-right font-bold">{{ godown.otc_debit }}</td>
       </tr>
       {% endfor %}
         {% else %}
@@ -112,7 +120,7 @@
   <div class="bg-white rounded-xl shadow-lg p-6 w-80 text-center">
     <h2 class="text-lg font-semibold mb-4 text-gray-800">Confirm Edit</h2>
     <p class="mb-6 text-gray-600">
-      Are you sure you want to edit this expense's details?
+      Are you sure you want to edit this godown's details?
     </p>
 
     <div class="flex justify-center space-x-4">
@@ -139,7 +147,7 @@
   <div class="bg-white rounded-xl shadow-lg p-6 w-80 text-center">
     <h2 class="text-lg font-semibold mb-4">Confirm Deletion</h2>
     <p class="mb-6 text-gray-600">
-      Are you sure you want to delete this expense?
+      Are you sure you want to delete this godown?
     </p>
 
     <div class="flex justify-center space-x-4">
@@ -163,11 +171,11 @@
 {% endblock %}
  {% block externalJS %}
 <script>
-  navActive("expenseMasterLink"); 
+  navActive("godownMasterLink");
   let deleteUrl = "";
 
-  function openEditModal(expenseId) {
-    const editUrl = "{% url 'edit-expense' 0 %}".replace("0", expenseId);
+  function openEditModal(godownId) {
+    const editUrl = "{% url 'edit-godown' 0 %}".replace("0", godownId);
     document.getElementById("confirmEditBtn").setAttribute("href", editUrl);
     document.getElementById("editModal").classList.remove("hidden");
   }
@@ -176,8 +184,8 @@
     document.getElementById("editModal").classList.add("hidden");
   }
 
-  function openModal(expenseId) {
-    deleteUrl = "{% url 'delete-expense' 0 %}".replace("0", expenseId);
+  function openModal(godownId) {
+    deleteUrl = "{% url 'delete-godown' 0 %}".replace("0", godownId);
     document.getElementById("confirmDeleteBtn").setAttribute("href", deleteUrl);
     document.getElementById("confirmModal").classList.remove("hidden");
   }

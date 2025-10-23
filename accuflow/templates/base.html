@@ -132,6 +132,20 @@ table, input, textarea {
                <span>Customer Master</span>
             </a>
             <a
+              href="{% url 'godown' %}"
+              class="flex items-center gap-2 px-3 py-1 rounded hover:bg-gray-100 cursor-pointer block nav-link"
+              id=""
+            >
+              <span>Godown Master</span>
+            </a>
+               <a
+              href="{% url 'collectors' %}"
+              class="flex items-center gap-2 px-3 py-1 rounded hover:bg-gray-100 cursor-pointer block nav-link"
+              id=""
+            >
+              <span>Collector Master</span>
+            </a>
+              <a
               href="{% url 'expenses' %}"
               class="flex items-center gap-2 px-3 py-1 rounded hover:bg-gray-100 cursor-pointer block nav-link"
               id="expenseMasterLink"
@@ -139,26 +153,13 @@ table, input, textarea {
               <span>Expense Master</span>
             </a>
             <a
-              href="{% url 'expenses' %}"
-              class="flex items-center gap-2 px-3 py-1 rounded hover:bg-gray-100 cursor-pointer block nav-link"
-              id=""
-            >
-              <span>Godown Master</span>
-            </a>
-            <a
-              href="{% url 'expenses' %}"
+              href="{% url 'cashbank' %}"
               class="flex items-center gap-2 px-3 py-1 rounded hover:bg-gray-100 cursor-pointer block nav-link"
               id=""
             >
               <span>Cash/Bank Master</span>
             </a>
-            <a
-              href="{% url 'expenses' %}"
-              class="flex items-center gap-2 px-3 py-1 rounded hover:bg-gray-100 cursor-pointer block nav-link"
-              id=""
-            >
-              <span>Collector Master</span>
-            </a>
+         
           </div>
         </div>
 

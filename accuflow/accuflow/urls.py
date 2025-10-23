@@ -26,6 +26,8 @@ urlpatterns = [
     path('suppliers/', include('suppliers.urls')),
     path('expenses/', include('expenses.urls')),
     path('godown/', include('godown.urls')),
+    path('cashbank/', include('cashbank.urls')),
+    path('collectors/', include('collector.urls')),
 ]
 
 if settings.DEBUG:
