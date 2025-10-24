@@ -5,6 +5,7 @@
   tbody{
     border-right:   1px solid #D1D5DB;
     border-left: 1px solid #D1D5DB;
+    border-bottom: 1px solid #D1D5DB;
   }
 </style>
 {% endblock %} 
@@ -41,18 +42,18 @@
   <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">Cash/Bank Management</h1>
 <a
   href="{% url 'create-cashbank' %}"
-  class="float-end mb-4 inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-300"
+  class="leading-none float-end inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-300"
 >
   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
     <path stroke-linecap="round" stroke-linejoin="round"
           d="M12 4v16m8-8H4" />
   </svg>
-  Create Cash/Bank
+  <span>Create Cash/Bank</span>
 </a>
 </div>
-    <div class="overflow-x-auto mt-5 w-full">
-  <table class="min-w-full rounded-lg overflow-hidden">
+<div class="overflow-x-auto mt-5 w-full">
+  <table class="min-w-full rounded-t-lg overflow-hidden">
     <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
       <tr>
         <th class="px-4 py-3 text-left font-medium">Actions</th>
@@ -61,7 +62,7 @@
         <th class="px-4 py-3 text-left font-medium">Description</th>
       </tr>
     </thead>
-    <tbody class="bg-gray-100 search-area">
+    <tbody class="bg-gray-100 search-area ">
       {% if cashbanks %}
       {% for cashbank in cashbanks %}
       <tr class="hover:bg-gray-50  divide-x divide-y divide-gray-300 odd:bg-white even:bg-gray-100">
@@ -70,13 +71,13 @@
           <div class="flex gap-2">
             <button
               onclick="openEditModal('{{ cashbank.id }}')"
-              class="bg-blue-500 text-white px-3 py-1.5 rounded hover:bg-blue-600 text-sm"
+              class="bg-blue-500 text-white px-2 py-1.5 rounded hover:bg-blue-600 text-xs"
             >
               <i class="fa-solid fa-pen"></i>
             </button>
             <button
               onclick="openModal('{{ cashbank.id }}')"
-              class="bg-red-500 text-white px-3 py-1.5 rounded hover:bg-red-600 text-sm"
+              class="bg-red-500 text-white px-2 py-1.5 rounded hover:bg-red-600 text-xs"
             >
               <i class="fa-solid fa-trash"></i>
             </button>

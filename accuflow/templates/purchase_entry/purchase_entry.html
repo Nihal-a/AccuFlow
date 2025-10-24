@@ -1,5 +1,5 @@
 {% extends 'base.html' %} 
-{% block title %}Collectors{% endblock %} 
+{% block title %}Purchase Entry{% endblock %} 
 {% block externalCSS %} 
 <style>
   tbody{
@@ -11,13 +11,13 @@
 {% endblock %} 
 {% block content %}
 
-<div class="flex justify-end items-center">
+{% comment %} <div class="flex justify-end items-center">
 
     <div class="relative w-full md:w-1/4">
       <input
         type="text"
         id="searchInput"
-        placeholder="Search collector..."
+        placeholder="Search purchase..."
         class="w-full bg-white rounded-xl px-4 py-2 pl-10 border  focus:border-transparent focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
       />
       <svg
@@ -34,22 +34,22 @@
         />
       </svg>
     </div>
-</div>
+</div> {% endcomment %}
 
 <div class="bg-white rounded-xl p-6 mt-3">
 <div class="flex justify-between items-center">
 
-  <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">Collector Management</h1>
+  <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">Purchase Management</h1>
 <a
-  href="{% url 'create-collector' %}"
-  class="leading-none float-end inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-300"
+  {% comment %} href="{% url 'create-godown' %}" {% endcomment %}
+  class="leading-none  float-end inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-300"
 >
   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
     <path stroke-linecap="round" stroke-linejoin="round"
           d="M12 4v16m8-8H4" />
   </svg>
-  Create Collector
+  Create Purchase
 </a>
 </div>
     <div class="overflow-x-auto mt-5 w-full">
@@ -61,44 +61,18 @@
         <th class="px-4 py-3 text-left font-medium">Name</th>
         <th class="px-4 py-3 text-left font-medium">Phone</th>
         <th class="px-4 py-3 text-left font-medium">Address</th>
+        <th class="px-4 py-3 text-right font-medium">Open Credit</th>
+        <th class="px-4 py-3 text-right font-medium">Open Debit</th>
+        <th class="px-4 py-3 text-right font-medium">OTC Credit</th>
+        <th class="px-4 py-3 text-right font-medium">OTC Debit</th>
       </tr>
     </thead>
     <tbody class="bg-gray-100 search-area">
-      {% if collectors %}
-      {% for collector in collectors %}
-      <tr class="hover:bg-gray-50  divide-x divide-y divide-gray-300 odd:bg-white even:bg-gray-100">
-        
-        <td class="px-4 py-2 w-1">
-          <div class="flex gap-2">
-            <button
-              onclick="openEditModal('{{ collector.id }}')"
-              class="bg-blue-500 text-white px-2 py-1.5 rounded hover:bg-blue-600 text-xs"
-            >
-              <i class="fa-solid fa-pen"></i>
-            </button>
-            <button
-              onclick="openModal('{{ collector.id }}')"
-              class="bg-red-500 text-white px-2 py-1.5 rounded hover:bg-red-600 text-xs"
-            >
-              <i class="fa-solid fa-trash"></i>
-            </button>
-          </div>
-        </td>
-        <td class="px-4 py-2 w-1">
-          {{forloop.counter}}
-        </td>
-        <td class="px-4 py-2 font-semibold uppercase">{{ collector.name }}</td>
-        <td class="px-4 py-2 text-gray-700">{{ collector.phone }}</td>
-        <td class="px-4 py-2 text-gray-700">{{ collector.address }}</td>
-      </tr>
-      {% endfor %}
-        {% else %}
     <tr>
       <td colspan="9" class="text-center py-2 text-gray-500">
         No data found
       </td>
     </tr>
-  {% endif %}
     </tbody>
   </table>
 </div>
@@ -113,7 +87,7 @@
   <div class="bg-white rounded-xl shadow-lg p-6 w-80 text-center">
     <h2 class="text-lg font-semibold mb-4 text-gray-800">Confirm Edit</h2>
     <p class="mb-6 text-gray-600">
-      Are you sure you want to edit this collector's details?
+      Are you sure you want to edit this purchase's details?
     </p>
 
     <div class="flex justify-center space-x-4">
@@ -140,7 +114,7 @@
   <div class="bg-white rounded-xl shadow-lg p-6 w-80 text-center">
     <h2 class="text-lg font-semibold mb-4">Confirm Deletion</h2>
     <p class="mb-6 text-gray-600">
-      Are you sure you want to delete this collector?
+      Are you sure you want to delete this purchase?
     </p>
 
     <div class="flex justify-center space-x-4">
@@ -164,11 +138,11 @@
 {% endblock %}
  {% block externalJS %}
 <script>
-  navActive("collectorMasterLink");
+  navActive("purchaseMasterLink");
   let deleteUrl = "";
-
-  function openEditModal(collectorId) {
-    const editUrl = "{% url 'edit-collector' 0 %}".replace("0", collectorId);
+{% comment %} 
+  function openEditModal(purchaseId) {
+    const editUrl = "{% url 'edit-purchase' 0 %}".replace("0", purchaseId);
     document.getElementById("confirmEditBtn").setAttribute("href", editUrl);
     document.getElementById("editModal").classList.remove("hidden");
   }
@@ -177,15 +151,15 @@
     document.getElementById("editModal").classList.add("hidden");
   }
 
-  function openModal(collectorId) {
-    deleteUrl = "{% url 'delete-collector' 0 %}".replace("0", collectorId);
+  function openModal(purchaseId) {
+    deleteUrl = "{% url 'delete-purchase' 0 %}".replace("0", purchaseId);
     document.getElementById("confirmDeleteBtn").setAttribute("href", deleteUrl);
     document.getElementById("confirmModal").classList.remove("hidden");
   }
 
   function closeModal() {
     document.getElementById("confirmModal").classList.add("hidden");
-  }
+  } {% endcomment %}
 
   // 🔍 Search Functionality
 

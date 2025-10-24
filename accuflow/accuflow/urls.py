@@ -28,6 +28,7 @@ urlpatterns = [
     path('godown/', include('godown.urls')),
     path('cashbank/', include('cashbank.urls')),
     path('collectors/', include('collector.urls')),
+    path('purchase/', include('purchase_entry.urls')),
 ]
 
 if settings.DEBUG:
