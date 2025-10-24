@@ -21,8 +21,10 @@ class AddCustomerView(View):
         open_debit = request.POST.get('open_debit',0)
         otc_credit = request.POST.get('otc_credit',0)
         otc_debit = request.POST.get('otc_debit',0)
+        country_code = request.POST.get('country_code')
+        wa = request.POST.get('whatsapp_number')
         
-        Customers.objects.create(
+        customer = Customers.objects.create(
             name=name,
             phone=phone,
             address=address,
@@ -31,6 +33,10 @@ class AddCustomerView(View):
             otc_credit=otc_credit,
             otc_debit=otc_debit
         )
+        if wa:
+            customer.country_code = country_code
+            customer.wa = wa
+            customer.save()
         return redirect('customers')
 
 class DeleteCustomerView(View):
@@ -55,5 +61,11 @@ class UpdateCustomerView(View):
         customer.open_debit = request.POST.get('open_debit', 0)
         customer.otc_credit = request.POST.get('otc_credit', 0)
         customer.otc_debit = request.POST.get('otc_debit', 0)
+        country_code = request.POST.get('country_code')
+        wa = request.POST.get('whatsapp_number')
+        if wa:
+            customer.country_code = country_code
+            customer.wa = wa
+            customer.save()
         customer.save()
         return redirect('customers')

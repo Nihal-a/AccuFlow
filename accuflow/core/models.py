@@ -12,6 +12,8 @@ class Customers(models.Model):
     otc_debit = models.FloatField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+    country_code = models.TextField(blank=True,null=True)
+    wa = models.TextField(blank=True,null=True)
     
     def __str__(self):
         return self.name
@@ -27,6 +29,8 @@ class Suppliers(models.Model):
     otc_debit = models.FloatField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+    country_code = models.TextField(blank=True,null=True)
+    wa = models.TextField(blank=True,null=True)
     
     def __str__(self):
         return self.name
@@ -54,6 +58,8 @@ class Godowns(models.Model):
     otc_debit = models.FloatField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+    country_code = models.TextField(blank=True,null=True)
+    wa = models.TextField(blank=True,null=True)
     
     def __str__(self):
         return self.name
@@ -75,3 +81,9 @@ class Collectors(models.Model):
     address = models.TextField(blank=True,null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+    country_code = models.TextField(blank=True,null=True)
+    wa = models.TextField(blank=True,null=True)
+    
+    
+class Purchases(models.Model):
+    pass 

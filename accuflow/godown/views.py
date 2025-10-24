@@ -21,8 +21,10 @@ class AddGodownView(View):
         open_debit = request.POST.get('open_debit',0)
         otc_credit = request.POST.get('otc_credit',0)
         otc_debit = request.POST.get('otc_debit',0)
+        country_code = request.POST.get('country_code')
+        wa = request.POST.get('whatsapp_number')
         
-        Godowns.objects.create(
+        godown = Godowns.objects.create(
             name=name,
             phone=phone,
             address=address,
@@ -31,6 +33,10 @@ class AddGodownView(View):
             otc_credit=otc_credit,
             otc_debit=otc_debit
         )
+        if wa:
+            godown.country_code = country_code
+            godown.wa = wa
+            godown.save()
         return redirect('godown')
 
 class DeleteGodownView(View):
@@ -55,5 +61,10 @@ class UpdateGodownView(View):
         godown.open_debit = request.POST.get('open_debit', 0)
         godown.otc_credit = request.POST.get('otc_credit', 0)
         godown.otc_debit = request.POST.get('otc_debit', 0)
+        country_code = request.POST.get('country_code')
+        wa = request.POST.get('whatsapp_number')
+        if wa:
+            godown.country_code = country_code
+            godown.wa = wa
         godown.save()
         return redirect('godown')

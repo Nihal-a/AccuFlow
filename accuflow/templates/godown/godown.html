@@ -1,13 +1,6 @@
 {% extends 'base.html' %} 
 {% block title %}Godown{% endblock %} 
 {% block externalCSS %} 
-<style>
-  tbody{
-    border-right:   1px solid #D1D5DB;
-    border-left: 1px solid #D1D5DB;
-    border-bottom: 1px solid #D1D5DB;
-  }
-</style>
 {% endblock %} 
 {% block content %}
 
@@ -18,7 +11,7 @@
         type="text"
         id="searchInput"
         placeholder="Search godown..."
-        class="w-full bg-white rounded-xl px-4 py-2 pl-10 border  focus:border-transparent focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+        class="w-full bg-white rounded-xl px-4 py-2 pl-10 border  focus:border-transparent ring-2 ring-blue-200  focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none"
       />
       <svg
         class="w-5 h-5 text-gray-400 absolute left-3 top-2.5 pointer-events-none"
@@ -42,7 +35,7 @@
   <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">Godown Management</h1>
 <a
   href="{% url 'create-godown' %}"
-  class="leading-none  float-end inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-300"
+  class="leading-none  float-end inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-300"
 >
   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -60,6 +53,7 @@
         <th class="px-4 py-3 text-left font-medium">#</th>
         <th class="px-4 py-3 text-left font-medium">Name</th>
         <th class="px-4 py-3 text-left font-medium">Phone</th>
+        <th class="px-4 py-3 text-left font-medium">WhatsApp</th>
         <th class="px-4 py-3 text-left font-medium">Address</th>
         <th class="px-4 py-3 text-right font-medium">Open Credit</th>
         <th class="px-4 py-3 text-right font-medium">Open Debit</th>
@@ -67,7 +61,7 @@
         <th class="px-4 py-3 text-right font-medium">OTC Debit</th>
       </tr>
     </thead>
-    <tbody class="bg-gray-100 search-area">
+    <tbody class="bg-gray-100">
       {% if godowns %}
       {% for godown in godowns %}
       <tr class="hover:bg-gray-50  divide-x divide-y divide-gray-300 odd:bg-white even:bg-gray-100">
@@ -91,9 +85,10 @@
         <td class="px-4 py-2 w-1">
           {{forloop.counter}}
         </td>
-        <td class="px-4 py-2 font-semibold uppercase">{{ godown.name }}</td>
-        <td class="px-4 py-2 text-gray-700">{{ godown.phone }}</td>
-        <td class="px-4 py-2 text-gray-700">{{ godown.address }}</td>
+        <td class="px-4 py-2 font-semibold uppercase search-area">{{ godown.name }}</td>
+        <td class="px-4 py-2 text-gray-700 search-area">{{ godown.phone }}</td>
+        <td class="px-4 py-2 text-gray-700 search-area">{% if godown.wa %}<i class="fa-brands fa-whatsapp"></i>{{ godown.country_code|default:'' }}{{godown.wa|default:''}}{% else %}<span class="text-yellow-600">N/A</span>{% endif %}</td>
+        <td class="px-4 py-2 text-gray-700 search-area">{{ godown.address }}</td>
         <td class="px-4 py-2 text-gray-700  text-right font-bold">{{ godown.open_credit }}</td>
         <td class="px-4 py-2 text-gray-700 text-right  font-bold">{{ godown.open_debit }}</td>
         <td class="px-4 py-2 text-gray-700 text-right font-bold">{{ godown.otc_credit }}</td>
@@ -102,7 +97,7 @@
       {% endfor %}
         {% else %}
     <tr>
-      <td colspan="9" class="text-center py-2 text-gray-500">
+      <td colspan="10" class="text-center py-2 text-gray-500">
         No data found
       </td>
     </tr>
