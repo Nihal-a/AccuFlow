@@ -1,40 +1,35 @@
 {% extends 'base.html' %} 
 {% block title %}Purchase Entry{% endblock %} 
 {% block externalCSS %} 
-<style>
-  tbody{
-    border-right:   1px solid #D1D5DB;
-    border-left: 1px solid #D1D5DB;
-    border-bottom: 1px solid #D1D5DB;
-  }
-</style>
 {% endblock %} 
 {% block content %}
 
-{% comment %} <div class="flex justify-end items-center">
 
-    <div class="relative w-full md:w-1/4">
-      <input
-        type="text"
-        id="searchInput"
-        placeholder="Search purchase..."
-        class="w-full bg-white rounded-xl px-4 py-2 pl-10 border  focus:border-transparent focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
-      />
-      <svg
-        class="w-5 h-5 text-gray-400 absolute left-3 top-2.5 pointer-events-none"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 3a7.5 7.5 0 006.15 13.65z"
-        />
-      </svg>
-    </div>
-</div> {% endcomment %}
+<div class="flex justify-end items-center">
+
+ <div class="relative w-full md:w-1/4">
+  <input
+    type="text"
+    id="searchInput"
+    placeholder="Search purchases..."
+    class="w-full bg-white rounded-xl px-4 py-2 pl-10 border border-transparent focus:border-transparent ring-2 ring-blue-200  focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none"
+  />
+  <svg
+    class="w-5 h-5 text-gray-400 absolute left-3 top-2.5 pointer-events-none"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    viewBox="0 0 24 24"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 3a7.5 7.5 0 006.15 13.65z"
+    />
+  </svg>
+</div>
+
+</div>
 
 <div class="bg-white rounded-xl p-6 mt-3">
 <div class="flex justify-between items-center">
@@ -42,7 +37,7 @@
   <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">Purchase Management</h1>
 <a
   {% comment %} href="{% url 'create-godown' %}" {% endcomment %}
-  class="leading-none  float-end inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-300"
+  class="leading-none  float-end inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-300"
 >
   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

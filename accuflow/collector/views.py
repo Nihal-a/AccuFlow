@@ -17,12 +17,19 @@ class AddCollectorView(View):
         name = request.POST.get('name')
         phone = request.POST.get('phone')
         address = request.POST.get('address')
+        country_code = request.POST.get('country_code')
+        wa = request.POST.get('whatsapp_number')
         
-        Collectors.objects.create(
+        
+        collector = Collectors.objects.create(
             name=name,
             phone=phone,
             address=address,
         )
+        if wa:
+            collector.country_code = country_code
+            collector.wa = wa
+            collector.save()
         return redirect('collectors')
 
 class DeleteCollectorView(View):
@@ -43,5 +50,10 @@ class UpdateCollectorView(View):
         collector.name = request.POST.get('name')
         collector.phone = request.POST.get('phone')
         collector.address = request.POST.get('address')
+        country_code = request.POST.get('country_code')
+        wa = request.POST.get('whatsapp_number')
+        if wa:
+            collector.country_code = country_code
+            collector.wa = wa
         collector.save()
         return redirect('collectors')

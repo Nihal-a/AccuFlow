@@ -21,8 +21,10 @@ class AddSupplierView(View):
         open_debit = request.POST.get('open_debit',0)
         otc_credit = request.POST.get('otc_credit',0)
         otc_debit = request.POST.get('otc_debit',0)
+        country_code = request.POST.get('country_code')
+        wa = request.POST.get('whatsapp_number')
         
-        Suppliers.objects.create(
+        supplier = Suppliers.objects.create(
             name=name,
             phone=phone,
             address=address,
@@ -31,6 +33,10 @@ class AddSupplierView(View):
             otc_credit=otc_credit,
             otc_debit=otc_debit
         )
+        if wa:
+            supplier.country_code = country_code
+            supplier.wa = wa
+            supplier.save()
         return redirect('suppliers')
 
 class DeleteSupplierView(View):
@@ -55,5 +61,10 @@ class UpdateSupplierView(View):
         supplier.open_debit = request.POST.get('open_debit', 0)
         supplier.otc_credit = request.POST.get('otc_credit', 0)
         supplier.otc_debit = request.POST.get('otc_debit', 0)
+        country_code = request.POST.get('country_code')
+        wa = request.POST.get('whatsapp_number')
+        if wa:
+            supplier.country_code = country_code
+            supplier.wa = wa
         supplier.save()
         return redirect('suppliers')

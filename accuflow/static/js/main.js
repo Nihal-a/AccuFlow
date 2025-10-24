@@ -4,19 +4,28 @@ function navActive(id) {
   console.log('object')
     $('#'+id).addClass('active');
 }
+const searchInput = document.getElementById("searchInput");
 
-  const searchInput = document.getElementById("searchInput");
-  if (searchInput){
+if (searchInput) {
   searchInput.addEventListener("keyup", function () {
     const filter = searchInput.value.toLowerCase();
-    const rows = document.querySelectorAll(".search-area");
+    const rows = document.querySelectorAll("tbody tr"); 
 
     rows.forEach((row) => {
-      const text = row.innerText.toLowerCase();
-      row.style.display = text.includes(filter) ? "" : "none";
+      const text = row.querySelector(".search-area") 
+        ? row.querySelectorAll(".search-area") 
+        : [];
+
+      let rowText = "";
+      text.forEach((cell) => {
+        rowText += cell.innerText.toLowerCase() + " ";
+      });
+
+      row.style.display = rowText.includes(filter) ? "" : "none";
     });
   });
 }
+
 
 
 
@@ -113,3 +122,78 @@ $(document).ready(function () {
     $("#back-button").addClass("disabled-btn");
   }
 });
+
+
+function getToken(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+          }
+      }
+  }
+  return cookieValue;
+}
+const csrftoken = getToken('csrftoken')
+
+
+
+let isFormDirty = false;
+const forms = document.getElementsByTagName("form");
+
+if (forms.length > 0) {
+  // Track input changes in all forms
+  $("form :input").on("input change", function () {
+    isFormDirty = true;
+  });
+
+  // When any form is submitted, reset the flag
+  Array.from(forms).forEach((form) => {
+    form.addEventListener("submit", function () {
+      isFormDirty = false;
+    });
+  });
+
+  // Warn when trying to leave or reload the page
+  window.addEventListener("beforeunload", function (e) {
+    if (isFormDirty) {
+      e.preventDefault();
+      e.returnValue = "You have unsaved changes. Do you really want to leave?";
+    }
+  });
+}
+
+function countryCode(){
+  var countrySelect = document.getElementById('countryCode')
+  $(countrySelect).html(`
+      <option value="+971">🇦🇪 +971 (UAE)</option>
+                <option value="+966">🇸🇦 +966 (Saudi Arabia)</option>
+                <option value="+974">🇶🇦 +974 (Qatar)</option>
+                <option value="+965">🇰🇼 +965 (Kuwait)</option>
+                <option value="+968">🇴🇲 +968 (Oman)</option>
+                <option value="+973">🇧🇭 +973 (Bahrain)</option>
+                <option value="+962">🇯🇴 +962 (Jordan)</option>
+                <option value="+961">🇱🇧 +961 (Lebanon)</option>
+                <option value="+20">🇪🇬 +20 (Egypt)</option>
+                <option value="+963">🇸🇾 +963 (Syria)</option>
+                <option value="+967">🇾🇪 +967 (Yemen)</option>
+                <option value="+218">🇱🇾 +218 (Libya)</option>
+                <option value="+212">🇲🇦 +212 (Morocco)</option>
+                <option value="+213">🇩🇿 +213 (Algeria)</option>
+                <option value="+249">🇸🇩 +249 (Sudan)</option>
+
+                <option value="+91" selected>🇮🇳 +91 (India)</option>
+                <option value="+1">🇺🇸 +1 (USA)</option>
+                <option value="+44">🇬🇧 +44 (UK)</option>
+                <option value="+61">🇦🇺 +61 (Australia)</option>
+                <option value="+94">🇱🇰 +94 (Sri Lanka)</option>
+                <option value="+880">🇧🇩 +880 (Bangladesh)</option>
+                <option value="+92">🇵🇰 +92 (Pakistan)</option>
+                <option value="+81">🇯🇵 +81 (Japan)</option>
+                <option value="+86">🇨🇳 +86 (China)</option>
+    `)
+}
