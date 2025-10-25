@@ -63,7 +63,8 @@
       <label class="block text-gray-700">Purchase No*</label>
       <input
         type="text"
-        name="purchase_name"
+        name=""
+        id="purchase_name"
         placeholder="Enter Purchase No"
         class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
         disabled
@@ -77,7 +78,8 @@
       <label class="block text-gray-700">Date*</label>
       <input
         type="date"
-        name="date"
+        name=""
+        id="date"
         class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
         required
       />
@@ -94,7 +96,7 @@
       <input
         type="checkbox"
         id="is_paid"
-        name="is_paid"
+        name=""
         class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
       />
       <label for="is_paid" class="ml-2 text-gray-700">All</label>
@@ -103,7 +105,8 @@
     <!-- Dropdown -->
     <div class="flex-1">
       <select
-        name="supplier"
+        name=""
+        id="supplier"
         class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
         required
       >
@@ -130,7 +133,7 @@
       <input
         type="checkbox"
         id="is_paid"
-        name="is_paid"
+        name=""
         class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
       />
       <label for="is_paid" class="ml-2 text-gray-700">All</label>
@@ -139,7 +142,8 @@
     <!-- Dropdown -->
     <div class="flex-1">
       <select
-        name="godown"
+        name=""
+        id="godown"
         class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
         required
       >
@@ -152,12 +156,28 @@
   </div>
 </div>
 
+
+  <div class="col-span-6">
+    <div class="">
+      <label class="block text-gray-700">Amount*</label>
+      <input
+        type="number"
+        name=""
+        id="amount"
+        placeholder="Enter Amount"
+        class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+        required
+      />
+    </div>
+  </div>
+
   <div class="col-span-6">
     <div class="">
       <label class="block text-gray-700">Qty*</label>
       <input
         type="number"
-        name="qty"
+        name=""
+        id="qty"
         placeholder="Enter Quantity"
         class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
         required
@@ -169,11 +189,13 @@
 
   <div class="col-span-6">
     <div class="">
-      <label class="block text-gray-700">Amount*</label>
+      <label class="block text-gray-700">Total Amount*</label>
       <input
         type="number"
-        name="amount"
-        placeholder="Enter Amount"
+        name=""
+        id="total_amount"
+        placeholder=""
+        disabled
         class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
         required
       />
@@ -183,21 +205,24 @@
   <div class="description col-span-6">
     <div class="">
       <label class="block text-gray-700">Description</label>
-      <textarea name="description" id="description"
+      <textarea name="" id="description"
         class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
       ></textarea>
   </div>
 </div>
 </div>
   <hr class="mt-5 mb-5">
+  <form action="{% url 'purchase-create' %}" method="post">
+    {% csrf_token %}
   <div class="flex items-center justify-between">
     <div class="flex gap-2 items-center">
         <a
       id="addGrid"
       href="#"
+      onclick="addToPurchaseGrid()"
       class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300"
     >
-      <svg
+      <!-- <svg
         xmlns="http://www.w3.org/2000/svg"
         class="h-4 w-4"
         fill="none"
@@ -210,13 +235,13 @@
           stroke-linejoin="round"
           d="M12 4v16m8-8H4"
         />
-      </svg>
-      Add to Grid
+      </svg> -->
+      <span id="addToGridText">Add to Grid</span>
     </a>
 
     <a
       id="btnCancel"
-      href="#"
+      href=""
       class="leading-none inline-flex items-center gap-1.5 bg-gray-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-gray-600 transition-all duration-300"
     >
       <svg
@@ -260,9 +285,9 @@
         />
       </svg>
     </div>
-    <a
+    <button
       id="btnSave"
-      href="#"
+      type="submit"
       class="leading-none inline-flex items-center gap-1.5 bg-green-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-green-600 transition-all duration-300"
     >
       <svg
@@ -294,47 +319,18 @@
             <th class="px-4 py-3 text-left font-medium">Date</th>
             <th class="px-4 py-3 text-left font-medium">Supplier</th>
             <th class="px-4 py-3 text-right font-medium">Godown</th>
-            <th class="px-4 py-3 text-right font-medium">Qty</th>
             <th class="px-4 py-3 text-right font-medium">Amount</th>
+            <th class="px-4 py-3 text-right font-medium">Qty</th>
+            <th class="px-4 py-3 text-right font-medium">Total Amount</th>
             <th class="px-4 py-3 text-right font-medium">Description</th>
           </tr>
         </thead>
-        <tbody class="bg-gray-100">
-          <tr>
-            <td colspan="9" class="text-center py-2 text-gray-500">
-              No data found
-            </td>
-          </tr>
+        <tbody class="bg-gray-100" id="purchaseTableBody">
         </tbody>
       </table>
     </div>
+    </form>
 </div>
-
-
-    <div class="overflow-x-auto mt-5 w-full hidden" id="purchaseView">
-      <table class="min-w-full rounded-t-lg overflow-hidden">
-        <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
-          <tr>
-            <th class="px-4 py-3 text-left font-medium">Actions</th>
-            <th class="px-4 py-3 text-left font-medium">#</th>
-            <th class="px-4 py-3 text-left font-medium">Name</th>
-            <th class="px-4 py-3 text-left font-medium">Phone</th>
-            <th class="px-4 py-3 text-left font-medium">Address</th>
-            <th class="px-4 py-3 text-right font-medium">Open Credit</th>
-            <th class="px-4 py-3 text-right font-medium">Open Debit</th>
-            <th class="px-4 py-3 text-right font-medium">OTC Credit</th>
-            <th class="px-4 py-3 text-right font-medium">OTC Debit</th>
-          </tr>
-        </thead>
-        <tbody class="bg-gray-100 search-area">
-          <tr>
-            <td colspan="9" class="text-center py-2 text-gray-500">
-              No data found
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
   </div>
 
   <!-- 🟦 Edit Confirmation Modal -->
@@ -395,6 +391,58 @@
   </div>
   {% endblock %} {% block externalJS %}
   <script>
+    var purchases = {{ purchases|safe }};
+    console.log(purchases)
+    for (let i=0; i<purchases.length; i++) {
+      const purchase = purchases[i];
+      var tableBody = document.getElementById("purchaseTableBody");
+      var rowCount = tableBody.querySelectorAll("tr").length + 1;
+      var newRow = `
+      <tr>
+        <td class="px-4 py-3 text-left">
+          <a href="#" class="text-blue-500 hover:underline mr-2" onclick="updatePurchase(this)">Edit</a>
+          <a href="#" class="text-red-500 hover:underline" onclick="deletePurchase(this)">Delete</a>
+        </td>
+        <td class="px-4 py-3 text-left">${rowCount}</td>
+        <td class="px-4 py-3 text-left search-area">
+          ${purchase.purchase_no}
+          <input type="hidden" name="purchase_nos" value="${purchase.purchase_no}">
+        </td>
+        <td class="px-4 py-3 text-left search-area">
+          ${purchase.date.split('T')[0]}    
+          <input type="hidden" name="dates" value="${purchase.date.split('T')[0]}">
+        </td>
+        <td class="px-4 py-3 text-left search-area">
+          ${purchase.supplier}
+          <input type="hidden" name="suppliers" value="${purchase.supplier_id}">
+        </td>
+        <td class="px-4 py-3 text-right search-area">
+          ${purchase.godown}
+          <input type="hidden" name="godowns" value="${purchase.godown_id}">
+        </td>
+        <td class="px-4 py-3 text-right search-area">
+          ${parseFloat(purchase.amount).toFixed(2)}
+          <input type="hidden" name="amounts" value="${purchase.amount}">   
+        </td>
+        <td class="px-4 py-3 text-right search-area">
+          ${purchase.qty}
+          <input type="hidden" name="qtys" value="${purchase.qty}">
+        </td>
+        <td class="px-4 py-3 text-right search-area">
+          ${parseFloat(purchase.total_amount).toFixed(2)}
+          <input type="hidden" name="total_amounts" value="${parseFloat(purchase.total_amount).toFixed(2)}">
+        </td>
+        <td class="px-4 py-3 text-right search-area">
+          ${purchase.description}
+          <input type="hidden" name="descriptions" value="${purchase.description}">
+        </td>
+      </tr>`; 
+      tableBody.insertAdjacentHTML('beforeend', newRow);
+      $('#purchase_name, #date, #amount, #qty, #description, #total_amount').val('');
+      $('#supplier, #godown').prop('selectedIndex', 0);
+    }
+  </script>
+  <script>
       navActive("purchaseMasterLink");
       let deleteUrl = "";
     {% comment %}
@@ -418,8 +466,113 @@
         document.getElementById("confirmModal").classList.add("hidden");
       } {% endcomment %}
 
-      // 🔍 Search Functionality
   </script>
+<script>
+  $('#amount, #qty').on('input', function() {
+    const amount = parseFloat($('#amount').val()) || 0;
+    const qty = parseFloat($('#qty').val()) || 0;
+    const total = amount * qty; 
+    $('#total_amount').val(total.toFixed(2));
+  });
+
+  function addToPurchaseGrid() {
+    const purchase_no = document.getElementById("purchase_name").value.trim();
+    const date = document.getElementById("date").value;
+    const supplierEl = document.getElementById("supplier");
+    const supplier = supplierEl.options[supplierEl.selectedIndex]?.text || "";
+    const supplierSelect = supplierEl.value;
+    const godownEl = document.getElementById("godown");
+    const godown = godownEl.options[godownEl.selectedIndex]?.text || "";
+    const godownSelect = godownEl.value;
+    const qty = parseFloat(document.getElementById("qty").value) || 0;
+    const amount = parseFloat(document.getElementById("amount").value) || 0;
+    const description = document.getElementById("description").value.trim();
+    const total_amount = qty * amount;
+
+    if ( !date || !supplierSelect || !godownSelect || !qty || !amount) {
+      alert("⚠️ Please fill in all required fields before adding.");
+      return;
+    }
+
+    const tableBody = document.getElementById("purchaseTableBody");
+    const rowCount = tableBody.querySelectorAll("tr").length + 1;
+
+    const newRow = `
+      <tr>
+        <td class="px-4 py-3 text-left">
+          <a href="#" class="text-blue-500 hover:underline mr-2" onclick="updatePurchase(this)">Edit</a>
+          <a href="#" class="text-red-500 hover:underline" onclick="deletePurchase(this)">Delete</a>
+        </td>
+        <td class="px-4 py-3 text-left">${rowCount}</td>
+        <td class="px-4 py-3 text-left search-area">
+          ${purchase_no}
+          <input type="hidden" name="purchase_nos" value="${purchase_no}">
+        </td>
+        <td class="px-4 py-3 text-left search-area">
+          ${date}
+          <input type="hidden" name="dates" value="${date}">
+        </td>
+        <td class="px-4 py-3 text-left search-area">
+          ${supplier}
+          <input type="hidden" name="suppliers" value="${supplierSelect}">
+        </td>
+        <td class="px-4 py-3 text-right search-area">
+          ${godown}
+          <input type="hidden" name="godowns" value="${godownSelect}">
+        </td>
+        <td class="px-4 py-3 text-right search-area">
+          ${amount.toFixed(2)}
+          <input type="hidden" name="amounts" value="${amount}">
+        </td>
+        <td class="px-4 py-3 text-right search-area">
+          ${qty}
+          <input type="hidden" name="qtys" value="${qty}">
+        </td>
+        <td class="px-4 py-3 text-right search-area">
+          ${total_amount.toFixed(2)}
+          <input type="hidden" name="total_amounts" value="${total_amount.toFixed(2)}">
+        </td>
+        <td class="px-4 py-3 text-right search-area">
+          ${description}
+          <input type="hidden" name="descriptions" value="${description}">
+        </td>
+      </tr>`;
+
+    tableBody.insertAdjacentHTML('beforeend', newRow);
+
+      $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-green-500 text-white');
+      $('#addToGridText').text('Add to Grid');
+    clearPurchaseForm();
+  }
+
+  function updatePurchase(link) {
+    const selectedRow = link.closest('tr');
+    document.getElementById("purchase_name").value = selectedRow.cells[2].innerText.trim();
+    document.getElementById("date").value = selectedRow.cells[3].innerText.trim();
+    document.getElementById("supplier").value = selectedRow.cells[4].querySelector('input').value;
+    document.getElementById("godown").value = selectedRow.cells[5].querySelector('input').value;
+    document.getElementById("amount").value = selectedRow.cells[6].innerText.trim();
+    document.getElementById("qty").value = selectedRow.cells[7].innerText.trim();
+    document.getElementById("total_amount").value = selectedRow.cells[8].innerText.trim();
+    document.getElementById("description").value = selectedRow.cells[9].innerText.trim();
+
+    selectedRow.remove();
+    $('#addToGridText').text('Update Grid');
+    $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-blue-500 text-white');
+  }
+
+  function deletePurchase(link) {
+    if (confirm("Are you sure you want to delete this row?")) {
+      const selectedRow = link.closest('tr');
+      selectedRow.remove();
+    }
+  }
+
+  function clearPurchaseForm() {
+    $('#purchase_name, #date, #amount, #qty, #description, #total_amount').val('');
+    $('#supplier, #godown').prop('selectedIndex', 0);
+  }
+</script>
 
   {% endblock %}
 </div>

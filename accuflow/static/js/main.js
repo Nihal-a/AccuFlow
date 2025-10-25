@@ -197,3 +197,7 @@ function countryCode(){
                 <option value="+86">🇨🇳 +86 (China)</option>
     `)
 }
+
+if ($('#date').length){
+$('#date').val(new Date().toISOString().split('T')[0]);
+} 
