@@ -1,4 +1,4 @@
-{% extends 'base.html' %} {% block title %}Purchase Entry{% endblock %} 
+{% extends 'base.html' %} {% block title %}Commission Entry{% endblock %} 
 {% block externalCSS %} {% endblock %} {% block content %}
 <!-- 
 <div class="flex justify-end items-center">
@@ -27,7 +27,7 @@
 
 <div class="bg-white rounded-xl p-6 mt-3">
   <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">
-    Purchase Management
+   Commission Management
   </h1>
   <div class="mt-4 flex flex-wrap items-center gap-3">
     <!-- 🟦 New -->
@@ -60,12 +60,12 @@
 <div class="grid grid-cols-8 gap-4 ">
   <div class="col-span-6 flex gap-2 ">
     <div class="w-[50%]">
-      <label class="block text-gray-700">Purchase No*</label>
+      <label class="block text-gray-700">commission No*</label>
       <input
         type="text"
         name=""
-        id="purchase_name"
-        placeholder="Enter Purchase No"
+        id="commission_name"
+        placeholder="Enter Commission No"
         class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
         disabled
         required
@@ -86,7 +86,7 @@
 <div class="col-span-6 w-full flex items-center gap-3">
 <div class=" w-[80%]">
   <!-- Label -->
-  <label class="block text-gray-700 mb-1">Supplier*</label>
+  <label class="block text-gray-700 mb-1">Expense*</label>
   <div class="flex items-center gap-4 ">
     <!-- Row: Checkbox + Dropdown -->
     <div class="flex items-center gap-4 w-full">
@@ -105,13 +105,13 @@
     <div class="flex-1">
       <select
         name=""
-        id="supplier"
+        id="expense"
         class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
         required
       >
-        <option value="" selected>Select Supplier</option>
-        {% for supplier in suppliers %}
-        <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+        <option value="" selected>Select Expense</option>
+        {% for expense in expenses %}
+        <option value="{{ expense.id }}">{{ expense.name }}</option>
         {% endfor %}
       </select>
     </div>
@@ -204,7 +204,7 @@
 
 
   <div class="col-span-6 w-full flex gap-2">
-    <div class="flex-1">
+     <div class="flex-1">
       <label class="block text-gray-700">Qty*</label>
       <input
         type="number"
@@ -226,7 +226,7 @@
         required
       />
     </div>
-      
+     
    <div class="flex-1">
       <label class="block text-gray-700">Total Amount*</label>
       <input
@@ -251,14 +251,14 @@
 </div>
 </div>
   <hr class="mt-5 mb-5">
-  <form action="{% url 'purchase-create' %}" method="post">
+  <form action="{% url 'commission-create' %}" method="post">
     {% csrf_token %}
   <div class="flex items-center justify-between">
     <div class="flex gap-2 items-center">
         <a
       id="addGrid"
       href="#"
-      onclick="addToPurchaseGrid()"
+      onclick="addToCommissionGrid()"
       class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300"
     >
       <!-- <svg
@@ -307,7 +307,7 @@
       <input
         type="text"
         id="searchInput"
-        placeholder="Search purchase..."
+        placeholder="Search commission..."
         class="w-full bg-white rounded-xl px-4 py-2 pl-10 border  focus:border-transparent ring-2 ring-blue-200  focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none"
       />
       <svg
@@ -354,9 +354,9 @@
           <tr>
             <th class="px-4 py-3 text-left font-medium">Actions</th>
             <th class="px-4 py-3 text-left font-medium">#</th>
-            <th class="px-4 py-3 text-right font-medium">Godown</th>
+            <th class="px-4 py-3 text-right font-medium">Expense</th>
             <th class="px-4 py-3 text-right font-medium">Description</th>
-            <th class="px-4 py-3 text-left font-medium">Supplier</th>
+            <th class="px-4 py-3 text-left font-medium">Godown</th>
             <th class="px-4 py-3 text-right font-medium">Qty</th>
             <th class="px-4 py-3 text-right font-medium">Rate</th>
             <th class="px-4 py-3 text-right font-medium">Total Amount</th>
@@ -378,7 +378,7 @@
     <div class="bg-white rounded-xl shadow-lg p-6 w-80 text-center">
       <h2 class="text-lg font-semibold mb-4 text-gray-800">Confirm Edit</h2>
       <p class="mb-6 text-gray-600">
-        Are you sure you want to edit this purchase's details?
+        Are you sure you want to edit this commission's details?
       </p>
 
       <div class="flex justify-center space-x-4">
@@ -405,7 +405,7 @@
     <div class="bg-white rounded-xl shadow-lg p-6 w-80 text-center">
       <h2 class="text-lg font-semibold mb-4">Confirm Deletion</h2>
       <p class="mb-6 text-gray-600">
-        Are you sure you want to delete this purchase?
+        Are you sure you want to delete this commission?
       </p>
 
       <div class="flex justify-center space-x-4">
@@ -428,59 +428,59 @@
   </div>
   {% endblock %} {% block externalJS %}
   <script>
-    var purchases = {{ purchases|safe }};
-    console.log(purchases)
-    for (let i=0; i<purchases.length; i++) {
-      const purchase = purchases[i];
-      var tableBody = document.getElementById("purchaseTableBody");
+    var commissions = {{ commission|safe }};
+    console.log(commissions)
+    for (let i=0; i<commissions.length; i++) {
+      const commission = commissions[i];
+      var tableBody = document.getElementById("commissionTableBody");
       var rowCount = tableBody.querySelectorAll("tr").length + 1;
       var newRow = `
       <tr>
         <td class="px-4 py-3 text-left">
-          <a href="#" class="text-blue-500 hover:underline mr-2" onclick="updatePurchase(this)">Edit</a>
-          <a href="#" class="text-red-500 hover:underline" onclick="deletePurchase(this)">Delete</a>
+          <a href="#" class="text-blue-500 hover:underline mr-2" onclick="updateCommission(this)">Edit</a>
+          <a href="#" class="text-red-500 hover:underline" onclick="deleteCommission(this)">Delete</a>
         </td>
         <td class="px-4 py-3 text-left">${rowCount}</td>
         <td class="px-4 py-3 text-left search-area">
-          ${purchase.purchase_no}
-          <input type="hidden" name="purchase_nos" value="${purchase.purchase_no}">
+          ${commission.commission_no}
+          <input type="hidden" name="commission_nos" value="${commission.commission_no}">
         </td>
         <td class="px-4 py-3 text-left search-area">
-          ${purchase.date.split('T')[0]}    
-          <input type="hidden" name="dates" value="${purchase.date.split('T')[0]}">
+          ${commission.date.split('T')[0]}    
+          <input type="hidden" name="dates" value="${commission.date.split('T')[0]}">
         </td>
         <td class="px-4 py-3 text-left search-area">
-          ${purchase.supplier}
-          <input type="hidden" name="suppliers" value="${purchase.supplier_id}">
+          ${commission.expense}
+          <input type="hidden" name="suppliers" value="${commission.expense_id}">
         </td>
         <td class="px-4 py-3 text-right search-area">
-          ${purchase.godown}
-          <input type="hidden" name="godowns" value="${purchase.godown_id}">
+          ${commission.godown}
+          <input type="hidden" name="godowns" value="${commission.godown_id}">
         </td>
         <td class="px-4 py-3 text-right search-area">
-          ${parseFloat(purchase.amount).toFixed(2)}
-          <input type="hidden" name="amounts" value="${purchase.amount}">   
+          ${parseFloat(commission.amount).toFixed(2)}
+          <input type="hidden" name="amounts" value="${commission.amount}">   
         </td>
         <td class="px-4 py-3 text-right search-area">
-          ${purchase.qty}
-          <input type="hidden" name="qtys" value="${purchase.qty}">
+          ${commission.qty}
+          <input type="hidden" name="qtys" value="${commission.qty}">
         </td>
         <td class="px-4 py-3 text-right search-area">
-          ${parseFloat(purchase.total_amount).toFixed(2)}
-          <input type="hidden" name="total_amounts" value="${parseFloat(purchase.total_amount).toFixed(2)}">
+          ${parseFloat(commission.total_amount).toFixed(2)}
+          <input type="hidden" name="total_amounts" value="${parseFloat(commission.total_amount).toFixed(2)}">
         </td>
         <td class="px-4 py-3 text-right search-area">
-          ${purchase.description}
-          <input type="hidden" name="descriptions" value="${purchase.description}">
+          ${commission.description}
+          <input type="hidden" name="descriptions" value="${commission.description}">
         </td>
       </tr>`; 
       tableBody.insertAdjacentHTML('beforeend', newRow);
-      $('#purchase_name, #date, #amount, #qty, #description, #total_amount').val('');
-      $('#supplier, #godown').prop('selectedIndex', 0);
+      $('#commission_name, #date, #amount, #qty, #description, #total_amount').val('');
+      $('#expense, #godown').prop('selectedIndex', 0);
     }
   </script>
   <script>
-      navActive("purchaseMasterLink");
+      navActive("commissionMasterLink");
       let deleteUrl = "";
     {% comment %}
       function openEditModal(purchaseId) {
@@ -512,12 +512,12 @@
     $('#total_amount').val(total.toFixed(2));
   });
 
-  function addToPurchaseGrid() {
-    const purchase_no = document.getElementById("purchase_name").value.trim();
+  function addTocommissionGrid() {
+    const commission_no = document.getElementById("commission_name").value.trim();
     const date = document.getElementById("date").value;
-    const supplierEl = document.getElementById("supplier");
-    const supplier = supplierEl.options[supplierEl.selectedIndex]?.text || "";
-    const supplierSelect = supplierEl.value;
+    const expenseEl = document.getElementById("expense");
+    const expense = expenseEl.options[expenseEl.selectedIndex]?.text || "";
+    const expenseSelect = expenseEl.value;
     const godownEl = document.getElementById("godown");
     const godown = godownEl.options[godownEl.selectedIndex]?.text || "";
     const godownSelect = godownEl.value;
@@ -531,7 +531,7 @@
       return;
     }
 
-    const tableBody = document.getElementById("purchaseTableBody");
+    const tableBody = document.getElementById("commissionTableBody");
     const rowCount = tableBody.querySelectorAll("tr").length + 1;
 
     const newRow = `
@@ -542,8 +542,8 @@
         </td>
         <td class="px-4 py-3 text-left">${rowCount}</td>
         <td class="px-4 py-3 text-left search-area">
-          ${supplier}
-          <input type="hidden" name="suppliers" value="${supplierSelect}">
+          ${expense}
+          <input type="hidden" name="expenses" value="${expenseSelect}">
         </td>
          <td class="px-4 py-3 text-right search-area">
           ${description}
@@ -554,12 +554,12 @@
           <input type="hidden" name="godowns" value="${godownSelect}">
         </td>
         <td class="px-4 py-3 text-right search-area">
-          ${qty}
-          <input type="hidden" name="qtys" value="${qty}">
-        </td>
-        <td class="px-4 py-3 text-right search-area">
           ${amount.toFixed(2)}
           <input type="hidden" name="amounts" value="${amount}">
+        </td>
+        <td class="px-4 py-3 text-right search-area">
+          ${qty}
+          <input type="hidden" name="qtys" value="${qty}">
         </td>
         <td class="px-4 py-3 text-right search-area">
           ${total_amount.toFixed(2)}
@@ -575,11 +575,11 @@
     clearPurchaseForm();
   }
 
-  function updatePurchase(link) {
+  function updateCommission(link) {
     const selectedRow = link.closest('tr');
-    document.getElementById("purchase_name").value = selectedRow.cells[2].innerText.trim();
+    document.getElementById("commission_name").value = selectedRow.cells[2].innerText.trim();
     document.getElementById("date").value = selectedRow.cells[3].innerText.trim();
-    document.getElementById("supplier").value = selectedRow.cells[4].querySelector('input').value;
+    document.getElementById("expense").value = selectedRow.cells[4].querySelector('input').value;
     document.getElementById("godown").value = selectedRow.cells[5].querySelector('input').value;
     document.getElementById("amount").value = selectedRow.cells[6].innerText.trim();
     document.getElementById("qty").value = selectedRow.cells[7].innerText.trim();
@@ -599,8 +599,8 @@
   }
 
   function clearPurchaseForm() {
-    $('#purchase_name, #date, #amount, #qty, #description, #total_amount').val('');
-    $('#supplier, #godown').prop('selectedIndex', 0);
+    $('#commission_name, #date, #amount, #qty, #description, #total_amount').val('');
+    $('#expense, #godown').prop('selectedIndex', 0);
   }
 </script>
 

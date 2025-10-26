@@ -204,6 +204,17 @@
 
 
   <div class="col-span-6 w-full flex gap-2">
+     <div class="flex-1">
+      <label class="block text-gray-700">Qty*</label>
+      <input
+        type="number"
+        name=""
+        id="qty"
+        placeholder="Enter Quantity"
+        class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+        required
+      />
+    </div>
     <div class="flex-1">
       <label class="block text-gray-700">Rate*</label>
       <input
@@ -215,17 +226,7 @@
         required
       />
     </div>
-      <div class="flex-1">
-      <label class="block text-gray-700">Qty*</label>
-      <input
-        type="number"
-        name=""
-        id="qty"
-        placeholder="Enter Quantity"
-        class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-        required
-      />
-    </div>
+     
    <div class="flex-1">
       <label class="block text-gray-700">Total Amount*</label>
       <input
@@ -356,8 +357,8 @@
             <th class="px-4 py-3 text-right font-medium">Godown</th>
             <th class="px-4 py-3 text-right font-medium">Description</th>
             <th class="px-4 py-3 text-left font-medium">Customer</th>
-            <th class="px-4 py-3 text-right font-medium">Rate</th>
             <th class="px-4 py-3 text-right font-medium">Qty</th>
+            <th class="px-4 py-3 text-right font-medium">Rate</th>
             <th class="px-4 py-3 text-right font-medium">Total Amount</th>
           </tr>
         </thead>
@@ -553,12 +554,12 @@
           <input type="hidden" name="godowns" value="${godownSelect}">
         </td>
         <td class="px-4 py-3 text-right search-area">
-          ${amount.toFixed(2)}
-          <input type="hidden" name="amounts" value="${amount}">
-        </td>
-        <td class="px-4 py-3 text-right search-area">
           ${qty}
           <input type="hidden" name="qtys" value="${qty}">
+        </td>
+        <td class="px-4 py-3 text-right search-area">
+          ${amount.toFixed(2)}
+          <input type="hidden" name="amounts" value="${amount}">
         </td>
         <td class="px-4 py-3 text-right search-area">
           ${total_amount.toFixed(2)}
