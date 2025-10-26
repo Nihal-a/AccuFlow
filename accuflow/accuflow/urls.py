@@ -29,6 +29,8 @@ urlpatterns = [
     path('cashbank/', include('cashbank.urls')),
     path('collectors/', include('collector.urls')),
     path('purchase/', include('purchase_entry.urls')),
+    path('sale/', include('sale_entry.urls')),
+    # path('nsd/', include('nsd_entry.urls')),
 ]
 
 if settings.DEBUG:

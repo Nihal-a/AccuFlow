@@ -49,7 +49,6 @@ class PurchaseAddView(View):
         supplier_ids = request.POST.getlist('suppliers')
         customer_ids = request.POST.getlist('customers')
         godown_ids = request.POST.getlist('godowns')
-        print(supplier_ids)
         Purchases.objects.filter(date=today).delete()
         count = 0
         for d in dates:
