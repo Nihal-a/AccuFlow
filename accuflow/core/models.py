@@ -89,6 +89,7 @@ class Purchases(models.Model):
     purchase_no = models.TextField(blank=True,null=True)
     supplier = models.ForeignKey(Suppliers, on_delete=models.CASCADE, blank=True, null=True)
     godown = models.ForeignKey(Godowns, on_delete=models.CASCADE, blank=True, null=True)
+    customer = models.ForeignKey(Customers, on_delete=models.CASCADE, blank=True, null=True)
     date = models.DateField(blank=True,null=True)
     code = models.TextField(blank=True,null=True)
     qty = models.FloatField(default=0)
@@ -97,9 +98,26 @@ class Purchases(models.Model):
     created_at = models.DateTimeField(auto_now_add=True,blank=True,null=True)
     is_active = models.BooleanField(default=True)
     description = models.TextField(blank=True,null=True)
+    hold = models.BooleanField(default=False)
+    type = models.TextField(blank=True,null=True)
+    
     
     def __str__(self):
         return self.purchase_no
+    
+    @property
+    def which_type(self):
+        if (self.supplier == None) and (self.customer != None):
+            return 'customers'
+        elif (self.customer == None) and (self.supplier != None):
+            return 'suppliers'
+        
+    @property
+    def party(self):
+        if self.which_type == 'customers':
+            return self.customer
+        elif self.which_type == 'suppliers':
+            return self.supplier
     
 class Sales(models.Model):
     sale_no = models.TextField(blank=True,null=True)

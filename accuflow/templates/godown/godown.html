@@ -85,7 +85,7 @@
         <td class="px-4 py-2 w-1">
           {{forloop.counter}}
         </td>
-        <td class="px-4 py-2 font-semibold uppercase search-area">{{ godown.name }}</td>
+        <td class="px-4 py-2 font-semibold uppercase search-area">{{ godown.name }} ({{godown.godownId}})</td>
         <td class="px-4 py-2 text-gray-700 search-area">{{ godown.phone }}</td>
         <td class="px-4 py-2 text-gray-700 search-area">{% if godown.wa %}<i class="fa-brands fa-whatsapp"></i>{{ godown.country_code|default:'' }}{{godown.wa|default:''}}{% else %}<span class="text-yellow-600">N/A</span>{% endif %}</td>
         <td class="px-4 py-2 text-gray-700 search-area">{{ godown.address }}</td>

@@ -31,7 +31,8 @@ class AddCustomerView(View):
             open_credit=open_credit,
             open_debit=open_debit,
             otc_credit=otc_credit,
-            otc_debit=otc_debit
+            otc_debit=otc_debit,
+            customerId=last_customer_id()
         )
         if wa:
             customer.country_code = country_code
@@ -66,6 +67,18 @@ class UpdateCustomerView(View):
         if wa:
             customer.country_code = country_code
             customer.wa = wa
-            customer.save()
+        if customer.customerId is None:
+            customer.customerId = last_customer_id()
         customer.save()
         return redirect('customers')
+    
+    
+def last_customer_id():
+    last_customer = Customers.objects.filter(is_active=True).order_by('customerId').last() 
+    if last_customer and last_customer.customerId != None:
+        prefix, num = last_customer.customerId.split('-')
+        new_customer_id = f"{prefix}-{int(num) + 1}"
+    else: 
+        
+        new_customer_id = 'C-1'
+    return new_customer_id

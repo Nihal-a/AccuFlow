@@ -85,7 +85,7 @@
         <td class="px-4 py-2 w-1">
           {{forloop.counter}}
         </td>
-        <td class="px-4 py-2 font-semibold uppercase search-area">{{ customer.name }}</td>
+        <td class="px-4 py-2 font-semibold uppercase search-area">{{ customer.name }} ({{customer.customerId}})</td>
         <td class="px-4 py-2 text-gray-700 search-area"> {{ customer.phone }}</td>
         <td class="px-4 py-2 text-gray-700 search-area">{% if customer.wa %}<i class="fa-brands fa-whatsapp"></i>{{ customer.country_code|default:'' }}{{customer.wa|default:''}}{% else %}<span class="text-yellow-600">N/A</span>{% endif %}</td>
         <td class="px-4 py-2 text-gray-700 search-area">{{ customer.address }}</td>

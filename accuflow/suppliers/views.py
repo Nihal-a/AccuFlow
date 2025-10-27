@@ -31,7 +31,8 @@ class AddSupplierView(View):
             open_credit=open_credit,
             open_debit=open_debit,
             otc_credit=otc_credit,
-            otc_debit=otc_debit
+            otc_debit=otc_debit,
+            supplierId=new_supplier_id()
         )
         if wa:
             supplier.country_code = country_code
@@ -66,5 +67,18 @@ class UpdateSupplierView(View):
         if wa:
             supplier.country_code = country_code
             supplier.wa = wa
+        if supplier.supplierId is None:
+            supplier.supplierId = new_supplier_id()
         supplier.save()
         return redirect('suppliers')
+     
+    
+def new_supplier_id():
+    last_supplier = Suppliers.objects.filter(is_active=True).order_by('supplierId').last() 
+    if last_supplier and last_supplier.supplierId != None:
+        prefix, num = last_supplier.supplierId.split('-')
+        new_supplier_id = f"{prefix}-{int(num) + 1}"
+    else: 
+        new_supplier_id = 'S-1'
+    print("New Supplier ID:", new_supplier_id) 
+    return new_supplier_id

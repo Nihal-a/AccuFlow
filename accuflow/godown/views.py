@@ -31,7 +31,8 @@ class AddGodownView(View):
             open_credit=open_credit,
             open_debit=open_debit,
             otc_credit=otc_credit,
-            otc_debit=otc_debit
+            otc_debit=otc_debit,
+            godownId=new_godown_id()
         )
         if wa:
             godown.country_code = country_code
@@ -66,5 +67,17 @@ class UpdateGodownView(View):
         if wa:
             godown.country_code = country_code
             godown.wa = wa
+        if godown.godownId is None:
+            godown.godownId = new_godown_id() 
         godown.save()
         return redirect('godown')
+    
+    
+def new_godown_id():
+    last_godown = Godowns.objects.filter(is_active=True).order_by('godownId').last() 
+    if last_godown and last_godown.godownId != None:
+        prefix, num = last_godown.godownId.split('-')
+        new_godown_id = f"{prefix}-{int(num) + 1}"
+    else: 
+        new_godown_id = 'G-1'
+    return str(new_godown_id)

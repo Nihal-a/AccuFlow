@@ -1,7 +1,6 @@
 
 function navActive(id) {
   $('.nav-link').removeClass('active');
-  console.log('object')
     $('#'+id).addClass('active');
 }
 const searchInput = document.getElementById("searchInput");
@@ -10,7 +9,7 @@ if (searchInput) {
   searchInput.addEventListener("keyup", function () {
     const filter = searchInput.value.toLowerCase();
     const rows = document.querySelectorAll("tbody tr"); 
-
+    console.log(filter)
     rows.forEach((row) => {
       const text = row.querySelector(".search-area") 
         ? row.querySelectorAll(".search-area") 
@@ -94,7 +93,6 @@ $('td').on('click', function() {
   } else {
     selectedTag = selectedTag.filter(id => id !== rowId);
   }
-  console.log(selectedTag)
 });
 
 
