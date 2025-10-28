@@ -121,7 +121,7 @@
       >
         <option value="" selected>Select Supplier</option>
         {% for supplier in suppliers %}
-        <option value="{{ supplier.id }}" data-code="{{supplier.supplierId}}" data-credit="{{supplier.open_credit}}" data-debit="{{supplier.open_debit}}" data-type="suppliers">{{ supplier.name }}</option>
+        <option value="{{ supplier.id }}" data-code="{{supplier.supplierId}}" data-balance="{{supplier.balance}}" data-type="suppliers">{{ supplier.name }}</option>
         {% endfor %}
       </select>
     </div>
@@ -153,7 +153,7 @@
 </div>
 
     <div class="w[20%]">
-      <div id="supplierCredit" class="text-theme">
+      <div id="supplierCredit" class="">
 
       </div>
     </div>
@@ -178,7 +178,7 @@
       >
         <option value="" selected>Select Godown</option>
         {% for godown in godowns %}
-        <option value="{{ godown.id }}" data-code="{{godown.godownId}}">{{ godown.name }}</option>
+        <option value="{{ godown.id }}" data-code="{{godown.godownId}}" data-balance="{{godown.get_balance}}">{{ godown.name }}</option>
         {% endfor %}
       </select>
     </div>
@@ -206,6 +206,12 @@
     
   </div>
 </div>
+
+    <div class="w[20%]">
+      <div id="godownCredit" class="">
+
+      </div>
+    </div>
 </div>
 
 
@@ -354,13 +360,12 @@
 </div>
   </div>
 
-    <div class="overflow-x-auto mt-5 w-full" >
+    <div class="overflow-x-auto mt-5 w-full" id="purchaseCreateDiv">
       <table class="min-w-full rounded-t-lg overflow-hidden">
         <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
           <tr>
-            <th class="px-4 py-3 text-left font-medium">Actions</th>
-            <th class="px-4 py-3 text-left font-medium">#</th>
-            <th class="px-4 py-3 text-left font-medium">Purchase No</th>
+            <th class="px-4 py-3 text-left font-medium w-1">Actions</th>
+            <th class="px-4 py-3 text-left font-medium w-1">#</th>
             <th class="px-4 py-3 text-left font-medium">Date</th>
             <th class="px-4 py-3 text-left font-medium">Supplier</th>
             <th class="px-4 py-3 text-left font-medium">Godown</th>
@@ -476,8 +481,8 @@
       <table class="min-w-full rounded-t-lg overflow-hidden" id="viewPurchaseTable">
         <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
           <tr>
-            <th class="px-4 py-3 text-left font-medium">Actions</th>
-            <th class="px-4 py-3 text-left font-medium">#</th>
+            <th class="px-4 py-3 text-left font-medium w-1">Actions</th>
+            <th class="px-4 py-3 text-left font-medium w-1">#</th>
             <th class="px-4 py-3 text-left font-medium">Purchase No</th>
             <th class="px-4 py-3 text-left font-medium">Date</th>
             <th class="px-4 py-3 text-left font-medium">Supplier</th>
@@ -555,11 +560,44 @@
   </div>
   {% endblock %} {% block externalJS %}
   <script>
+
+
+  function addLastRow(){
+    const tableBody = document.getElementById("purchaseTableBody");
+    $('#totalRow').remove();
+    var totalQty = 0;
+    var totalAmount = 0;
+    var rateSum = 0;
+    count = 0;
+    tableBody.querySelectorAll("tr").forEach(function(row) {
+      const qty = parseFloat(row.cells[5].innerText) || 0;
+      const amount = parseFloat(row.cells[6].innerText) || 0;
+      const total = parseFloat(row.cells[7].innerText) || 0;
+      totalQty += qty;
+      rateSum += amount;
+      totalAmount += total;
+      count += 1;
+    });
+    rateAvg = rateSum / count || 0;
+    const lastRow = `
+      <tr class="bg-blue-200 font-bold" id="totalRow">
+        <td class="px-4 py-3 text-left" colspan="5">Totals:</td>
+        <td class="px-4 py-3 text-right">${parseFloat(totalQty).toFixed(2)}</td>
+        <td class="px-4 py-3 text-right">${parseFloat(rateAvg).toFixed(2)}</td>
+        <td class="px-4 py-3 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
+        <td class="px-4 py-3 text-right"></td>
+      </tr>`;
+    tableBody.insertAdjacentHTML('beforeend', lastRow);
+
+  }
+
+
   let selectedTR = '';
     $('#btnNew').on('click', function(e) {
       e.preventDefault();
     $('#date').val(new Date().toISOString().split('T')[0]);
-    $('#dateFilter').val('');
+    $('#from_date').val('');
+    $('#end_date').val('');
     $('#viewPurchaseDiv').addClass('hidden');
     $('#viewPurchaseTable tbody').empty();
     $('#createView').removeClass('hidden');
@@ -567,14 +605,7 @@
     $('#purchase_name, #amount, #qty, #description, #total_amount').val('');
     $('#supplier, #godown').prop('selectedIndex', 0);
       $('#supplierCredit').empty();
-    fetch("{% url 'api-purchase-no' %}")
-      .then(response => response.json())
-      .then(data => {
-        document.getElementById("purchase_name").value = data.purchase_no;
-      })
-      .catch(error => {
-        console.error('Error fetching purchase no:', error);
-      });
+  getLastPurchaseNo()
 
     });
     $('#btnView').on('click', function(e) {
@@ -587,15 +618,12 @@
       $('#supplierCredit').empty();
       var selectedOption = $(this).find('option:selected');
       var code = selectedOption.data('code') || '';
-      var credit = selectedOption.data('credit') || '0';
-      var debit = selectedOption.data('debit') || '0';
+      var balance = selectedOption.data('balance') || '0';
       console.log(code)
       $('#supplierID').val(code);
       $('#supplierCredit').empty();
       $('#supplierCredit').append(`
-      <p class="font-semibold  text-red[400]">Credit:${parseFloat(credit).toFixed(2)} </p> 
-      <p class="font-semibold">Debit:${parseFloat(debit).toFixed(2)}</p> 
-
+      <p class="font-semibold ${parseFloat(balance).toFixed(2)<= 0 ? `text-red`: ``}">Balance:${parseFloat(balance).toFixed(2)} </p> 
       `);
     });
     $('#allSuppliers').on('change', function() {
@@ -608,8 +636,7 @@
           var option = $('<option></option>')
             .attr('value', customer.id)
             .attr('data-code', customer.customerId)
-            .attr('data-credit', customer.open_credit)
-            .attr('data-debit', customer.open_debit)
+            .attr('data-balance', customer.balance)
             .attr('data-type', 'customers')
             .text(customer.name);
           supplierSelect.append(option);
@@ -625,7 +652,7 @@
           var option = $('<option></option>')
             .attr('value', supplier.id)
             .attr('data-code', supplier.supplierId)
-            .attr('data-credit', supplier.open_credit)
+            .attr('data-balance', supplier.balance)
             .attr('data-type', 'suppliers')
             .text(supplier.name);
           supplierSelect.append(option);
@@ -635,6 +662,11 @@
     $('#godown').on('change', function() {
       var selectedOption = $(this).find('option:selected');
       var code = selectedOption.data('code') || '';
+      var balance = selectedOption.data('balance') || '0';
+      $('#godownCredit').empty();
+      $('#godownCredit').append(`
+      <p class="font-semibold ${parseFloat(balance).toFixed(2)<= 0 ? `text-red`: ``}">Balance:${parseFloat(balance).toFixed(2)} </p> 
+      `);
       $('#godownID').val(code); 
     });
   </script>
@@ -646,15 +678,11 @@
       var rowCount = tableBody.querySelectorAll("tr").length + 1;
       var newRow = `
       <tr>
-        <td class="px-4 py-3 text-left">
+        <td class="px-3 py-3 text-left w-1 flex">
           <a href="#" class="text-blue-500 hover:underline mr-2" onclick="updatePurchase(this)">Edit</a>
           <a href="#" class="text-red-500 hover:underline" onclick="deletePurchase(this)">Delete</a>
         </td>
-        <td class="px-4 py-3 text-left">${rowCount}</td>
-        <td class="px-4 py-3 text-left search-area">
-          ${purchase.purchase_no}
-          <input type="hidden" name="purchase_nos" value="${purchase.purchase_no}">
-        </td>
+        <td class="px-4 py-3 text-left w-1">${rowCount}</td>
         <td class="px-4 py-3 text-left search-area">
           ${purchase.date.split('T')[0]}    
           <input type="hidden" name="dates" value="${purchase.date.split('T')[0]}">
@@ -695,6 +723,7 @@
       tableBody.insertAdjacentHTML('beforeend', newRow);
       $('#amount, #qty, #description, #total_amount').val('');
       $('#supplier, #godown').prop('selectedIndex', 0);
+    addLastRow()
     }
   </script>
   <script>
@@ -764,18 +793,15 @@
         purchase_id = data.purchase_id;
         hold = data.hold
 
+    clearPurchaseForm();
         if (hold){
     const newRow = `
       <tr>
-        <td class="px-4 py-3 text-left">
+        <td class="px-4 py-3 text-left w-1 flex">
           <a href="#" class="text-blue-500 hover:underline mr-2" onclick="updatePurchase(this)">Edit</a>
           <a href="#" class="text-red-500 hover:underline" onclick="deletePurchase(this)">Delete</a>
         </td>
         <td class="px-4 py-3 text-left">${rowCount}</td>
-        <td class="px-4 py-3 text-left">
-          ${purchase_no}
-          <input type="hidden" name="purchase_nos" value="${purchase_no}">
-          </td>
         <td class="px-4 py-3 text-left">${date}
           <input type="hidden" name="dates" value="${date}">
           </td>
@@ -812,8 +838,14 @@
       $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-green-500 text-white');
       $('#addToGridText').text('Add to Grid');
     $('#purchase_name').val(getLastPurchaseNo());
+    addLastRow()
+        }else{
+          $('#viewPurchaseDiv').removeClass('hidden');
+    $('#viewDiv').removeClass('hidden');
+          $('#createView').addClass('hidden');
+          $('#dateFilter').click();
+          $('#purchaseTableBody').removeClass('hidden')
         }
-    clearPurchaseForm();
       })
       .catch((error) => {
         console.error("Error holding purchase:", error);
@@ -823,20 +855,22 @@
 
   }
 function getLastPurchaseNo() {
-  const rows = $("#purchaseTableBody tr");
-  if (rows.length === 0) {
-    return "1";
-  }
-  const lastRow = rows[rows.length - 1];
-  const lastPurchaseNo = parseInt($(lastRow).find("td:nth-child(3)").text().trim());
-  return (lastPurchaseNo + 1).toString();
-  
+    let lastPurchaseNo = '';
+    fetch("{% url 'api-purchase-no' %}")
+      .then(response => response.json())
+      .then(data => {
+        lastPurchaseNo = data.purchase_no;
+        document.getElementById("purchase_name").value = lastPurchaseNo;
+      })
+      .catch(error => {
+        console.error('Error fetching purchase no:', error);
+      });
+    return lastPurchaseNo;  
 }
 
   function updatePurchase(link) {
-    $('#dateFilter').val('');
     $('#viewPurchaseDiv').addClass('hidden');
-    $('#viewPurchaseTable tbody').empty();
+    // $('#viewPurchaseTable tbody').empty();
     $('#createView').removeClass('hidden');
     $('#viewDiv').addClass('hidden');
     const selectedRow = link.closest('tr');
@@ -863,6 +897,7 @@ function getLastPurchaseNo() {
     $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-blue-500 text-white');
 
     $('#supplier, #godown').change()
+    addLastRow()
   }
 
 
@@ -889,7 +924,7 @@ function getLastPurchaseNo() {
         selectedTR.remove();
         deleteUrl = "";
         resetSLNo();
-
+        getLastPurchaseNo()
         closeModal();
       } else {
         console.error('Delete failed:', data.message);
@@ -899,12 +934,12 @@ function getLastPurchaseNo() {
       console.error('Error while deleting purchase:', error);
     });
   } 
-
-  function resetSLNo() {
-    $('#purchaseTableBody tr').each(function(index) {
-      $(this).find('td:first').text(index + 1);
-    });
-  } 
+function resetSLNo() {
+  $('#purchaseTableBody tr').each(function (index) {
+    $(this).find('td').eq(1).text(index + 1);
+    $(this).find('td').eq(1).find('input').val(index + 1);
+  });
+}
 
   function clearPurchaseForm() {
     $('#amount, #qty, #description, #total_amount, #supplierID, #godownID').val('');
@@ -912,6 +947,7 @@ function getLastPurchaseNo() {
     $('#allSuppliers').prop('checked', false);
       $('#supplierCredit').empty();
   }
+
 </script>
 
 <script>
@@ -933,18 +969,24 @@ function getLastPurchaseNo() {
   $('#dateFilter').on('click', function(){
     const startDate = $('#from_date').val()
     const endDate = $('#end_date').val()
-    console.log(startDate,endDate)
+    if (!startDate || !endDate) {
+      alert("⚠️ Please select both From Date and End Date.");
+      return;
+    }
     $('#viewPurchaseDiv').removeClass('hidden');
     fetch(`{% url 'api-purchases-by-date' %}?from=${startDate}&&to=${endDate}`)
       .then(response => response.json())
       .then(data => {
         const tableBody = $('#viewPurchaseTable tbody');
         tableBody.empty(); 
+        totalQty = data.total_qty || 0;
+        totalAmount = data.total_amount || 0;
+        rateAvg = data.rate_avg || 0;
         data.purchases.forEach((purchase, index) => {
           const newRow = `
             <tr>
-              <td class="px-4 py-3 text-left">
-                <a href="#" class="text-blue-500 hover:underline mr-2" onclick="updatePurchase(this)">Edit</a>
+              <td class="px-4 py-3 text-left w-1 flex">
+                <a href="#" class="text-blue-500 hover:underline mr-2" onclick="$('#purchaseTableBody').addClass('hidden'); updatePurchase(this);">Edit</a>
                 <a href="#" class="text-red-500 hover:underline" onclick="deletePurchase(this)">Delete</a>
               </td>
               <td class="px-4 py-3 text-left">${index + 1}</td>
@@ -982,6 +1024,16 @@ function getLastPurchaseNo() {
             </tr>`;
           tableBody.append(newRow);
         });
+        tableBody.append(`
+          <tr class="bg-blue-200 font-bold">
+            <td class="px-4 py-3 text-left" colspan="6">Totals:</td>
+            <td class="px-4 py-3 text-right">${parseFloat(totalQty).toFixed(2)}</td>
+            <td class="px-4 py-3 text-right">${parseFloat(rateAvg).toFixed(2)}</td>
+            <td class="px-4 py-3 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
+            <td class="px-4 py-3 text-right"></td>
+          </tr>
+        `);
+
         $('#showDate').text(`Showing purchases from ${startDate} to ${endDate}`);
       })
       .catch(error => {
@@ -1014,6 +1066,8 @@ document.addEventListener("focusin", (event) => {
     el.click();
   }
 });
+
+
 </script>
   {% endblock %}
 </div>

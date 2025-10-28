@@ -37,8 +37,7 @@ class PurchaseEntryView(View):
                 'id':customer.id,
                 'name':customer.name,
                 'customerId':customer.customerId, 
-                'open_credit':customer.open_credit,
-                'open_debit':customer.open_debit,
+                'balance':customer.get_balance,
             })
         suppliersData = []
         for supplier in suppliers:
@@ -46,8 +45,7 @@ class PurchaseEntryView(View):
                 'id':supplier.id,
                 'name':supplier.name,
                 'supplierId':supplier.supplierId,
-                'open_credit':supplier.open_credit,
-                'open_debit':supplier.open_debit,
+                'balance':supplier.get_balance,
             })
         context = {
             'purchases':purchaseData,
@@ -63,7 +61,6 @@ class PurchaseEntryView(View):
 class PurchaseAddView(View):
     def post(self,request):
         dates = request.POST.getlist('dates')
-        purchase_nos = request.POST.getlist('purchase_nos')
         total_amounts = request.POST.getlist('total_amounts')
         qtys = request.POST.getlist('qtys')
         amounts = request.POST.getlist('amounts')
@@ -83,7 +80,6 @@ class PurchaseAddView(View):
                 supplier = get_object_or_404(Suppliers, id=supplier_ids[count]) if supplier_ids[count] else None
             godown = get_object_or_404(Godowns, id=godown_ids[count]) if godown_ids[count] else None
             purchase = Purchases.objects.get(id=id)
-            purchase.purchase_no = purchase_nos[count]
             purchase.supplier = supplier
             purchase.godown = godown
             purchase.date = dates[count]
@@ -112,8 +108,6 @@ class PurchaseHold(View):
         total_amount = data.get('total_amount')
         description = data.get('description')
         type_value = data.get('type')
-        print(type_value) 
-        print(data)
         customer = None
         if type_value == 'customers':
             customer = get_object_or_404(Customers, id=supplier) if supplier else None
@@ -122,8 +116,6 @@ class PurchaseHold(View):
             customer = None
             
             supplier = get_object_or_404(Suppliers, id=supplier) if supplier else None
-        print(customer)
-        print(supplier)
         godown = get_object_or_404(Godowns, id=godown) if godown else None
         if data.get('purchase_id'):
             purchase = get_object_or_404(Purchases, id=data.get('purchase_id'))
@@ -155,7 +147,7 @@ class PurchaseHold(View):
             customer=customer,
             hold=True,
         )
-        return JsonResponse({'status':'success','purchase_id':purchase.id}) 
+        return JsonResponse({'status':'success','purchase_id':purchase.id,'hold':purchase.hold}) 
     
     
         
@@ -168,7 +160,6 @@ def getLastPurchaseNo():
         new_purchase_no = int(last_purchase_no.purchase_no) + 1
     else:
         new_purchase_no = 1
-    print(new_purchase_no)
     return new_purchase_no
 
 
@@ -188,6 +179,10 @@ def purchases_by_date(request):
             is_active=True
         )
     purchaseData = []
+    total_qty = 0
+    total_amount = 0
+    rate_sum = 0
+    count = 0
     for purchase in purchases:
         purchaseData.append({ 
             'id':purchase.id,
@@ -205,7 +200,12 @@ def purchases_by_date(request):
             'description':purchase.description if purchase.description else '', 
             'type':purchase.which_type if purchase.which_type else '',
         })
-    return JsonResponse({'purchases': purchaseData})
+        total_qty += purchase.qty
+        total_amount += purchase.total_amount
+        rate_sum += purchase.amount
+        count += 1
+    rate_avg = rate_sum / count if count > 0 else 0
+    return JsonResponse({'purchases': purchaseData, 'total_qty': total_qty, 'total_amount': total_amount, 'rate_avg': rate_avg})
 
 
 def delete_purchase(request):

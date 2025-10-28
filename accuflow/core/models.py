@@ -14,9 +14,14 @@ class Customers(models.Model):
     is_active = models.BooleanField(default=True)
     country_code = models.TextField(blank=True,null=True)
     wa = models.TextField(blank=True,null=True)
+    balance = models.FloatField(default=0)
     
     def __str__(self):
         return self.name
+    
+    @property
+    def get_balance(self):
+        return self.open_debit - self.open_credit
     
 class Suppliers(models.Model):
     name = models.TextField(blank=True,null=True)
@@ -31,9 +36,15 @@ class Suppliers(models.Model):
     is_active = models.BooleanField(default=True)
     country_code = models.TextField(blank=True,null=True)
     wa = models.TextField(blank=True,null=True)
+    balance = models.FloatField(default=0)
     
     def __str__(self):
         return self.name
+    @property
+    def get_balance(self):
+        return self.open_debit - self.open_credit
+    
+    
     
 class Expenses(models.Model):
     category  = models.TextField(blank=True,null=True)
@@ -60,9 +71,14 @@ class Godowns(models.Model):
     is_active = models.BooleanField(default=True)
     country_code = models.TextField(blank=True,null=True)
     wa = models.TextField(blank=True,null=True)
+    balance = models.FloatField(default=0)
     
     def __str__(self):
         return self.name
+    
+    @property
+    def get_balance(self):
+        return self.open_debit - self.open_credit
     
 class CashBanks(models.Model):
     name  = models.TextField(blank=True,null=True)
