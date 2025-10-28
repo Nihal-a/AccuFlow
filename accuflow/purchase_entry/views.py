@@ -5,8 +5,7 @@ from core.models import Purchases,Suppliers,Customers,Godowns
 from django.views import View
 from django.views.generic.edit import DeleteView
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
+from django.utils.dateparse import parse_date
 
 class PurchaseEntryView(View):
     def get(self,request):
@@ -74,8 +73,6 @@ class PurchaseAddView(View):
         purchase_ids = request.POST.getlist('purchase_ids') 
         types = request.POST.getlist('type')
         count = 0
-        print(purchase_nos) 
-        
         for id in purchase_ids:
             customer = None 
             if types[count] == 'customers':
@@ -115,19 +112,22 @@ class PurchaseHold(View):
         total_amount = data.get('total_amount')
         description = data.get('description')
         type_value = data.get('type')
-        print(type_value,supplier)
+        print(type_value) 
+        print(data)
         customer = None
         if type_value == 'customers':
-            print('asdfsdfsdfsdfsdf')
-            supplier = None 
             customer = get_object_or_404(Customers, id=supplier) if supplier else None
+            supplier = None 
         else:  
             customer = None
             
             supplier = get_object_or_404(Suppliers, id=supplier) if supplier else None
+        print(customer)
+        print(supplier)
         godown = get_object_or_404(Godowns, id=godown) if godown else None
         if data.get('purchase_id'):
             purchase = get_object_or_404(Purchases, id=data.get('purchase_id'))
+            
             purchase.purchase_no = purchase_no
             purchase.supplier = supplier
             purchase.godown = godown
@@ -136,11 +136,12 @@ class PurchaseHold(View):
             purchase.amount = amount
             purchase.total_amount = total_amount
             purchase.description = description
-            purchase.hold = True
             purchase.type = type_value
             purchase.customer = customer
+            if not purchase.hold:
+                purchase.hold = False 
             purchase.save()
-            return JsonResponse({'status':'success','purchase_id':purchase.id})
+            return JsonResponse({'status':'success','purchase_id':purchase.id,'hold':purchase.hold})
         purchase = Purchases.objects.create(
             purchase_no=purchase_no,
             supplier=supplier,
@@ -161,7 +162,7 @@ class PurchaseHold(View):
 
 
 def getLastPurchaseNo():
-    last_purchase_no = Purchases.objects.filter(is_active=True).order_by('purchase_no').last() 
+    last_purchase_no = Purchases.objects.filter(is_active=True).order_by('-purchase_no').first() 
     
     if last_purchase_no and last_purchase_no.purchase_no.isdigit():
         new_purchase_no = int(last_purchase_no.purchase_no) + 1
@@ -177,8 +178,15 @@ def purchase_no(request):
 
 
 def purchases_by_date(request):
-    date = request.GET.get('date')
-    purchases = Purchases.objects.filter(date=date,hold=False,is_active=True)
+    from_date = request.GET.get('from')
+    to_date = request.GET.get('to')
+    purchases = []
+    if from_date and to_date:
+        purchases = Purchases.objects.filter(
+            date__range=[parse_date(from_date), parse_date(to_date)],
+            hold=False,
+            is_active=True
+        )
     purchaseData = []
     for purchase in purchases:
         purchaseData.append({ 
@@ -189,7 +197,7 @@ def purchases_by_date(request):
             'godown':purchase.godown.name if purchase.godown else '',
             'godown_id':purchase.godown.id if purchase.godown else '',
             'customer':purchase.customer.name if purchase.customer else '',
-                'customer_id':purchase.customer.id if purchase.customer else '',
+            'customer_id':purchase.customer.id if purchase.customer else '',
             'date':str(purchase.date),
             'qty':purchase.qty,
             'amount':purchase.amount,

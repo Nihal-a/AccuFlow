@@ -121,7 +121,7 @@
       >
         <option value="" selected>Select Supplier</option>
         {% for supplier in suppliers %}
-        <option value="{{ supplier.id }}" data-code="{{supplier.supplierId}}" data-credit="{{supplier.open_credit}}" data-type="suppliers">{{ supplier.name }}</option>
+        <option value="{{ supplier.id }}" data-code="{{supplier.supplierId}}" data-credit="{{supplier.open_credit}}" data-debit="{{supplier.open_debit}}" data-type="suppliers">{{ supplier.name }}</option>
         {% endfor %}
       </select>
     </div>
@@ -153,7 +153,9 @@
 </div>
 
     <div class="w[20%]">
-      <span id="supplierCredit" class="text-theme"></span>
+      <div id="supplierCredit" class="text-theme">
+
+      </div>
     </div>
 </div>
 
@@ -377,18 +379,36 @@
 
 <div id="viewDiv" class="hidden">
   <div class="dateDiv mt-3" >
-    <div class="flex justify-center items center">
-          <div class="">
-      <label class="block text-gray-700">Date*</label>
-      <input
-        type="date"
-        name=""
-        id="dateFilter"
-        class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-        required
-      />
-    </div>
-    </div>
+    <div class="flex justify-center items-end gap-5 mt-4">
+  <div>
+    <label class="block text-gray-700">From Date*</label>
+    <input
+      type="date"
+      id="from_date"
+      class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+      required
+    />
+  </div>
+
+  <div>
+    <label class="block text-gray-700">End Date*</label>
+    <input
+      type="date"
+      id="end_date"
+      class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+      required
+    />
+  </div>
+
+  <div>
+    <button
+      id="dateFilter"
+      class="bg-blue-600 text-white px-5 py-2 mt-6 rounded-xl hover:bg-blue-700 transition-all"
+    >
+      Filter
+    </button>
+  </div>
+</div>
   </div>
   
 <div id="viewPurchaseDiv" class="hidden">
@@ -425,7 +445,7 @@
     </button>
   </div>
 
-  <h2 id="showDate"></h2>
+  <h2 id="showDate" class="underline"></h2>
 
   <div class="relative w-full md:w-1/4">
     <input
@@ -483,7 +503,7 @@
   >
     <div class="bg-white rounded-xl shadow-lg p-6 w-80 text-center">
       <h2 class="text-lg font-semibold mb-4 text-gray-800">Confirm Edit</h2>
-      <p class="mb-6 text-gray-600">
+      <p class="mb-6 text-gray-600 ">
         Are you sure you want to edit this purchase's details?
       </p>
 
@@ -546,6 +566,7 @@
     $('#viewDiv').addClass('hidden');
     $('#purchase_name, #amount, #qty, #description, #total_amount').val('');
     $('#supplier, #godown').prop('selectedIndex', 0);
+      $('#supplierCredit').empty();
     fetch("{% url 'api-purchase-no' %}")
       .then(response => response.json())
       .then(data => {
@@ -563,12 +584,19 @@
     });
 
     $('#supplier').on('change', function() {
+      $('#supplierCredit').empty();
       var selectedOption = $(this).find('option:selected');
       var code = selectedOption.data('code') || '';
       var credit = selectedOption.data('credit') || '0';
+      var debit = selectedOption.data('debit') || '0';
       console.log(code)
       $('#supplierID').val(code);
-      $('#supplierCredit').text('Credit: ' + credit);
+      $('#supplierCredit').empty();
+      $('#supplierCredit').append(`
+      <p class="font-semibold  text-red[400]">Credit:${parseFloat(credit).toFixed(2)} </p> 
+      <p class="font-semibold">Debit:${parseFloat(debit).toFixed(2)}</p> 
+
+      `);
     });
     $('#allSuppliers').on('change', function() {
       if($(this).is(':checked')) {
@@ -581,6 +609,7 @@
             .attr('value', customer.id)
             .attr('data-code', customer.customerId)
             .attr('data-credit', customer.open_credit)
+            .attr('data-debit', customer.open_debit)
             .attr('data-type', 'customers')
             .text(customer.name);
           supplierSelect.append(option);
@@ -731,14 +760,11 @@
     })
       .then((response) => response.json())
       .then((data) => {
+        console.log(data)
         purchase_id = data.purchase_id;
-      })
-      .catch((error) => {
-        console.error("Error holding purchase:", error);
-      });
+        hold = data.hold
 
-
-
+        if (hold){
     const newRow = `
       <tr>
         <td class="px-4 py-3 text-left">
@@ -785,8 +811,15 @@
 
       $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-green-500 text-white');
       $('#addToGridText').text('Add to Grid');
-    clearPurchaseForm();
     $('#purchase_name').val(getLastPurchaseNo());
+        }
+    clearPurchaseForm();
+      })
+      .catch((error) => {
+        console.error("Error holding purchase:", error);
+      });
+
+
 
   }
 function getLastPurchaseNo() {
@@ -809,7 +842,6 @@ function getLastPurchaseNo() {
     const selectedRow = link.closest('tr');
     document.getElementById("purchase_name").value = selectedRow.cells[2].innerText.trim();
     document.getElementById("date").value = selectedRow.cells[3].innerText.trim();
-    document.getElementById("supplier").value = selectedRow.cells[4].querySelector('input').value;
     document.getElementById("godown").value = selectedRow.cells[5].querySelector('input').value;
     document.getElementById("amount").value = selectedRow.cells[6].innerText.trim();
     document.getElementById("qty").value = selectedRow.cells[7].innerText.trim();
@@ -823,6 +855,8 @@ function getLastPurchaseNo() {
     } else {
       $('#allSuppliers').prop('checked', false).change();
     }
+    document.getElementById("supplier").value = selectedRow.cells[4].querySelector('input').value;
+    console.log(selectedRow.cells[4].querySelector('input').value)
 
     selectedRow.remove();
     $('#addToGridText').text('Update Grid');
@@ -839,20 +873,31 @@ function getLastPurchaseNo() {
 
     
         deleteUrl = "/purchase/api/delete_purchase/?id=0".replace("0", purchaseId);
-
-        document.getElementById("confirmDeleteBtn").setAttribute("href", deleteUrl);
         document.getElementById("confirmModal").classList.remove("hidden");
   }
   function deleteItem() {
       resetSLNo();
-    fetch(`${deleteUrl}`)
-      .then(response => response.json())
-      .then(data => {
-        console.log('Purchase deleted successfully:', data);
-        selectedTR.remove();
 
-        closeModal()
-      })
+  fetch(deleteUrl, {
+    method: 'GET', 
+  })
+    .then(response => response.json())
+    .then(data => {
+      console.log('Purchase deleted successfully:', data);
+
+      if (data.status === 'success') {
+        selectedTR.remove();
+        deleteUrl = "";
+        resetSLNo();
+
+        closeModal();
+      } else {
+        console.error('Delete failed:', data.message);
+      }
+    })
+    .catch(error => {
+      console.error('Error while deleting purchase:', error);
+    });
   } 
 
   function resetSLNo() {
@@ -865,6 +910,7 @@ function getLastPurchaseNo() {
     $('#amount, #qty, #description, #total_amount, #supplierID, #godownID').val('');
     $('#supplier, #godown').prop('selectedIndex', 0);
     $('#allSuppliers').prop('checked', false);
+      $('#supplierCredit').empty();
   }
 </script>
 
@@ -884,10 +930,12 @@ function getLastPurchaseNo() {
       }
     });
   });
-  $('#dateFilter').on('change', function(){
-    const selectedDate = $(this).val()
+  $('#dateFilter').on('click', function(){
+    const startDate = $('#from_date').val()
+    const endDate = $('#end_date').val()
+    console.log(startDate,endDate)
     $('#viewPurchaseDiv').removeClass('hidden');
-    fetch(`{% url 'api-purchases-by-date' %}?date=${selectedDate}`)
+    fetch(`{% url 'api-purchases-by-date' %}?from=${startDate}&&to=${endDate}`)
       .then(response => response.json())
       .then(data => {
         const tableBody = $('#viewPurchaseTable tbody');
@@ -906,8 +954,13 @@ function getLastPurchaseNo() {
               <td class="px-4 py-3 text-left search-area">${purchase.date.split('T')[0]}
                 <input type="hidden" name="dates" value="${purchase.date.split('T')[0]}">
                 </td>
-              <td class="px-4 py-3 text-left search-area">${purchase.supplier}
-                <input type="hidden" name="suppliers" value="${purchase.supplier_id}">
+              <td class="px-4 py-3 text-left search-area">
+        ${purchase.type === 'suppliers' ? purchase.supplier : purchase.customer}
+        <input 
+          type="hidden" 
+          name="suppliers" 
+          value="${purchase.type === 'suppliers' ? purchase.supplier_id : purchase.customer_id}"
+        >
                 </td>
               <td class="px-4 py-3 text-left search-area">${purchase.godown}
                 <input type="hidden" name="godowns" value="${purchase.godown_id}">
@@ -929,7 +982,7 @@ function getLastPurchaseNo() {
             </tr>`;
           tableBody.append(newRow);
         });
-        $('#showDate').text(`Showing purchases for date: ${selectedDate}`);
+        $('#showDate').text(`Showing purchases from ${startDate} to ${endDate}`);
       })
       .catch(error => {
         console.error('Error fetching purchases by date:', error);
