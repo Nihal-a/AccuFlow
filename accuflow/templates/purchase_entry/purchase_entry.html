@@ -619,7 +619,6 @@
       var selectedOption = $(this).find('option:selected');
       var code = selectedOption.data('code') || '';
       var balance = selectedOption.data('balance') || '0';
-      console.log(code)
       $('#supplierID').val(code);
       $('#supplierCredit').empty();
       $('#supplierCredit').append(`
@@ -672,17 +671,17 @@
   </script>
   <script>
     var purchases = {{ purchases|safe }};
+
     for (let i=0; i<purchases.length; i++) {
       const purchase = purchases[i];
       var tableBody = document.getElementById("purchaseTableBody");
-      var rowCount = tableBody.querySelectorAll("tr").length + 1;
       var newRow = `
       <tr>
         <td class="px-3 py-3 text-left w-1 flex">
           <a href="#" class="text-blue-500 hover:underline mr-2" onclick="updatePurchase(this)">Edit</a>
           <a href="#" class="text-red-500 hover:underline" onclick="deletePurchase(this)">Delete</a>
         </td>
-        <td class="px-4 py-3 text-left w-1">${rowCount}</td>
+        <td class="px-4 py-3 text-left w-1 sl">${i+1}</td>
         <td class="px-4 py-3 text-left search-area">
           ${purchase.date.split('T')[0]}    
           <input type="hidden" name="dates" value="${purchase.date.split('T')[0]}">
@@ -735,7 +734,6 @@
 
       function closeModal() {
         document.getElementById("confirmModal").classList.add("hidden");
-        $(selectedTR).remove();
       }
 
   </script>
@@ -801,7 +799,7 @@
           <a href="#" class="text-blue-500 hover:underline mr-2" onclick="updatePurchase(this)">Edit</a>
           <a href="#" class="text-red-500 hover:underline" onclick="deletePurchase(this)">Delete</a>
         </td>
-        <td class="px-4 py-3 text-left">${rowCount}</td>
+        <td class="px-4 py-3 text-left sl"></td>
         <td class="px-4 py-3 text-left">${date}
           <input type="hidden" name="dates" value="${date}">
           </td>
@@ -838,6 +836,7 @@
       $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-green-500 text-white');
       $('#addToGridText').text('Add to Grid');
     $('#purchase_name').val(getLastPurchaseNo());
+    resetSLNo()
     addLastRow()
         }else{
           $('#viewPurchaseDiv').removeClass('hidden');
@@ -897,7 +896,9 @@ function getLastPurchaseNo() {
     $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-blue-500 text-white');
 
     $('#supplier, #godown').change()
+    resetSLNo()
     addLastRow()
+    
   }
 
 
@@ -911,7 +912,6 @@ function getLastPurchaseNo() {
         document.getElementById("confirmModal").classList.remove("hidden");
   }
   function deleteItem() {
-      resetSLNo();
 
   fetch(deleteUrl, {
     method: 'GET', 
@@ -935,9 +935,9 @@ function getLastPurchaseNo() {
     });
   } 
 function resetSLNo() {
-  $('#purchaseTableBody tr').each(function (index) {
-    $(this).find('td').eq(1).text(index + 1);
-    $(this).find('td').eq(1).find('input').val(index + 1);
+  $('#purchaseTableBody .sl').each(function (index) {
+    $(this).text(index + 1);
+    $(this).find('input').val(index + 1);
   });
 }
 
@@ -946,6 +946,7 @@ function resetSLNo() {
     $('#supplier, #godown').prop('selectedIndex', 0);
     $('#allSuppliers').prop('checked', false);
       $('#supplierCredit').empty();
+      $('#godownCredit').empty()
   }
 
 </script>
@@ -989,7 +990,7 @@ function resetSLNo() {
                 <a href="#" class="text-blue-500 hover:underline mr-2" onclick="$('#purchaseTableBody').addClass('hidden'); updatePurchase(this);">Edit</a>
                 <a href="#" class="text-red-500 hover:underline" onclick="deletePurchase(this)">Delete</a>
               </td>
-              <td class="px-4 py-3 text-left">${index + 1}</td>
+              <td class="px-4 py-3 text-left sl">${index + 1}</td>
               <td class="px-4 py-3 text-left search-area">${purchase.purchase_no}
                 <input type="hidden" name="purchase_nos" value="${purchase.purchase_no}">
                 </td>
