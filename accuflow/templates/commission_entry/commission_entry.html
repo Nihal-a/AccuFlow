@@ -292,7 +292,8 @@
 
     <a
       id="btnCancel"
-      href=""
+      href="#"
+      onclick="oncancelData()"
       class="leading-none inline-flex items-center gap-1.5 bg-gray-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-gray-600 transition-all duration-300"
     >
       <svg
@@ -561,6 +562,7 @@
   {% endblock %} {% block externalJS %}
   <script>
 
+    var isUpdate = false;
 
   function addLastRow(){
     const tableBody = document.getElementById("commissionTableBody");
@@ -645,8 +647,8 @@
       var newRow = `
       <tr>
         <td class="px-3 py-3 text-left w-1 flex">
-          <a href="#" class="text-blue-500 hover:underline mr-2" onclick="updateCommission(this)">Edit</a>
-          <a href="#" class="text-red-500 hover:underline" onclick="deleteCommission(this)">Delete</a>
+          <button type='button' class="text-blue-500 hover:underline mr-2" onclick="updateCommission(this)">Edit</button>
+          <button type='button' class="text-red-500 hover:underline" onclick="deleteCommission(this)">Delete</button>
         </td>
         <td class="px-4 py-3 text-left w-1 sl">${i+1}</td>
         <td class="px-4 py-3 text-left search-area">
@@ -668,12 +670,12 @@
           <input type="hidden" name="godowns" value="${commission.godown_id}">
         </td>
         <td class="px-4 py-3 text-right search-area">
-          ${parseFloat(commission.amount).toFixed(2)}
-          <input type="hidden" name="amounts" value="${commission.amount}">   
-        </td>
-        <td class="px-4 py-3 text-right search-area">
           ${commission.qty}
           <input type="hidden" name="qtys" value="${commission.qty}">
+        </td>
+        <td class="px-4 py-3 text-right search-area">
+          ${parseFloat(commission.amount).toFixed(2)}
+          <input type="hidden" name="amounts" value="${commission.amount}">   
         </td>
         <td class="px-4 py-3 text-right search-area">
           ${parseFloat(commission.total_amount).toFixed(2)}
@@ -759,12 +761,54 @@
         hold = data.hold
 
     clearCommissionForm();
+    isUpdate = false;
         if (hold){
+          if (selectedTR){
+        $(selectedTR).removeClass('bg-blue-300');
+        $(selectedTR).empty();
+        $(selectedTR).append(`
+          <td class="px-4 py-3 text-left w-1 flex">
+          <button type='button' class="text-blue-500 hover:underline mr-2" onclick="updateCommission(this)">Edit</button>
+          <button type='button' class="text-red-500 hover:underline" onclick="deleteCommission(this)">Delete</button>
+        </td>
+        <td class="px-4 py-3 text-left sl"></td>
+        <td class="px-4 py-3 text-left">${date}
+          <input type="hidden" name="dates" value="${date}">
+          </td>
+        <td class="px-4 py-3 text-left search-area">
+          ${expense}
+          <input type="hidden" name="expenses" value="${expenseSelect}">
+        </td>
+        <td class="px-4 py-3 text-left search-area">
+          ${godown}
+          <input type="hidden" name="godowns" value="${godownSelect}">
+        </td>
+        <td class="px-4 py-3 text-right search-area">
+          ${qty}
+          <input type="hidden" name="qtys" value="${qty}">
+        </td>
+        <td class="px-4 py-3 text-right search-area">
+          ${amount.toFixed(2)}
+          <input type="hidden" name="amounts" value="${amount}">
+        </td>
+        <td class="px-4 py-3 text-right search-area">
+          ${total_amount.toFixed(2)}
+          <input type="hidden" name="total_amounts" value="${total_amount.toFixed(2)}">
+        </td>
+         <td class="px-4 py-3 text-left search-area">
+          ${description}
+          <input type="hidden" name="descriptions" value="${description}">
+        </td>
+        <input type="hidden" name="commission_ids" id="commission_id" value="${commission_id}"> 
+        <input type="hidden" name="type" id="type" value="${type_value}"> 
+        `);
+        selectedTR = '';
+          }else{
     const newRow = `
       <tr>
         <td class="px-4 py-3 text-left w-1 flex">
-          <a href="#" class="text-blue-500 hover:underline mr-2" onclick="updateCommission(this)">Edit</a>
-          <a href="#" class="text-red-500 hover:underline" onclick="deleteCommission(this)">Delete</a>
+          <button type='button' class="text-blue-500 hover:underline mr-2" onclick="updateCommission(this)">Edit</button>
+          <button type='button' class="text-red-500 hover:underline" onclick="deleteCommission(this)">Delete</button>
         </td>
         <td class="px-4 py-3 text-left sl"></td>
         <td class="px-4 py-3 text-left">${date}
@@ -799,6 +843,7 @@
       </tr>`;
 
     tableBody.insertAdjacentHTML('beforeend', newRow);
+          }
 
       $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-green-500 text-white');
       $('#addToGridText').text('Add to Grid');
@@ -840,15 +885,16 @@ function getLastCommissionNo() {
     $('#createView').removeClass('hidden');
     $('#viewDiv').addClass('hidden');
     const selectedRow = link.closest('tr');
+    selectedTR = selectedRow;
+    if (isUpdate){
     document.getElementById("commission_name").value = selectedRow.cells[2].innerText.trim();
     document.getElementById("date").value = selectedRow.cells[3].innerText.trim();
     document.getElementById("godown").value = selectedRow.cells[5].querySelector('input').value;
-    document.getElementById("amount").value = selectedRow.cells[6].innerText.trim();
-    document.getElementById("qty").value = selectedRow.cells[7].innerText.trim();
+    document.getElementById("amount").value = selectedRow.cells[7].innerText.trim();
+    document.getElementById("qty").value = selectedRow.cells[6].innerText.trim();
     document.getElementById("total_amount").value = selectedRow.cells[8].innerText.trim();
     document.getElementById("description").value = selectedRow.cells[9].innerText.trim();
     document.getElementById("commissionId").value = selectedRow.querySelector('#commission_id').value;
-    var type = selectedRow.querySelector('#type') ? selectedRow.querySelector('#type').value : 'expenses';
 {% comment %} 
     if (type === 'customers') {
       $('#allExpenses').prop('checked', true).change();
@@ -857,9 +903,27 @@ function getLastCommissionNo() {
     }
      {% endcomment %}
     document.getElementById("expense").value = selectedRow.cells[4].querySelector('input').value;
-    console.log(selectedRow.cells[4].querySelector('input').value)
+    }else{
+      makeRowHighlight(selectedRow);
+    document.getElementById("commission_name").value = selectedRow.cells[1].innerText.trim();
+    document.getElementById("date").value = selectedRow.cells[2].innerText.trim();
+    document.getElementById("godown").value = selectedRow.cells[4].querySelector('input').value;
+    document.getElementById("amount").value = selectedRow.cells[6].innerText.trim();
+    document.getElementById("qty").value = selectedRow.cells[5].innerText.trim();
+    document.getElementById("total_amount").value = selectedRow.cells[7].innerText.trim();
+    document.getElementById("description").value = selectedRow.cells[8].innerText.trim();
+    document.getElementById("commissionId").value = selectedRow.querySelector('#commission_id').value;
+{% comment %} 
+    if (type === 'customers') {
+      $('#allExpenses').prop('checked', true).change();
+    } else {
+      $('#allExpenses').prop('checked', false).change();
+    }
+     {% endcomment %}
+    document.getElementById("expense").value = selectedRow.cells[3].querySelector('input').value;
+  }
 
-    selectedRow.remove();
+    // selectedRow.remove();
     $('#addToGridText').text('Update Grid');
     $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-blue-500 text-white');
 
@@ -868,6 +932,16 @@ function getLastCommissionNo() {
     addLastRow()
     
   }
+
+
+
+  function makeRowHighlight(tr){
+    $('#commissionTableBody tr').removeClass('bg-yellow-100');
+    $(tr).addClass('bg-blue-300');
+    $(tr).find('button').attr('disabled', true);
+  }
+
+
 
 
   function deleteCommission(link) {
@@ -955,7 +1029,7 @@ function resetSLNo() {
           const newRow = `
             <tr>
               <td class="px-4 py-3 text-left w-1 flex">
-                <a href="#" class="text-blue-500 hover:underline mr-2" onclick="$('#commissionTableBody').addClass('hidden'); updateCommission(this);">Edit</a>
+                <a href="#" class="text-blue-500 hover:underline mr-2" onclick="updateViewData(this)">Edit</a>
                 <a href="#" class="text-red-500 hover:underline" onclick="deleteCommission(this)">Delete</a>
               </td>
               <td class="px-4 py-3 text-left sl">${index + 1}</td>
@@ -966,11 +1040,11 @@ function resetSLNo() {
                 <input type="hidden" name="dates" value="${commission.date.split('T')[0]}">
                 </td>
               <td class="px-4 py-3 text-left search-area">
-        ${commission.type === 'expenses' ? commission.expense : commission.expense} 
+        ${commission.expense} 
         <input 
           type="hidden" 
           name="expenses" 
-          value="${commission.type === 'expenses' ? commission.expense_id : commission.expense_id}"
+          value="${commission.id}"
         >
                 </td>
               <td class="px-4 py-3 text-left search-area">${commission.godown}
@@ -1036,6 +1110,23 @@ document.addEventListener("focusin", (event) => {
   }
 });
 
+function updateViewData(button){
+  $('#commissionTableBody').addClass('hidden'); 
+  isUpdate = true;
+  updateCommission(button);
+}
+ 
+  function oncancelData(){
+    clearCommissionForm();
+    if (isUpdate){
+
+          $('#viewCommissionDiv').removeClass('hidden');
+          $('#viewDiv').removeClass('hidden');
+          $('#createView').addClass('hidden');
+          $('#dateFilter').click();
+          $('#commissionTableBody').removeClass('hidden')
+    }
+  }
 
 </script>
   {% endblock %}

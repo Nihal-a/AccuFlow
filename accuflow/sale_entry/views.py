@@ -12,6 +12,7 @@ class SaleEntryView(View):
         sales = Sales.objects.filter(hold=True,is_active=True)
         saleData = []
         for sale in sales:
+            print(sale.which_type) 
             saleData.append({
                 'id':sale.id,
                 'sale_no':sale.sale_no,
@@ -69,6 +70,7 @@ class SaleAddView(View):
         godown_ids = request.POST.getlist('godowns')
         sale_ids = request.POST.getlist('sale_ids') 
         types = request.POST.getlist('type')
+        print(types)
         count = 0
         for id in sale_ids:
             customer = None 
@@ -100,7 +102,7 @@ class SaleHold(View):
     def post(self,request):
         data = json.loads(request.body)
         sale_no = data.get('sale_no')
-        supplier = data.get('supplier')
+        supplier = data.get('customer')
         godown = data.get('godown')
         date = data.get('date')
         qty = data.get('qty')
@@ -109,6 +111,8 @@ class SaleHold(View):
         description = data.get('description')
         type_value = data.get('type')
         customer = None
+        print(type_value)
+        print(supplier)
         if type_value == 'customers':
             customer = get_object_or_404(Customers, id=supplier) if supplier else None
             supplier = None 

@@ -292,7 +292,8 @@
 
     <a
       id="btnCancel"
-      href=""
+      href="#"
+      onclick="onCancelPurchase()"
       class="leading-none inline-flex items-center gap-1.5 bg-gray-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-gray-600 transition-all duration-300"
     >
       <svg
@@ -561,6 +562,7 @@
   {% endblock %} {% block externalJS %}
   <script>
 
+    isUpdate = false;
 
   function addLastRow(){
     const tableBody = document.getElementById("purchaseTableBody");
@@ -678,8 +680,8 @@
       var newRow = `
       <tr>
         <td class="px-3 py-3 text-left w-1 flex">
-          <a href="#" class="text-blue-500 hover:underline mr-2" onclick="updatePurchase(this)">Edit</a>
-          <a href="#" class="text-red-500 hover:underline" onclick="deletePurchase(this)">Delete</a>
+          <button type='button' class="text-blue-500 hover:underline mr-2" onclick="updatePurchase(this)">Edit</button>
+          <button type='button' class="text-red-500 hover:underline" onclick="deletePurchase(this)">Delete</button>
         </td>
         <td class="px-4 py-3 text-left w-1 sl">${i+1}</td>
         <td class="px-4 py-3 text-left search-area">
@@ -701,12 +703,12 @@
           <input type="hidden" name="godowns" value="${purchase.godown_id}">
         </td>
         <td class="px-4 py-3 text-right search-area">
-          ${parseFloat(purchase.amount).toFixed(2)}
-          <input type="hidden" name="amounts" value="${purchase.amount}">   
-        </td>
-        <td class="px-4 py-3 text-right search-area">
           ${purchase.qty}
           <input type="hidden" name="qtys" value="${purchase.qty}">
+        </td>
+        <td class="px-4 py-3 text-right search-area">
+          ${parseFloat(purchase.amount).toFixed(2)}
+          <input type="hidden" name="amounts" value="${purchase.amount}">   
         </td>
         <td class="px-4 py-3 text-right search-area">
           ${parseFloat(purchase.total_amount).toFixed(2)}
@@ -792,12 +794,54 @@
         hold = data.hold
 
     clearPurchaseForm();
+    isUpdate = false;
         if (hold){
+          if (selectedTR){
+            $(selectedTR).empty();
+             $(selectedTR).removeClass('bg-blue-300');
+            $(selectedTR).append(`
+             <td class="px-4 py-3 text-left w-1 flex">
+          <button type='button' class="text-blue-500 hover:underline mr-2" onclick="updatePurchase(this)">Edit</button>
+          <button type='button' class="text-red-500 hover:underline" onclick="deletePurchase(this)">Delete</button>
+        </td>
+        <td class="px-4 py-3 text-left sl"></td>
+        <td class="px-4 py-3 text-left">${date}
+          <input type="hidden" name="dates" value="${date}">
+          </td>
+        <td class="px-4 py-3 text-left search-area">
+          ${supplier}
+          <input type="hidden" name="suppliers" value="${supplierSelect}">
+        </td>
+        <td class="px-4 py-3 text-left search-area">
+          ${godown}
+          <input type="hidden" name="godowns" value="${godownSelect}">
+        </td>
+        <td class="px-4 py-3 text-right search-area">
+          ${qty}
+          <input type="hidden" name="qtys" value="${qty}">
+        </td>
+        <td class="px-4 py-3 text-right search-area">
+          ${amount.toFixed(2)}
+          <input type="hidden" name="amounts" value="${amount}">
+        </td>
+        <td class="px-4 py-3 text-right search-area">
+          ${total_amount.toFixed(2)}
+          <input type="hidden" name="total_amounts" value="${total_amount.toFixed(2)}">
+        </td>
+         <td class="px-4 py-3 text-left search-area">
+          ${description}
+          <input type="hidden" name="descriptions" value="${description}">
+        </td>
+        <input type="hidden" name="purchase_ids" id="purchase_id" value="${purchase_id}"> 
+        <input type="hidden" name="type" id="type" value="${type_value}"> 
+        `);
+            selectedTR = '';
+          }else{
     const newRow = `
       <tr>
         <td class="px-4 py-3 text-left w-1 flex">
-          <a href="#" class="text-blue-500 hover:underline mr-2" onclick="updatePurchase(this)">Edit</a>
-          <a href="#" class="text-red-500 hover:underline" onclick="deletePurchase(this)">Delete</a>
+          <button type='button' class="text-blue-500 hover:underline mr-2" onclick="updatePurchase(this)">Edit</button>
+          <button type='button' class="text-red-500 hover:underline" onclick="deletePurchase(this)">Delete</button>
         </td>
         <td class="px-4 py-3 text-left sl"></td>
         <td class="px-4 py-3 text-left">${date}
@@ -833,6 +877,7 @@
 
     tableBody.insertAdjacentHTML('beforeend', newRow);
 
+          }
       $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-green-500 text-white');
       $('#addToGridText').text('Add to Grid');
     $('#purchase_name').val(getLastPurchaseNo());
@@ -873,11 +918,13 @@ function getLastPurchaseNo() {
     $('#createView').removeClass('hidden');
     $('#viewDiv').addClass('hidden');
     const selectedRow = link.closest('tr');
+    if (isUpdate){
+
     document.getElementById("purchase_name").value = selectedRow.cells[2].innerText.trim();
     document.getElementById("date").value = selectedRow.cells[3].innerText.trim();
     document.getElementById("godown").value = selectedRow.cells[5].querySelector('input').value;
-    document.getElementById("amount").value = selectedRow.cells[6].innerText.trim();
-    document.getElementById("qty").value = selectedRow.cells[7].innerText.trim();
+    document.getElementById("amount").value = selectedRow.cells[7].innerText.trim();
+    document.getElementById("qty").value = selectedRow.cells[6].innerText.trim();
     document.getElementById("total_amount").value = selectedRow.cells[8].innerText.trim();
     document.getElementById("description").value = selectedRow.cells[9].innerText.trim();
     document.getElementById("purchaseId").value = selectedRow.querySelector('#purchase_id').value;
@@ -889,15 +936,35 @@ function getLastPurchaseNo() {
       $('#allSuppliers').prop('checked', false).change();
     }
     document.getElementById("supplier").value = selectedRow.cells[4].querySelector('input').value;
-    console.log(selectedRow.cells[4].querySelector('input').value)
+    }else{
+      selectedTR = selectedRow;
+      makeRowHighlight(selectedRow);
+    document.getElementById("purchase_name").value = selectedRow.cells[1].innerText.trim();
+    document.getElementById("date").value = selectedRow.cells[2].innerText.trim();
+    document.getElementById("godown").value = selectedRow.cells[4].querySelector('input').value;
+    document.getElementById("amount").value = selectedRow.cells[6].innerText.trim();
+    document.getElementById("qty").value = selectedRow.cells[5].innerText.trim();
+    document.getElementById("total_amount").value = selectedRow.cells[7].innerText.trim();
+    document.getElementById("description").value = selectedRow.cells[8].innerText.trim();
+    document.getElementById("purchaseId").value = selectedRow.querySelector('#purchase_id').value;
+    var type = selectedRow.querySelector('#type') ? selectedRow.querySelector('#type').value : 'suppliers';
 
-    selectedRow.remove();
+    if (type === 'customers') {
+      $('#allSuppliers').prop('checked', true).change();
+    } else {
+      $('#allSuppliers').prop('checked', false).change();
+    }
+    document.getElementById("supplier").value = selectedRow.cells[3].querySelector('input').value;
+  }
+
+    // selectedRow.remove();
     $('#addToGridText').text('Update Grid');
     $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-blue-500 text-white');
 
     $('#supplier, #godown').change()
     resetSLNo()
     addLastRow()
+
     
   }
 
@@ -946,7 +1013,13 @@ function resetSLNo() {
     $('#supplier, #godown').prop('selectedIndex', 0);
     $('#allSuppliers').prop('checked', false);
       $('#supplierCredit').empty();
-      $('#godownCredit').empty()
+      $('#godownCredit').empty(1)
+  }
+
+  function makeRowHighlight(tr){
+    $('#purchaseTableBody tr').removeClass('bg-yellow-100');
+    $(tr).addClass('bg-blue-300');
+    $(tr).find('button').attr('disabled', true);
   }
 
 </script>
@@ -987,7 +1060,7 @@ function resetSLNo() {
           const newRow = `
             <tr>
               <td class="px-4 py-3 text-left w-1 flex">
-                <a href="#" class="text-blue-500 hover:underline mr-2" onclick="$('#purchaseTableBody').addClass('hidden'); updatePurchase(this);">Edit</a>
+                <a href="#" class="text-blue-500 hover:underline mr-2" onclick="editViewData(this);">Edit</a>
                 <a href="#" class="text-red-500 hover:underline" onclick="deletePurchase(this)">Delete</a>
               </td>
               <td class="px-4 py-3 text-left sl">${index + 1}</td>
@@ -1068,6 +1141,23 @@ document.addEventListener("focusin", (event) => {
   }
 });
 
+function editViewData(button) {
+$('#purchaseTableBody').addClass('hidden'); 
+isUpdate = true;
+updatePurchase(button);
+  }
+
+  function onCancelPurchase(){
+    clearPurchaseForm();
+    if (isUpdate){
+
+          $('#viewPurchaseDiv').removeClass('hidden');
+          $('#viewDiv').removeClass('hidden');
+          $('#createView').addClass('hidden');
+          $('#dateFilter').click();
+          $('#purchaseTableBody').removeClass('hidden')
+    }
+  }
 
 </script>
   {% endblock %}

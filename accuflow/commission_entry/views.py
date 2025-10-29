@@ -15,7 +15,7 @@ class CommissionEntryView(View):
             commissionData.append({
                 'id':commission.id,
                 'commission_no':commission.commission_no,
-                'expense':commission.expense.name if commission.expense else '',
+                'expense':commission.expense.category if commission.expense else '',
                 'expense_id':commission.expense.id if commission.expense else '',
                 'godown':commission.godown.name if commission.godown else '',
                 'godown_id':commission.godown.id if commission.godown else '',
@@ -24,7 +24,6 @@ class CommissionEntryView(View):
                 'amount':commission.amount,
                 'total_amount':commission.total_amount,
                 'description':commission.description if commission.description else '', 
-                'type':commission.which_type if commission.which_type else '',
             })
         expenses = Expenses.objects.filter(is_active=True)
         godowns = Godowns.objects.filter(is_active=True)
@@ -54,7 +53,6 @@ class CommissionAddView(View):
         expense_ids = request.POST.getlist('expenses')
         godown_ids = request.POST.getlist('godowns')
         commission_ids = request.POST.getlist('commission_ids') 
-        types = request.POST.getlist('type')
         count = 0
         for id in commission_ids:
             expense = get_object_or_404(Expenses, id=expense_ids[count]) if expense_ids[count] else None
@@ -86,7 +84,6 @@ class CommissionHold(View):
         amount = data.get('amount')
         total_amount = data.get('total_amount')
         description = data.get('description')
-        type_value = data.get('type')
 
         expense = get_object_or_404(Expenses, id=expense) if expense else None
         godown = get_object_or_404(Godowns, id=godown) if godown else None
@@ -100,8 +97,7 @@ class CommissionHold(View):
             commission.qty = qty
             commission.amount = amount
             commission.total_amount = total_amount
-            commission.description = description
-            commission.type = type_value
+            commission.description = description 
             if not commission.hold:
                 commission.hold = False 
             commission.save()
@@ -115,7 +111,6 @@ class CommissionHold(View):
             amount=amount,
             total_amount=total_amount,
             description=description,
-            type=type_value,
             hold=True,
         )
         return JsonResponse({'status':'success','commission_id':commission.id,'hold':commission.hold}) 
