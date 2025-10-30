@@ -1,36 +1,35 @@
 import datetime
 import json
 from django.shortcuts import render,redirect, get_object_or_404
-from core.models import Purchases,Suppliers,Customers,Godowns
+from core.models import Purchases,Suppliers,Customers,Godowns,NSDs
 from django.views import View
 from django.views.generic.edit import DeleteView
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 
-class PurchaseEntryView(View):
+class NSDEntryView(View):
     def get(self,request):
-        purchases = Purchases.objects.filter(hold=True,is_active=True)
-        purchaseData = []
-        for purchase in purchases:
-            purchaseData.append({
-                'id':purchase.id,
-                'purchase_no':purchase.purchase_no,
-                'supplier':purchase.supplier.name if purchase.supplier else '',
-                'supplier_id':purchase.supplier.id if purchase.supplier else '',
-                'customer':purchase.customer.name if purchase.customer else '',
-                'customer_id':purchase.customer.id if purchase.customer else '',
-                'godown':purchase.godown.name if purchase.godown else '',
-                'godown_id':purchase.godown.id if purchase.godown else '',
-                'date':str(purchase.date),
-                'qty':purchase.qty,
-                'amount':purchase.amount,
-                'total_amount':purchase.total_amount,
-                'description':purchase.description if purchase.description else '', 
-                'type':purchase.which_type if purchase.which_type else '',
+        nsds = NSDs.objects.filter(hold=True,is_active=True)
+        nsdData = []
+        for nsd in nsds:
+            nsdData.append({
+                'id':nsd.id,
+                'nsd_no':nsd.nsd_no,
+                'supplier':nsd.supplier.name if nsd.supplier else '',
+                'supplier_id':nsd.supplier.id if nsd.supplier else '',
+                'customer':nsd.customer.name if nsd.customer else '',
+                'customer_id':nsd.customer.id if nsd.customer else '',
+                'date':str(nsd.date),
+                'qty':nsd.qty,
+                'sell_rate':nsd.sell_rate,
+                'sell_amount':nsd.sell_amount,
+                'purchase_rate':nsd.purchase_rate,
+                'purchase_amount':nsd.purchase_amount,
+                'description':nsd.description if nsd.description else '', 
+                'type':nsd.which_type if nsd.which_type else '',
             })
         suppliers = Suppliers.objects.filter(is_active=True)
         customers = Customers.objects.filter(is_active=True)
-        godowns = Godowns.objects.filter(is_active=True)
         customersData = []
         for customer in customers:
             customersData.append({
@@ -48,29 +47,30 @@ class PurchaseEntryView(View):
                 'balance':supplier.get_balance,
             })
         context = {
-            'purchases':purchaseData,
+            'nsds':nsdData,
             'suppliers':suppliersData,
             'customers':customersData,
-            'godowns':godowns,
-            'last_purchase_no':getLastPurchaseNo(),
+            'last_nsd_no':getLastNSDNo(),
         }
-        return render(request,'purchase_entry/purchase_entry.html',context)
+        return render(request,'nsd_entry/nsd_entry.html',context)
     
     
 
-class PurchaseAddView(View):
+class NSDAddView(View):
     def post(self,request):
         dates = request.POST.getlist('dates')
         total_amounts = request.POST.getlist('total_amounts')
         qtys = request.POST.getlist('qtys')
-        amounts = request.POST.getlist('amounts')
+        sell_rate = request.POST.getlist('sell_rate')
+        sell_amount = request.POST.getlist('sell_amount')
+        purchase_rate = request.POST.getlist('purchase_rate')
+        purchase_amount = request.POST.getlist('purchase_amount')
         supplier_ids = request.POST.getlist('suppliers')
         customer_ids = request.POST.getlist('customers')
-        godown_ids = request.POST.getlist('godowns')
-        purchase_ids = request.POST.getlist('purchase_ids') 
+        nsd_ids = request.POST.getlist('nsd_ids') 
         types = request.POST.getlist('type')
         count = 0
-        for id in purchase_ids:
+        for id in nsd_ids:
             customer = None 
             if types[count] == 'customers':
                 supplier = None
@@ -78,34 +78,33 @@ class PurchaseAddView(View):
             else:
                 customer = None
                 supplier = get_object_or_404(Suppliers, id=supplier_ids[count]) if supplier_ids[count] else None
-            godown = get_object_or_404(Godowns, id=godown_ids[count]) if godown_ids[count] else None
-            purchase = Purchases.objects.get(id=id)
-            purchase.supplier = supplier
-            purchase.godown = godown
-            purchase.date = dates[count]
-            purchase.qty = qtys[count]
-            purchase.amount = amounts[count]
-            purchase.total_amount = total_amounts[count]    
-            purchase.hold = False
-            purchase.customer = customer
-            purchase.save()  
+            nsd = NSDs.objects.get(id=id)
+            nsd.supplier = supplier
+            nsd.date = dates[count]
+            nsd.qty = qtys[count]
+            nsd.sell_rate = sell_rate[count]
+            nsd.sell_amount = sell_amount[count]
+            nsd.purchase_rate = purchase_rate[count]    
+            nsd.purchase_amount = purchase_amount[count]    
+            nsd.hold = False
+            nsd.customer = customer
+            nsd.save()  
             count += 1
-        return redirect('purchase')
+        return redirect('nsd')
 
 
-    
 
-
-class PurchaseHold(View):
+class NSDHold(View):
     def post(self,request):
         data = json.loads(request.body)
-        purchase_no = data.get('purchase_no')
+        nsd_no = data.get('nsd_no')
         supplier = data.get('supplier')
-        godown = data.get('godown')
         date = data.get('date')
         qty = data.get('qty')
-        amount = data.get('amount')
-        total_amount = data.get('total_amount')
+        sell_rate = request.get('sell_rate')
+        sell_amount = request.get('sell_amount')
+        purchase_rate = request.get('purchase_rate')
+        purchase_amount = request.get('purchase_amount')
         description = data.get('description')
         type_value = data.get('type')
         customer = None
@@ -114,103 +113,105 @@ class PurchaseHold(View):
             supplier = None 
         else:  
             customer = None
-            
             supplier = get_object_or_404(Suppliers, id=supplier) if supplier else None
-        godown = get_object_or_404(Godowns, id=godown) if godown else None
-        if data.get('purchase_id'):
-            purchase = get_object_or_404(Purchases, id=data.get('purchase_id'))
-            
-            purchase.purchase_no = purchase_no
-            purchase.supplier = supplier
-            purchase.godown = godown
-            purchase.date = date
-            purchase.qty = qty
-            purchase.amount = amount
-            purchase.total_amount = total_amount
-            purchase.description = description
-            purchase.type = type_value
-            purchase.customer = customer
-            if not purchase.hold:
-                purchase.hold = False 
-            purchase.save()
-            return JsonResponse({'status':'success','purchase_id':purchase.id,'hold':purchase.hold})
-        purchase = Purchases.objects.create(
-            purchase_no=purchase_no,
+        if data.get('nsd_id'):
+            nsd = get_object_or_404(NSDs, id=data.get('nsd_id'))
+            nsd.nsd_no = nsd_no
+            nsd.supplier = supplier
+            nsd.date = date
+            nsd.qty = qty
+            nsd.sell_rate = sell_rate
+            nsd.sell_amount = sell_amount
+            nsd.purchase_rate = purchase_rate
+            nsd.purchase_amount = purchase_amount
+            nsd.description = description
+            nsd.type = type_value
+            nsd.customer = customer
+            if not nsd.hold:
+                nsd.hold = False 
+            nsd.save()
+            return JsonResponse({'status':'success','nsd_id':nsd.id,'hold':nsd.hold})
+        nsd = NSDs.objects.create(
+            nsd_no=nsd_no,
             supplier=supplier,
-            godown=godown,
             date=date,
             qty=qty,
-            amount=amount,
-            total_amount=total_amount,
+            sell_rate=sell_rate,
+            sell_amount=sell_amount,
+            purchase_rate=purchase_rate,
+            purchase_amount=purchase_amount,
             description=description,
             type=type_value,
             customer=customer,
             hold=True,
         )
-        return JsonResponse({'status':'success','purchase_id':purchase.id,'hold':purchase.hold}) 
+        return JsonResponse({'status':'success','nsd_id':nsd.id,'hold':nsd.hold}) 
     
     
         
 
 
-def getLastPurchaseNo():
-    last_purchase_no = Purchases.objects.filter(is_active=True).order_by('-purchase_no').first() 
+def getLastNSDNo():
+    last_nsd_no = NSDs.objects.filter(is_active=True).order_by('-nsd_no').first() 
     
-    if last_purchase_no and last_purchase_no.purchase_no.isdigit():
-        new_purchase_no = int(last_purchase_no.purchase_no) + 1
+    if last_nsd_no and last_nsd_no.nsd_no.isdigit():
+        new_nsd_no = int(last_nsd_no.nsd_no) + 1
     else:
-        new_purchase_no = 1
-    return new_purchase_no
+        new_nsd_no = 1
+    return new_nsd_no
 
 
-def purchase_no(request):
-    new_purchase_no = getLastPurchaseNo()
-    return JsonResponse({'purchase_no': new_purchase_no})
+def nsd_no(request):
+    new_nsd_no = getLastNSDNo()
+    return JsonResponse({'nsd_no': new_nsd_no})
 
 
-def purchases_by_date(request):
+def nsds_by_date(request):
     from_date = request.GET.get('from')
     to_date = request.GET.get('to')
-    purchases = []
+    nsds = []
     if from_date and to_date:
-        purchases = Purchases.objects.filter(
+        nsds = NSDs.objects.filter(
             date__range=[parse_date(from_date), parse_date(to_date)],
             hold=False,
             is_active=True
         )
-    purchaseData = []
+    nsdData = []
     total_qty = 0
     total_amount = 0
     rate_sum = 0
     count = 0
-    for purchase in purchases:
-        purchaseData.append({ 
-            'id':purchase.id,
-            'purchase_no':purchase.purchase_no,
-            'supplier':purchase.supplier.name if purchase.supplier else '',
-            'supplier_id':purchase.supplier.id if purchase.supplier else '',
-            'godown':purchase.godown.name if purchase.godown else '',
-            'godown_id':purchase.godown.id if purchase.godown else '',
-            'customer':purchase.customer.name if purchase.customer else '',
-            'customer_id':purchase.customer.id if purchase.customer else '',
-            'date':str(purchase.date),
-            'qty':purchase.qty,
-            'amount':purchase.amount,
-            'total_amount':purchase.total_amount,
-            'description':purchase.description if purchase.description else '', 
-            'type':purchase.which_type if purchase.which_type else '',
+    for nsd in nsds:
+        nsdData.append({ 
+            'id':nsd.id,
+            'nsd_no':nsd.nsd_no,
+            'supplier':nsd.supplier.name if nsd.supplier else '',
+            'supplier_id':nsd.supplier.id if nsd.supplier else '',
+            'customer':nsd.customer.name if nsd.customer else '',
+            'customer_id':nsd.customer.id if nsd.customer else '',
+            'date':str(nsd.date),
+            'qty':nsd.qty,
+            'sell_rate':nsd.sell_rate,
+            'sell_amount':nsd.sell_amount,
+            'purchase_rate':nsd.purchase_rate,
+            'purchase_amount':nsd.purchase_amount,
+            'description':nsd.description if nsd.description else '', 
+            'type':nsd.which_type if nsd.which_type else '',
         })
-        total_qty += purchase.qty
-        total_amount += purchase.total_amount
-        rate_sum += purchase.amount
+        total_qty += nsd.qty
+        total_sell_amount += nsd.sell_amount
+        sell_rate_sum += nsd.sell_rate
+        total_purchase_amount += nsd.purchase_amount
+        purchase_rate_sum += nsd.purchase_rate
         count += 1
-    rate_avg = rate_sum / count if count > 0 else 0
-    return JsonResponse({'purchases': purchaseData, 'total_qty': total_qty, 'total_amount': total_amount, 'rate_avg': rate_avg})
+    sell_rate_avg = sell_rate_sum / count if count > 0 else 0
+    purchase_rate_avg = purchase_rate_sum / count if count > 0 else 0
+    return JsonResponse({'nsds': nsdData, 'total_qty': total_qty, 'total_amount': total_amount, 'sell_rate_avg': sell_rate_avg, 'purchase_rate_avg': purchase_rate_avg})
 
 
-def delete_purchase(request):
+def delete_nsd(request):
     pk = request.GET.get('id') 
-    purchase = get_object_or_404(Purchases, id=pk)
-    purchase.is_active = False
-    purchase.save()
-    return JsonResponse({'status':'success','message':'Purchase deleted successfully'})
+    nsd = get_object_or_404(NSDs, id=pk)
+    nsd.is_active = False
+    nsd.save()
+    return JsonResponse({'status':'success','message':'nsd deleted successfully'})

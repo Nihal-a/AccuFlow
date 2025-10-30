@@ -168,24 +168,6 @@ class Sales(models.Model):
             return self.customer
         elif self.which_type == 'suppliers':
             return self.supplier
-    
-class NSD(models.Model):
-    nsd_no = models.TextField(blank=True,null=True)
-    supplier = models.ForeignKey(Suppliers, on_delete=models.CASCADE, blank=True, null=True)
-    customer = models.ForeignKey(Customers, on_delete=models.CASCADE, blank=True, null=True)
-    date = models.DateField(blank=True,null=True)
-    code = models.TextField(blank=True,null=True)
-    qty = models.FloatField(default=0)
-    sell_rate = models.FloatField(default=0)
-    purchase_rate = models.FloatField(default=0)
-    sell_amount = models.FloatField(default=0)
-    purchase_amount = models.FloatField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True,blank=True,null=True)
-    is_active = models.BooleanField(default=True)
-    description = models.TextField(blank=True,null=True)
-    
-    def __str__(self):
-        return self.nsd_no   
 
 class Commissions(models.Model):
     commission_no = models.TextField(blank=True,null=True)
@@ -219,3 +201,73 @@ class Commissions(models.Model):
     #         return self.customer
     #     elif self.which_type == 'suppliers':
     #         return self.supplier
+
+class NSDs(models.Model):
+    nsd_no = models.TextField(blank=True,null=True)
+    supplier = models.ForeignKey(Suppliers, on_delete=models.CASCADE, blank=True, null=True)
+    customer = models.ForeignKey(Customers, on_delete=models.CASCADE, blank=True, null=True)
+    date = models.DateField(blank=True,null=True)
+    code = models.TextField(blank=True,null=True)
+    qty = models.FloatField(default=0)
+    sell_rate = models.FloatField(default=0)
+    sell_amount = models.FloatField(default=0)
+    purchase_rate = models.FloatField(default=0)
+    purchase_amount = models.FloatField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True,blank=True,null=True)
+    is_active = models.BooleanField(default=True)
+    description = models.TextField(blank=True,null=True)
+    hold = models.BooleanField(default=False)
+    type = models.TextField(blank=True,null=True)
+    
+    
+    def __str__(self):
+        return self.nsd_no
+    
+    @property
+    def which_type(self):
+        if (self.supplier == None) and (self.customer != None):
+            return 'customers'
+        elif (self.customer == None) and (self.supplier != None):
+            return 'suppliers'
+        
+    @property
+    def party(self):
+        if self.which_type == 'customers':
+            return self.customer
+        elif self.which_type == 'suppliers':
+            return self.supplier
+        
+class Cashs(models.Model):
+    nsd_no = models.TextField(blank=True,null=True)
+    cashbank = models.ForeignKey(CashBanks, on_delete=models.CASCADE, blank=True, null=True)
+    party = models.ForeignKey(Customers, on_delete=models.CASCADE, blank=True, null=True)
+    date = models.DateField(blank=True,null=True)
+    code = models.TextField(blank=True,null=True)
+    qty = models.FloatField(default=0)
+    sell_rate = models.FloatField(default=0)
+    sell_amount = models.FloatField(default=0)
+    purchase_rate = models.FloatField(default=0)
+    purchase_amount = models.FloatField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True,blank=True,null=True)
+    is_active = models.BooleanField(default=True)
+    description = models.TextField(blank=True,null=True)
+    hold = models.BooleanField(default=False)
+    type = models.TextField(blank=True,null=True)
+    
+    
+    def __str__(self):
+        return self.nsd_no
+    
+    @property
+    def which_type(self):
+        if (self.supplier == None) and (self.customer != None):
+            return 'customers'
+        elif (self.customer == None) and (self.supplier != None):
+            return 'suppliers'
+        
+    @property
+    def party(self):
+        if self.which_type == 'customers':
+            return self.customer
+        elif self.which_type == 'suppliers':
+            return self.supplier

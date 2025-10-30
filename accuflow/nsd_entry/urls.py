@@ -2,10 +2,10 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.PurchaseEntryView.as_view(), name='nsd'),
-    path('create/', views.PurchaseAddView.as_view(), name='purchase-create'),
-    path('api/purchase_no/', views.purchase_no, name='api-purchase-no'),
-    path('api/purchases_by_date/', views.purchases_by_date, name='api-purchases-by-date'),
-    path('api/hold_purchase/', views.PurchaseHold.as_view(), name='api-hold-purchase'),
-    path('api/delete_purchase/', views.delete_purchase, name='api-delete-purchase'), 
+    path('', views.NSDEntryView.as_view(), name='nsd'),
+    path('create/', views.NSDAddView.as_view(), name='nsd-create'),
+    path('api/nsd_no/', views.nsd_no, name='api-nsd-no'),
+    path('api/nsds_by_date/', views.nsds_by_date, name='api-nsds-by-date'),
+    path('api/hold_nsd/', views.NSDHold.as_view(), name='api-hold-nsd'),
+    path('api/delete_nsd/', views.delete_nsd, name='api-delete-nsd'), 
 ] 

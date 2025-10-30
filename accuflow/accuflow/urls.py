@@ -31,6 +31,7 @@ urlpatterns = [
     path('purchase/', include('purchase_entry.urls')),
     path('sale/', include('sale_entry.urls')),
     path('nsd/', include('nsd_entry.urls')),
+    path('cash/', include('cash_entry.urls')),
     path('commission/', include('commission_entry.urls')),
 ]
 
