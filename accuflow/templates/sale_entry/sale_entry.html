@@ -613,6 +613,13 @@
       e.preventDefault();
     $('#createView').addClass('hidden');
     $('#viewDiv').removeClass('hidden');
+    clearSaleForm();
+    isUpdate = false;
+    $('#addToGridText').text('Add to Grid');
+    $(selectedTR).removeClass('bg-blue-300');
+    $(selectedTR).find('button').removeAttr('disabled');
+    selectedTR = '';
+    
     });
 
     $('#customer').on('change', function() {
@@ -1021,6 +1028,7 @@ function resetSLNo() {
     $('#allcustomers').prop('checked', false);
       $('#customerCredit').empty();
       $('#godownCredit').empty()
+    $('#sale_name').val(getLastSaleNo());
   }
 
 </script>
@@ -1160,6 +1168,11 @@ function onViewUpdate(button){
           $('#dateFilter').click();
           $('#saleTableBody').removeClass('hidden')
     }
+    isUpdate = false;
+    $('#addToGridText').text('Add to Grid');
+    $(selectedTR).removeClass('bg-blue-300'); 
+    $(selectedTR).find('button').removeAttr('disabled');
+    selectedTR = '';
   }
 
 </script>

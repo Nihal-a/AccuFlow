@@ -614,6 +614,13 @@
       e.preventDefault();
     $('#createView').addClass('hidden');
     $('#viewDiv').removeClass('hidden');
+
+    clearCommissionForm();
+    isUpdate = false;
+    $('#addToGridText').text('Add to Grid');
+    $(selectedTR).removeClass('bg-blue-300');
+    $(selectedTR).find('button').removeAttr('disabled');
+    selectedTR = '';
     });
 
     $('#expense').on('change', function() {
@@ -989,6 +996,7 @@ function resetSLNo() {
     $('#allExpenses').prop('checked', false);
       $('#expenseCredit').empty();
       $('#godownCredit').empty()
+    $('#commission_name').val(getLastCommissionNo());
   }
 
 </script>
@@ -1126,6 +1134,11 @@ function updateViewData(button){
           $('#dateFilter').click();
           $('#commissionTableBody').removeClass('hidden')
     }
+    isUpdate = false;
+    $('#addToGridText').text('Add to Grid');
+    $(selectedTR).removeClass('bg-blue-300'); 
+    $(selectedTR).find('button').removeAttr('disabled');
+    selectedTR = '';
   }
 
 </script>

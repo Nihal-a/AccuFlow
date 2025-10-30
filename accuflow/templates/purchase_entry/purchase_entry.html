@@ -614,6 +614,13 @@
       e.preventDefault();
     $('#createView').addClass('hidden');
     $('#viewDiv').removeClass('hidden');
+
+    clearPurchaseForm();
+    isUpdate = false;
+    $('#addToGridText').text('Add to Grid');
+    $(selectedTR).removeClass('bg-blue-300'); 
+    $(selectedTR).find('button').removeAttr('disabled');
+    selectedTR = '';
     });
 
     $('#supplier').on('change', function() {
@@ -1013,7 +1020,8 @@ function resetSLNo() {
     $('#supplier, #godown').prop('selectedIndex', 0);
     $('#allSuppliers').prop('checked', false);
       $('#supplierCredit').empty();
-      $('#godownCredit').empty(1)
+      $('#godownCredit').empty()
+    $('#purchase_name').val(getLastPurchaseNo());
   }
 
   function makeRowHighlight(tr){
@@ -1156,7 +1164,15 @@ updatePurchase(button);
           $('#createView').addClass('hidden');
           $('#dateFilter').click();
           $('#purchaseTableBody').removeClass('hidden')
+
+
     }
+    isUpdate = false;
+    $('#addToGridText').text('Add to Grid');
+    $(selectedTR).removeClass('bg-blue-300'); 
+    $(selectedTR).find('button').removeAttr('disabled');
+    selectedTR = '';
+
   }
 
 </script>
