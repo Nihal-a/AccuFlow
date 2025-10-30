@@ -204,8 +204,10 @@ class Commissions(models.Model):
 
 class NSDs(models.Model):
     nsd_no = models.TextField(blank=True,null=True)
-    supplier = models.ForeignKey(Suppliers, on_delete=models.CASCADE, blank=True, null=True)
-    customer = models.ForeignKey(Customers, on_delete=models.CASCADE, blank=True, null=True)
+    sender_supplier = models.ForeignKey(Suppliers, on_delete=models.CASCADE, blank=True, null=True,related_name='sender_supplier')
+    sender_customer = models.ForeignKey(Customers, on_delete=models.CASCADE, blank=True, null=True,related_name='sender_customer')
+    receiver_supplier = models.ForeignKey(Suppliers, on_delete=models.CASCADE, blank=True, null=True,related_name='receiver_supplier')
+    receiver_customer = models.ForeignKey(Customers, on_delete=models.CASCADE, blank=True, null=True,related_name='receiver_customer')
     date = models.DateField(blank=True,null=True)
     code = models.TextField(blank=True,null=True)
     qty = models.FloatField(default=0)
@@ -224,10 +226,17 @@ class NSDs(models.Model):
         return self.nsd_no
     
     @property
-    def which_type(self):
-        if (self.supplier == None) and (self.customer != None):
+    def which_sender_type(self):
+        if (self.sender_supplier == None) and (self.sender_customer != None):
             return 'customers'
-        elif (self.customer == None) and (self.supplier != None):
+        elif (self.sender_customer == None) and (self.sender_supplier != None):
+            return 'suppliers'
+    
+    @property
+    def which_receiver_type(self):
+        if (self.receiver_supplier == None) and (self.receiver_customer != None):
+            return 'customers'
+        elif (self.receiver_customer == None) and (self.receiver_supplier != None):
             return 'suppliers'
         
     @property

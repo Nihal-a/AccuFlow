@@ -131,7 +131,7 @@
 </div>
 <div class=" w-[20%]">
   <!-- Label -->
-  <label class="block text-gray-700 mb-1">code*</label>
+  <label class="block text-gray-700 mb-1">S.Code*</label>
   <div class="flex items-center gap-4 ">
     <!-- Row: Checkbox + Dropdown -->
     <div class="flex items-center gap-4 w-full">
@@ -167,6 +167,16 @@
 
   <!-- Row: Checkbox + Dropdown -->
   <div class="flex items-center gap-4">
+    <div class="flex items-center">
+      <input
+        type="checkbox"
+        id="allCustomer"
+        name=""
+        tabindex="-1"
+        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+      />
+      <label for="allCustomer" class="ml-2 text-gray-700">All</label>
+    </div>
 
     <!-- Dropdown -->
     <div class="flex-1">
@@ -178,7 +188,7 @@
       >
         <option value="" selected>Select Customer</option>
         {% for customer in customers %}
-        <option value="{{ customer.id }}" data-code="{{customer.customerId}}" data-balance="{{customer.get_balance}}">{{ customer.name }}</option>
+        <option value="{{ customer.id }}" data-code="{{customer.customerId}}" data-balance="{{customer.get_balance}}" data-type="customers">{{ customer.name }}</option>
         {% endfor %}
       </select>
     </div>
@@ -186,7 +196,7 @@
 </div>
 <div class=" w-[30%]">
   <!-- Label -->
-  <label class="block text-gray-700 mb-1">G.code*</label>
+  <label class="block text-gray-700 mb-1">C.Code*</label>
   <div class="flex items-center gap-4 ">
     <!-- Row: Checkbox + Dropdown -->
     <div class="flex items-center gap-4 w-full">
@@ -409,8 +419,10 @@
             <th class="px-4 py-3 text-left font-medium">Supplier</th>
             <th class="px-4 py-3 text-left font-medium">Customer</th>
             <th class="px-4 py-3 text-right font-medium">Qty</th>
-            <th class="px-4 py-3 text-right font-medium">Rate</th>
-            <th class="px-4 py-3 text-right font-medium">Total Amount</th>
+            <th class="px-4 py-3 text-right font-medium">Sell Rate</th>
+            <th class="px-4 py-3 text-right font-medium">Sell Amount</th>
+            <th class="px-4 py-3 text-right font-medium">Purchase Rate</th>
+            <th class="px-4 py-3 text-right font-medium">Purchase Amount</th>
             <th class="px-4 py-3 text-right font-medium">Description</th>
           </tr>
         </thead>
@@ -527,8 +539,10 @@
             <th class="px-4 py-3 text-left font-medium">Supplier</th>
             <th class="px-4 py-3 text-left font-medium">Customer</th>
             <th class="px-4 py-3 text-right font-medium">Qty</th>
-            <th class="px-4 py-3 text-right font-medium">Rate</th>
-            <th class="px-4 py-3 text-right font-medium">Total Amount</th>
+            <th class="px-4 py-3 text-right font-medium">Sell Rate</th>
+            <th class="px-4 py-3 text-right font-medium">Sell Amount</th>
+            <th class="px-4 py-3 text-right font-medium">Purchase Rate</th>
+            <th class="px-4 py-3 text-right font-medium">Purchase Amount</th>
             <th class="px-4 py-3 text-right font-medium">Description</th>
           </tr>
         </thead>
@@ -621,7 +635,7 @@
     rateAvg = rateSum / count || 0;
     const lastRow = `
       <tr class="bg-blue-200 font-bold" id="totalRow">
-        <td class="px-4 py-3 text-left" colspan="5">Totals:</td>
+        <td class="px-4 py-3 text-left" colspan="7">Totals:</td>
         <td class="px-4 py-3 text-right">${parseFloat(totalQty).toFixed(2)}</td>
         <td class="px-4 py-3 text-right">${parseFloat(rateAvg).toFixed(2)}</td>
         <td class="px-4 py-3 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
@@ -642,7 +656,7 @@
     $('#viewnsdTable tbody').empty();
     $('#createView').removeClass('hidden');
     $('#viewDiv').addClass('hidden');
-    $('#nsd_name, #amount, #qty, #description, #total_amount').val('');
+    $('#nsd_name, #sell_rate,#sell_amount, #purchase_rate, #purchase_amount, #qty, #description').val('');
     $('#supplier, #customer').prop('selectedIndex', 0);
       $('#supplierCredit').empty();
   getLastNSDNo()
@@ -652,6 +666,12 @@
       e.preventDefault();
     $('#createView').addClass('hidden');
     $('#viewDiv').removeClass('hidden');
+    clearNSDForm();
+    isUpdate = false;
+    $('#addToGridText').text('Add to Grid');
+    $(selectedTR).removeClass('bg-blue-300');
+    $(selectedTR).find('button').removeAttr('disabled');
+    selectedTR = '';
     });
 
     $('#supplier').on('change', function() {
@@ -698,6 +718,39 @@
         });
       }
     });
+    $('#allCustomer').on('change', function() {
+      if($(this).is(':checked')) {
+        const suppliers = {{ suppliers|safe }}
+        var customerSelect = $('#customer');
+        $('#customerID').val('');
+        $('#customerCredit').text('');
+        suppliers.forEach(function(supplier) {
+          var option = $('<option></option>')
+            .attr('value', supplier.id)
+            .attr('data-code', supplier.supplierId)
+            .attr('data-balance', supplier.balance)
+            .attr('data-type', 'suppliers')
+            .text(supplier.name);
+          customerSelect.append(option);
+        });
+      } else {
+        const customers = {{ customers|safe }}
+        var customerSelect = $('#customer');
+        customerSelect.empty();
+        $('#customerID').val('');
+        $('#customerCredit').text('');
+        customerSelect.append('<option value="" selected>Select Customer</option>');
+        customers.forEach(function(customer) {
+          var option = $('<option></option>')
+            .attr('value', customer.id)
+            .attr('data-code', customer.customerId)
+            .attr('data-balance', customer.get_balance)
+            .attr('data-type', 'customers')
+            .text(customer.name);
+          customerSelect.append(option);
+        });
+      }
+    });
     $('#customer').on('change', function() {
       var selectedOption = $(this).find('option:selected');
       var code = selectedOption.data('code') || '';
@@ -727,18 +780,19 @@
           <input type="hidden" name="dates" value="${nsd.date.split('T')[0]}">
         </td>
         <td class="px-4 py-3 text-left search-area">
-        ${nsd.type === 'suppliers' ? nsd.supplier : nsd.customer}
+        ${nsd.which_sender_type === 'suppliers' ? nsd.sender_supplier : nsd.sender_customer}
         <input 
           type="hidden" 
           name="suppliers" 
-          value="${nsd.type === 'suppliers' ? nsd.supplier_id : nsd.customer_id}"
+          value="${nsd.which_sender_type === 'suppliers' ? nsd.sender_supplier_id : nsd.sender_customer_id}"
         >
       </td>
 
 
         <td class="px-4 py-3 text-left search-area">
-          ${nsd.customer}
-          <input type="hidden" name="customers" value="${nsd.customer_id}">
+          
+        ${nsd.which_receiver_type === 'suppliers' ? nsd.receiver_supplier : nsd.receiver_customer}
+          <input type="hidden" name="customers" value="${nsd.which_sender_type === 'suppliers' ? nsd.receiver_supplier_id : nsd.receiver_customer_id}">
         </td>
         <td class="px-4 py-3 text-right search-area">
           ${nsd.qty}
@@ -746,29 +800,30 @@
         </td>
         <td class="px-4 py-3 text-right search-area">
           ${parseFloat(nsd.sell_rate).toFixed(2)}
-          <input type="hidden" name="amounts" value="${nsd.sell_rate}">   
+          <input type="hidden" name="sell_rates" value="${nsd.sell_rate}">   
         </td>
         <td class="px-4 py-3 text-right search-area">
           ${parseFloat(nsd.sell_amount).toFixed(2)}
-          <input type="hidden" name="amounts" value="${nsd.sell_amount}">   
+          <input type="hidden" name="sell_amounts" value="${nsd.sell_amount}">   
         </td>
         <td class="px-4 py-3 text-right search-area">
           ${parseFloat(nsd.purchase_rate).toFixed(2)}
-          <input type="hidden" name="total_amounts" value="${parseFloat(nsd.purchase_rate).toFixed(2)}">
+          <input type="hidden" name="purchase_rates" value="${parseFloat(nsd.purchase_rate).toFixed(2)}">
         </td>
         <td class="px-4 py-3 text-right search-area">
           ${parseFloat(nsd.purchase_amount).toFixed(2)}
-          <input type="hidden" name="total_amounts" value="${parseFloat(nsd.purchase_amount).toFixed(2)}">
+          <input type="hidden" name="purchase_amounts" value="${parseFloat(nsd.purchase_amount).toFixed(2)}">
         </td>
         <td class="px-4 py-3 text-right search-area">
           ${nsd.description}
           <input type="hidden" name="descriptions" value="${nsd.description}">
         </td>
         <input type="hidden" name="nsd_ids" id="nsd_id" value="${nsd.id}"> 
-        <input type="hidden" name="type" id="type" value="${nsd.type}"> 
+        <input type="hidden" name="receiver_type" id="receiver_type" value="${nsd.which_receiver_type}"> 
+        <input type="hidden" name="sender_type" id="sender_type" value="${nsd.which_sender_type}">
       </tr>`; 
       tableBody.insertAdjacentHTML('beforeend', newRow);
-      $('#amount, #qty, #description, #total_amount').val('');
+      $('#sell_rate,#sell_amount,#purchase_rate,#purchase_amount, #qty, #description').val('');
       $('#supplier, #customer').prop('selectedIndex', 0);
     addLastRow()
     }
@@ -786,11 +841,16 @@
 
   </script>
 <script>
-  $('#amount, #qty').on('input', function() {
-    const amount = parseFloat($('#amount').val()) || 0;
+  $('#sell_rate, #purchase_rate, #qty').on('input', function() {
+    const sellRate = parseFloat($('#sell_rate').val()) || 0;
+    const purchaseRate = parseFloat($('#purchase_rate').val()) || 0;
     const qty = parseFloat($('#qty').val()) || 0;
-    const total = amount * qty; 
-    $('#total_amount').val(total.toFixed(2));
+
+    const sellAmount = sellRate * qty;
+    const purchaseAmount = purchaseRate * qty;
+
+    $('#sell_amount').val(sellAmount.toFixed(2));
+    $('#purchase_amount').val(purchaseAmount.toFixed(2));
   });
 
   function addToNSDGrid() {
@@ -804,11 +864,14 @@
     const customer = customerEl.options[customerEl.selectedIndex]?.text || "";
     const customerSelect = customerEl.value;
     const qty = parseFloat(document.getElementById("qty").value) || 0;
-    const amount = parseFloat(document.getElementById("amount").value) || 0;
     const description = document.getElementById("description").value.trim();
-    const total_amount = qty * amount;
-    const type_value = $('#supplier').find('option:selected').data('type');
-    if ( !date || !supplierSelect || !customerSelect || !qty || !amount) {
+    const sender_type= $('#supplier').find('option:selected').data('type');
+    const receiver_type= $('#customer').find('option:selected').data('type');
+    const sell_rate = parseFloat(document.getElementById("sell_rate").value) || 0;
+    const purchase_rate = parseFloat(document.getElementById("purchase_rate").value) || 0;
+    const sell_amount = parseFloat(document.getElementById("sell_amount").value) || 0;
+    const purchase_amount = parseFloat(document.getElementById("purchase_amount").value) || 0;
+    if ( !date || !supplierSelect || !customerSelect || !qty) {
       alert("⚠️ Please fill in all required fields before adding.");
       return;
     }
@@ -826,11 +889,15 @@
         supplier: supplierSelect,
         customer: customerSelect,
         qty: qty,
-        amount: amount,
-        total_amount: total_amount,
         description: description,
         nsd_id:nsd_id,
-        type: type_value 
+        sender_type: sender_type,
+        receiver_type: receiver_type,
+        sell_rate: sell_rate,
+        purchase_rate: purchase_rate,
+        sell_amount: sell_amount,
+        purchase_amount: purchase_amount, 
+
       }), 
     })
       .then((response) => response.json())
@@ -867,19 +934,28 @@
           <input type="hidden" name="qtys" value="${qty}">
         </td>
         <td class="px-4 py-3 text-right search-area">
-          ${amount.toFixed(2)}
-          <input type="hidden" name="amounts" value="${amount}">
+          ${sell_rate.toFixed(2)}
+          <input type="hidden" name="sell_rates" value="${sell_rate}">
         </td>
         <td class="px-4 py-3 text-right search-area">
-          ${total_amount.toFixed(2)}
-          <input type="hidden" name="total_amounts" value="${total_amount.toFixed(2)}">
+          ${sell_amount.toFixed(2)}
+          <input type="hidden" name="sell_amounts" value="${sell_amount}">   
+        </td>
+        <td class="px-4 py-3 text-right search-area">
+          ${purchase_rate.toFixed(2)}
+          <input type="hidden" name="purchase_rates" value="${purchase_rate}">
+        </td>
+        <td class="px-4 py-3 text-right search-area">
+          ${purchase_amount.toFixed(2)}
+          <input type="hidden" name="purchase_amounts" value="${purchase_amount}">
         </td>
          <td class="px-4 py-3 text-left search-area">
           ${description}
           <input type="hidden" name="descriptions" value="${description}">
         </td>
         <input type="hidden" name="nsd_ids" id="nsd_id" value="${nsd_id}"> 
-        <input type="hidden" name="type" id="type" value="${type_value}"> 
+        <input type="hidden" name="sender_type" id="type" value="${sender_type}">
+        <input type="hidden" name="receiver_type" id="type" value="${receiver_type}">
         `);
             selectedTR = '';
           }else{
@@ -906,19 +982,29 @@
           <input type="hidden" name="qtys" value="${qty}">
         </td>
         <td class="px-4 py-3 text-right search-area">
-          ${amount.toFixed(2)}
-          <input type="hidden" name="amounts" value="${amount}">
+          ${sell_rate.toFixed(2)}
+          <input type="hidden" name="sell_rates" value="${sell_rate}">
         </td>
         <td class="px-4 py-3 text-right search-area">
-          ${total_amount.toFixed(2)}
-          <input type="hidden" name="total_amounts" value="${total_amount.toFixed(2)}">
+          ${sell_amount.toFixed(2)}
+          <input type="hidden" name="sell_amounts" value="${sell_amount}">   
         </td>
+        <td class="px-4 py-3 text-right search-area">
+          ${purchase_rate.toFixed(2)}
+          <input type="hidden" name="purchase_rates" value="${purchase_rate}">
+        </td>
+        <td class="px-4 py-3 text-right search-area">
+          ${purchase_amount.toFixed(2)}
+          <input type="hidden" name="purchase_amounts" value="${purchase_amount}">
+        </td>
+
          <td class="px-4 py-3 text-left search-area">
           ${description}
           <input type="hidden" name="descriptions" value="${description}">
         </td>
         <input type="hidden" name="nsd_ids" id="nsd_id" value="${nsd_id}"> 
-        <input type="hidden" name="type" id="type" value="${type_value}"> 
+        <input type="hidden" name="sender_type" id="type" value="${sender_type}">
+        <input type="hidden" name="receiver_type" id="type" value="${receiver_type}">
       </tr>`;
 
     tableBody.insertAdjacentHTML('beforeend', newRow);
@@ -969,17 +1055,25 @@ function getLastNSDNo() {
     document.getElementById("nsd_name").value = selectedRow.cells[2].innerText.trim();
     document.getElementById("date").value = selectedRow.cells[3].innerText.trim();
     document.getElementById("customer").value = selectedRow.cells[5].querySelector('input').value;
-    document.getElementById("amount").value = selectedRow.cells[7].innerText.trim();
     document.getElementById("qty").value = selectedRow.cells[6].innerText.trim();
-    document.getElementById("total_amount").value = selectedRow.cells[8].innerText.trim();
-    document.getElementById("description").value = selectedRow.cells[9].innerText.trim();
+    document.getElementById("sell_rate").value = selectedRow.cells[7].innerText.trim();
+    document.getElementById("sell_amount").value = selectedRow.cells[8].innerText.trim();
+    document.getElementById("purchase_rate").value = selectedRow.cells[9].innerText.trim();
+    document.getElementById("purchase_amount").value = selectedRow.cells[10].innerText.trim();
+    document.getElementById("description").value = selectedRow.cells[11].innerText.trim();
     document.getElementById("nsdId").value = selectedRow.querySelector('#nsd_id').value;
-    var type = selectedRow.querySelector('#type') ? selectedRow.querySelector('#type').value : 'suppliers';
-
-    if (type === 'customers') {
+    var sender_type = selectedRow.querySelector('#sender_type')  ? selectedRow.querySelector('#sender_type').value : 'suppliers';
+    var receiver_type = selectedRow.querySelector('#receiver_type') ? selectedRow.querySelector('#receiver_type').value : 'suppliers';
+    console.log(selectedRow.cells[5].querySelector('input').value) 
+    if (sender_type === 'customers') {
       $('#allSuppliers').prop('checked', true).change();
     } else {
       $('#allSuppliers').prop('checked', false).change();
+    }
+    if (receiver_type === 'customers') {
+      $('#allCustomers').prop('checked', true).change();
+    } else {
+      $('#allCustomers').prop('checked', false).change();
     }
     document.getElementById("supplier").value = selectedRow.cells[4].querySelector('input').value;
     }else{
@@ -988,22 +1082,29 @@ function getLastNSDNo() {
     document.getElementById("nsd_name").value = selectedRow.cells[1].innerText.trim();
     document.getElementById("date").value = selectedRow.cells[2].innerText.trim();
     document.getElementById("customer").value = selectedRow.cells[4].querySelector('input').value;
-    document.getElementById("amount").value = selectedRow.cells[6].innerText.trim();
     document.getElementById("qty").value = selectedRow.cells[5].innerText.trim();
-    document.getElementById("total_amount").value = selectedRow.cells[7].innerText.trim();
-    document.getElementById("description").value = selectedRow.cells[8].innerText.trim();
+    document.getElementById("sell_rate").value = selectedRow.cells[6].innerText.trim();
+    document.getElementById("sell_amount").value = selectedRow.cells[7].innerText.trim();
+    document.getElementById("purchase_rate").value = selectedRow.cells[8].innerText.trim();
+    document.getElementById("purchase_amount").value = selectedRow.cells[9].innerText.trim();
+    document.getElementById("description").value = selectedRow.cells[10].innerText.trim();
     document.getElementById("nsdId").value = selectedRow.querySelector('#nsd_id').value;
-    var type = selectedRow.querySelector('#type') ? selectedRow.querySelector('#type').value : 'suppliers';
+    var sender_type = selectedRow.querySelector('#sender_type') ? selectedRow.querySelector('#sender_type').value : 'suppliers';
+    var receiver_type = selectedRow.querySelector('#receiver_type') ? selectedRow.querySelector('#receiver_type').value : 'suppliers';
 
-    if (type === 'customers') {
+    if (sender_type === 'customers') {
       $('#allSuppliers').prop('checked', true).change();
     } else {
       $('#allSuppliers').prop('checked', false).change();
     }
+    if (receiver_type === 'customers') {
+      $('#allCustomers').prop('checked', true).change();
+    } else {
+      $('#allCustomers').prop('checked', false).change();
+    }
     document.getElementById("supplier").value = selectedRow.cells[3].querySelector('input').value;
   }
 
-    // selectedRow.remove();
     $('#addToGridText').text('Update Grid');
     $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-blue-500 text-white');
 
@@ -1055,11 +1156,12 @@ function resetSLNo() {
 }
 
   function clearNSDForm() {
-    $('#amount, #qty, #description, #total_amount, #supplierID, #customerID').val('');
+    $('#sell_rate,#sell_amount,#purchase_rate,#purchase_amount, #qty, #description, #supplierID, #customerID').val('');
     $('#supplier, #customer').prop('selectedIndex', 0);
     $('#allSuppliers').prop('checked', false);
       $('#supplierCredit').empty();
       $('#customerCredit').empty(1)
+    $('#nsd_no').val(getLastNSDNo());
   }
 
   function makeRowHighlight(tr){
@@ -1100,8 +1202,10 @@ function resetSLNo() {
         const tableBody = $('#viewNSDTable tbody');
         tableBody.empty(); 
         totalQty = data.total_qty || 0;
-        totalAmount = data.total_amount || 0;
-        rateAvg = data.rate_avg || 0;
+        total_sell_amount = data.total_sell_amount || 0;
+        sell_rate_avg = data.sell_rate_avg || 0;
+        total_purchase_amount = data.total_purchase_amount || 0;
+        purchase_rate_avg = data.purchase_rate_avg || 0;
         data.nsds.forEach((nsd, index) => {
           const newRow = `
             <tr>
@@ -1117,33 +1221,42 @@ function resetSLNo() {
                 <input type="hidden" name="dates" value="${nsd.date.split('T')[0]}">
                 </td>
               <td class="px-4 py-3 text-left search-area">
-        ${nsd.type === 'suppliers' ? nsd.supplier : nsd.customer} 
+        ${nsd.which_sender_type === 'suppliers' ? nsd.sender_supplier : nsd.sender_customer} 
         <input 
           type="hidden" 
           name="suppliers" 
-          value="${nsd.type === 'suppliers' ? nsd.supplier_id : nsd.customer_id}"
+          value="${nsd.which_sender_type === 'suppliers' ? nsd.sender_supplier_id : nsd.sender_customer_id}"
+        >
+                </td>
+              <td class="px-4 py-3 text-left search-area">
+        ${nsd.which_receiver_type === 'suppliers' ? nsd.receiver_supplier : nsd.receiver_customer} 
+        <input 
+          type="hidden" 
+          name="customers" 
+          value="${nsd.which_receiver_type === 'suppliers' ? nsd.receiver_supplier_id : nsd.receiver_customer_id}"
         >
                 </td>
               <td class="px-4 py-3 text-right font-bold">${parseFloat(nsd.qty).toFixed(2)}
                 <input type="hidden" name="qtys" value="${nsd.qty}">
                 </td>
               <td class="px-4 py-3 text-right font-bold">${parseFloat(nsd.sell_rate).toFixed(2)}
-                <input type="hidden" name="amounts" value="${nsd.sell_rate}">
+                <input type="hidden" name="sell_rates" value="${nsd.sell_rate}">
                 </td>
               <td class="px-4 py-3 text-right font-bold">${parseFloat(nsd.sell_amount).toFixed(2)}
-                <input type="hidden" name="amounts" value="${nsd.sell_amount}">
+                <input type="hidden" name="sell_amount" value="${nsd.sell_amount}">
                 </td>
               <td class="px-4 py-3 text-right font-bold">${parseFloat(nsd.purchase_rate).toFixed(2)}
-                <input type="hidden" name="amounts" value="${nsd.purchase_rate}">
+                <input type="hidden" name="purchase_rates" value="${nsd.purchase_rate}">
                 </td>
               <td class="px-4 py-3 text-right font-bold">${parseFloat(nsd.purchase_amount).toFixed(2)}
-                <input type="hidden" name="total_amounts" value="${parseFloat(nsd.purchase_amount).toFixed(2)}">
+                <input type="hidden" name="purchase_amounts" value="${parseFloat(nsd.purchase_amount).toFixed(2)}">
                 </td>
               <td class="px-4 py-3 text-right search-area">${nsd.description}
                 <input type="hidden" name="descriptions" value="${nsd.description}">
                 </td>
               <input type="hidden" name="nsd_ids" id="nsd_id" value="${nsd.id}"> 
-              <input type="hidden" name="type" id="type" value="${nsd.type}">
+              <input type="hidden" name="receiver_type" id="receiver_type" value="${nsd.which_receiver_type}"> 
+              <input type="hidden" name="sender_type" id="sender_type" value="${nsd.which_sender_type}">
             </tr>`;
           tableBody.append(newRow);
         });
@@ -1151,8 +1264,10 @@ function resetSLNo() {
           <tr class="bg-blue-200 font-bold">
             <td class="px-4 py-3 text-left" colspan="6">Totals:</td>
             <td class="px-4 py-3 text-right">${parseFloat(totalQty).toFixed(2)}</td>
-            <td class="px-4 py-3 text-right">${parseFloat(rateAvg).toFixed(2)}</td>
-            <td class="px-4 py-3 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
+            <td class="px-4 py-3 text-right">${parseFloat(sell_rate_avg).toFixed(2)}</td>
+            <td class="px-4 py-3 text-right">${parseFloat(total_sell_amount).toFixed(2)}</td>
+            <td class="px-4 py-3 text-right">${parseFloat(purchase_rate_avg).toFixed(2)}</td>
+            <td class="px-4 py-3 text-right">${parseFloat(total_purchase_amount).toFixed(2)}</td>
             <td class="px-4 py-3 text-right"></td>
           </tr>
         `);
@@ -1206,6 +1321,11 @@ updateNSD(button);
           $('#dateFilter').click();
           $('#nsdTableBody').removeClass('hidden')
     }
+    isUpdate = false;
+    $('#addToGridText').text('Add to Grid');
+    $(selectedTR).removeClass('bg-blue-300'); 
+    $(selectedTR).find('button').removeAttr('disabled');
+    selectedTR = '';
   }
 
 </script>

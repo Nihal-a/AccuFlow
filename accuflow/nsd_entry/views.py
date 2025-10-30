@@ -15,10 +15,14 @@ class NSDEntryView(View):
             nsdData.append({
                 'id':nsd.id,
                 'nsd_no':nsd.nsd_no,
-                'supplier':nsd.supplier.name if nsd.supplier else '',
-                'supplier_id':nsd.supplier.id if nsd.supplier else '',
-                'customer':nsd.customer.name if nsd.customer else '',
-                'customer_id':nsd.customer.id if nsd.customer else '',
+                'sender_supplier':nsd.sender_supplier.name if nsd.sender_supplier else '',
+                'sender_supplier_id':nsd.sender_supplier.id if nsd.sender_supplier else '',
+                'sender_customer':nsd.sender_customer.name if nsd.sender_customer else '',
+                'sender_customer_id':nsd.sender_customer.id if nsd.sender_customer else '',
+                'receiver_supplier':nsd.receiver_supplier.name if nsd.receiver_supplier else '',
+                'receiver_supplier_id':nsd.receiver_supplier.id if nsd.receiver_supplier else '',
+                'receiver_customer':nsd.receiver_customer.name if nsd.receiver_customer else '',
+                'receiver_customer_id':nsd.receiver_customer.id if nsd.receiver_customer else '',
                 'date':str(nsd.date),
                 'qty':nsd.qty,
                 'sell_rate':nsd.sell_rate,
@@ -26,7 +30,8 @@ class NSDEntryView(View):
                 'purchase_rate':nsd.purchase_rate,
                 'purchase_amount':nsd.purchase_amount,
                 'description':nsd.description if nsd.description else '', 
-                'type':nsd.which_type if nsd.which_type else '',
+                'which_receiver_type':nsd.which_receiver_type if nsd.which_receiver_type else '',
+                'which_sender_type':nsd.which_sender_type if nsd.which_sender_type else '',
             })
         suppliers = Suppliers.objects.filter(is_active=True)
         customers = Customers.objects.filter(is_active=True)
@@ -61,25 +66,38 @@ class NSDAddView(View):
         dates = request.POST.getlist('dates')
         total_amounts = request.POST.getlist('total_amounts')
         qtys = request.POST.getlist('qtys')
-        sell_rate = request.POST.getlist('sell_rate')
-        sell_amount = request.POST.getlist('sell_amount')
-        purchase_rate = request.POST.getlist('purchase_rate')
-        purchase_amount = request.POST.getlist('purchase_amount')
+        sell_rate = request.POST.getlist('sell_rates')
+        sell_amount = request.POST.getlist('sell_amounts')
+        purchase_rate = request.POST.getlist('purchase_rates')
+        purchase_amount = request.POST.getlist('purchase_amounts')
         supplier_ids = request.POST.getlist('suppliers')
         customer_ids = request.POST.getlist('customers')
         nsd_ids = request.POST.getlist('nsd_ids') 
-        types = request.POST.getlist('type')
+        sender_types = request.POST.getlist('sender_type')
+        receiver_types = request.POST.getlist('receiver_type')
         count = 0
         for id in nsd_ids:
-            customer = None 
-            if types[count] == 'customers':
-                supplier = None
-                customer = get_object_or_404(Customers, id=supplier_ids[count]) if supplier_ids[count] else None
-            else:
-                customer = None
-                supplier = get_object_or_404(Suppliers, id=supplier_ids[count]) if supplier_ids[count] else None
+            sender_customer = None 
+            sender_customer = None
+            receiver_customer = None
+            receiver_supplier = None
             nsd = NSDs.objects.get(id=id)
-            nsd.supplier = supplier
+            if receiver_types[count] == 'customers':
+                receiver_customer = get_object_or_404(Customers, id=customer_ids[count]) if customer_ids[count] else None
+                receiver_supplier = None
+            else:
+                receiver_customer = None
+                receiver_supplier = get_object_or_404(Suppliers, id=customer_ids[count]) if customer_ids[count] else None            
+            if sender_types[count] == 'customers':
+                sender_customer = get_object_or_404(Customers, id=supplier_ids[count]) if supplier_ids[count] else None
+                sender_supplier = None 
+            else:  
+                sender_customer = None
+                sender_supplier = get_object_or_404(Suppliers, id=supplier_ids[count]) if supplier_ids[count] else None
+            nsd.sender_customer = sender_customer
+            nsd.sender_supplier = sender_supplier
+            nsd.receiver_customer = receiver_customer
+            nsd.receiver_supplier = receiver_supplier
             nsd.date = dates[count]
             nsd.qty = qtys[count]
             nsd.sell_rate = sell_rate[count]
@@ -87,7 +105,6 @@ class NSDAddView(View):
             nsd.purchase_rate = purchase_rate[count]    
             nsd.purchase_amount = purchase_amount[count]    
             nsd.hold = False
-            nsd.customer = customer
             nsd.save()  
             count += 1
         return redirect('nsd')
@@ -96,56 +113,80 @@ class NSDAddView(View):
 
 class NSDHold(View):
     def post(self,request):
-        data = json.loads(request.body)
-        nsd_no = data.get('nsd_no')
-        supplier = data.get('supplier')
-        date = data.get('date')
-        qty = data.get('qty')
-        sell_rate = request.get('sell_rate')
-        sell_amount = request.get('sell_amount')
-        purchase_rate = request.get('purchase_rate')
-        purchase_amount = request.get('purchase_amount')
-        description = data.get('description')
-        type_value = data.get('type')
-        customer = None
-        if type_value == 'customers':
-            customer = get_object_or_404(Customers, id=supplier) if supplier else None
-            supplier = None 
-        else:  
-            customer = None
-            supplier = get_object_or_404(Suppliers, id=supplier) if supplier else None
-        if data.get('nsd_id'):
-            nsd = get_object_or_404(NSDs, id=data.get('nsd_id'))
-            nsd.nsd_no = nsd_no
-            nsd.supplier = supplier
-            nsd.date = date
-            nsd.qty = qty
-            nsd.sell_rate = sell_rate
-            nsd.sell_amount = sell_amount
-            nsd.purchase_rate = purchase_rate
-            nsd.purchase_amount = purchase_amount
-            nsd.description = description
-            nsd.type = type_value
-            nsd.customer = customer
-            if not nsd.hold:
-                nsd.hold = False 
-            nsd.save()
-            return JsonResponse({'status':'success','nsd_id':nsd.id,'hold':nsd.hold})
-        nsd = NSDs.objects.create(
-            nsd_no=nsd_no,
-            supplier=supplier,
-            date=date,
-            qty=qty,
-            sell_rate=sell_rate,
-            sell_amount=sell_amount,
-            purchase_rate=purchase_rate,
-            purchase_amount=purchase_amount,
-            description=description,
-            type=type_value,
-            customer=customer,
-            hold=True,
-        )
-        return JsonResponse({'status':'success','nsd_id':nsd.id,'hold':nsd.hold}) 
+        try:
+            data = json.loads(request.body)
+            nsd_no = data.get('nsd_no')
+            supplier = data.get('supplier')
+            date = data.get('date')
+            qty = data.get('qty')
+            sell_rate = data.get('sell_rate')
+            sell_amount = data.get('sell_amount')
+            purchase_rate = data.get('purchase_rate')
+            purchase_amount = data.get('purchase_amount')
+            description = data.get('description')
+            sender_type = data.get('sender_type')
+            receiver_type = data.get('receiver_type')
+            customer = data.get('customer') 
+            sender_customer = None
+            sender_supplier = None
+            receiver_customer = None
+            receiver_supplier = None
+            print(supplier,customer)
+            if sender_type == 'customers':
+                sender_customer = get_object_or_404(Customers, id=supplier) if supplier else None
+                sender_supplier = None 
+            else:  
+                sender_customer = None
+                sender_supplier = get_object_or_404(Suppliers, id=supplier) if supplier else None
+            print('sender portion done')
+            print(sender_customer,sender_supplier)
+            if receiver_type == 'customers':
+                receiver_customer = get_object_or_404(Customers, id=customer) if customer else None
+                receiver_supplier = None
+            else:
+                receiver_customer = None
+                receiver_supplier = get_object_or_404(Suppliers, id=customer) if customer else None            
+            print('receiver portion done')
+            print(receiver_customer,receiver_supplier) 
+            if data.get('nsd_id'):
+                nsd = get_object_or_404(NSDs, id=data.get('nsd_id'))
+                nsd.nsd_no = nsd_no
+                nsd.date = date
+                nsd.qty = qty
+                nsd.sell_rate = sell_rate
+                nsd.sell_amount = sell_amount
+                nsd.purchase_rate = purchase_rate
+                nsd.purchase_amount = purchase_amount
+                nsd.description = description
+                nsd.receiver_customer = receiver_customer
+                nsd.receiver_supplier = receiver_supplier
+                nsd.sender_customer = sender_customer
+                nsd.sender_supplier = sender_supplier
+                if not nsd.hold:
+                    nsd.hold = False 
+                nsd.save()
+                return JsonResponse({'status':'success','nsd_id':nsd.id,'hold':nsd.hold})
+            nsd = NSDs.objects.create(
+                nsd_no=nsd_no,
+                date=date,
+                qty=qty,
+                sell_rate=sell_rate,
+                sell_amount=sell_amount,
+                purchase_rate=purchase_rate,
+                purchase_amount=purchase_amount,
+                description=description,
+                receiver_customer=receiver_customer,
+                receiver_supplier=receiver_supplier,
+                sender_customer=sender_customer,
+                sender_supplier=sender_supplier,
+                hold=True,
+            )
+            return JsonResponse({'status':'success','nsd_id':nsd.id,'hold':nsd.hold}) 
+        
+        except Exception as e:
+            print(e) 
+            return JsonResponse({'status':'error','message':str(e)})
+        
     
     
         
@@ -178,17 +219,23 @@ def nsds_by_date(request):
         )
     nsdData = []
     total_qty = 0
-    total_amount = 0
-    rate_sum = 0
+    total_sell_amount = 0
+    total_purchase_amount = 0
+    sell_rate_sum = 0
+    purchase_rate_sum = 0
     count = 0
     for nsd in nsds:
         nsdData.append({ 
             'id':nsd.id,
             'nsd_no':nsd.nsd_no,
-            'supplier':nsd.supplier.name if nsd.supplier else '',
-            'supplier_id':nsd.supplier.id if nsd.supplier else '',
-            'customer':nsd.customer.name if nsd.customer else '',
-            'customer_id':nsd.customer.id if nsd.customer else '',
+            'sender_supplier':nsd.sender_supplier.name if nsd.sender_supplier else '',
+            'sender_supplier_id':nsd.sender_supplier.id if nsd.sender_supplier else '',
+            'sender_customer':nsd.sender_customer.name if nsd.sender_customer else '',
+            'sender_customer_id':nsd.sender_customer.id if nsd.sender_customer else '',
+            'receiver_supplier':nsd.receiver_supplier.name if nsd.receiver_supplier else '',
+            'receiver_supplier_id':nsd.receiver_supplier.id if nsd.receiver_supplier else '',
+            'receiver_customer':nsd.receiver_customer.name if nsd.receiver_customer else '',
+            'receiver_customer_id':nsd.receiver_customer.id if nsd.receiver_customer else '',
             'date':str(nsd.date),
             'qty':nsd.qty,
             'sell_rate':nsd.sell_rate,
@@ -196,7 +243,8 @@ def nsds_by_date(request):
             'purchase_rate':nsd.purchase_rate,
             'purchase_amount':nsd.purchase_amount,
             'description':nsd.description if nsd.description else '', 
-            'type':nsd.which_type if nsd.which_type else '',
+            'which_receiver_type':nsd.which_receiver_type if nsd.which_receiver_type else '',
+            'which_sender_type':nsd.which_sender_type if nsd.which_sender_type else '',
         })
         total_qty += nsd.qty
         total_sell_amount += nsd.sell_amount
@@ -206,7 +254,14 @@ def nsds_by_date(request):
         count += 1
     sell_rate_avg = sell_rate_sum / count if count > 0 else 0
     purchase_rate_avg = purchase_rate_sum / count if count > 0 else 0
-    return JsonResponse({'nsds': nsdData, 'total_qty': total_qty, 'total_amount': total_amount, 'sell_rate_avg': sell_rate_avg, 'purchase_rate_avg': purchase_rate_avg})
+    context ={
+        'nsds': nsdData, 'total_qty': total_qty, 
+        'sell_rate_avg': sell_rate_avg, 
+        'purchase_rate_avg': purchase_rate_avg,
+        'total_sell_amount': total_sell_amount,
+        'total_purchase_amount': total_purchase_amount,
+        }
+    return JsonResponse(context)
 
 
 def delete_nsd(request):
