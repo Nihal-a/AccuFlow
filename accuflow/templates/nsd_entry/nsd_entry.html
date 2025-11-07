@@ -792,7 +792,7 @@
         <td class="px-4 py-3 text-left search-area">
           
         ${nsd.which_receiver_type === 'suppliers' ? nsd.receiver_supplier : nsd.receiver_customer}
-          <input type="hidden" name="customers" value="${nsd.which_sender_type === 'suppliers' ? nsd.receiver_supplier_id : nsd.receiver_customer_id}">
+          <input type="hidden" name="customers" value="${nsd.which_receiver_type === 'suppliers' ? nsd.receiver_supplier_id : nsd.receiver_customer_id}">
         </td>
         <td class="px-4 py-3 text-right search-area">
           ${nsd.qty}
@@ -1071,9 +1071,9 @@ function getLastNSDNo() {
       $('#allSuppliers').prop('checked', false).change();
     }
     if (receiver_type === 'customers') {
-      $('#allCustomers').prop('checked', true).change();
+      $('#allCustomer').prop('checked', true).change();
     } else {
-      $('#allCustomers').prop('checked', false).change();
+      $('#allCustomer').prop('checked', false).change();
     }
     document.getElementById("supplier").value = selectedRow.cells[4].querySelector('input').value;
     }else{
@@ -1098,10 +1098,11 @@ function getLastNSDNo() {
       $('#allSuppliers').prop('checked', false).change();
     }
     if (receiver_type === 'customers') {
-      $('#allCustomers').prop('checked', true).change();
+      $('#allCustomer').prop('checked', true).change();
     } else {
-      $('#allCustomers').prop('checked', false).change();
+      $('#allCustomer').prop('checked', false).change();
     }
+    console.log(selectedRow.cells[4].querySelector('input').value)
     document.getElementById("supplier").value = selectedRow.cells[3].querySelector('input').value;
   }
 

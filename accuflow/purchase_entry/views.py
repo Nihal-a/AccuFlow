@@ -1,11 +1,10 @@
-import datetime
 import json
 from django.shortcuts import render,redirect, get_object_or_404
 from core.models import Purchases,Suppliers,Customers,Godowns
 from django.views import View
-from django.views.generic.edit import DeleteView
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
+from django.db.models import Q
 
 class PurchaseEntryView(View):
     def get(self,request):
@@ -157,6 +156,7 @@ def getLastPurchaseNo():
     last_purchase_no = Purchases.objects.filter(is_active=True).order_by('-purchase_no').first() 
     
     if last_purchase_no and last_purchase_no.purchase_no.isdigit():
+        print(last_purchase_no.purchase_no)
         new_purchase_no = int(last_purchase_no.purchase_no) + 1
     else:
         new_purchase_no = 1

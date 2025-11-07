@@ -607,7 +607,7 @@
     $('#purchase_name, #amount, #qty, #description, #total_amount').val('');
     $('#supplier, #godown').prop('selectedIndex', 0);
       $('#supplierCredit').empty();
-  getLastPurchaseNo()
+    $('#purchase_name').val(getLastPurchaseNo()).change();
 
     });
     $('#btnView').on('click', function(e) {
@@ -799,9 +799,12 @@
         console.log(data)
         purchase_id = data.purchase_id;
         hold = data.hold
+        console.log(hold)
+        console.log(data.hold) 
 
-    clearPurchaseForm();
     isUpdate = false;
+    clearPurchaseForm();
+    $('#purchase_name').val(getLastPurchaseNo()).change();
         if (hold){
           if (selectedTR){
             $(selectedTR).empty();
@@ -885,10 +888,9 @@
     tableBody.insertAdjacentHTML('beforeend', newRow);
 
           }
-      $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-green-500 text-white');
+              $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-green-500 text-white');
       $('#addToGridText').text('Add to Grid');
-    $('#purchase_name').val(getLastPurchaseNo());
-    resetSLNo()
+
     addLastRow()
         }else{
           $('#viewPurchaseDiv').removeClass('hidden');
@@ -897,6 +899,7 @@
           $('#dateFilter').click();
           $('#purchaseTableBody').removeClass('hidden')
         }
+    resetSLNo()
       })
       .catch((error) => {
         console.error("Error holding purchase:", error);
@@ -911,6 +914,7 @@ function getLastPurchaseNo() {
       .then(response => response.json())
       .then(data => {
         lastPurchaseNo = data.purchase_no;
+        console.log(lastPurchaseNo)
         document.getElementById("purchase_name").value = lastPurchaseNo;
       })
       .catch(error => {
@@ -998,7 +1002,9 @@ function getLastPurchaseNo() {
         selectedTR.remove();
         deleteUrl = "";
         resetSLNo();
-        getLastPurchaseNo()
+        addLastRow();
+        console.log(getLastPurchaseNo())
+    $('#purchase_name').val(getLastPurchaseNo()).change();
         closeModal();
       } else {
         console.error('Delete failed:', data.message);
@@ -1021,7 +1027,8 @@ function resetSLNo() {
     $('#allSuppliers').prop('checked', false);
       $('#supplierCredit').empty();
       $('#godownCredit').empty()
-    $('#purchase_name').val(getLastPurchaseNo());
+    $('#purchase_name').val(getLastPurchaseNo()).change();
+    $('#purchaseId').val('');
   }
 
   function makeRowHighlight(tr){
@@ -1159,6 +1166,7 @@ updatePurchase(button);
     clearPurchaseForm();
     if (isUpdate){
 
+    isUpdate = false;
           $('#viewPurchaseDiv').removeClass('hidden');
           $('#viewDiv').removeClass('hidden');
           $('#createView').addClass('hidden');

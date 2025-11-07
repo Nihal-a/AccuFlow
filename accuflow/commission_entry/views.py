@@ -32,7 +32,7 @@ class CommissionEntryView(View):
             expensesData.append({
                 'id':expense.id,
                 'name':expense.category,
-                'supplierId':expense.expenseId,
+                'expenseId':expense.expenseId,
             })
         context = {
             'commissions':commissionData,
@@ -40,6 +40,7 @@ class CommissionEntryView(View):
             'godowns':godowns,
             'last_commission_no':getLastCommissionNo(),
         }
+        print(expensesData) 
         return render(request,'commission_entry/commission_entry.html',context)
     
     

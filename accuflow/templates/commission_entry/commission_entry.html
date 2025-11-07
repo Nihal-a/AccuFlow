@@ -100,7 +100,7 @@
   <label class="block text-gray-700 mb-1">Expense*</label>
   <div class="flex items-center gap-4">
     <div class="flex items-center gap-4 w-full">
-    <div class="flex items-center">
+    <!-- <div class="flex items-center">
       <input
         type="checkbox"
         id="allExpenses"
@@ -109,7 +109,7 @@
         class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
       />
       <label for="allExpenses" class="ml-2 text-gray-700">All</label>
-    </div>
+    </div> -->
 
     <!-- Dropdown -->
     <div class="flex-1">
@@ -121,7 +121,7 @@
       >
         <option value="" selected>Select Expense</option>
         {% for expense in expenses %}
-        <option value="{{ expense.id }}" data-code="{{expense.expenseId}}" data-balance="{{expense.balance}}" data-type="expenses">{{ expense.name }}</option>
+        <option value="{{ expense.id }}" data-code="{{expense.expenseId }}">{{ expense.name }}</option>
         {% endfor %}
       </select>
     </div>
@@ -129,34 +129,7 @@
     
   </div>
 </div>
-<div class=" w-[20%]">
-  <!-- Label -->
-  <label class="block text-gray-700 mb-1">code*</label>
-  <div class="flex items-center gap-4 ">
-    <!-- Row: Checkbox + Dropdown -->
-    <div class="flex items-center gap-4 w-full">
-    <!-- Dropdown -->
-     <div class="flex-1">
-      <input
-        type="text"
-        name=""
-        id="expenseID"
-        placeholder=""
-        disabled
-        class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-        required
-      />
-    </div>
-    </div>
-    
-  </div>
-</div>
 
-    <div class="w[20%]">
-      <div id="expenseCredit" class="">
-
-      </div>
-    </div>
 </div>
 
 
@@ -606,7 +579,6 @@
     $('#viewDiv').addClass('hidden');
     $('#commission_name, #amount, #qty, #description, #total_amount').val('');
     $('#expense, #godown').prop('selectedIndex', 0);
-      $('#expenseCredit').empty();
   getLastCommissionNo()
 
     });
@@ -624,15 +596,10 @@
     });
 
     $('#expense').on('change', function() {
-      $('#expenseCredit').empty();
       var selectedOption = $(this).find('option:selected');
       var code = selectedOption.data('code') || '';
       var balance = selectedOption.data('balance') || '0';
       $('#expenseID').val(code);
-      $('#expenseCredit').empty();
-      $('#expenseCredit').append(`
-      <p class="font-semibold ${parseFloat(balance).toFixed(2)<= 0 ? `text-red`: ``}">Balance:${parseFloat(balance).toFixed(2)} </p> 
-      `);
     });
     $('#godown').on('change', function() {
       var selectedOption = $(this).find('option:selected');
@@ -902,13 +869,12 @@ function getLastCommissionNo() {
     document.getElementById("total_amount").value = selectedRow.cells[8].innerText.trim();
     document.getElementById("description").value = selectedRow.cells[9].innerText.trim();
     document.getElementById("commissionId").value = selectedRow.querySelector('#commission_id').value;
-{% comment %} 
+
     if (type === 'customers') {
       $('#allExpenses').prop('checked', true).change();
     } else {
       $('#allExpenses').prop('checked', false).change();
     }
-     {% endcomment %}
     document.getElementById("expense").value = selectedRow.cells[4].querySelector('input').value;
     }else{
       makeRowHighlight(selectedRow);
@@ -920,13 +886,13 @@ function getLastCommissionNo() {
     document.getElementById("total_amount").value = selectedRow.cells[7].innerText.trim();
     document.getElementById("description").value = selectedRow.cells[8].innerText.trim();
     document.getElementById("commissionId").value = selectedRow.querySelector('#commission_id').value;
-{% comment %} 
+
     if (type === 'customers') {
       $('#allExpenses').prop('checked', true).change();
     } else {
       $('#allExpenses').prop('checked', false).change();
     }
-     {% endcomment %}
+
     document.getElementById("expense").value = selectedRow.cells[3].querySelector('input').value;
   }
 
@@ -994,7 +960,6 @@ function resetSLNo() {
     $('#amount, #qty, #description, #total_amount, #expenseID, #godownID').val('');
     $('#expense, #godown').prop('selectedIndex', 0);
     $('#allExpenses').prop('checked', false);
-      $('#expenseCredit').empty();
       $('#godownCredit').empty()
     $('#commission_name').val(getLastCommissionNo());
   }
