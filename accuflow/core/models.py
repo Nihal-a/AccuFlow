@@ -247,21 +247,18 @@ class NSDs(models.Model):
             return self.supplier
         
 class Cashs(models.Model):
-    nsd_no = models.TextField(blank=True,null=True)
-    cashbank = models.ForeignKey(CashBanks, on_delete=models.CASCADE, blank=True, null=True)
-    party = models.ForeignKey(Customers, on_delete=models.CASCADE, blank=True, null=True)
+    cash_no = models.TextField(blank=True,null=True)
+    cash_bank = models.ForeignKey(CashBanks, on_delete=models.CASCADE, blank=True, null=True)
+    customer = models.ForeignKey(Customers, on_delete=models.CASCADE, blank=True, null=True)
+    supplier = models.ForeignKey(Suppliers, on_delete=models.CASCADE, blank=True, null=True)
     date = models.DateField(blank=True,null=True)
-    code = models.TextField(blank=True,null=True)
-    qty = models.FloatField(default=0)
-    sell_rate = models.FloatField(default=0)
-    sell_amount = models.FloatField(default=0)
-    purchase_rate = models.FloatField(default=0)
-    purchase_amount = models.FloatField(default=0)
+    amount = models.FloatField(default=0)
     created_at = models.DateTimeField(auto_now_add=True,blank=True,null=True)
     is_active = models.BooleanField(default=True)
     description = models.TextField(blank=True,null=True)
     hold = models.BooleanField(default=False)
-    type = models.TextField(blank=True,null=True)
+    
+    
     
     
     def __str__(self):

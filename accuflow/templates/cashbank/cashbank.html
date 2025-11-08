@@ -53,6 +53,7 @@
       <tr>
         <th class="px-4 py-3 text-left font-medium">Actions</th>
         <th class="px-4 py-3 text-left font-medium">#</th>
+        <th class="px-4 py-3 text-left font-medium">Cash/Bank No</th>
         <th class="px-4 py-3 text-left font-medium">Name</th>
         <th class="px-4 py-3 text-left font-medium">Description</th>
       </tr>
@@ -81,6 +82,7 @@
         <td class="px-4 py-2 w-1">
           {{forloop.counter}}
         </td>
+        <td class="px-4 py-2 font-semibold uppercase search-area">{{ cashbank.cashbankId }}</td>
         <td class="px-4 py-2 font-semibold uppercase search-area">{{ cashbank.name }}</td>
          <td class="px-4 py-2 text-gray-700 search-area">{{ cashbank.description }}</td>
       </tr>
