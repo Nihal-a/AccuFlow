@@ -890,6 +890,7 @@
           }
               $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-green-500 text-white');
       $('#addToGridText').text('Add to Grid');
+      isUpdate = false
 
     addLastRow()
         }else{
@@ -898,6 +899,8 @@
           $('#createView').addClass('hidden');
           $('#dateFilter').click();
           $('#purchaseTableBody').removeClass('hidden')
+      $('#addToGridText').text('Add to Grid');
+          isUpdate = false
         }
     resetSLNo()
       })
@@ -1012,7 +1015,9 @@ function getLastPurchaseNo() {
     })
     .catch(error => {
       console.error('Error while deleting purchase:', error);
-    });
+    }).finally(() => {
+  selectedTR = '';
+});
   } 
 function resetSLNo() {
   $('#purchaseTableBody .sl').each(function (index) {

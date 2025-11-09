@@ -114,7 +114,7 @@
       >
         <option value="" selected>Select Cash/Bank</option>
         {% for cashbank in cashbanks %}
-        <option value="{{ cashbank.id }}" data-code="{{cashbank.cashbankd}}">{{ cashbank.name }}</option>
+        <option value="{{ cashbank.id }}" data-code="{{cashbank.cashbankId}}">{{ cashbank.name }}</option>
         {% endfor %}
       </select>
     </div>
@@ -218,7 +218,27 @@
       />
     </div>
   </div>
+<div class=" col-span-4">
+  <!-- Label -->
+  <label class="block text-gray-700 mb-1">Transaction*</label>
 
+  <!-- Row: Checkbox + Dropdown -->
+  <div class="flex items-center gap-4">
+
+    <!-- Dropdown -->
+    <div class="flex-1">
+      <select
+        name=""
+        id="transaction"
+        class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+        required
+      >
+        <option value="Paid" selected>Paid</option>
+        <option value="Received">Received</option>
+      </select>
+    </div>
+  </div>
+</div>
   <div class="description col-span-6">
     <div class="">
       <label class="block text-gray-700">Description</label>
@@ -337,6 +357,7 @@
             <th class="px-4 py-3 text-left font-medium">Cash/Bank</th>
             <th class="px-4 py-3 text-left font-medium">Party</th>
             <th class="px-4 py-3 text-right font-medium">Amount</th>
+            <th class="px-4 py-3 text-right font-medium">Transaction</th>
             <th class="px-4 py-3 text-right font-medium">Description</th>
           </tr>
         </thead>
@@ -453,6 +474,7 @@
             <th class="px-4 py-3 text-left font-medium">Cash/Bank</th>
             <th class="px-4 py-3 text-left font-medium">Party</th>
             <th class="px-4 py-3 text-right font-medium">Amount</th>
+            <th class="px-4 py-3 text-right font-medium">Transaction</th>
             <th class="px-4 py-3 text-right font-medium">Description</th>
           </tr>
         </thead>
@@ -541,7 +563,7 @@
     rateAvg = rateSum / count || 0;
     const lastRow = `
       <tr class="bg-blue-200 font-bold" id="totalRow">
-        <td class="px-4 py-3 text-left" colspan="5">Totals:</td>
+        <td class="px-4 py-3 text-left" colspan="6">Totals:</td>
         <td class="px-4 py-3 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
         <td class="px-4 py-3 text-right"></td>
       </tr>`;
@@ -637,6 +659,10 @@
           <input type="hidden" name="amounts" value="${cash.amount}">   
         </td>
         <td class="px-4 py-3 text-right search-area">
+          ${cash.transaction}
+          <input type="hidden" name="transactions" value="${cash.transaction}">
+        </td>
+        <td class="px-4 py-3 text-right search-area">
           ${cash.description}
           <input type="hidden" name="descriptions" value="${cash.description}">
         </td>
@@ -675,8 +701,9 @@
     const cashSelect = cashEl.value;
     const amount = parseFloat(document.getElementById("amount").value) || 0;
     const description = document.getElementById("description").value.trim();
+    const transaction = document.getElementById("transaction").value.trim();
     const type_value = $('#supplier').find('option:selected').data('type');
-    if ( !date || !supplierSelect || !cashSelect || !amount) {
+    if ( !date || !supplierSelect || !cashSelect || !amount || !transaction) {
       alert("⚠️ Please fill in all required fields before adding.");
       return;
     }
@@ -696,6 +723,7 @@
         amount: amount,
         description: description,
         cash_id:cash_id,
+        transaction:transaction,
         type: type_value 
       }), 
     })
@@ -734,6 +762,10 @@
           <input type="hidden" name="amounts" value="${amount}">
         </td>
          <td class="px-4 py-3 text-left search-area">
+          ${transaction}
+          <input type="hidden" name="transactions" value="${transaction}">
+        </td>
+         <td class="px-4 py-3 text-left search-area">
           ${description}
           <input type="hidden" name="descriptions" value="${description}">
         </td>
@@ -764,6 +796,10 @@
           ${amount.toFixed(2)}
           <input type="hidden" name="amounts" value="${amount}">
         </td>
+         <td class="px-4 py-3 text-center search-area">
+          ${transaction}
+          <input type="hidden" name="transactions" value="${transaction}">
+        </td>
          <td class="px-4 py-3 text-left search-area">
           ${description}
           <input type="hidden" name="descriptions" value="${description}">
@@ -779,12 +815,15 @@
       $('#addToGridText').text('Add to Grid');
 
     addLastRow()
+    isUpdate = false
         }else{
           $('#viewCashDiv').removeClass('hidden');
     $('#viewDiv').removeClass('hidden');
           $('#createView').addClass('hidden');
           $('#dateFilter').click();
           $('#cashTableBody').removeClass('hidden')
+      $('#addToGridText').text('Add to Grid');
+      isUpdate = false
         }
     resetSLNo()
       })
@@ -820,8 +859,9 @@ function getLastCashNo() {
     document.getElementById("date").value = selectedRow.cells[3].innerText.trim();
     document.getElementById("cash").value = selectedRow.cells[4].querySelector('input').value;
     document.getElementById("amount").value = selectedRow.cells[6].innerText.trim();
-    document.getElementById("description").value = selectedRow.cells[7].innerText.trim();
+    document.getElementById("description").value = selectedRow.cells[8].innerText.trim();
     document.getElementById("cashId").value = selectedRow.querySelector('#cash_id').value;
+    document.getElementById("transaction").value = selectedRow.cells[7].innerText.trim();
     var type = selectedRow.querySelector('#type') ? selectedRow.querySelector('#type').value : 'suppliers';
 
     document.getElementById("supplier").value = selectedRow.cells[5].querySelector('input').value;
@@ -832,7 +872,8 @@ function getLastCashNo() {
     document.getElementById("date").value = selectedRow.cells[2].innerText.trim();
     document.getElementById("cash").value = selectedRow.cells[3].querySelector('input').value;
     document.getElementById("amount").value = selectedRow.cells[5].innerText.trim();
-    document.getElementById("description").value = selectedRow.cells[6].innerText.trim();
+    document.getElementById("description").value = selectedRow.cells[7].innerText.trim();
+    document.getElementById("transaction").value = selectedRow.cells[6].innerText.trim();
     document.getElementById("cashId").value = selectedRow.querySelector('#cash_id').value;
     var type = selectedRow.querySelector('#type') ? selectedRow.querySelector('#type').value : 'suppliers';
 
@@ -882,7 +923,9 @@ function getLastCashNo() {
     })
     .catch(error => {
       console.error('Error while deleting cash:', error);
-    });
+    }).finally(() => {
+  selectedTR = '';
+});
   } 
 function resetSLNo() {
   $('#cashTableBody .sl').each(function (index) {
@@ -892,7 +935,7 @@ function resetSLNo() {
 }
 
   function clearCashForm() {
-    $('#amount, #supplierID, #cashbankId').val('');
+    $('#amount, #supplierID, #cashbankId,#cashId, #transaction, #description').val('');
     $('#supplier, #cash').prop('selectedIndex', 0);
       $('#supplierCredit').empty();
       $('#cashCredit').empty()
@@ -917,7 +960,6 @@ function resetSLNo() {
     $('#viewCashTable tbody tr').each(function() {
         console.log($(this).find('td:nth-child(7)'))
       const totalAmount = parseFloat($(this).find('td:nth-child(7)').text()) || 0;
-      console.log(totalAmount)
       if (totalAmount >= fromPrice && totalAmount <= toPrice) {
         $(this).show();
       } else {
@@ -969,6 +1011,9 @@ function resetSLNo() {
               <td class="px-4 py-3 text-right font-bold">${parseFloat(cash.amount).toFixed(2)}
                 <input type="hidden" name="amounts" value="${cash.amount}">
                 </td>
+              <td class="px-4 py-3 text-center search-area">${cash.transaction}
+                <input type="hidden" name="transactions" value="${cash.transaction}">
+                </td>
               <td class="px-4 py-3 text-right search-area">${cash.description}
                 <input type="hidden" name="descriptions" value="${cash.description}">
                 </td>
@@ -979,7 +1024,7 @@ function resetSLNo() {
         });
         tableBody.append(`
           <tr class="bg-blue-200 font-bold">
-            <td class="px-4 py-3 text-left" colspan="6">Totals:</td>
+            <td class="px-4 py-3 text-left" colspan="7">Totals:</td>
             <td class="px-4 py-3 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
             <td class="px-4 py-3 text-right"></td>
           </tr>

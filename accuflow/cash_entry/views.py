@@ -25,6 +25,7 @@ class CashEntryView(View):
                 'amount':cash.amount,
                 'description':cash.description if cash.description else '', 
                 'type':cash.which_type if cash.which_type else '',
+                'transaction':cash.transaction if cash.transaction else ''
             })
         suppliers = Suppliers.objects.filter(is_active=True)
         customers = Customers.objects.filter(is_active=True)
@@ -48,6 +49,7 @@ class CashAddView(View):
         cashbanks_ids = request.POST.getlist('cashs')
         cash_ids = request.POST.getlist('cash_ids') 
         types = request.POST.getlist('type')
+        transactions = request.POST.getlist('transactions')
         count = 0
         for id in cash_ids:
             customer = None 
@@ -66,6 +68,7 @@ class CashAddView(View):
             cash.date = dates[count]
             cash.amount = amounts[count]
             cash.hold = False 
+            cash.transaction = transactions[count]
             cash.save()
             count += 1
         return redirect('cash')
@@ -85,6 +88,7 @@ class CashHold(View):
         description = data.get('description')
         type_value = data.get('type')
         cash_id = data.get('cash_id')
+        transaction = data.get('transaction')
         customer = None
         if type_value == 'customers':
             customer = get_object_or_404(Customers, id=supplier) if supplier else None
@@ -102,6 +106,7 @@ class CashHold(View):
             cash.date = date
             cash.amount = amount
             cash.description = description
+            cash.transaction = transaction
             cash.save()
             return JsonResponse({'status':'success','message':'Cash held successfully','cash_id':cash.id,'hold':cash.hold})
         cash = Cashs.objects.create(
@@ -112,6 +117,7 @@ class CashHold(View):
             date = date,
             amount = amount,
             description = description,
+            transaction = transaction,
             hold = True
         )
         return JsonResponse({'status':'success','message':'Cash held successfully','cash_id':cash.id,'hold':cash.hold})
@@ -164,6 +170,7 @@ def cashs_by_date(request):
             'amount':cash.amount,
             'description':cash.description if cash.description else '', 
             'type':cash.which_type if cash.which_type else '',
+            'transaction':cash.transaction if cash.transaction else ''
         })
         total_amount += cash.amount
     return JsonResponse({'cashs': cashData, 'total_amount': total_amount})

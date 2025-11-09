@@ -824,12 +824,15 @@
     $('#commission_name').val(getLastCommissionNo());
     resetSLNo()
     addLastRow()
+    isUpdate = false
         }else{
           $('#viewCommissionDiv').removeClass('hidden');
     $('#viewDiv').removeClass('hidden');
           $('#createView').addClass('hidden');
           $('#dateFilter').click();
           $('#commissionTableBody').removeClass('hidden')
+      $('#addToGridText').text('Add to Grid');
+      isUpdate = false
         }
       })
       .catch((error) => {
@@ -947,7 +950,9 @@ function getLastCommissionNo() {
     })
     .catch(error => {
       console.error('Error while deleting commission:', error);
-    });
+    }).finally(() => {
+  selectedTR = '';
+});
   } 
 function resetSLNo() {
   $('#commissionTableBody .sl').each(function (index) {
@@ -957,7 +962,7 @@ function resetSLNo() {
 }
 
   function clearCommissionForm() {
-    $('#amount, #qty, #description, #total_amount, #expenseID, #godownID').val('');
+    $('#amount, #qty, #description, #total_amount, #expenseID, #godownID,#commissionId').val('');
     $('#expense, #godown').prop('selectedIndex', 0);
     $('#allExpenses').prop('checked', false);
       $('#godownCredit').empty()

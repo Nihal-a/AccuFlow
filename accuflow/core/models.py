@@ -257,6 +257,7 @@ class Cashs(models.Model):
     is_active = models.BooleanField(default=True)
     description = models.TextField(blank=True,null=True)
     hold = models.BooleanField(default=False)
+    transaction = models.TextField(blank=True,null=True)
     
     
     

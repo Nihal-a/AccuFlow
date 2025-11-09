@@ -902,7 +902,6 @@
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log(data)
         nsd_id = data.nsd_id;
         hold = data.hold
 
@@ -1015,12 +1014,15 @@
     $('#nsd_name').val(getLastNSDNo());
     resetSLNo()
     addLastRow()
+    isUpdate = false
         }else{
           $('#viewNSDDiv').removeClass('hidden');
     $('#viewDiv').removeClass('hidden');
           $('#createView').addClass('hidden');
           $('#dateFilter').click();
           $('#nsdTableBody').removeClass('hidden')
+      $('#addToGridText').text('Add to Grid');
+      isUpdate = false
         }
       })
       .catch((error) => {
@@ -1064,8 +1066,8 @@ function getLastNSDNo() {
     document.getElementById("nsdId").value = selectedRow.querySelector('#nsd_id').value;
     var sender_type = selectedRow.querySelector('#sender_type')  ? selectedRow.querySelector('#sender_type').value : 'suppliers';
     var receiver_type = selectedRow.querySelector('#receiver_type') ? selectedRow.querySelector('#receiver_type').value : 'suppliers';
-    console.log(selectedRow.cells[5].querySelector('input').value) 
-    if (sender_type === 'customers') {
+
+    if (sender_type === 'customers') { 
       $('#allSuppliers').prop('checked', true).change();
     } else {
       $('#allSuppliers').prop('checked', false).change();
@@ -1091,7 +1093,6 @@ function getLastNSDNo() {
     document.getElementById("nsdId").value = selectedRow.querySelector('#nsd_id').value;
     var sender_type = selectedRow.querySelector('#sender_type') ? selectedRow.querySelector('#sender_type').value : 'suppliers';
     var receiver_type = selectedRow.querySelector('#receiver_type') ? selectedRow.querySelector('#receiver_type').value : 'suppliers';
-
     if (sender_type === 'customers') {
       $('#allSuppliers').prop('checked', true).change();
     } else {
@@ -1102,7 +1103,6 @@ function getLastNSDNo() {
     } else {
       $('#allCustomer').prop('checked', false).change();
     }
-    console.log(selectedRow.cells[4].querySelector('input').value)
     document.getElementById("supplier").value = selectedRow.cells[3].querySelector('input').value;
   }
 
@@ -1143,11 +1143,15 @@ function getLastNSDNo() {
         closeModal();
       } else {
         console.error('Delete failed:', data.message);
+        deleteUrl = "";
       }
     })
     .catch(error => {
       console.error('Error while deleting nsd:', error);
-    });
+    })
+.finally(() => {
+  selectedTR = '';
+});
   } 
 function resetSLNo() {
   $('#nsdTableBody .sl').each(function (index) {
@@ -1157,7 +1161,7 @@ function resetSLNo() {
 }
 
   function clearNSDForm() {
-    $('#sell_rate,#sell_amount,#purchase_rate,#purchase_amount, #qty, #description, #supplierID, #customerID').val('');
+    $('#sell_rate,#sell_amount,#purchase_rate,#purchase_amount, #qty, #description, #supplierID, #customerID,#nsdId').val('');
     $('#supplier, #customer').prop('selectedIndex', 0);
     $('#allSuppliers').prop('checked', false);
       $('#supplierCredit').empty();

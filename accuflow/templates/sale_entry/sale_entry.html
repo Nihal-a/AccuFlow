@@ -888,6 +888,7 @@
       $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-green-500 text-white');
       $('#addToGridText').text('Add to Grid');
     $('#sale_name').val(getLastSaleNo());
+    isUpdate = false
     resetSLNo()
     addLastRow()
         }else{
@@ -896,6 +897,8 @@
           $('#createView').addClass('hidden');
           $('#dateFilter').click();
           $('#saleTableBody').removeClass('hidden')
+      $('#addToGridText').text('Add to Grid');
+    isUpdate = false
         }
       })
       .catch((error) => {
@@ -1013,7 +1016,9 @@ function getLastSaleNo() {
     })
     .catch(error => {
       console.error('Error while deleting sale:', error);
-    });
+    }).finally(() => {
+  selectedTR = '';
+});
   } 
 function resetSLNo() {
   $('#saleTableBody .sl').each(function (index) {
@@ -1023,7 +1028,7 @@ function resetSLNo() {
 }
 
   function clearSaleForm() {
-    $('#amount, #qty, #description, #total_amount, #customerID, #godownID').val('');
+    $('#amount, #qty, #description, #total_amount, #customerID, #godownID,#saleId').val('');
     $('#customer, #godown').prop('selectedIndex', 0);
     $('#allcustomers').prop('checked', false);
       $('#customerCredit').empty();
