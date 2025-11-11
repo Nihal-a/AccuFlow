@@ -1,5 +1,98 @@
 from django.db import models
 
+from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, PermissionsMixin, Group, Permission
+
+class UserAccountManager(BaseUserManager):
+    def create_user(self, username, password=None, **extra_fields):
+        """
+        Base user creation method for all user types.
+        """
+        if not username:
+            raise ValueError('The username field is required')
+
+        user = self.model(username=username, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_collector(self, username, password=None):
+        user = self.create_user(
+            username=username,
+            password=password,
+            is_client=False,
+            is_collector=True
+        )
+        return user
+
+    def create_client(self, username, password=None):
+        user = self.create_user(
+            username=username,
+            password=password,
+            is_client=True,
+            is_collector=False
+        )
+        return user
+
+    def create_superuser(self, username, password):
+        user = self.create_user(
+            username=username,
+            password=password,
+            is_admin=True,
+            is_staff=True,
+            is_client=False,
+            is_collector=False,
+            is_superuser=True,
+        )
+        user.save(using=self._db)
+        return user
+
+
+class UserAccount(AbstractBaseUser, PermissionsMixin):
+    username = models.CharField(max_length=200, unique=True) 
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+    is_admin = models.BooleanField(default=False)
+    is_client = models.BooleanField(default=True)
+    is_collector = models.BooleanField(default=False)
+
+    groups = models.ManyToManyField(
+        Group,
+        related_name='user_accounts',
+        blank=True,
+        help_text='The groups this user belongs to.',
+    )
+
+    user_permissions = models.ManyToManyField(
+        Permission,
+        related_name='user_accounts',
+        blank=True,
+        help_text='Specific permissions for this user.',
+    )
+
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = []
+
+    objects = UserAccountManager()
+
+    def __str__(self):
+        return self.username or "Unnamed User"
+
+    class Meta:
+        verbose_name = "User Account"
+        verbose_name_plural = "User Accounts"
+    
+
+class Clients(models.Model):
+    name = models.TextField(blank=True,null=True)
+    user = models.ForeignKey(UserAccount,on_delete=models.CASCADE,blank=True,null=True)
+    email = models.TextField(blank=True,null=True)
+    is_active= models.BooleanField(default=True)
+    phone = models.TextField(blank=True,null=True)
+    wa = models.TextField(blank=True,null=True)
+    country_code = models.TextField(blank=True,null=True)
+    clientId = models.TextField(blank=True,null=True)
+    
+
 
 class Customers(models.Model):
     name = models.TextField(blank=True,null=True)

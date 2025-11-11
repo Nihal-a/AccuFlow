@@ -20,6 +20,16 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',
+    'super_admin',
+    'expenses',
+    'nsd_entry',
+    'purchase_entry',
+    'suppliers',
+    'collector',
+    'cash_entry',
+    'cashbank',
+    'sale_entry',
+    'commission_entry'
 ]
 
 MIDDLEWARE = [
@@ -28,7 +38,8 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
+    'core.login_required_middleware.LoginRequiredMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware', 
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -50,6 +61,9 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'accuflow.wsgi.application'
+
+
+AUTH_USER_MODEL = 'core.UserAccount'
 
 
 # Database
@@ -121,3 +135,5 @@ MEDIA_ROOT = os.path.join(BASE_DIR,'media')
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+

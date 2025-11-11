@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class CommisionEntryConfig(AppConfig):
+class SuperAdminConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'commission_entry'
+    name = 'super_admin'
