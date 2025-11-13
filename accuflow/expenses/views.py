@@ -3,9 +3,11 @@ from core.models import Expenses
 from django.views import View
 from django.views.generic.edit import DeleteView
 
+from core.views import getClient
+
 class ExpenseView(View):
     def get(self,request):
-        expenses = Expenses.objects.filter(is_active=True)
+        expenses = Expenses.objects.filter(is_active=True,client=getClient(request.user))
         return render(request,'expenses/expenses.html',{'expenses':expenses})
 
 
@@ -19,6 +21,7 @@ class AddExpenseView(View):
         Expenses.objects.create(
             category=name,
             description=description,
+            client=getClient(request.user)
         )
         return redirect('expenses')
 

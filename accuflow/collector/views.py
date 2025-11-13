@@ -3,9 +3,11 @@ from core.models import Collectors
 from django.views import View
 from django.views.generic.edit import DeleteView
 
+from core.views import getClient
+
 class CollectorView(View):
     def get(self,request):
-        collector = Collectors.objects.filter(is_active=True)
+        collector = Collectors.objects.filter(is_active=True,client=getClient(request.user))
         return render(request,'collector/collectors.html',{'collectors':collector})
 
 
@@ -25,6 +27,7 @@ class AddCollectorView(View):
             name=name,
             phone=phone,
             address=address,
+            client=getClient(request.user)
         )
         if wa:
             collector.country_code = country_code

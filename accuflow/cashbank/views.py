@@ -3,9 +3,11 @@ from core.models import CashBanks
 from django.views import View
 from django.views.generic.edit import DeleteView
 
+from core.views import getClient
+
 class CashBankView(View):
     def get(self,request):
-        cashbank = CashBanks.objects.filter(is_active=True)
+        cashbank = CashBanks.objects.filter(is_active=True,client=getClient(request.user))
         return render(request,'cashbank/cashbank.html',{'cashbanks':cashbank})
 
 
@@ -20,7 +22,8 @@ class AddCashBankView(View):
         CashBanks.objects.create(
             name=name,
             description=description,
-            cashbankId = getLastCashBankNo()
+            cashbankId = getLastCashBankNo(client=getClient(request.user)),
+            client=getClient(request.user)
         )
         return redirect('cashbank')
 
@@ -48,8 +51,8 @@ class UpdateCashBankView(View):
     
     
 
-def getLastCashBankNo():
-    last_cashbank = CashBanks.objects.filter(is_active=True).order_by('cashbankId').last() 
+def getLastCashBankNo(client):
+    last_cashbank = CashBanks.objects.filter(is_active=True,client=client).order_by('cashbankId').last()  
     if last_cashbank and last_cashbank.cashbankId != None:
         prefix, num = last_cashbank.cashbankId.split('-')
         new_cashbank_id = f"{prefix}-{int(num) + 1}"

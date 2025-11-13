@@ -2,10 +2,11 @@ from django.shortcuts import render,redirect, get_object_or_404
 from core.models import Suppliers
 from django.views import View
 from django.views.generic.edit import DeleteView
+from core.views import getClient
 
 class SupplierView(View):
     def get(self,request):
-        suppliers = Suppliers.objects.filter(is_active=True)
+        suppliers = Suppliers.objects.filter(is_active=True,client=getClient(request.user))
         return render(request,'supplier/suppliers.html',{'suppliers':suppliers})
 
 
@@ -32,7 +33,8 @@ class AddSupplierView(View):
             open_debit=open_debit,
             otc_credit=otc_credit,
             otc_debit=otc_debit,
-            supplierId=new_supplier_id()
+            supplierId=new_supplier_id(),
+            client=getClient(request.user)
         )
         if wa:
             supplier.country_code = country_code
@@ -68,13 +70,13 @@ class UpdateSupplierView(View):
             supplier.country_code = country_code
             supplier.wa = wa
         if supplier.supplierId is None:
-            supplier.supplierId = new_supplier_id()
+            supplier.supplierId = new_supplier_id(client=getClient(request.user))
         supplier.save()
         return redirect('suppliers')
      
     
-def new_supplier_id():
-    last_supplier = Suppliers.objects.filter(is_active=True).order_by('supplierId').last() 
+def new_supplier_id(client):
+    last_supplier = Suppliers.objects.filter(is_active=True,client=client).order_by('supplierId').last() 
     if last_supplier and last_supplier.supplierId != None:
         prefix, num = last_supplier.supplierId.split('-')
         new_supplier_id = f"{prefix}-{int(num) + 1}"

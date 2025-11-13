@@ -7,9 +7,11 @@ from django.views.generic.edit import DeleteView
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 
+from core.views import getClient
+
 class CashEntryView(View):
     def get(self,request):
-        cashs = Cashs.objects.filter(hold=True,is_active=True)
+        cashs = Cashs.objects.filter(hold=True,is_active=True,client=getClient(request.user))
         cashData = []
         for cash in cashs:
             cashData.append({
@@ -27,14 +29,14 @@ class CashEntryView(View):
                 'type':cash.which_type if cash.which_type else '',
                 'transaction':cash.transaction if cash.transaction else ''
             })
-        suppliers = Suppliers.objects.filter(is_active=True)
-        customers = Customers.objects.filter(is_active=True)
-        cashbanks = CashBanks.objects.filter(is_active=True)
+        suppliers = Suppliers.objects.filter(is_active=True,client=getClient(request.user))
+        customers = Customers.objects.filter(is_active=True,client=getClient(request.user))
+        cashbanks = CashBanks.objects.filter(is_active=True,client=getClient(request.user))
         context = {
             'cashs':cashData,
             'suppliers':suppliers,
             'customers':customers,
-            'last_cash_no':getLastCashNo(),
+            'last_cash_no':getLastCashNo(client=getClient(request.user)),
             'cashbanks':cashbanks,
         }
         return render(request,'cashs/cash_entry.html',context)
@@ -69,6 +71,7 @@ class CashAddView(View):
             cash.amount = amounts[count]
             cash.hold = False 
             cash.transaction = transactions[count]
+            cash.client=getClient(request.user)
             cash.save()
             count += 1
         return redirect('cash')
@@ -107,6 +110,7 @@ class CashHold(View):
             cash.amount = amount
             cash.description = description
             cash.transaction = transaction
+            cash.client=getClient(request.user)
             cash.save()
             return JsonResponse({'status':'success','message':'Cash held successfully','cash_id':cash.id,'hold':cash.hold})
         cash = Cashs.objects.create(
@@ -118,7 +122,8 @@ class CashHold(View):
             amount = amount,
             description = description,
             transaction = transaction,
-            hold = True
+            hold = True,
+            client=getClient(request.user)
         )
         return JsonResponse({'status':'success','message':'Cash held successfully','cash_id':cash.id,'hold':cash.hold})
     
@@ -126,8 +131,8 @@ class CashHold(View):
         
 
 
-def getLastCashNo():
-    last_cash_no = Cashs.objects.filter(is_active=True).order_by('-cash_no').first() 
+def getLastCashNo(client):
+    last_cash_no = Cashs.objects.filter(is_active=True,client=client).order_by('-cash_no').first() 
     if last_cash_no and last_cash_no.cash_no.isdigit():
         new_cash_no = str(int(last_cash_no.cash_no) + 1).zfill(len(last_cash_no.cash_no))
     else:
@@ -137,7 +142,7 @@ def getLastCashNo():
 
 
 def Cash_no(request):
-    new_cash_no = getLastCashNo()
+    new_cash_no = getLastCashNo(client=getClient(request.user))
     return JsonResponse({'cash_no': new_cash_no})
 
 
@@ -149,7 +154,8 @@ def cashs_by_date(request):
         cashs = Cashs.objects.filter(
             date__range=[parse_date(from_date), parse_date(to_date)],
             hold=False,
-            is_active=True
+            is_active=True,
+            client=getClient(request.user)
         )
         
     

@@ -3,9 +3,11 @@ from core.models import Customers
 from django.views import View
 from django.views.generic.edit import DeleteView
 
+from core.views import getClient
+
 class CustomerView(View):
     def get(self,request):
-        customers = Customers.objects.filter(is_active=True)
+        customers = Customers.objects.filter(is_active=True,client=getClient(request.user))
         return render(request,'customer/customers.html',{'customers':customers})
 
 
@@ -32,7 +34,8 @@ class AddCustomerView(View):
             open_debit=open_debit,
             otc_credit=otc_credit,
             otc_debit=otc_debit,
-            customerId=last_customer_id()
+            customerId=last_customer_id(client=getClient(request.user)),
+            client=getClient(request.user)
         )
         if wa:
             customer.country_code = country_code
@@ -48,7 +51,7 @@ class DeleteCustomerView(View):
         return redirect('customers')
  
 
-class UpdateCustomerView(View):
+class UpdateCustomerView(View): 
     def get(self, request, customer_id):
         customer = get_object_or_404(Customers, id=customer_id)
         return render(request, 'customer/update.html', {'customer': customer})
@@ -68,13 +71,13 @@ class UpdateCustomerView(View):
             customer.country_code = country_code
             customer.wa = wa
         if customer.customerId is None:
-            customer.customerId = last_customer_id()
+            customer.customerId = last_customer_id(client=getClient(request.user))
         customer.save()
         return redirect('customers')
     
     
-def last_customer_id():
-    last_customer = Customers.objects.filter(is_active=True).order_by('customerId').last() 
+def last_customer_id(client):
+    last_customer = Customers.objects.filter(is_active=True,client=client).order_by('customerId').last() 
     if last_customer and last_customer.customerId != None:
         prefix, num = last_customer.customerId.split('-')
         new_customer_id = f"{prefix}-{int(num) + 1}"

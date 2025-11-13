@@ -108,6 +108,7 @@ class Customers(models.Model):
     country_code = models.TextField(blank=True,null=True)
     wa = models.TextField(blank=True,null=True)
     balance = models.FloatField(default=0)
+    client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
     
     def __str__(self):
         return self.name
@@ -130,6 +131,7 @@ class Suppliers(models.Model):
     country_code = models.TextField(blank=True,null=True)
     wa = models.TextField(blank=True,null=True)
     balance = models.FloatField(default=0)
+    client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
     
     def __str__(self):
         return self.name
@@ -146,6 +148,7 @@ class Expenses(models.Model):
     amount = models.FloatField(default=0)
     created_at = models.DateTimeField(auto_now_add=True,blank=True,null=True)
     is_active = models.BooleanField(default=True)
+    client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
     
     def __str__(self):
         return self.category
@@ -165,6 +168,7 @@ class Godowns(models.Model):
     country_code = models.TextField(blank=True,null=True)
     wa = models.TextField(blank=True,null=True)
     balance = models.FloatField(default=0)
+    client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
     
     def __str__(self):
         return self.name
@@ -179,6 +183,7 @@ class CashBanks(models.Model):
     description = models.TextField(blank=True,null=True) 
     created_at = models.DateTimeField(auto_now_add=True,blank=True,null=True)
     is_active = models.BooleanField(default=True)
+    client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
     
     def __str__(self):
         return self.name
@@ -192,6 +197,7 @@ class Collectors(models.Model):
     is_active = models.BooleanField(default=True)
     country_code = models.TextField(blank=True,null=True)
     wa = models.TextField(blank=True,null=True)
+    client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
     
     
 class Purchases(models.Model):
@@ -209,6 +215,7 @@ class Purchases(models.Model):
     description = models.TextField(blank=True,null=True)
     hold = models.BooleanField(default=False)
     type = models.TextField(blank=True,null=True)
+    client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
     
     
     def __str__(self):
@@ -243,6 +250,7 @@ class Sales(models.Model):
     description = models.TextField(blank=True,null=True)
     hold = models.BooleanField(default=False)
     type = models.TextField(blank=True,null=True)
+    client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
     
     
     def __str__(self):
@@ -276,6 +284,7 @@ class Commissions(models.Model):
     description = models.TextField(blank=True,null=True)
     hold = models.BooleanField(default=False)
     type = models.TextField(blank=True,null=True)
+    client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
     
     
     def __str__(self):
@@ -313,6 +322,7 @@ class NSDs(models.Model):
     description = models.TextField(blank=True,null=True)
     hold = models.BooleanField(default=False)
     type = models.TextField(blank=True,null=True)
+    client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
     
     
     def __str__(self):
@@ -351,6 +361,7 @@ class Cashs(models.Model):
     description = models.TextField(blank=True,null=True)
     hold = models.BooleanField(default=False)
     transaction = models.TextField(blank=True,null=True)
+    client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
     
     
     

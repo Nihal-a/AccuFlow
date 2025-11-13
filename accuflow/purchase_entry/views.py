@@ -6,9 +6,11 @@ from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 from django.db.models import Q
 
+from core.views import getClient
+
 class PurchaseEntryView(View):
     def get(self,request):
-        purchases = Purchases.objects.filter(hold=True,is_active=True)
+        purchases = Purchases.objects.filter(hold=True,is_active=True,client=getClient(request.user))
         purchaseData = []
         for purchase in purchases:
             purchaseData.append({
@@ -27,9 +29,9 @@ class PurchaseEntryView(View):
                 'description':purchase.description if purchase.description else '', 
                 'type':purchase.which_type if purchase.which_type else '',
             })
-        suppliers = Suppliers.objects.filter(is_active=True)
-        customers = Customers.objects.filter(is_active=True)
-        godowns = Godowns.objects.filter(is_active=True)
+        suppliers = Suppliers.objects.filter(is_active=True,client=getClient(request.user))
+        customers = Customers.objects.filter(is_active=True,client=getClient(request.user))
+        godowns = Godowns.objects.filter(is_active=True,client=getClient(request.user))
         customersData = []
         for customer in customers:
             customersData.append({
@@ -51,7 +53,7 @@ class PurchaseEntryView(View):
             'suppliers':suppliersData,
             'customers':customersData,
             'godowns':godowns,
-            'last_purchase_no':getLastPurchaseNo(),
+            'last_purchase_no':getLastPurchaseNo(client=getClient(request.user)),
         }
         return render(request,'purchase_entry/purchase_entry.html',context)
     
@@ -87,6 +89,7 @@ class PurchaseAddView(View):
             purchase.total_amount = total_amounts[count]    
             purchase.hold = False
             purchase.customer = customer
+            purchase.client=getClient(request.user)
             purchase.save()  
             count += 1
         return redirect('purchase')
@@ -129,6 +132,7 @@ class PurchaseHold(View):
             purchase.description = description
             purchase.type = type_value
             purchase.customer = customer
+            purchase.client=getClient(request.user)
             if not purchase.hold:
                 purchase.hold = False 
             purchase.save()
@@ -145,6 +149,7 @@ class PurchaseHold(View):
             type=type_value,
             customer=customer,
             hold=True,
+            client=getClient(request.user)
         )
         return JsonResponse({'status':'success','purchase_id':purchase.id,'hold':purchase.hold}) 
     
@@ -152,11 +157,10 @@ class PurchaseHold(View):
         
 
 
-def getLastPurchaseNo():
-    last_purchase_no = Purchases.objects.filter(is_active=True).order_by('-purchase_no').first() 
+def getLastPurchaseNo(client):
+    last_purchase_no = Purchases.objects.filter(is_active=True,client=client).order_by('-purchase_no').first() 
     
     if last_purchase_no and last_purchase_no.purchase_no.isdigit():
-        print(last_purchase_no.purchase_no)
         new_purchase_no = int(last_purchase_no.purchase_no) + 1
     else:
         new_purchase_no = 1
@@ -164,7 +168,7 @@ def getLastPurchaseNo():
 
 
 def purchase_no(request):
-    new_purchase_no = getLastPurchaseNo()
+    new_purchase_no = getLastPurchaseNo(client=getClient(request.user))
     return JsonResponse({'purchase_no': new_purchase_no})
 
 
@@ -176,7 +180,8 @@ def purchases_by_date(request):
         purchases = Purchases.objects.filter(
             date__range=[parse_date(from_date), parse_date(to_date)],
             hold=False,
-            is_active=True
+            is_active=True,
+            client=getClient(request.user)
         )
     purchaseData = []
     total_qty = 0

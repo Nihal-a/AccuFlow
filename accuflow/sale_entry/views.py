@@ -7,9 +7,11 @@ from django.views.generic.edit import DeleteView
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 
+from core.views import getClient
+
 class SaleEntryView(View):
     def get(self,request):
-        sales = Sales.objects.filter(hold=True,is_active=True)
+        sales = Sales.objects.filter(hold=True,is_active=True,client=getClient(request.user))
         saleData = []
         for sale in sales:
             print(sale.which_type) 
@@ -29,9 +31,9 @@ class SaleEntryView(View):
                 'description':sale.description if sale.description else '', 
                 'type':sale.which_type if sale.which_type else '',
             })
-        suppliers = Suppliers.objects.filter(is_active=True)
-        customers = Customers.objects.filter(is_active=True)
-        godowns = Godowns.objects.filter(is_active=True)
+        suppliers = Suppliers.objects.filter(is_active=True,client=getClient(request.user))
+        customers = Customers.objects.filter(is_active=True,client=getClient(request.user))
+        godowns = Godowns.objects.filter(is_active=True,client=getClient(request.user))
         customersData = []
         for customer in customers:
             customersData.append({
@@ -53,7 +55,7 @@ class SaleEntryView(View):
             'suppliers':suppliersData,
             'customers':customersData,
             'godowns':godowns,
-            'last_sale_no':getLastSaleNo(),
+            'last_sale_no':getLastSaleNo(client=getClient(request.user)),
         }
         return render(request,'sale_entry/sale_entry.html',context)
     
@@ -70,7 +72,6 @@ class SaleAddView(View):
         godown_ids = request.POST.getlist('godowns')
         sale_ids = request.POST.getlist('sale_ids') 
         types = request.POST.getlist('type')
-        print(types)
         count = 0
         for id in sale_ids:
             customer = None 
@@ -90,6 +91,7 @@ class SaleAddView(View):
             sale.total_amount = total_amounts[count]    
             sale.hold = False
             sale.customer = customer
+            sale.client=getClient(request.user)
             sale.save()  
             count += 1
         return redirect('sale')
@@ -111,8 +113,6 @@ class SaleHold(View):
         description = data.get('description')
         type_value = data.get('type')
         customer = None
-        print(type_value)
-        print(supplier)
         if type_value == 'customers':
             customer = get_object_or_404(Customers, id=supplier) if supplier else None
             supplier = None 
@@ -134,6 +134,7 @@ class SaleHold(View):
             sale.description = description
             sale.type = type_value
             sale.customer = customer
+            sale.client=getClient(request.user)
             if not sale.hold:
                 sale.hold = False 
             sale.save()
@@ -150,6 +151,7 @@ class SaleHold(View):
             type=type_value,
             customer=customer,
             hold=True,
+            client=getClient(request.user)
         )
         return JsonResponse({'status':'success','sale_id':sale.id,'hold':sale.hold}) 
     
@@ -157,8 +159,8 @@ class SaleHold(View):
         
 
 
-def getLastSaleNo():
-    last_sale_no = Sales.objects.filter(is_active=True).order_by('-sale_no').first() 
+def getLastSaleNo(client):
+    last_sale_no = Sales.objects.filter(is_active=True,client=client).order_by('-sale_no').first() 
     
     if last_sale_no and last_sale_no.sale_no.isdigit():
         new_sale_no = int(last_sale_no.sale_no) + 1
@@ -168,7 +170,7 @@ def getLastSaleNo():
 
 
 def sale_no(request):
-    new_sale_no = getLastSaleNo()
+    new_sale_no = getLastSaleNo(client=getClient(request.user))
     return JsonResponse({'sale_no': new_sale_no})
 
 
@@ -180,7 +182,8 @@ def sales_by_date(request):
         sales = Sales.objects.filter(
             date__range=[parse_date(from_date), parse_date(to_date)],
             hold=False,
-            is_active=True
+            is_active=True,
+            client=getClient(request.user)
         )
     saleData = []
     total_qty = 0

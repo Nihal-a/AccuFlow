@@ -7,9 +7,11 @@ from django.views.generic.edit import DeleteView
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 
+from core.views import getClient
+
 class NSDEntryView(View):
     def get(self,request):
-        nsds = NSDs.objects.filter(hold=True,is_active=True)
+        nsds = NSDs.objects.filter(hold=True,is_active=True,client=getClient(request.user))
         nsdData = []
         for nsd in nsds:
             nsdData.append({
@@ -33,8 +35,8 @@ class NSDEntryView(View):
                 'which_receiver_type':nsd.which_receiver_type if nsd.which_receiver_type else '',
                 'which_sender_type':nsd.which_sender_type if nsd.which_sender_type else '',
             })
-        suppliers = Suppliers.objects.filter(is_active=True)
-        customers = Customers.objects.filter(is_active=True)
+        suppliers = Suppliers.objects.filter(is_active=True,client=getClient(request.user))
+        customers = Customers.objects.filter(is_active=True,client=getClient(request.user))
         customersData = []
         for customer in customers:
             customersData.append({
@@ -55,7 +57,7 @@ class NSDEntryView(View):
             'nsds':nsdData,
             'suppliers':suppliersData,
             'customers':customersData,
-            'last_nsd_no':getLastNSDNo(),
+            'last_nsd_no':getLastNSDNo(client=getClient(request.user)),
         }
         return render(request,'nsd_entry/nsd_entry.html',context)
     
@@ -105,6 +107,7 @@ class NSDAddView(View):
             nsd.purchase_rate = purchase_rate[count]    
             nsd.purchase_amount = purchase_amount[count]    
             nsd.hold = False
+            nsd.client=getClient(request.user)
             nsd.save()  
             count += 1
         return redirect('nsd')
@@ -131,23 +134,18 @@ class NSDHold(View):
             sender_supplier = None
             receiver_customer = None
             receiver_supplier = None
-            print(supplier,customer)
             if sender_type == 'customers':
                 sender_customer = get_object_or_404(Customers, id=supplier) if supplier else None
                 sender_supplier = None 
             else:  
                 sender_customer = None
                 sender_supplier = get_object_or_404(Suppliers, id=supplier) if supplier else None
-            print('sender portion done')
-            print(sender_customer,sender_supplier)
             if receiver_type == 'customers':
                 receiver_customer = get_object_or_404(Customers, id=customer) if customer else None
                 receiver_supplier = None
             else:
                 receiver_customer = None
-                receiver_supplier = get_object_or_404(Suppliers, id=customer) if customer else None            
-            print('receiver portion done')
-            print(receiver_customer,receiver_supplier) 
+                receiver_supplier = get_object_or_404(Suppliers, id=customer) if customer else None   
             if data.get('nsd_id'):
                 nsd = get_object_or_404(NSDs, id=data.get('nsd_id'))
                 nsd.nsd_no = nsd_no
@@ -162,6 +160,7 @@ class NSDHold(View):
                 nsd.receiver_supplier = receiver_supplier
                 nsd.sender_customer = sender_customer
                 nsd.sender_supplier = sender_supplier
+                nsd.client=getClient(request.user)
                 if not nsd.hold:
                     nsd.hold = False 
                 nsd.save()
@@ -180,6 +179,7 @@ class NSDHold(View):
                 sender_customer=sender_customer,
                 sender_supplier=sender_supplier,
                 hold=True,
+                client=getClient(request.user)
             )
             return JsonResponse({'status':'success','nsd_id':nsd.id,'hold':nsd.hold}) 
         
@@ -192,8 +192,8 @@ class NSDHold(View):
         
 
 
-def getLastNSDNo():
-    last_nsd_no = NSDs.objects.filter(is_active=True).order_by('-nsd_no').first() 
+def getLastNSDNo(client):
+    last_nsd_no = NSDs.objects.filter(is_active=True,client=client).order_by('-nsd_no').first() 
     
     if last_nsd_no and last_nsd_no.nsd_no.isdigit():
         new_nsd_no = int(last_nsd_no.nsd_no) + 1
@@ -203,7 +203,7 @@ def getLastNSDNo():
 
 
 def nsd_no(request):
-    new_nsd_no = getLastNSDNo()
+    new_nsd_no = getLastNSDNo(client=getClient(request.user))
     return JsonResponse({'nsd_no': new_nsd_no})
 
 
@@ -215,7 +215,8 @@ def nsds_by_date(request):
         nsds = NSDs.objects.filter(
             date__range=[parse_date(from_date), parse_date(to_date)],
             hold=False,
-            is_active=True
+            is_active=True,
+            client=getClient(request.user)
         )
     nsdData = []
     total_qty = 0

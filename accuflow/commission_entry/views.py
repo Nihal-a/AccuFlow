@@ -7,9 +7,11 @@ from django.views.generic.edit import DeleteView
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 
+from core.views import getClient
+
 class CommissionEntryView(View):
     def get(self,request):
-        commissions = Commissions.objects.filter(hold=True,is_active=True)
+        commissions = Commissions.objects.filter(hold=True,is_active=True,client=getClient(request.user))
         commissionData = []
         for commission in commissions:
             commissionData.append({
@@ -25,8 +27,8 @@ class CommissionEntryView(View):
                 'total_amount':commission.total_amount,
                 'description':commission.description if commission.description else '', 
             })
-        expenses = Expenses.objects.filter(is_active=True)
-        godowns = Godowns.objects.filter(is_active=True)
+        expenses = Expenses.objects.filter(is_active=True,client=getClient(request.user))
+        godowns = Godowns.objects.filter(is_active=True,client=getClient(request.user))
         expensesData = []
         for expense in expenses:
             expensesData.append({
@@ -38,9 +40,8 @@ class CommissionEntryView(View):
             'commissions':commissionData,
             'expenses':expensesData,
             'godowns':godowns,
-            'last_commission_no':getLastCommissionNo(),
+            'last_commission_no':getLastCommissionNo(client=getClient(request.user)),
         }
-        print(expensesData) 
         return render(request,'commission_entry/commission_entry.html',context)
     
     
@@ -66,6 +67,7 @@ class CommissionAddView(View):
             commission.amount = amounts[count]
             commission.total_amount = total_amounts[count]    
             commission.hold = False
+            commission.client=getClient(request.user)
             commission.save()  
             count += 1
         return redirect('commission')
@@ -99,6 +101,7 @@ class CommissionHold(View):
             commission.amount = amount
             commission.total_amount = total_amount
             commission.description = description 
+            commission.client=getClient(request.user)
             if not commission.hold:
                 commission.hold = False 
             commission.save()
@@ -113,6 +116,7 @@ class CommissionHold(View):
             total_amount=total_amount,
             description=description,
             hold=True,
+            client=getClient(request.user)
         )
         return JsonResponse({'status':'success','commission_id':commission.id,'hold':commission.hold}) 
     
@@ -120,8 +124,8 @@ class CommissionHold(View):
         
 
 
-def getLastCommissionNo():
-    last_commission_no = Commissions.objects.filter(is_active=True).order_by('-commission_no').first() 
+def getLastCommissionNo(client):
+    last_commission_no = Commissions.objects.filter(is_active=True,client=client).order_by('-commission_no').first() 
     
     if last_commission_no and last_commission_no.commission_no.isdigit():
         new_commission_no = int(last_commission_no.commission_no) + 1
@@ -131,7 +135,7 @@ def getLastCommissionNo():
 
 
 def commission_no(request):
-    new_commission_no = getLastCommissionNo()
+    new_commission_no = getLastCommissionNo(client=getClient(request.user))
     return JsonResponse({'commission_no': new_commission_no})
 
 
@@ -143,7 +147,8 @@ def commissions_by_date(request):
         commissions = Commissions.objects.filter(
             date__range=[parse_date(from_date), parse_date(to_date)],
             hold=False,
-            is_active=True
+            is_active=True,
+            client=getClient(request.user)
         )
     commissionData = []
     total_qty = 0

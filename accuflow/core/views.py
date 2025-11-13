@@ -1,6 +1,7 @@
 from django.shortcuts import render,redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
+from .models import Clients
 
 def user_login(request):
     if request.method == 'POST':
@@ -25,3 +26,8 @@ def user_logout(request):
     return redirect('login')
  
 
+def getClient(user):
+    if Clients.objects.filter(user=user,is_active=True).exists():
+        return Clients.objects.get(user=user,is_active=True)
+    else:
+        return None
