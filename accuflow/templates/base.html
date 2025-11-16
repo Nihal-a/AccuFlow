@@ -273,7 +273,7 @@
               class="nav-link"
               id=""
             >
-              <span> Cash Entry</span>
+              <span> Cash/Bank Entry</span>
             </a>
             <a
               href="{% url 'commission' %}"
@@ -310,14 +310,21 @@
              <i data-lucide="file-text" class="w-4 h-4 "></i><span> Statement </span>
           </div>
           <div class="ml-4 space-y-0.5 text-gray-500">
-            <div class="nav-link">
-              Supplier Ledger
-            </div>
+                 <a
+              href="{% url 'supplierledger' %}"
+              class="nav-link"
+              id=""
+            >
+              <span> Supplier Ledger</span>
+            </a>
             <div class="nav-link">
               Customer Ledger
             </div>
             <div class="nav-link">
               Godown Ledger
+            </div>
+            <div class="nav-link">
+              Cash/Bank Ledger
             </div>
             <div class="nav-link">
               General Ledger
@@ -375,7 +382,7 @@
         <!-- Online Currency-->
         <div class="space-y-0">
           <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-medium uppercase">
-          <i data-lucide="clipboard-list" class="w-4 h-4 "></i><span>   Reports  </span>
+          <i data-lucide="clipboard-list" class="w-4 h-4 "></i><span>   Online Currency  </span>
           </div>
           <div class="ml-4 space-y-0.5 text-gray-500">
             <div class="nav-link">

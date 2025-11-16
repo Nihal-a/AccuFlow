@@ -1,7 +1,7 @@
 from django.shortcuts import render,redirect, get_object_or_404
 from core.models import Godowns
 from django.views import View
-from django.views.generic.edit import DeleteView
+from core.views import getClient
 
 class GodownView(View):
     def get(self,request):
@@ -32,7 +32,8 @@ class AddGodownView(View):
             open_debit=open_debit,
             otc_credit=otc_credit,
             otc_debit=otc_debit,
-            godownId=new_godown_id()
+            godownId=new_godown_id(client=getClient(request.user)),
+            client=getClient(request.user)
         )
         if wa:
             godown.country_code = country_code
@@ -73,8 +74,8 @@ class UpdateGodownView(View):
         return redirect('godown')
     
     
-def new_godown_id():
-    last_godown = Godowns.objects.filter(is_active=True).order_by('godownId').last() 
+def new_godown_id(client):
+    last_godown = Godowns.objects.filter(is_active=True,client=client).order_by('godownId').last() 
     if last_godown and last_godown.godownId != None:
         prefix, num = last_godown.godownId.split('-')
         new_godown_id = f"{prefix}-{int(num) + 1}"

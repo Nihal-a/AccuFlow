@@ -33,7 +33,7 @@ class AddSupplierView(View):
             open_debit=open_debit,
             otc_credit=otc_credit,
             otc_debit=otc_debit,
-            supplierId=new_supplier_id(),
+            supplierId=new_supplier_id(client=getClient(request.user)),
             client=getClient(request.user)
         )
         if wa:

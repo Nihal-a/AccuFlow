@@ -34,6 +34,7 @@ urlpatterns = [
     path('nsd/', include('nsd_entry.urls')),
     path('cash/', include('cash_entry.urls')),
     path('commission/', include('commission_entry.urls')),
+    path('supplierledger/', include('supplier_ledger.urls')),
 ]
 
 if settings.DEBUG:
