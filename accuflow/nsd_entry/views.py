@@ -7,7 +7,7 @@ from django.views.generic.edit import DeleteView
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 
-from core.views import getClient
+from core.views import getClient, update_ledger
 
 class NSDEntryView(View):
     def get(self,request):
@@ -84,18 +84,24 @@ class NSDAddView(View):
             receiver_customer = None
             receiver_supplier = None
             nsd = NSDs.objects.get(id=id)
+            sender = None
+            receiver = None
             if receiver_types[count] == 'customers':
                 receiver_customer = get_object_or_404(Customers, id=customer_ids[count]) if customer_ids[count] else None
                 receiver_supplier = None
+                receiver = receiver_customer
             else:
                 receiver_customer = None
-                receiver_supplier = get_object_or_404(Suppliers, id=customer_ids[count]) if customer_ids[count] else None            
+                receiver_supplier = get_object_or_404(Suppliers, id=customer_ids[count]) if customer_ids[count] else None     
+                receiver = receiver_supplier       
             if sender_types[count] == 'customers':
                 sender_customer = get_object_or_404(Customers, id=supplier_ids[count]) if supplier_ids[count] else None
                 sender_supplier = None 
+                sender = sender_customer
             else:  
                 sender_customer = None
                 sender_supplier = get_object_or_404(Suppliers, id=supplier_ids[count]) if supplier_ids[count] else None
+                sender = sender_supplier
             nsd.sender_customer = sender_customer
             nsd.sender_supplier = sender_supplier
             nsd.receiver_customer = receiver_customer
@@ -134,20 +140,34 @@ class NSDHold(View):
             sender_supplier = None
             receiver_customer = None
             receiver_supplier = None
+            sender =None
+            receiver = None
             if sender_type == 'customers':
                 sender_customer = get_object_or_404(Customers, id=supplier) if supplier else None
                 sender_supplier = None 
+                sender = sender_customer
             else:  
                 sender_customer = None
                 sender_supplier = get_object_or_404(Suppliers, id=supplier) if supplier else None
+                sender = sender_supplier
             if receiver_type == 'customers':
                 receiver_customer = get_object_or_404(Customers, id=customer) if customer else None
                 receiver_supplier = None
+                receiver = receiver_customer
             else:
                 receiver_customer = None
-                receiver_supplier = get_object_or_404(Suppliers, id=customer) if customer else None   
+                receiver_supplier = get_object_or_404(Suppliers, id=customer) if customer else None 
+                receiver = receiver_supplier  
             if data.get('nsd_id'):
                 nsd = get_object_or_404(NSDs, id=data.get('nsd_id'))
+                update_ledger(
+                    where=nsd.sender, 
+                    to=nsd.receiver,
+                    old_purchase=nsd.purchase_amount,
+                    old_sale=nsd.sell_amount,
+                    new_purchase=0,
+                    new_sale=0
+                )
                 nsd.nsd_no = nsd_no
                 nsd.date = date
                 nsd.qty = qty
@@ -164,6 +184,14 @@ class NSDHold(View):
                 if not nsd.hold:
                     nsd.hold = False 
                 nsd.save()
+                update_ledger(
+                    where=nsd.sender, 
+                    to=nsd.receiver,
+                    new_purchase=nsd.purchase_amount,
+                    new_sale=nsd.sell_amount,
+                    old_purchase=0,
+                    old_sale=0
+                )
                 return JsonResponse({'status':'success','nsd_id':nsd.id,'hold':nsd.hold})
             nsd = NSDs.objects.create(
                 nsd_no=nsd_no,
@@ -180,6 +208,14 @@ class NSDHold(View):
                 sender_supplier=sender_supplier,
                 hold=True,
                 client=getClient(request.user)
+            )
+            update_ledger(
+                where=sender, 
+                to=receiver,
+                old_purchase=0,
+                old_sale=0,
+                new_purchase=purchase_amount,
+                new_sale=sell_amount
             )
             return JsonResponse({'status':'success','nsd_id':nsd.id,'hold':nsd.hold}) 
         
@@ -269,5 +305,13 @@ def delete_nsd(request):
     pk = request.GET.get('id') 
     nsd = get_object_or_404(NSDs, id=pk)
     nsd.is_active = False
+    update_ledger(
+        where=nsd.sender, 
+        to=nsd.receiver,
+        old_purchase=nsd.purchase_amount,
+        old_sale=nsd.sell_amount,
+        new_purchase=0,
+        new_sale=0
+    )
     nsd.save()
     return JsonResponse({'status':'success','message':'nsd deleted successfully'})

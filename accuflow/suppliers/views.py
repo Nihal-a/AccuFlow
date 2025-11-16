@@ -33,7 +33,7 @@ class AddSupplierView(View):
             open_debit=open_debit,
             otc_credit=otc_credit,
             otc_debit=otc_debit,
-            supplierId=new_supplier_id(),
+            supplierId=new_supplier_id(client=getClient(request.user)),
             client=getClient(request.user)
         )
         if wa:
@@ -72,7 +72,7 @@ class UpdateSupplierView(View):
         if supplier.supplierId is None:
             supplier.supplierId = new_supplier_id(client=getClient(request.user))
         supplier.save()
-        return redirect('suppliers')
+        return redirect('suppliers') 
      
     
 def new_supplier_id(client):

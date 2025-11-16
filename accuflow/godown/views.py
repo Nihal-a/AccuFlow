@@ -3,9 +3,11 @@ from core.models import Godowns
 from django.views import View
 from django.views.generic.edit import DeleteView
 
+from core.views import getClient
+
 class GodownView(View):
     def get(self,request):
-        godown = Godowns.objects.filter(is_active=True)
+        godown = Godowns.objects.filter(is_active=True,client=getClient(request.user))
         return render(request,'godown/godown.html',{'godowns':godown})
 
 
@@ -32,7 +34,8 @@ class AddGodownView(View):
             open_debit=open_debit,
             otc_credit=otc_credit,
             otc_debit=otc_debit,
-            godownId=new_godown_id()
+            godownId=new_godown_id(client=getClient(request.user)),
+            client = getClient(request.user)
         )
         if wa:
             godown.country_code = country_code
@@ -49,7 +52,7 @@ class DeleteGodownView(View):
  
 
 class UpdateGodownView(View):
-    def get(self, request, godown_id):
+    def get(self, request, godown_id): 
         godown = get_object_or_404(Godowns, id=godown_id)
         return render(request, 'godown/update.html', {'godown': godown})
 
@@ -64,17 +67,18 @@ class UpdateGodownView(View):
         godown.otc_debit = request.POST.get('otc_debit', 0)
         country_code = request.POST.get('country_code')
         wa = request.POST.get('whatsapp_number')
+        godown.client = getClient(request.user)
         if wa:
             godown.country_code = country_code
             godown.wa = wa
         if godown.godownId is None:
-            godown.godownId = new_godown_id() 
+            godown.godownId = new_godown_id(client=getClient(request.user)) 
         godown.save()
         return redirect('godown')
     
     
-def new_godown_id():
-    last_godown = Godowns.objects.filter(is_active=True).order_by('godownId').last() 
+def new_godown_id(client):
+    last_godown = Godowns.objects.filter(is_active=True,client=client).order_by('godownId').last() 
     if last_godown and last_godown.godownId != None:
         prefix, num = last_godown.godownId.split('-')
         new_godown_id = f"{prefix}-{int(num) + 1}"

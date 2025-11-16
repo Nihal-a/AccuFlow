@@ -109,6 +109,8 @@ class Customers(models.Model):
     wa = models.TextField(blank=True,null=True)
     balance = models.FloatField(default=0)
     client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
+    credit = models.FloatField(default=0)
+    debit = models.FloatField(default=0)
     
     def __str__(self):
         return self.name
@@ -130,6 +132,8 @@ class Suppliers(models.Model):
     is_active = models.BooleanField(default=True)
     country_code = models.TextField(blank=True,null=True)
     wa = models.TextField(blank=True,null=True)
+    credit = models.FloatField(default=0)
+    debit = models.FloatField(default=0)
     balance = models.FloatField(default=0)
     client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
     
@@ -169,6 +173,8 @@ class Godowns(models.Model):
     wa = models.TextField(blank=True,null=True)
     balance = models.FloatField(default=0)
     client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
+    credit = models.FloatField(default=0)
+    debit = models.FloatField(default=0)
     
     def __str__(self):
         return self.name
@@ -341,6 +347,19 @@ class NSDs(models.Model):
             return 'customers'
         elif (self.receiver_customer == None) and (self.receiver_supplier != None):
             return 'suppliers'
+    @property
+    def sender(self):
+        if (self.sender_supplier == None) and (self.sender_customer != None):
+            return self.sender_customer
+        elif (self.sender_customer == None) and (self.sender_supplier != None):
+            return self.sender_supplier
+    
+    @property
+    def receiver(self):
+        if (self.receiver_supplier == None) and (self.receiver_customer != None):
+            return self.receiver_customer
+        elif (self.receiver_customer == None) and (self.receiver_supplier != None):
+            return self.receiver_supplier 
         
     @property
     def party(self):

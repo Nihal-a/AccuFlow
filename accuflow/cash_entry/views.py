@@ -93,12 +93,15 @@ class CashHold(View):
         cash_id = data.get('cash_id')
         transaction = data.get('transaction')
         customer = None
+        seller = None
         if type_value == 'customers':
             customer = get_object_or_404(Customers, id=supplier) if supplier else None
             supplier = None 
+            seller = customer
         else:
             customer = None
             supplier = get_object_or_404(Suppliers, id=supplier) if supplier else None
+            seller = supplier
         cash = ''
         if cash_id:
             cash = get_object_or_404(Cashs, id=cash_id)

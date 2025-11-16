@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 from django.db.models import Q
 
-from core.views import getClient
+from core.views import getClient, update_ledger
 
 class PurchaseEntryView(View):
     def get(self,request):
@@ -71,16 +71,22 @@ class PurchaseAddView(View):
         purchase_ids = request.POST.getlist('purchase_ids') 
         types = request.POST.getlist('type')
         count = 0
+        seller = None
         for id in purchase_ids:
             customer = None 
             if types[count] == 'customers':
                 supplier = None
                 customer = get_object_or_404(Customers, id=supplier_ids[count]) if supplier_ids[count] else None
+                seller = customer
             else:
                 customer = None
                 supplier = get_object_or_404(Suppliers, id=supplier_ids[count]) if supplier_ids[count] else None
+                seller = supplier
             godown = get_object_or_404(Godowns, id=godown_ids[count]) if godown_ids[count] else None
             purchase = Purchases.objects.get(id=id)
+            
+            update_ledger(where=purchase.party,to=purchase.godown,old_purchase=purchase.total_amount,old_sale=purchase.total_amount)
+            update_ledger(where=seller,to=godown,new_purchase=total_amounts[count],new_sale=total_amounts[count]) 
             purchase.supplier = supplier
             purchase.godown = godown
             purchase.date = dates[count]
@@ -111,19 +117,33 @@ class PurchaseHold(View):
         description = data.get('description')
         type_value = data.get('type')
         customer = None
+        seller = None
         if type_value == 'customers':
             customer = get_object_or_404(Customers, id=supplier) if supplier else None
             supplier = None 
+            seller = customer
         else:  
             customer = None
             
             supplier = get_object_or_404(Suppliers, id=supplier) if supplier else None
+            seller = supplier
         godown = get_object_or_404(Godowns, id=godown) if godown else None
         if data.get('purchase_id'):
             purchase = get_object_or_404(Purchases, id=data.get('purchase_id'))
-            
-            purchase.purchase_no = purchase_no
+
+            old_seller = purchase.customer or purchase.supplier
+
+            update_ledger(
+                where=purchase.party, 
+                to=purchase.godown,
+                old_purchase=purchase.total_amount,
+                old_sale=purchase.total_amount,
+                new_purchase=0,
+                new_sale=0
+            )
+            purchase.purchase_no = purchase_no 
             purchase.supplier = supplier
+            purchase.customer = customer
             purchase.godown = godown
             purchase.date = date
             purchase.qty = qty
@@ -131,11 +151,19 @@ class PurchaseHold(View):
             purchase.total_amount = total_amount
             purchase.description = description
             purchase.type = type_value
-            purchase.customer = customer
-            purchase.client=getClient(request.user)
-            if not purchase.hold:
-                purchase.hold = False 
+            purchase.client = getClient(request.user)
             purchase.save()
+            new_seller = customer or supplier
+
+            update_ledger(
+                where=new_seller,
+                to=godown,
+                old_purchase=0, 
+                old_sale=0,
+                new_purchase=total_amount,
+                new_sale=total_amount,
+            )
+
             return JsonResponse({'status':'success','purchase_id':purchase.id,'hold':purchase.hold})
         purchase = Purchases.objects.create(
             purchase_no=purchase_no,
@@ -151,6 +179,7 @@ class PurchaseHold(View):
             hold=True,
             client=getClient(request.user)
         )
+        update_ledger(where=seller,to=godown,new_purchase=total_amount,new_sale=total_amount)
         return JsonResponse({'status':'success','purchase_id':purchase.id,'hold':purchase.hold}) 
     
     
@@ -217,5 +246,13 @@ def delete_purchase(request):
     pk = request.GET.get('id') 
     purchase = get_object_or_404(Purchases, id=pk)
     purchase.is_active = False
+    update_ledger(
+        where=purchase.party, 
+        to=purchase.godown,
+        old_purchase=purchase.total_amount,
+        old_sale=purchase.total_amount,
+        new_purchase=0,
+        new_sale=0
+    )
     purchase.save()
     return JsonResponse({'status':'success','message':'Purchase deleted successfully'})
