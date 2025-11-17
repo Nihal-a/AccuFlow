@@ -35,6 +35,7 @@ urlpatterns = [
     path('cash/', include('cash_entry.urls')),
     path('commission/', include('commission_entry.urls')),
     path('supplierledger/', include('supplier_ledger.urls')),
+    path('changepass/', include('change_pass.urls')),
 ]
 
 if settings.DEBUG:

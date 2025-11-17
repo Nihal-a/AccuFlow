@@ -397,7 +397,7 @@
         <!-- MIS Report-->
         <div class="space-y-0">
           <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-medium uppercase">
-          <i data-lucide="clipboard-list" class="w-4 h-4 "></i><span>   Reports  </span>
+          <i data-lucide="clipboard-list" class="w-4 h-4 "></i><span>  MIS Reports  </span>
           </div>
           <div class="ml-4 space-y-0.5 text-gray-500">
             <div class="nav-link">
@@ -422,10 +422,15 @@
           <div class="ml-4 space-y-0.5 text-gray-500">
             <div class="nav-link">
               Address View
-            </div>
-            <div class="nav-link">
-              Change Password
-            </div>
+            </div >
+           <a
+              href="{% url 'changepass' %}"
+              class="nav-link"
+              id=""
+            >
+              <span> Change Password</span>
+            </a>
+
             <a href="#" onclick="openLogoutModal()" class="nav-link">
               <span>Logout</span>
             </a>

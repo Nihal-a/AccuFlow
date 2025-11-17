@@ -1,0 +1,142 @@
+{% extends 'base.html' %} 
+{% block title %}Supplier Ledger{% endblock %} 
+
+{% block content %}
+<div class="bg-white rounded-xl p-6 mt-3 flex justify-center items-center">
+<div class="bg-white bg-opacity-90 backdrop-blur-sm rounded-2xl w-full md:w-2/4 p-8 text-center">
+        <form action="" method="" class="text-left">  
+        <div class="mb-4">
+          <label class="block text-gray-700">Current Password*</label>
+          <div class="relative">
+            <input
+              type="password"
+              id="password1"
+              name="currentpassword"
+              placeholder="Enter Password"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+              required
+            />
+
+            <button type="button" id="toggle1" tabindex="-1"
+              class="absolute right-3 top-3 text-gray-500">
+              <svg id="eye1Open" xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+
+              <svg id="eye1Closed" xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5 hidden">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M3 3l18 18M10.477 10.477A2.997 2.997 0 0012 9a3 3 0 012.829 2.12M9.88 14.121A2.996 2.996 0 0012 15a3 3 0 002.12-.879M6.343 6.343C4.499 7.87 3.29 9.814 2.458 12c1.274 4.057 5.065 7 9.542 7a9.97 9.97 0 005.657-1.757" />
+              </svg>
+            </button>
+
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-gray-700">New Password*</label>
+          <div class="relative">
+            <input
+              type="password"
+              id="password2"
+              name="newpassword"
+              placeholder="Enter New Password"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+              required
+            />
+
+            <button type="button" id="toggle2" tabindex="-1"
+              class="absolute right-3 top-3 text-gray-500">
+              <svg id="eye2Open" xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+
+              <svg id="eye2Closed" xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5 hidden">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M3 3l18 18M10.477 10.477A2.997 2.997 0 0012 9a3 3 0 012.829 2.12M9.88 14.121A2.996 2.996 0 0012 15a3 3 0 002.12-.879M6.343 6.343C4.499 7.87 3.29 9.814 2.458 12c1.274 4.057 5.065 7 9.542 7a9.97 9.97 0 005.657-1.757" />
+              </svg>
+            </button>
+
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-gray-700">Confirm Password*</label>
+          <div class="relative">
+            <input
+              type="password"
+              id="password3"
+              name="confirmpassword"
+              placeholder="Enter Password"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+              required
+            />
+
+            <button type="button" id="toggle3" tabindex="-1"
+              class="absolute right-3 top-3 text-gray-500">
+              <svg id="eye3Open" xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+
+              <svg id="eye3Closed" xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5 hidden">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M3 3l18 18M10.477 10.477A2.997 2.997 0 0012 9a3 3 0 012.829 2.12M9.88 14.121A2.996 2.996 0 0012 15a3 3 0 002.12-.879M6.343 6.343C4.499 7.87 3.29 9.814 2.458 12c1.274 4.057 5.065 7 9.542 7a9.97 9.97 0 005.657-1.757" />
+              </svg>
+            </button>
+
+          </div>
+        </div>
+
+        <div class="w-full flex justify-between gap-3">
+            <button type="submit" class="w-[50%] bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 rounded-md transition duration-200">
+                Discard
+            </button>
+            <button type="submit" class="w-[50%] bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded-md transition duration-200">
+                Apply Changes 
+            </button>
+        </div>
+
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block externalJS %}
+<script>
+function setupToggle(btnId, inputId, eyeOpenId, eyeClosedId) {
+    document.getElementById(btnId).onclick = function () {
+        const input = document.getElementById(inputId);
+        const openEye = document.getElementById(eyeOpenId);
+        const closedEye = document.getElementById(eyeClosedId);
+
+        if (input.type === "password") {
+            input.type = "text";
+            openEye.classList.add("hidden");
+            closedEye.classList.remove("hidden");
+        } else {
+            input.type = "password";
+            closedEye.classList.add("hidden");
+            openEye.classList.remove("hidden");
+        }
+    };
+}
+
+setupToggle("toggle1", "password1", "eye1Open", "eye1Closed");
+setupToggle("toggle2", "password2", "eye2Open", "eye2Closed");
+setupToggle("toggle3", "password3", "eye3Open", "eye3Closed");
+</script>
+{% endblock %}
