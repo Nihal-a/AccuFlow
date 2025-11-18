@@ -68,34 +68,30 @@ def update_party(party):
 
 
 def update_ledger(where, to, old_purchase=0, new_purchase=0, old_sale=0, new_sale=0):
-    # print(where.balance,to.balance)
-    # print(new_purchase,old_purchase)
-    # print(new_sale,old_sale) 
-    if where:
+    if where and where != None:
         if old_purchase:
-            where.debit = where.debit - float(old_purchase)
-            if where.debit < 0:
-                where.credit += abs(where.debit)
-                where.debit = 0
+            where.credit = where.credit - float(old_purchase)
+            if where.credit < 0:
+                where.debit += abs(where.credit)
+                where.credit = 0
 
         if new_purchase:
-            print("before the + seller:",where.debit)
-            where.debit += float(new_purchase)
+            print("before the + seller:",where.credit)
+            where.credit += float(new_purchase)
         where.save()
-        print("after the + seller:",where.debit)
+        print("after the + seller:",where.credit)
         update_party(where)
 
-    if to:
+    if to and where != None:
         if old_sale:
-            to.credit = to.credit - float(old_sale)
-            if to.credit < 0:
-                to.debit += abs(to.credit)
-                to.credit = 0
+            to.debit = to.debit - float(old_sale)
+            if to.debit < 0:
+                to.credit += abs(to.debit)
+                to.debit = 0
 
         if new_sale:
-            to.credit += new_sale 
+            to.debit += float(new_sale) 
         to.save()
-        print(to.debit,to.credit)
         update_party(to)
 
 

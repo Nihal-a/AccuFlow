@@ -102,6 +102,8 @@ class NSDAddView(View):
                 sender_customer = None
                 sender_supplier = get_object_or_404(Suppliers, id=supplier_ids[count]) if supplier_ids[count] else None
                 sender = sender_supplier
+            update_ledger(where=nsd.sender,to=nsd.receiver,old_purchase=nsd.purchase_amount,old_sale=nsd.sell_amount)
+            update_ledger(where=sender,to=receiver,new_purchase=purchase_amount[count],new_sale=sell_amount[count]) 
             nsd.sender_customer = sender_customer
             nsd.sender_supplier = sender_supplier
             nsd.receiver_customer = receiver_customer
@@ -160,14 +162,15 @@ class NSDHold(View):
                 receiver = receiver_supplier  
             if data.get('nsd_id'):
                 nsd = get_object_or_404(NSDs, id=data.get('nsd_id'))
-                update_ledger(
-                    where=nsd.sender, 
-                    to=nsd.receiver,
-                    old_purchase=nsd.purchase_amount,
-                    old_sale=nsd.sell_amount,
-                    new_purchase=0,
-                    new_sale=0
-                )
+                if not nsd.hold:
+                    update_ledger(
+                        where=nsd.sender, 
+                        to=nsd.receiver,
+                        old_purchase=nsd.purchase_amount,
+                        old_sale=nsd.sell_amount,
+                        new_purchase=0,
+                        new_sale=0
+                    )
                 nsd.nsd_no = nsd_no
                 nsd.date = date
                 nsd.qty = qty
@@ -184,14 +187,15 @@ class NSDHold(View):
                 if not nsd.hold:
                     nsd.hold = False 
                 nsd.save()
-                update_ledger(
-                    where=nsd.sender, 
-                    to=nsd.receiver,
-                    new_purchase=nsd.purchase_amount,
-                    new_sale=nsd.sell_amount,
-                    old_purchase=0,
-                    old_sale=0
-                )
+                if not nsd.hold:
+                    update_ledger(
+                        where=sender, 
+                        to=receiver,
+                        new_purchase=purchase_amount,
+                        new_sale=sell_amount,
+                        old_purchase=0,
+                        old_sale=0
+                    )
                 return JsonResponse({'status':'success','nsd_id':nsd.id,'hold':nsd.hold})
             nsd = NSDs.objects.create(
                 nsd_no=nsd_no,
@@ -208,14 +212,6 @@ class NSDHold(View):
                 sender_supplier=sender_supplier,
                 hold=True,
                 client=getClient(request.user)
-            )
-            update_ledger(
-                where=sender, 
-                to=receiver,
-                old_purchase=0,
-                old_sale=0,
-                new_purchase=purchase_amount,
-                new_sale=sell_amount
             )
             return JsonResponse({'status':'success','nsd_id':nsd.id,'hold':nsd.hold}) 
         
@@ -305,7 +301,8 @@ def delete_nsd(request):
     pk = request.GET.get('id') 
     nsd = get_object_or_404(NSDs, id=pk)
     nsd.is_active = False
-    update_ledger(
+    if not nsd.hold:
+        update_ledger(
         where=nsd.sender, 
         to=nsd.receiver,
         old_purchase=nsd.purchase_amount,

@@ -7,7 +7,7 @@ from django.views.generic.edit import DeleteView
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 
-from core.views import getClient
+from core.views import getClient, update_ledger
 
 class CashEntryView(View):
     def get(self,request):
@@ -54,13 +54,18 @@ class CashAddView(View):
         transactions = request.POST.getlist('transactions')
         count = 0
         for id in cash_ids:
-            customer = None 
+            customer = None
+            seller = None 
             if types[count] == 'customers':
                 supplier = None
+            
                 customer = get_object_or_404(Customers, id=supplier_ids[count]) if supplier_ids[count] else None
+                seller = customer
             else:
                 customer = None
                 supplier = get_object_or_404(Suppliers, id=supplier_ids[count]) if supplier_ids[count] else None
+                seller = supplier
+            update_ledger(where=seller,to=None,new_purchase=amounts[count],old_sale=0)
             cash_bank = get_object_or_404(CashBanks, id=cashbanks_ids[count]) if cashbanks_ids[count] else None
             cash = get_object_or_404(Cashs, id=id)
             cash.cash_no = cash.cash_no

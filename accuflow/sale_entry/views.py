@@ -75,14 +75,19 @@ class SaleAddView(View):
         count = 0
         for id in sale_ids:
             customer = None 
+            seller = None
             if types[count] == 'customers':
                 supplier = None
                 customer = get_object_or_404(Customers, id=customer_ids[count]) if customer_ids[count] else None
+                seller = customer
             else:
                 customer = None
                 supplier = get_object_or_404(Suppliers, id=customer_ids[count]) if customer_ids[count] else None
+                seller = customer
             godown = get_object_or_404(Godowns, id=godown_ids[count]) if godown_ids[count] else None
             sale = Sales.objects.get(id=id)
+            update_ledger(where=sale.party,to=None,old_purchase=sale.total_amount,old_sale=sale.total_amount)
+            update_ledger(where=seller,to=None,new_purchase=total_amounts[count],new_sale=total_amounts[count]) 
             sale.supplier = supplier
             sale.godown = godown
             sale.date = dates[count]
@@ -126,15 +131,15 @@ class SaleHold(View):
         godown = get_object_or_404(Godowns, id=godown) if godown else None
         if data.get('sale_id'):
             sale = get_object_or_404(Sales, id=data.get('sale_id'))
-            
-            update_ledger(
-                where=sale.party, 
-                to=sale.godown,
-                old_purchase=sale.total_amount,
-                old_sale=sale.total_amount,
-                new_purchase=0,
-                new_sale=0
-            )
+            if not sale.hold:
+                update_ledger(
+                    where=sale.party,  
+        to=None,
+                    old_purchase=sale.total_amount,
+                    old_sale=sale.total_amount,
+                    new_purchase=0,
+                    new_sale=0
+                )
             sale.sale_no = sale_no
             sale.supplier = supplier
             sale.godown = godown
@@ -149,14 +154,15 @@ class SaleHold(View):
             if not sale.hold:
                 sale.hold = False 
             sale.save()
-            update_ledger(
-                where=seller,
-                to=godown,
-                old_purchase=0, 
-                old_sale=0,
-                new_purchase=total_amount,
-                new_sale=total_amount,
-            )
+            if not sale.hold:
+                update_ledger(
+                    where=seller, 
+        to=None,
+                    old_purchase=0, 
+                    old_sale=0,
+                    new_purchase=total_amount,
+                    new_sale=total_amount,
+                )
             return JsonResponse({'status':'success','sale_id':sale.id,'hold':sale.hold})
         sale = Sales.objects.create(
             sale_no=sale_no,
@@ -172,7 +178,6 @@ class SaleHold(View):
             hold=True,
             client=getClient(request.user)
         )
-        update_ledger(where=seller,to=godown,new_purchase=total_amount,new_sale=total_amount)
         return JsonResponse({'status':'success','sale_id':sale.id,'hold':sale.hold}) 
     
     
@@ -239,13 +244,14 @@ def delete_sale(request):
     pk = request.GET.get('id') 
     sale = get_object_or_404(Sales, id=pk)
     sale.is_active = False
-    update_ledger(
-        where=sale.party, 
-        to=sale.godown,
-        old_purchase=sale.total_amount,
-        old_sale=sale.total_amount,
-        new_purchase=0,
-        new_sale=0
-    )
+    if not sale.hold:
+        update_ledger(
+            where=sale.party,  
+        to=None,
+            old_purchase=sale.total_amount,
+            old_sale=sale.total_amount,
+            new_purchase=0,
+            new_sale=0
+        )
     sale.save()
     return JsonResponse({'status':'success','message':'sale deleted successfully'})

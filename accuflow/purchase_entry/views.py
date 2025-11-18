@@ -85,8 +85,8 @@ class PurchaseAddView(View):
             godown = get_object_or_404(Godowns, id=godown_ids[count]) if godown_ids[count] else None
             purchase = Purchases.objects.get(id=id)
             
-            update_ledger(where=purchase.party,to=purchase.godown,old_purchase=purchase.total_amount,old_sale=purchase.total_amount)
-            update_ledger(where=seller,to=godown,new_purchase=total_amounts[count],new_sale=total_amounts[count]) 
+            update_ledger(where=purchase.party,to=None,old_purchase=purchase.total_amount,old_sale=purchase.total_amount)
+            update_ledger(where=seller,to=None,new_purchase=total_amounts[count],new_sale=total_amounts[count]) 
             purchase.supplier = supplier
             purchase.godown = godown
             purchase.date = dates[count]
@@ -132,15 +132,15 @@ class PurchaseHold(View):
             purchase = get_object_or_404(Purchases, id=data.get('purchase_id'))
 
             old_seller = purchase.customer or purchase.supplier
-
-            update_ledger(
-                where=purchase.party, 
-                to=purchase.godown,
-                old_purchase=purchase.total_amount,
-                old_sale=purchase.total_amount,
-                new_purchase=0,
-                new_sale=0
-            )
+            if not purchase.hold:
+                update_ledger(
+                    where=purchase.party,  
+        to=None,
+                    old_purchase=purchase.total_amount,
+                    old_sale=purchase.total_amount,
+                    new_purchase=0,
+                    new_sale=0
+                )
             purchase.purchase_no = purchase_no 
             purchase.supplier = supplier
             purchase.customer = customer
@@ -154,15 +154,15 @@ class PurchaseHold(View):
             purchase.client = getClient(request.user)
             purchase.save()
             new_seller = customer or supplier
-
-            update_ledger(
-                where=new_seller,
-                to=godown,
-                old_purchase=0, 
-                old_sale=0,
-                new_purchase=total_amount,
-                new_sale=total_amount,
-            )
+            if not purchase.hold:
+                update_ledger(
+                    where=new_seller, 
+        to=None,
+                    old_purchase=0, 
+                    old_sale=0,
+                    new_purchase=total_amount,
+                    new_sale=total_amount,
+                )
 
             return JsonResponse({'status':'success','purchase_id':purchase.id,'hold':purchase.hold})
         purchase = Purchases.objects.create(
@@ -179,7 +179,6 @@ class PurchaseHold(View):
             hold=True,
             client=getClient(request.user)
         )
-        update_ledger(where=seller,to=godown,new_purchase=total_amount,new_sale=total_amount)
         return JsonResponse({'status':'success','purchase_id':purchase.id,'hold':purchase.hold}) 
     
     
@@ -246,9 +245,10 @@ def delete_purchase(request):
     pk = request.GET.get('id') 
     purchase = get_object_or_404(Purchases, id=pk)
     purchase.is_active = False
-    update_ledger(
+    if not purchase.hold:
+        update_ledger(
         where=purchase.party, 
-        to=purchase.godown,
+        to=None,
         old_purchase=purchase.total_amount,
         old_sale=purchase.total_amount,
         new_purchase=0,
