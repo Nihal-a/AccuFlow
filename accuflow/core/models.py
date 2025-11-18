@@ -117,7 +117,7 @@ class Customers(models.Model):
     
     @property
     def get_balance(self):
-        return self.open_debit - self.open_credit
+        return self.balance
     
 class Suppliers(models.Model):
     name = models.TextField(blank=True,null=True)
@@ -141,7 +141,7 @@ class Suppliers(models.Model):
         return self.name
     @property
     def get_balance(self):
-        return self.open_debit - self.open_credit
+        return self.balance
     
     
     
@@ -181,7 +181,7 @@ class Godowns(models.Model):
     
     @property
     def get_balance(self):
-        return self.open_debit - self.open_credit
+        return self.balance
     
 class CashBanks(models.Model):
     name  = models.TextField(blank=True,null=True)
