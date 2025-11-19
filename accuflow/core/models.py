@@ -117,7 +117,7 @@ class Customers(models.Model):
     
     @property
     def get_balance(self):
-        return self.balance
+        return self.balance 
     
 class Suppliers(models.Model):
     name = models.TextField(blank=True,null=True)
@@ -141,7 +141,7 @@ class Suppliers(models.Model):
         return self.name
     @property
     def get_balance(self):
-        return self.balance
+        return self.balance 
     
     
     
@@ -181,7 +181,7 @@ class Godowns(models.Model):
     
     @property
     def get_balance(self):
-        return self.balance
+        return self.balance 
     
 class CashBanks(models.Model):
     name  = models.TextField(blank=True,null=True)
@@ -386,7 +386,7 @@ class Cashs(models.Model):
     
     
     def __str__(self):
-        return self.nsd_no
+        return self.cash_no 
     
     @property
     def which_type(self):
@@ -396,7 +396,7 @@ class Cashs(models.Model):
             return 'suppliers'
         
     @property
-    def party(self):
+    def party(self): 
         if self.which_type == 'customers':
             return self.customer
         elif self.which_type == 'suppliers':

@@ -82,7 +82,7 @@ def update_ledger(where, to, old_purchase=0, new_purchase=0, old_sale=0, new_sal
         print("after the + seller:",where.credit)
         update_party(where)
 
-    if to and where != None:
+    if to and to != None:
         if old_sale:
             to.debit = to.debit - float(old_sale)
             if to.debit < 0:

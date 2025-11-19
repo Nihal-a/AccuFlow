@@ -65,7 +65,12 @@ class CashAddView(View):
                 customer = None
                 supplier = get_object_or_404(Suppliers, id=supplier_ids[count]) if supplier_ids[count] else None
                 seller = supplier
-            update_ledger(where=seller,to=None,new_purchase=amounts[count],old_sale=0)
+            if transactions[count] == 'Paid':
+                
+                update_ledger(where=None,to=seller,new_sale=amounts[count],old_sale=0)
+            else: 
+                update_ledger(where=seller,to=None,new_purchase=amounts[count],old_sale=0)
+                
             cash_bank = get_object_or_404(CashBanks, id=cashbanks_ids[count]) if cashbanks_ids[count] else None
             cash = get_object_or_404(Cashs, id=id)
             cash.cash_no = cash.cash_no
@@ -110,6 +115,11 @@ class CashHold(View):
         cash = ''
         if cash_id:
             cash = get_object_or_404(Cashs, id=cash_id)
+            if transaction == 'Paid':
+                
+                update_ledger(where=None,to=seller,new_sale=amount,old_sale=cash.amount) 
+            else: 
+                update_ledger(where=seller,to=None,new_purchase=amount,old_sale=0,old_purchase=cash.amount)
             cash.cash_no = cash_no
             cash.supplier = supplier
             cash.customer = customer
@@ -194,5 +204,7 @@ def delete_cash(request):
     pk = request.GET.get('id') 
     cash = get_object_or_404(Cashs, id=pk)
     cash.is_active = False
+    if cash.hold:
+        update_ledger(where=cash.party,to=None,new_purchase=0,old_sale=0,old_purchase=cash.amount)
     cash.save()
     return JsonResponse({'status':'success','message':'Cash deleted successfully'})
