@@ -175,13 +175,14 @@ class Godowns(models.Model):
     client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
     credit = models.FloatField(default=0)
     debit = models.FloatField(default=0)
+    qty = models.IntegerField(default=0)
     
     def __str__(self):
         return self.name
     
     @property
     def get_balance(self):
-        return self.balance 
+        return self.qty 
     
 class CashBanks(models.Model):
     name  = models.TextField(blank=True,null=True)

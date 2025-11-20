@@ -59,6 +59,8 @@ class CommissionAddView(View):
         for id in commission_ids:
             expense = get_object_or_404(Expenses, id=expense_ids[count]) if expense_ids[count] else None
             godown = get_object_or_404(Godowns, id=godown_ids[count]) if godown_ids[count] else None
+            godown.qty -= float(qtys[count])
+            godown.save()
             commission = Commissions.objects.get(id=id)
             commission.expense = expense
             commission.godown = godown
@@ -92,7 +94,9 @@ class CommissionHold(View):
         godown = get_object_or_404(Godowns, id=godown) if godown else None
         if data.get('commission_id'):
             commission = get_object_or_404(Commissions, id=data.get('commission_id'))
-            
+            godown.qty += float(commission.qty)
+            godown.qty -= float(qty)
+            godown.save()
             commission.commission_no = commission_no
             commission.expense = expense
             commission.godown = godown
@@ -181,5 +185,7 @@ def delete_commission(request):
     pk = request.GET.get('id') 
     commission = get_object_or_404(Commissions, id=pk)
     commission.is_active = False
+    commission.godown.qty += float(commission.qty)
+    commission.godown.save() 
     commission.save()
     return JsonResponse({'status':'success','message':'commission deleted successfully'})

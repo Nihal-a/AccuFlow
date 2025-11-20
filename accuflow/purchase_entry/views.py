@@ -38,7 +38,7 @@ class PurchaseEntryView(View):
                 'id':customer.id,
                 'name':customer.name,
                 'customerId':customer.customerId, 
-                'balance':customer.get_balance,
+                'balance':customer.balance,
             })
         suppliersData = []
         for supplier in suppliers:
@@ -46,7 +46,7 @@ class PurchaseEntryView(View):
                 'id':supplier.id,
                 'name':supplier.name,
                 'supplierId':supplier.supplierId,
-                'balance':supplier.get_balance,
+                'balance':supplier.balance,
             })
         context = {
             'purchases':purchaseData,
@@ -84,7 +84,8 @@ class PurchaseAddView(View):
                 seller = supplier
             godown = get_object_or_404(Godowns, id=godown_ids[count]) if godown_ids[count] else None
             purchase = Purchases.objects.get(id=id)
-            
+            godown.qty += float(qtys[count])  
+            godown.save()
             update_ledger(where=purchase.party,to=None,old_purchase=purchase.total_amount,old_sale=purchase.total_amount)
             update_ledger(where=seller,to=None,new_purchase=total_amounts[count],new_sale=total_amounts[count]) 
             purchase.supplier = supplier
@@ -96,6 +97,7 @@ class PurchaseAddView(View):
             purchase.hold = False
             purchase.customer = customer
             purchase.client=getClient(request.user)
+            
             purchase.save()  
             count += 1
         return redirect('purchase')
@@ -141,6 +143,8 @@ class PurchaseHold(View):
                     new_purchase=0,
                     new_sale=0
                 )
+                godown.qty -= purchase.qty
+                godown.save()
             purchase.purchase_no = purchase_no 
             purchase.supplier = supplier
             purchase.customer = customer
@@ -157,12 +161,15 @@ class PurchaseHold(View):
             if not purchase.hold:
                 update_ledger(
                     where=new_seller, 
-        to=None,
+                    to=None,
                     old_purchase=0, 
                     old_sale=0,
                     new_purchase=total_amount,
                     new_sale=total_amount,
                 )
+                godown.qty += float(qty)
+                godown.save()
+                
 
             return JsonResponse({'status':'success','purchase_id':purchase.id,'hold':purchase.hold})
         purchase = Purchases.objects.create(
@@ -189,7 +196,7 @@ def getLastPurchaseNo(client):
     last_purchase_no = Purchases.objects.filter(is_active=True,client=client).order_by('-purchase_no').first() 
     
     if last_purchase_no and last_purchase_no.purchase_no.isdigit():
-        new_purchase_no = int(last_purchase_no.purchase_no) + 1
+        new_purchase_no = float(last_purchase_no.purchase_no) + 1
     else:
         new_purchase_no = 1
     return new_purchase_no
@@ -254,5 +261,7 @@ def delete_purchase(request):
         new_purchase=0,
         new_sale=0
     )
+        purchase.godown.qty -= purchase.qty
+        purchase.godown.save() 
     purchase.save()
     return JsonResponse({'status':'success','message':'Purchase deleted successfully'})
