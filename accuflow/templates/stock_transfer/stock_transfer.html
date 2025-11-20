@@ -1,9 +1,12 @@
 {% extends "base.html" %}
-{% block title %} Commission Entry {% endblock title %}
-{% block externalCSS %}{% endblock externalCSS %}
+{% block title %}
+    Stock Transfer
+{% endblock title %}
+{% block externalCSS %}
+{% endblock externalCSS %}
 {% block content %}
     <div class="bg-white rounded-xl p-6 mt-3">
-        <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">Commission Management</h1>
+        <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">Stock Transfer</h1>
         <div class="mt-4 flex flex-wrap items-center gap-3">
             <!-- 🟦 New -->
             <a id="btnNew"
@@ -39,7 +42,7 @@
             <div class="grid grid-cols-8 gap-4 ">
                 <div class="col-span-6 flex gap-2 ">
                     <div class="w-[50%]">
-                        <label class="block text-gray-700">Commission No*</label>
+                        <label class="block text-gray-700">Transfer No*</label>
                         <input type="text"
                                name=""
                                value="{{ last_commission_no }}"
@@ -62,33 +65,7 @@
                 <div class="col-span-6 w-full flex items-center gap-3">
                     <div class=" w-[80%]">
                         <!-- Label -->
-                        <label class="block text-gray-700 mb-1">Expense*</label>
-                        <div class="flex items-center gap-4">
-                            <div class="flex items-center gap-4 w-full">
-                                <!-- <div class="flex items-center">
-      <input type="checkbox" id="allExpenses" name="" tabindex="-1" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
-      <label for="allExpenses" class="ml-2 text-gray-700">All</label>
-</div> -->
-                                <!-- Dropdown -->
-                                <div class="flex-1">
-                                    <select name=""
-                                            id="expense"
-                                            class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            required>
-                                        <option value="" selected>Select Expense</option>
-                                        {% for expense in expenses %}
-                                            <option value="{{ expense.id }}" data-code="{{ expense.expenseId }}">{{ expense.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-span-6 w-full flex items-center gap-3">
-                    <div class=" w-[80%]">
-                        <!-- Label -->
-                        <label class="block text-gray-700 mb-1">Godown*</label>
+                        <label class="block text-gray-700 mb-1">Godown From*</label>
                         <!-- Row: Checkbox + Dropdown -->
                         <div class="flex items-center gap-4">
                             <!-- Dropdown -->
@@ -127,35 +104,63 @@
                         </div>
                     </div>
                     <div class="w[20%]">
-                        <div id="godownCredit" ></div>
+                        <div id="godownCredit"></div>
                     </div>
                 </div>
-                <div class="col-span-6 w-full flex gap-2">
+                
+                <div class="col-span-6 w-full flex items-center gap-3">
+                    <div class=" w-[80%]">
+                        <!-- Label -->
+                        <label class="block text-gray-700 mb-1">Godown From*</label>
+                        <!-- Row: Checkbox + Dropdown -->
+                        <div class="flex items-center gap-4">
+                            <!-- Dropdown -->
+                            <div class="flex-1">
+                                <select name=""
+                                        id="godown"
+                                        class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required>
+                                    <option value="" selected>Select Godown</option>
+                                    {% for godown in godowns %}
+                                        <option value="{{ godown.id }}"
+                                                data-code="{{ godown.godownId }}"
+                                                data-balance="{{ godown.get_balance }}">{{ godown.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class=" w-[30%]">
+                        <!-- Label -->
+                        <label class="block text-gray-700 mb-1">G.code*</label>
+                        <div class="flex items-center gap-4 ">
+                            <!-- Row: Checkbox + Dropdown -->
+                            <div class="flex items-center gap-4 w-full">
+                                <!-- Dropdown -->
+                                <div class="flex-1">
+                                    <input type="text"
+                                           name=""
+                                           id="godownID"
+                                           placeholder=""
+                                           disabled
+                                           class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                           required />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w[20%]">
+                        <div id="godownCredit"></div>
+                    </div>
+                </div>
+               
+                <div class="col-span-6 w-[35%] flex gap-2">
                     <div class="flex-1">
                         <label class="block text-gray-700">Qty*</label>
                         <input type="number"
                                name=""
                                id="qty"
                                placeholder="Enter Quantity"
-                               class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               required />
-                    </div>
-                    <div class="flex-1">
-                        <label class="block text-gray-700">Rate*</label>
-                        <input type="number"
-                               name=""
-                               id="amount"
-                               placeholder="Enter Amount"
-                               class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               required />
-                    </div>
-                    <div class="flex-1">
-                        <label class="block text-gray-700">Total Amount*</label>
-                        <input type="number"
-                               name=""
-                               id="total_amount"
-                               placeholder=""
-                               disabled
                                class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                                required />
                     </div>
@@ -224,7 +229,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                             </svg>
                             Save
-                          </button>
+                        </button>
                     </div>
                 </div>
                 <div class="overflow-x-auto mt-5 w-full" id="commissionCreateDiv">

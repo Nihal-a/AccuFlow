@@ -15,8 +15,9 @@
               crossorigin="anonymous"
               referrerpolicy="no-referrer" />
         <script src="https://cdn.tailwindcss.com"></script>
-        {% block externalCSS %}{% endblock %}
+        {% block externalCSS %}{% endblock externalCSS %}
         <style>
+          
   /* ✅ Fonts */
   body {
     font-family: 'Inter', 'Roboto', 'Segoe UI', sans-serif !important;
@@ -222,7 +223,9 @@
                         <a href="{% url 'stockview' %}" class="nav-link" id="">
                             <span>Stock View</span>
                         </a>
-                        <div class="nav-link">Stock Transfer</div>
+                        <a href="{% url 'stocktransfer' %}" class="nav-link" id="">
+                            <span>Stock Transfer</span>
+                        </a>
                          <a href="{% url 'cashbankbalance' %}" class="nav-link" id="">
                             <span>Cash/Bank Balance</span>
                         </a>
@@ -251,7 +254,9 @@
                     <div class="ml-4 space-y-0.5 text-gray-500">
                         <div class="nav-link">Add New Collection</div>
                         <div class="nav-link">Pending Approval</div>
-                        <div class="nav-link">View Collections</div>
+                        <a href="{% url 'viewcollections' %}" class="nav-link" id="">
+                            <span>View Collections</span>
+                        </a>
                     </div>
                 </div>
                 <!-- Report -->
