@@ -12,6 +12,21 @@ from core.views import getClient, update_ledger
 class CashEntryView(View):
     def get(self,request):
         cashs = Cashs.objects.filter(hold=True,is_active=True,client=getClient(request.user))
+        cb = (
+            Cashs.objects.filter(
+                hold=False,
+                is_active=True,
+                client=getClient(request.user)
+            )
+            .values('cash_bank__id')
+            .last()
+        )
+
+        if cb:
+            cb_id = cb['cash_bank__id']
+        else:
+            cb_id = None
+        print(cb_id) 
         cashData = []
         for cash in cashs:
             cashData.append({
@@ -38,6 +53,7 @@ class CashEntryView(View):
             'customers':customers,
             'last_cash_no':getLastCashNo(client=getClient(request.user)),
             'cashbanks':cashbanks,
+            'cb_id':cb_id
         }
         return render(request,'cashs/cash_entry.html',context)
     
@@ -130,7 +146,7 @@ class CashHold(View):
             cash.transaction = transaction
             cash.client=getClient(request.user)
             cash.save()
-            return JsonResponse({'status':'success','message':'Cash held successfully','cash_id':cash.id,'hold':cash.hold})
+            return JsonResponse({'status':'success','message':'Cash held successfully','cash_id':cash.id,'hold':cash.hold,'cb_id':cash_bank}) 
         cash = Cashs.objects.create(
             cash_no = cash_no,
             supplier = supplier,
@@ -143,7 +159,7 @@ class CashHold(View):
             hold = True,
             client=getClient(request.user)
         )
-        return JsonResponse({'status':'success','message':'Cash held successfully','cash_id':cash.id,'hold':cash.hold})
+        return JsonResponse({'status':'success','message':'Cash held successfully','cash_id':cash.id,'hold':cash.hold,'cb_id':cash_bank})
     
     
         

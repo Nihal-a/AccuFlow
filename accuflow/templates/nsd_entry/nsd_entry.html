@@ -186,9 +186,9 @@
         class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
         required
       >
-        <option value="" selected>Select Customer</option>
+        <option value="" selected>Select Customer</option> 
         {% for customer in customers %}
-        <option value="{{ customer.id }}" data-code="{{customer.customerId}}" data-balance="{{customer.get_balance}}" data-type="customers">{{ customer.name }}</option>
+        <option value="{{ customer.id }}" data-code="{{customer.customerId}}" data-balance="{{customer.balance}}" data-type="customers">{{ customer.name }}</option>
         {% endfor %}
       </select>
     </div>
@@ -679,11 +679,17 @@
       var selectedOption = $(this).find('option:selected');
       var code = selectedOption.data('code') || '';
       var balance = selectedOption.data('balance') || '0';
+      var supplierType = selectedOption.data('type')
       $('#supplierID').val(code);
       $('#supplierCredit').empty();
       $('#supplierCredit').append(`
       <p class="font-semibold ${parseFloat(balance).toFixed(2)<= 0 ? `text-red`: ``}">Balance:${parseFloat(balance).toFixed(2)} </p> 
       `);
+      $('#customer option').each(function () {
+            if ($(this).data('type') == supplierType && $(this).val()==$('#supplier').val()) {
+                $(this).prop('disabled', true);
+            }
+        });
     });
     $('#allSuppliers').on('change', function() {
       if($(this).is(':checked')) {
@@ -755,11 +761,18 @@
       var selectedOption = $(this).find('option:selected');
       var code = selectedOption.data('code') || '';
       var balance = selectedOption.data('balance') || '0';
+      var customerType = selectedOption.data('type')
       $('#customerCredit').empty();
       $('#customerCredit').append(`
       <p class="font-semibold ${parseFloat(balance).toFixed(2)<= 0 ? `text-red`: ``}">Balance:${parseFloat(balance).toFixed(2)} </p> 
       `);
       $('#customerID').val(code); 
+
+      $('#supplier option').each(function () {
+            if ($(this).data('type') == customerType && $(this).val()==$('#customer').val()) {
+                $(this).prop('disabled', true);
+            }
+        });
     });
   </script>
   <script>

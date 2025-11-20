@@ -86,6 +86,8 @@ class SaleAddView(View):
                 seller = customer
             godown = get_object_or_404(Godowns, id=godown_ids[count]) if godown_ids[count] else None
             sale = Sales.objects.get(id=id)
+            godown.qty -= float(qtys[count])    
+            godown.save()
             update_ledger(where=None,to=sale.party,old_purchase=sale.total_amount,old_sale=sale.total_amount)
             update_ledger(where=None,to=seller,new_purchase=total_amounts[count],new_sale=total_amounts[count]) 
             sale.supplier = supplier
@@ -140,6 +142,8 @@ class SaleHold(View):
                     new_purchase=0,
                     new_sale=0
                 )
+                godown.qty += sale.qty
+                godown.save()
             sale.sale_no = sale_no
             sale.supplier = supplier
             sale.godown = godown
@@ -163,6 +167,8 @@ class SaleHold(View):
                     new_purchase=total_amount,
                     new_sale=total_amount,
                 )
+                godown.qty -= sale.qty
+                godown.save()
             return JsonResponse({'status':'success','sale_id':sale.id,'hold':sale.hold})
         sale = Sales.objects.create(
             sale_no=sale_no,
@@ -253,5 +259,7 @@ def delete_sale(request):
             new_purchase=0,
             new_sale=0
         )
+        sale.godown.qty += sale.qty
+        sale.godown.save()
     sale.save()
     return JsonResponse({'status':'success','message':'sale deleted successfully'})

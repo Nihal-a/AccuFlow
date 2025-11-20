@@ -606,11 +606,14 @@
       var selectedOption = $(this).find('option:selected');
       var code = selectedOption.data('code') || '';
       var balance = selectedOption.data('balance') || '0';
+      var selectedType = selectedOption.data('type')
       $('#supplierID').val(code);
       $('#supplierCredit').empty();
       $('#supplierCredit').append(`
       <p class="font-semibold ${parseFloat(balance).toFixed(2)<= 0 ? `text-red`: ``}">Balance:${parseFloat(balance).toFixed(2)} </p> 
       `);
+      $('#cash').prop('disabled', false);
+
     });
     $('#cash').on('change', function() {
       var selectedOption = $(this).find('option:selected');
@@ -936,8 +939,8 @@ function resetSLNo() {
 
 
   function clearCashForm() {
-    $('#amount, #supplierID, #cashbankId,#cashId, #transaction, #description').val('');
-    $('#supplier, #cash').prop('selectedIndex', 0);
+    $('#amount, #supplierID,#cashId, #transaction, #description').val('');
+    $('#supplier').prop('selectedIndex', 0);
       $('#supplierCredit').empty();
       $('#cashCredit').empty()
     $('#cash_name').val(getLastCashNo()).change();
@@ -1032,6 +1035,7 @@ function resetSLNo() {
         `);
 
         $('#showDate').text(`Showing cashs from ${startDate} to ${endDate}`);
+        $('#cash').val(data.cb_id).change()
       })
       .catch(error => {
         console.error('Error fetching cashs by date:', error);
@@ -1090,6 +1094,7 @@ updateCash(button);
     selectedTR = '';
 
   }
+  $('#cash').val('{{cb_id}}').change()
 
 </script>
   {% endblock %}
