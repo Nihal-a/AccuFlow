@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Stock View
+{% endblock title %}
+
+{% block content %}
+<div class="bg-white rounded-xl p-6 mt-3">
+    <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">
+        Stock View
+    </h1>
+
+    <p class="text-sm text-gray-500 mt-2">
+        (Fixed: table now stretches full width)
+    </p>
+
+    <hr class="mt-5">
+
+    <div id="createView" class="mt-5 w-full">
+        <div class="grid grid-cols-8 gap-4">
+
+            <div class="overflow-x-auto mt-5 w-full col-span-8">
+                <table id="viewPurchaseTable"
+                    class="w-[50%] min-w-max rounded-t-lg overflow-hidden">
+                    <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
+                        <tr>
+                            <th class="px-4 py-3 text-left font-medium w-1">#</th>
+                            <th class="px-4 py-3 text-left font-medium">Code</th>
+                            <th class="px-4 py-3 text-center font-medium">Name</th>
+                            <th class="px-4 py-3 text-right font-medium">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="purchaseTableBody" class="bg-gray-100"></tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block externalJS %}
+<script>
+    navActive("supplierMasterLink");
+
+    let deleteUrl = "";
+
+    function openEditModal(supplierId) {
+        const url = "{% url 'edit-supplier' 0 %}".replace("0", supplierId);
+        document.getElementById("confirmEditBtn").setAttribute("href", url);
+        document.getElementById("editModal").classList.remove("hidden");
+    }
+
+    function closeEditModal() {
+        document.getElementById("editModal").classList.add("hidden");
+    }
+
+    function openModal(supplierId) {
+        deleteUrl = "{% url 'delete-supplier' 0 %}".replace("0", supplierId);
+        document.getElementById("confirmDeleteBtn").setAttribute("href", deleteUrl);
+        document.getElementById("confirmModal").classList.remove("hidden");
+    }
+
+    function closeModal() {
+        document.getElementById("confirmModal").classList.add("hidden");
+    }
+</script>
+{% endblock externalJS %}

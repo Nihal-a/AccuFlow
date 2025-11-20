@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Stock View
+{% endblock title %}
+
+{% block content %}
+<div class="bg-white rounded-xl p-6 mt-3">
+    <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">
+        Stock View
+    </h1>
+
+    <p class="text-sm text-gray-500 mt-2">
+        (Fixed: table now stretches full width)
+    </p>
+
+    <hr class="mt-5">
+
+    <div id="createView" class="mt-5 w-full">
+        <div class="grid grid-cols-8 gap-4">
+        
+
+            <div class="col-span-6 w-full flex items-end gap-3">
+                <div class="w-[20%]">
+                    <label class="block text-gray-700 mb-1">From*</label>
+                    <div class="flex items-center gap-4">
+                        <div class="flex-1">
+                            <input type="date"
+                                id="dateFrom"
+                                class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-[20%]">
+                    <label class="block text-gray-700 mb-1">To*</label>
+                    <div class="flex items-center gap-4">
+                        <div class="flex-1">
+                            <input type="date"
+                                id="dateTo"
+                                class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                required>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                     <a id="btnView"
+                        href="#"
+                        class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
+                        View Stocks
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-span-6 w-full flex items-center gap-3">
+                    <div class="w-[45%] border rounded-lg overflow-hidden shadow-sm">
+                       
+                        <div class="grid grid-cols-3 ">
+                            <div class="col-span-1 px-3 py-2.5 font-semibold text-sm border-b border-r bg-white">
+                                Total Qty
+                            </div>
+                            <div class="col-span-2 px-3 py-2.5 bg-yellow-300 text-right font-semibold text-sm" id="totalQty">
+                                0.000
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-3">
+                            <div class="col-span-1 px-3 py-2.5 font-semibold text-sm border-b border-r bg-white">
+                                Avg. Rate
+                            </div>
+                            <div class="col-span-2 px-3 py-2.5 bg-gray-400 text-right font-semibold text-sm" id="avgRate">
+                                0.000
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-3">
+                            <div class="col-span-1 px-3 py-2.5 font-semibold text-sm border-r bg-white">
+                                Amount
+                            </div>
+                            <div class="col-span-2 px-3 py-2.5 bg-green-400 text-right font-semibold text-sm" id="totalAmount">
+                                0.000
+                            </div>
+                        </div>
+
+                    </div>
+            </div>
+
+            <div class="overflow-x-auto mt-5 w-full col-span-8">
+                <table id="viewPurchaseTable"
+                    class="w-[50%] min-w-max rounded-t-lg overflow-hidden">
+                    <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
+                        <tr>
+                            <th class="px-4 py-3 text-left font-medium w-1">#</th>
+                            <th class="px-4 py-3 text-center font-medium">Name</th>
+                            <th class="px-4 py-3 text-right font-medium">Qty</th>
+                            <th class="px-4 py-3 text-right font-medium">Rate</th>
+                            <th class="px-4 py-3 text-right font-medium">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="purchaseTableBody" class="bg-gray-100"></tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block externalJS %}
+<script>
+    navActive("supplierMasterLink");
+
+    let deleteUrl = "";
+
+    function openEditModal(supplierId) {
+        const url = "{% url 'edit-supplier' 0 %}".replace("0", supplierId);
+        document.getElementById("confirmEditBtn").setAttribute("href", url);
+        document.getElementById("editModal").classList.remove("hidden");
+    }
+
+    function closeEditModal() {
+        document.getElementById("editModal").classList.add("hidden");
+    }
+
+    function openModal(supplierId) {
+        deleteUrl = "{% url 'delete-supplier' 0 %}".replace("0", supplierId);
+        document.getElementById("confirmDeleteBtn").setAttribute("href", deleteUrl);
+        document.getElementById("confirmModal").classList.remove("hidden");
+    }
+
+    function closeModal() {
+        document.getElementById("confirmModal").classList.add("hidden");
+    }
+</script>
+{% endblock externalJS %}
