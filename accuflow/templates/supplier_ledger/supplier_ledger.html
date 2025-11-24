@@ -17,13 +17,16 @@
     <hr class="mt-5">
 
     <div id="createView" class="mt-5 w-full">
-        <div class="grid grid-cols-8 gap-4">
+        <div class="grid">
+            <form method="post" action="{% url 'supplierledger' %}" class="grid  grid-cols-8 gap-4">
+                {% csrf_token %}
             <div class="col-span-6 w-full flex items-center gap-3">
                 <div class="w-[45%]">
                     <div class="flex items-center gap-4 w-full">
                         <div class="flex-1">
                             <select
-                                id="supplierSelect"
+                                id="supplier"
+                                name="supplier"
                                 class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 required>
                                 <option value="" selected>Select Supplier</option>
@@ -60,8 +63,10 @@
                         <div class="flex-1">
                             <input type="date"
                                 id="dateFrom"
+                                name="dateFrom"
+                                value="{{date_from}}"
                                 class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                required>
+                                >
                         </div>
                     </div>
                 </div>
@@ -72,8 +77,10 @@
                         <div class="flex-1">
                             <input type="date"
                                 id="dateTo"
+                                name="dateTo"
+                                value="{{date_to}}"
                                 class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                required>
+                                >
                         </div>
                     </div>
                 </div>
@@ -84,8 +91,9 @@
                         <div class="flex-1">
                             <select
                                 id="sortOrder"
+                                name="sort"
                                 class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                required>
+                                >
                                 <option value="" selected>Sort By</option>
                                 {% for supplier in suppliers %}
                                 <option value="{{ supplier.id }}">
@@ -104,19 +112,19 @@
 
                         <div class="w-full flex items-center gap-5">
                             <div>
-                                <input type="checkbox" id="noOpeningBalance">
+                                <input type="checkbox" id="noOpeningBalance" name="opening">
                                 <label for="noOpeningBalance">Without Opening Balance</label>
                             </div>
 
                             <div class="flex gap-2">
                                 <a id="btnClear"
-                                    href="#"
+                                    href="{% url 'supplierledger' %}"
                                     class="leading-none inline-flex items-center gap-1.5 bg-gray-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-gray-600 transition-all duration-300">
                                     Clear Details
                                 </a>
 
-                                <a id="btnView"
-                                    href="#"
+                                <button id="btnView"
+                                    type="submit"
                                     class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
                                     View Results
                                 </a>
@@ -125,25 +133,43 @@
                     </div>
                 </div>
             </div>
+            </form>
 
             <div class="overflow-x-auto mt-5 w-full col-span-8">
                 <table id="viewPurchaseTable"
                     class="w-full min-w-max rounded-t-lg overflow-hidden">
                     <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
                         <tr>
-                            <th class="px-4 py-3 text-left font-medium w-1">Actions</th>
+                            <!-- <th class="px-4 py-3 text-left font-medium w-1">Actions</th> -->
                             <th class="px-4 py-3 text-left font-medium w-1">#</th>
-                            <th class="px-4 py-3 text-left font-medium">Purchase No</th>
+                            <th class="px-4 py-3 text-left font-medium">Trade</th>
                             <th class="px-4 py-3 text-left font-medium">Date</th>
                             <th class="px-4 py-3 text-left font-medium">Supplier</th>
-                            <th class="px-4 py-3 text-left font-medium">Godown</th>
+                            <th class="px-4 py-3 text-left font-medium">Partner</th>
                             <th class="px-4 py-3 text-right font-medium">Qty</th>
                             <th class="px-4 py-3 text-right font-medium">Rate</th>
                             <th class="px-4 py-3 text-right font-medium">Total Amount</th>
                             <th class="px-4 py-3 text-right font-medium">Description</th>
+                            <th class="px-4 py-3 text-right font-medium">Balance</th>
                         </tr>
                     </thead>
-                    <tbody id="purchaseTableBody" class="bg-gray-100"></tbody>
+                    <tbody id="purchaseTableBody" class="bg-gray-100">
+                        {% for ledger in ledgers %}
+                        <tr>
+                            <td  class="px-4 py-3 text-left font-medium">{{forloop.counter}}</td>
+                            <td  class="px-4 py-3 text-left font-medium">{{ledger.name}}</td>
+                            <td  class="px-4 py-3 text-left font-medium">{{ledger.date}}</td>
+                            <td  class="px-4 py-3 text-left font-medium">{{ledger.supplier}}</td>
+                            <td  class="px-4 py-3 text-left font-medium">{{ledger.party}}</td>
+                            <td  class="px-4 py-3 text-right font-medium">{{ledger.qty}}</td>
+                            <td  class="px-4 py-3 text-right font-medium">{{ledger.rate}}</td>
+                            <td  class="px-4 py-3 text-right font-medium">{{ledger.total_amount}}</td>
+                            <td  class="px-4 py-3 text-right font-medium">{{ledger.description}}</td>
+                            <td  class="px-4 py-3 text-right font-medium">{{ledger.balance}}</td>
+ 
+                        </tr>
+                        {% endfor %}
+                    </tbody>
                 </table>
             </div>
 
@@ -156,26 +182,14 @@
 <script>
     navActive("supplierMasterLink");
 
-    let deleteUrl = "";
 
-    function openEditModal(supplierId) {
-        const url = "{% url 'edit-supplier' 0 %}".replace("0", supplierId);
-        document.getElementById("confirmEditBtn").setAttribute("href", url);
-        document.getElementById("editModal").classList.remove("hidden");
-    }
-
-    function closeEditModal() {
-        document.getElementById("editModal").classList.add("hidden");
-    }
-
-    function openModal(supplierId) {
-        deleteUrl = "{% url 'delete-supplier' 0 %}".replace("0", supplierId);
-        document.getElementById("confirmDeleteBtn").setAttribute("href", deleteUrl);
-        document.getElementById("confirmModal").classList.remove("hidden");
-    }
-
-    function closeModal() {
-        document.getElementById("confirmModal").classList.add("hidden");
-    }
+    $('#supplier').on('change', function() {
+      var selectedOption = $(this).find('option:selected');
+      var code = selectedOption.data('code') || '';
+      $('#supplierID').val(code);
+    });
+    {% if supplier %}
+    $('#supplier').val('{{supplier.id}}').change()
+    {% endif %}
 </script>
 {% endblock externalJS %}
