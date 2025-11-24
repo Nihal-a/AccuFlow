@@ -36,7 +36,9 @@ urlpatterns = [
     path('commission/', include('commission_entry.urls')),
     path('supplierledger/', include('supplier_ledger.urls')),
     path('stockview/', include('stock_view.urls')),
+    path('stocktransfer/', include('stock_transfer.urls')),
     path('cashbankbalance/', include('cashbank_balance.urls')),
+    path('viewcollections/', include('view_collections.urls')),
     path('changepass/', include('change_pass.urls')),
 ]
 
