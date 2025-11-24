@@ -90,6 +90,8 @@ class SaleAddView(View):
             godown.save()
             update_ledger(where=None,to=sale.party,old_purchase=sale.total_amount,old_sale=sale.total_amount)
             update_ledger(where=None,to=seller,new_purchase=total_amounts[count],new_sale=total_amounts[count]) 
+            sale.seller_balance = seller.balance
+            sale.purchaser_balance = godown.get_balance
             sale.supplier = supplier
             sale.godown = godown
             sale.date = dates[count]
@@ -144,6 +146,8 @@ class SaleHold(View):
                 )
                 godown.qty += sale.qty
                 godown.save()
+                sale.purchaser_balance = sale.purchaser_balance - sale.qty
+                sale.seller_balance = sale.seller_balance - sale.amount
             sale.sale_no = sale_no
             sale.supplier = supplier
             sale.godown = godown
@@ -161,7 +165,7 @@ class SaleHold(View):
             if not sale.hold:
                 update_ledger(
                     to=seller, 
-        where=None,
+                    where=None,
                     old_purchase=0, 
                     old_sale=0,
                     new_purchase=total_amount,
@@ -169,6 +173,9 @@ class SaleHold(View):
                 )
                 godown.qty -= sale.qty
                 godown.save()
+                sale.purchaser_balance += float(qty)
+                sale.seller_balance += float(amount)
+                sale.save()
             return JsonResponse({'status':'success','sale_id':sale.id,'hold':sale.hold})
         sale = Sales.objects.create(
             sale_no=sale_no,

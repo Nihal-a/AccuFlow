@@ -62,6 +62,7 @@ class CommissionAddView(View):
             godown.qty -= float(qtys[count])
             godown.save()
             commission = Commissions.objects.get(id=id)
+            commission.godown_balance = godown.qty
             commission.expense = expense
             commission.godown = godown
             commission.date = dates[count]
@@ -97,6 +98,8 @@ class CommissionHold(View):
             godown.qty += float(commission.qty)
             godown.qty -= float(qty)
             godown.save()
+            commission.godown_balance -= commission.qty
+            commission.godown_balance += float(qty)
             commission.commission_no = commission_no
             commission.expense = expense
             commission.godown = godown

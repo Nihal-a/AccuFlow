@@ -227,6 +227,8 @@ class Purchases(models.Model):
     hold = models.BooleanField(default=False)
     type = models.TextField(blank=True,null=True)
     client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
+    seller_balance = models.FloatField(default=0)
+    purchaser_balance = models.FloatField(default=0)
     
     
     def __str__(self):
@@ -262,6 +264,8 @@ class Sales(models.Model):
     hold = models.BooleanField(default=False)
     type = models.TextField(blank=True,null=True)
     client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
+    seller_balance = models.FloatField(default=0)
+    purchaser_balance = models.FloatField(default=0)
     
     
     def __str__(self):
@@ -296,6 +300,7 @@ class Commissions(models.Model):
     hold = models.BooleanField(default=False)
     type = models.TextField(blank=True,null=True)
     client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
+    godown_balance = models.FloatField(default=0)
     
     
     def __str__(self):
@@ -334,6 +339,8 @@ class NSDs(models.Model):
     hold = models.BooleanField(default=False)
     type = models.TextField(blank=True,null=True)
     client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
+    sender_balance = models.FloatField(default=0)
+    receiver_balance = models.FloatField(default=0)
     
     
     def __str__(self):
@@ -386,7 +393,8 @@ class Cashs(models.Model):
     hold = models.BooleanField(default=False)
     transaction = models.TextField(blank=True,null=True)
     client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
-    
+    party_balance = models.FloatField(default=0)
+     
     
     
     

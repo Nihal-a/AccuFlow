@@ -88,6 +88,8 @@ class PurchaseAddView(View):
             godown.save()
             update_ledger(where=purchase.party,to=None,old_purchase=purchase.total_amount,old_sale=purchase.total_amount)
             update_ledger(where=seller,to=None,new_purchase=total_amounts[count],new_sale=total_amounts[count]) 
+            purchase.seller_balance = seller.balance
+            purchase.purchaser_balance = godown.get_balance
             purchase.supplier = supplier
             purchase.godown = godown
             purchase.date = dates[count]
@@ -145,6 +147,8 @@ class PurchaseHold(View):
                 )
                 godown.qty -= purchase.qty
                 godown.save()
+                purchase.purchaser_balance = purchase.purchaser_balance - purchase.qty
+                purchase.seller_balance = purchase.seller_balance - purchase.amount
             purchase.purchase_no = purchase_no 
             purchase.supplier = supplier
             purchase.customer = customer
@@ -169,6 +173,9 @@ class PurchaseHold(View):
                 )
                 godown.qty += float(qty)
                 godown.save()
+                purchase.purchaser_balance += float(qty)
+                purchase.seller_balance += float(amount)
+                purchase.save()
                 
 
             return JsonResponse({'status':'success','purchase_id':purchase.id,'hold':purchase.hold})

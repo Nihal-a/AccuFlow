@@ -104,6 +104,8 @@ class NSDAddView(View):
                 sender = sender_supplier
             update_ledger(where=nsd.sender,to=nsd.receiver,old_purchase=nsd.purchase_amount,old_sale=nsd.sell_amount)
             update_ledger(where=sender,to=receiver,new_purchase=purchase_amount[count],new_sale=sell_amount[count]) 
+            nsd.sender_balance = sender.balance
+            nsd.receiver_balance = receiver.balance
             nsd.sender_customer = sender_customer
             nsd.sender_supplier = sender_supplier
             nsd.receiver_customer = receiver_customer
@@ -171,6 +173,8 @@ class NSDHold(View):
                         new_purchase=0,
                         new_sale=0
                     )
+                    nsd.sender_balance -= nsd.sell_amount
+                    nsd.receiver_balance -= nsd.purchase_amount
                 nsd.nsd_no = nsd_no
                 nsd.date = date
                 nsd.qty = qty
@@ -196,6 +200,9 @@ class NSDHold(View):
                         old_purchase=0,
                         old_sale=0
                     )
+                    nsd.sender_balance += float(sell_amount)
+                    nsd.receiver_balance += float(purchase_amount)
+                    nsd.save()
                 return JsonResponse({'status':'success','nsd_id':nsd.id,'hold':nsd.hold})
             nsd = NSDs.objects.create(
                 nsd_no=nsd_no,
