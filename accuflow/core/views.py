@@ -31,31 +31,7 @@ def getClient(user):
         return Clients.objects.get(user=user,is_active=True)
     else:
         return None
-    
-    
-# def ledger_creator(where, to, purchase_amount, sale_amount):
-
-#     where.debit += purchase_amount
-
-#     if where.debit > 0 and where.credit > 0:
-#         cancel = min(where.debit, where.credit)
-#         where.debit -= cancel
-#         where.credit -= cancel
-
-#     where.balance = where.debit - where.credit
-#     where.save()
-
-#     to.credit += sale_amount
-
-#     if to.debit > 0 and to.credit > 0:
-#         cancel = min(to.debit, to.credit)
-#         to.debit -= cancel
-#         to.credit -= cancel
-
-#     to.balance = to.debit - to.credit
-#     to.save()
-
-
+       
 
 def update_party(party):
     if party.debit > 0 and party.credit > 0:
@@ -94,46 +70,3 @@ def update_ledger(where, to, old_purchase=0, new_purchase=0, old_sale=0, new_sal
         to.save()
         update_party(to)
 
-
-# def update_ledger(party, old_amount=0, new_amount=0):
-#     if party is None:
-#         return
-    
-#     if old_amount:
-#         party.debit -= float(old_amount)
-
-#     if new_amount:
-#         party.debit += float(new_amount)
-
-#     if party.debit < 0:
-#         party.credit += abs(party.debit)
-#         party.debit = 0
-
-#     party.save()
-#     update_party(party) 
-    
-    
-# def update_godown_ledger(godown, old_amount=0, new_amount=0):
-#     if godown is None:
-#         return
-    
-#     if old_amount:
-#         godown.credit -= float(old_amount)
-
-#     if new_amount:
-#         godown.credit += float(new_amount)
-
-#     if godown.credit < 0:
-#         godown.debit += abs(godown.credit)
-#         godown.credit = 0
-
-#     # cancel both if present
-#     if godown.credit > 0 and godown.debit > 0:
-#         cancel = min(godown.credit, godown.debit)
-#         godown.credit -= cancel
-#         godown.debit -= cancel
-
-#     godown.balance = godown.debit - godown.credit
-#     godown.save()
-
- 

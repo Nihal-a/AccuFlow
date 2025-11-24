@@ -60,6 +60,9 @@
         <th class="px-4 py-3 text-right font-medium">Open Debit</th>
         <th class="px-4 py-3 text-right font-medium">OTC Credit</th>
         <th class="px-4 py-3 text-right font-medium">OTC Debit</th>
+        <th class="px-4 py-3 text-right font-medium">OTC Balance</th>
+        <th class="px-4 py-3 text-right font-medium">Open Balance</th>
+        <th class="px-4 py-3 text-right font-medium">Balance</th>
       </tr>
     </thead>
     <tbody class="bg-gray-100">
@@ -94,6 +97,9 @@
         <td class="px-4 py-2 text-gray-700 text-right  font-bold">{{ supplier.open_debit }}</td>
         <td class="px-4 py-2 text-gray-700 text-right font-bold">{{ supplier.otc_credit }}</td>
         <td class="px-4 py-2 text-gray-700 text-right font-bold">{{ supplier.otc_debit }}</td>
+        <td class="px-4 py-2 text-gray-700 text-right font-bold">{{ supplier.otc_balance }}</td>
+        <td class="px-4 py-2 text-gray-700 text-right font-bold">{{ supplier.open_balance }}</td>
+        <td class="px-4 py-2 text-gray-700 text-right font-bold">{{ supplier.balance }}</td>
       </tr>
       {% endfor %}
   {% else %}

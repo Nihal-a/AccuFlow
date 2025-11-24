@@ -111,6 +111,8 @@ class Customers(models.Model):
     client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
     credit = models.FloatField(default=0)
     debit = models.FloatField(default=0)
+    open_balance = models.FloatField(default=0)
+    otc_balance = models.FloatField(default=0)
     
     def __str__(self):
         return self.name
@@ -136,6 +138,8 @@ class Suppliers(models.Model):
     debit = models.FloatField(default=0)
     balance = models.FloatField(default=0)
     client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
+    open_balance = models.FloatField(default=0)
+    otc_balance = models.FloatField(default=0)
     
     def __str__(self):
         return self.name
