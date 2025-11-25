@@ -3,6 +3,7 @@ from core.models import Suppliers
 from django.views import View
 from core.views import getClient
 from core.models import *
+from datetime import datetime
 
 class SupplierLedgerView(View):
     def get(self,request):
@@ -11,6 +12,7 @@ class SupplierLedgerView(View):
 
     def post(self,request): 
         supplier = request.POST.get('supplier')
+        opening = request.POST.get('opening')
         suppliers = Suppliers.objects.filter(is_active=True,client = getClient(request.user))
         purchases = Purchases.objects.filter(is_active=True,hold=False,client = getClient(request.user))
         sales = Sales.objects.filter(is_active=True,hold=False,client = getClient(request.user))
@@ -26,7 +28,19 @@ class SupplierLedgerView(View):
         total_balance = 0
         if supplier:
             supplier = Suppliers.objects.get(id=supplier)
-
+            if opening != 'on': 
+                ledgers.append({
+                    'name':'Opening Balance',
+                    'date':supplier.created_at,
+                    'supplier':supplier.name if supplier else '',
+                    'party':'N/A',
+                    'qty':'1',
+                    'rate':supplier.open_balance,
+                    'total_amount':supplier.open_balance,
+                    'description':f"Open Credit = {supplier.open_credit}\nOpen Debit = {supplier.open_debit}",
+                    'balance':supplier.open_balance,
+                    
+                })
             sales = sales.filter(supplier=supplier)
             purchases = purchases.filter(supplier=supplier) 
             sender_nsds = nsds.filter(sender_supplier=supplier)
@@ -107,12 +121,19 @@ class SupplierLedgerView(View):
                 'description':cash.description,
                 'balance':cash.party_balance,
             })
+        for entry in ledgers:
+            d = entry["date"]
+            if isinstance(d, datetime):
+                entry["date"] = d
+            else:
+                entry["date"] = datetime.combine(d, datetime.min.time())
         context = {
             'suppliers':suppliers,
             'date_from':date_from,
             'date_to':date_to,
             'ledgers':ledgers,
-            'supplier':supplier if supplier else ''
+            'supplier':supplier if supplier else '',
+            'opening':opening
             }
         return render(request,'supplier_ledger/supplier_ledger.html',context)
             

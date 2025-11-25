@@ -164,11 +164,15 @@
                             <td  class="px-4 py-3 text-right font-medium">{{ledger.qty}}</td>
                             <td  class="px-4 py-3 text-right font-medium">{{ledger.rate}}</td>
                             <td  class="px-4 py-3 text-right font-medium">{{ledger.total_amount}}</td>
-                            <td  class="px-4 py-3 text-right font-medium">{{ledger.description}}</td>
+                            <td  class="px-4 py-3 text-right font-medium" style="white-space: pre !important;">{{ledger.description}}</td>
                             <td  class="px-4 py-3 text-right font-medium">{{ledger.balance}}</td>
- 
                         </tr>
                         {% endfor %}
+                        <tr class="bg-blue-200 text-gray-700 uppercase text-sm">
+                            <td colspan="8"></td>
+                            <td class="px-4 py-3 text-right font-medium font-bold">Balance :</td>
+                            <td class="px-4 py-3 text-right font-medium font-bold">{{supplier.balance|default:'0.00'}}</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -191,5 +195,9 @@
     {% if supplier %}
     $('#supplier').val('{{supplier.id}}').change()
     {% endif %}
+    console.log('{{opening}}')
+    {% if opening == 'on' %}
+    $('#noOpeningBalance').prop('checked', true).change();
+{% endif %}
 </script>
 {% endblock externalJS %}
