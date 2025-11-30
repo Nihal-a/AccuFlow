@@ -231,6 +231,7 @@ class Purchases(models.Model):
     purchaser_balance = models.FloatField(default=0)
     
     
+    
     def __str__(self):
         return self.purchase_no
     

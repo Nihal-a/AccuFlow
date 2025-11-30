@@ -112,7 +112,7 @@
 
                         <div class="w-full flex items-center gap-5">
                             <div>
-                                <input type="checkbox" id="noOpeningBalance" name="opening">
+                                <input type="checkbox" id="noOpeningBalance" name="opening" checked>
                                 <label for="noOpeningBalance">Without Opening Balance</label>
                             </div>
 
@@ -140,16 +140,21 @@
                     class="w-full min-w-max rounded-t-lg overflow-hidden">
                     <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
                         <tr>
+                            <th colspan="7"></th>
+                            <th class="px-4 py-3 text-left font-bold w-1" colspan="2">Open Balance</th>
+                            <th class="px-4 py-3 text-left font-bold w-1">{{open_balance}}</th>
+                        </tr>
+                        <tr>
                             <!-- <th class="px-4 py-3 text-left font-medium w-1">Actions</th> -->
                             <th class="px-4 py-3 text-left font-medium w-1">#</th>
-                            <th class="px-4 py-3 text-left font-medium">Trade</th>
-                            <th class="px-4 py-3 text-left font-medium">Date</th>
-                            <th class="px-4 py-3 text-left font-medium">Supplier</th>
-                            <th class="px-4 py-3 text-left font-medium">Partner</th>
+                            <th class="px-4 py-3 text-left font-medium">Tran.Date</th>
+                            <th class="px-4 py-3 text-left font-medium">T.No</th>
+                            <th class="px-4 py-3 text-left font-medium">Type</th>
+                            <th class="px-4 py-3 text-left font-medium">Description</th>
                             <th class="px-4 py-3 text-right font-medium">Qty</th>
                             <th class="px-4 py-3 text-right font-medium">Rate</th>
-                            <th class="px-4 py-3 text-right font-medium">Total Amount</th>
-                            <th class="px-4 py-3 text-right font-medium">Description</th>
+                            <th class="px-4 py-3 text-right font-medium">Debit</th>
+                            <th class="px-4 py-3 text-right font-medium">Credit</th>
                             <th class="px-4 py-3 text-right font-medium">Balance</th>
                         </tr>
                     </thead>
@@ -157,21 +162,27 @@
                         {% for ledger in ledgers %}
                         <tr>
                             <td  class="px-4 py-3 text-left font-medium">{{forloop.counter}}</td>
-                            <td  class="px-4 py-3 text-left font-medium">{{ledger.name}}</td>
-                            <td  class="px-4 py-3 text-left font-medium">{{ledger.date}}</td>
-                            <td  class="px-4 py-3 text-left font-medium">{{ledger.supplier}}</td>
-                            <td  class="px-4 py-3 text-left font-medium">{{ledger.party}}</td>
+                            <td  class="px-4 py-3 text-left font-medium">{{ledger.date|date:"d-m-Y"}}</td>
+                            <td  class="px-4 py-3 text-left font-medium">{{ledger.transaction_no}}</td>
+                            <td  class="px-4 py-3 text-left font-medium">{{ledger.type}}</td>
+                            <td  class="px-4 py-3 text-left font-medium">
+                                <p class="py-0 px-0 m-0">{{ledger.supplier.name}}</p>
+                                <p class="py-0 px-0 m-0">{{ledger.supplier.phone|default:''}}</p>
+                                <p class="py-0 px-0 m-0"    >{{ledger.supplier.address|default:''}}</p>
+                            </td>
                             <td  class="px-4 py-3 text-right font-medium">{{ledger.qty}}</td>
                             <td  class="px-4 py-3 text-right font-medium">{{ledger.rate}}</td>
-                            <td  class="px-4 py-3 text-right font-medium">{{ledger.total_amount}}</td>
-                            <td  class="px-4 py-3 text-right font-medium" style="white-space: pre !important;">{{ledger.description}}</td>
+                            <td  class="px-4 py-3 text-right font-medium">{{ledger.debit}}</td>
+                            <td  class="px-4 py-3 text-right font-medium">{{ledger.credit}}</td>
                             <td  class="px-4 py-3 text-right font-medium">{{ledger.balance}}</td>
                         </tr>
                         {% endfor %}
                         <tr class="bg-blue-200 text-gray-700 uppercase text-sm">
-                            <td colspan="8"></td>
-                            <td class="px-4 py-3 text-right font-medium font-bold">Balance :</td>
-                            <td class="px-4 py-3 text-right font-medium font-bold">{{supplier.balance|default:'0.00'}}</td>
+                            <td colspan="6"></td> 
+                            <td class="px-4 py-3 text-right font-medium font-bold">Total :</td>
+                            <td class="px-4 py-3 text-right font-medium font-bold">{{debit_total|default:'0.00'}}</td>
+                            <td class="px-4 py-3 text-right font-medium font-bold">{{credit_total|default:'0.00'}}</td>
+                            <td class="px-4 py-3 text-right font-medium font-bold">{{total_balance|default:'0.00'}}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -198,6 +209,8 @@
     console.log('{{opening}}')
     {% if opening == 'on' %}
     $('#noOpeningBalance').prop('checked', true).change();
+    {% else %}
+    $('#noOpeningBalance').prop('checked', false).change(); 
 {% endif %}
 </script>
 {% endblock externalJS %}
