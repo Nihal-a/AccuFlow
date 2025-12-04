@@ -44,6 +44,7 @@ class SupplierLedgerView(View):
                     'debit':supplier.open_debit,
                     'balance':supplier.open_balance, 
                     'created_at':supplier.created_at,
+                    'description':''
                 })
             sales = sales.filter(supplier=supplier)
             purchases = purchases.filter(supplier=supplier) 
@@ -77,6 +78,7 @@ class SupplierLedgerView(View):
                 'debit':'0',
                 'balance':purchase.seller_balance,
                 'created_at':purchase.created_at,
+                'description':purchase.description if purchase.description else '',
             })
             credit_total += purchase.total_amount
         for sale in sales:
@@ -91,6 +93,7 @@ class SupplierLedgerView(View):
                 'debit':sale.total_amount,
                 'balance':sale.seller_balance,
                 'created_at':sale.created_at,
+                'description':sale.description if sale.description else '',
             })
             debit_total += sale.total_amount
         for nsd in sender_nsds:
@@ -105,6 +108,7 @@ class SupplierLedgerView(View):
                 'debit':'0',
                 'balance':nsd.sender_balance,
                 'created_at':nsd.created_at,
+                'description':nsd.description if nsd.description else '',
             })
             credit_total += nsd.sell_amount
         for nsd in receiver_nsds:
@@ -119,6 +123,7 @@ class SupplierLedgerView(View):
                 'credit':'0',
                 'balance':nsd.receiver_balance,
                 'created_at':nsd.created_at,
+                'description':nsd.description if nsd.description else '',
             })
             debit_total += nsd.purchase_amount
         for cash in cashs:
@@ -133,6 +138,7 @@ class SupplierLedgerView(View):
                 'debit':cash.amount if cash.transaction == 'Paid' else '',
                 'balance':cash.party_balance,
                 'created_at':cash.created_at,
+                'description':cash.description if cash.description else '',
             }) 
             if cash.transaction == 'Received':
                 credit_total += cash.amount

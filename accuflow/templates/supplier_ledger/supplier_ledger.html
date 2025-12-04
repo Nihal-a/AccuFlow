@@ -168,11 +168,7 @@
                             <td  class="px-4 py-3 text-left font-medium">{{ledger.date|date:"d-m-Y"}}</td>
                             <td  class="px-4 py-3 text-left font-medium">{{ledger.transaction_no}}</td>
                             <td  class="px-4 py-3 text-left font-medium">{{ledger.type}}</td>
-                            <td  class="px-4 py-3 text-left font-medium">
-                                <p class="py-0 px-0 m-0">{{ledger.supplier.name}}</p>
-                                <p class="py-0 px-0 m-0">{{ledger.supplier.phone|default:''}}</p>
-                                <p class="py-0 px-0 m-0"    >{{ledger.supplier.address|default:''}}</p>
-                            </td>
+                            <td  class="px-4 py-3 text-left font-medium">{{ledger.description}}</td>
                             <td  class="px-4 py-3 text-right font-medium">{{ledger.qty}}</td>
                             <td  class="px-4 py-3 text-right font-medium">{{ledger.rate}}</td>
                             <td  class="px-4 py-3 text-right font-medium">{{ledger.debit}}</td>
