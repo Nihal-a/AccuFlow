@@ -86,9 +86,9 @@ class CashAddView(View):
                 update_ledger(where=None,to=seller,new_sale=amounts[count],old_sale=0)
             else: 
                 update_ledger(where=seller,to=None,new_purchase=amounts[count],old_sale=0)
-            cash.party_balance = seller.balance
             cash_bank = get_object_or_404(CashBanks, id=cashbanks_ids[count]) if cashbanks_ids[count] else None
             cash = get_object_or_404(Cashs, id=id)
+            cash.party_balance = seller.balance
             cash.cash_no = cash.cash_no
             cash.supplier = supplier
             cash.customer = customer

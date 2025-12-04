@@ -67,7 +67,7 @@ class SupplierLedgerView(View):
         
         for purchase in purchases:
             ledgers.append({
-                'transaction_no':f'{purchase.purchase_no} - (Purchase)',
+                'transaction_no':f'{purchase.purchase_no}',
                 'date':purchase.date,
                 'supplier':purchase.supplier if purchase.supplier else '',
                 'type':'PR',
@@ -81,7 +81,7 @@ class SupplierLedgerView(View):
             credit_total += purchase.total_amount
         for sale in sales:
             ledgers.append({
-                'transaction_no':f'{sale.sale_no} - (Sale)',
+                'transaction_no':f'{sale.sale_no}',
                 'date':sale.date,
                 'supplier':sale.supplier if sale.supplier else '',
                 'type':'SL',
@@ -95,7 +95,7 @@ class SupplierLedgerView(View):
             debit_total += sale.total_amount
         for nsd in sender_nsds:
             ledgers.append({
-                'transaction_no':f'{nsd.nsd_no} - (NSD)',
+                'transaction_no':f'{nsd.nsd_no}',
                 'date':nsd.date,
                 'supplier':nsd.sender_supplier if nsd.sender_supplier else '',
                 'type':'NS',
@@ -109,7 +109,7 @@ class SupplierLedgerView(View):
             credit_total += nsd.sell_amount
         for nsd in receiver_nsds:
             ledgers.append({
-                'transaction_no':f'{nsd.nsd_no} - (NSD)',
+                'transaction_no':f'{nsd.nsd_no}',
                 'date':nsd.date,
                 'supplier':nsd.sender_supplier if nsd.sender_supplier else '',
                 'type':'NS',
@@ -123,14 +123,14 @@ class SupplierLedgerView(View):
             debit_total += nsd.purchase_amount
         for cash in cashs:
             ledgers.append({
-                'transaction_no':f'{cash.cash_no} - (Cash Entry)',
+                'transaction_no':f'{cash.cash_no}',
                 'date':cash.date,
                 'supplier':cash.supplier if cash.supplier else '', 
                 'type':'JL',
-                'qty':'1',
+                'qty':'',
                 'rate':cash.amount,
-                'credit':cash.amount if cash.transaction == 'Received' else '0',
-                'debit':cash.amount if cash.transaction == 'Paid' else '0',
+                'credit':cash.amount if cash.transaction == 'Received' else '',
+                'debit':cash.amount if cash.transaction == 'Paid' else '',
                 'balance':cash.party_balance,
                 'created_at':cash.created_at,
             }) 
