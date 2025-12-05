@@ -94,12 +94,10 @@
                                 name="sort"
                                 class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 >
-                                <option value="" selected>Sort By</option>
-                                {% for supplier in suppliers %}
-                                <option value="{{ supplier.id }}">
-                                    {{ supplier.name }}
-                                </option>
-                                {% endfor %}
+                                <option value="Serial" selected>SlNo</option>
+                                <option value="Detailed">Detailed</option>
+                                <option value="Remark">Remark</option>
+                                
                             </select>
                         </div>
                     </div>
@@ -212,5 +210,6 @@
     {% else %}
     $('#noOpeningBalance').prop('checked', false).change(); 
 {% endif %}
+$('#sortOrder').val('{{sort}}').change();  
 </script>
 {% endblock externalJS %}

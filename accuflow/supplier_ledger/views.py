@@ -10,11 +10,12 @@ from django.utils import timezone
 class SupplierLedgerView(View):
     def get(self,request):
         suppliers = Suppliers.objects.filter(is_active=True,client = getClient(request.user))
-        return render(request,'supplier_ledger/supplier_ledger.html',{'suppliers':suppliers})
+        return render(request,'supplier_ledger/supplier_ledger.html',{'suppliers':suppliers,'sort':'Serial'})
 
     def post(self,request): 
         supplier = request.POST.get('supplier')
         opening = request.POST.get('opening')
+        sort = request.POST.get('sort')
         suppliers = Suppliers.objects.filter(is_active=True,client = getClient(request.user))
         purchases = Purchases.objects.filter(is_active=True,hold=False,client = getClient(request.user))
         sales = Sales.objects.filter(is_active=True,hold=False,client = getClient(request.user))
@@ -67,7 +68,7 @@ class SupplierLedgerView(View):
             cashs = cashs.filter(date__lte=date_to)
         
         for purchase in purchases:
-            ledgers.append({
+            context = {
                 'transaction_no':f'{purchase.purchase_no}',
                 'date':purchase.date,
                 'supplier':purchase.supplier if purchase.supplier else '',
@@ -78,11 +79,16 @@ class SupplierLedgerView(View):
                 'debit':'0',
                 'balance':purchase.seller_balance,
                 'created_at':purchase.created_at,
-                'description':purchase.description if purchase.description else '',
-            })
-            credit_total += purchase.total_amount
+            }
+            if sort == 'Detailed':
+                context['description'] = f'{purchase.godown.name}\n{purchase.description}'
+            if sort == 'Remark':
+                context['description'] = f'{purchase.description}'
+            if context.get('description')!= '':
+                ledgers.append(context) 
+                credit_total += purchase.total_amount
         for sale in sales:
-            ledgers.append({
+            context = {
                 'transaction_no':f'{sale.sale_no}',
                 'date':sale.date,
                 'supplier':sale.supplier if sale.supplier else '',
@@ -93,11 +99,16 @@ class SupplierLedgerView(View):
                 'debit':sale.total_amount,
                 'balance':sale.seller_balance,
                 'created_at':sale.created_at,
-                'description':sale.description if sale.description else '',
-            })
-            debit_total += sale.total_amount
+            }
+            if sort == 'Detailed':
+                context['description'] = f'{sale.godown.name}\n{sale.description}'
+            if sort == 'Remark':
+                context['description'] = f'{sale.description}'
+            if context.get('description')!= '':
+                ledgers.append(context) 
+                debit_total += sale.total_amount
         for nsd in sender_nsds:
-            ledgers.append({
+            context = {
                 'transaction_no':f'{nsd.nsd_no}',
                 'date':nsd.date,
                 'supplier':nsd.sender_supplier if nsd.sender_supplier else '',
@@ -108,11 +119,16 @@ class SupplierLedgerView(View):
                 'debit':'0',
                 'balance':nsd.sender_balance,
                 'created_at':nsd.created_at,
-                'description':nsd.description if nsd.description else '',
-            })
-            credit_total += nsd.sell_amount
+            }
+            if sort == 'Detailed':
+                context['description'] = f'{nsd.receiver.name}\n{nsd.description}'
+            if sort == 'Remark':
+                context['description'] = f'{nsd.description}'
+            if context.get('description')!= '':
+                ledgers.append(context) 
+                credit_total += nsd.sell_amount
         for nsd in receiver_nsds:
-            ledgers.append({
+            context = {
                 'transaction_no':f'{nsd.nsd_no}',
                 'date':nsd.date,
                 'supplier':nsd.sender_supplier if nsd.sender_supplier else '',
@@ -123,11 +139,16 @@ class SupplierLedgerView(View):
                 'credit':'0',
                 'balance':nsd.receiver_balance,
                 'created_at':nsd.created_at,
-                'description':nsd.description if nsd.description else '',
-            })
-            debit_total += nsd.purchase_amount
+            }
+            if sort == 'Detailed':
+                context['description'] = f'{nsd.sender.name}\n{nsd.description}'
+            if sort == 'Remark':
+                context['description'] = f'{nsd.description}'
+            if context.get('description')!= '':
+                ledgers.append(context) 
+                debit_total += nsd.purchase_amount
         for cash in cashs:
-            ledgers.append({
+            context = {
                 'transaction_no':f'{cash.cash_no}',
                 'date':cash.date,
                 'supplier':cash.supplier if cash.supplier else '', 
@@ -138,12 +159,17 @@ class SupplierLedgerView(View):
                 'debit':cash.amount if cash.transaction == 'Paid' else '',
                 'balance':cash.party_balance,
                 'created_at':cash.created_at,
-                'description':cash.description if cash.description else '',
-            }) 
-            if cash.transaction == 'Received':
-                credit_total += cash.amount
-            else:
-                debit_total += cash.amount
+            }
+            if sort == 'Detailed':
+                context['description'] = f'{cash.cash_bank.name}' 
+            if sort == 'Remark':
+                context['description'] = f'{cash.description}' 
+            if context.get('description')!= '':
+                ledgers.append(context) 
+                if cash.transaction == 'Received':
+                    credit_total += cash.amount
+                else:
+                    debit_total += cash.amount
         for entry in ledgers:
 
             d = entry["created_at"]
@@ -194,7 +220,7 @@ class SupplierLedgerView(View):
                     opening_balance += c.amount
                 else:
                     opening_balance -= c.amount
-        
+
         context = {
             'suppliers':suppliers,
             'date_from':date_from,
@@ -206,6 +232,7 @@ class SupplierLedgerView(View):
             'debit_total':debit_total,
             'total_balance':total_balance,
             'open_balance':opening_balance,
+            'sort':sort,
             }
         return render(request,'supplier_ledger/supplier_ledger.html',context)
             
