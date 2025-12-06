@@ -180,6 +180,9 @@ class Godowns(models.Model):
     credit = models.FloatField(default=0)
     debit = models.FloatField(default=0)
     qty = models.IntegerField(default=0)
+    open_balance = models.FloatField(default=0)
+    otc_balance = models.FloatField(default=0)
+    
     
     def __str__(self):
         return self.name

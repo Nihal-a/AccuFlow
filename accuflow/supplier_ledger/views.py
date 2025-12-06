@@ -80,13 +80,12 @@ class SupplierLedgerView(View):
                 'balance':purchase.seller_balance,
                 'created_at':purchase.created_at,
             }
-            if sort == 'Detailed':
+            if sort != 'Remark':
                 context['description'] = f'{purchase.godown.name}\n{purchase.description}'
-            if sort == 'Remark':
+            else:
                 context['description'] = f'{purchase.description}'
-            if context.get('description')!= '':
-                ledgers.append(context) 
-                credit_total += purchase.total_amount
+            ledgers.append(context) 
+            credit_total += purchase.total_amount
         for sale in sales:
             context = {
                 'transaction_no':f'{sale.sale_no}',
@@ -100,13 +99,12 @@ class SupplierLedgerView(View):
                 'balance':sale.seller_balance,
                 'created_at':sale.created_at,
             }
-            if sort == 'Detailed':
+            if sort != 'Detailed':
                 context['description'] = f'{sale.godown.name}\n{sale.description}'
-            if sort == 'Remark':
+            else:
                 context['description'] = f'{sale.description}'
-            if context.get('description')!= '':
-                ledgers.append(context) 
-                debit_total += sale.total_amount
+            ledgers.append(context) 
+            debit_total += sale.total_amount
         for nsd in sender_nsds:
             context = {
                 'transaction_no':f'{nsd.nsd_no}',
@@ -120,13 +118,12 @@ class SupplierLedgerView(View):
                 'balance':nsd.sender_balance,
                 'created_at':nsd.created_at,
             }
-            if sort == 'Detailed':
+            if sort != 'Remark':
                 context['description'] = f'{nsd.receiver.name}\n{nsd.description}'
-            if sort == 'Remark':
+            else:
                 context['description'] = f'{nsd.description}'
-            if context.get('description')!= '':
-                ledgers.append(context) 
-                credit_total += nsd.sell_amount
+            ledgers.append(context) 
+            credit_total += nsd.sell_amount
         for nsd in receiver_nsds:
             context = {
                 'transaction_no':f'{nsd.nsd_no}',
@@ -140,13 +137,12 @@ class SupplierLedgerView(View):
                 'balance':nsd.receiver_balance,
                 'created_at':nsd.created_at,
             }
-            if sort == 'Detailed':
+            if sort != 'Remark':
                 context['description'] = f'{nsd.sender.name}\n{nsd.description}'
-            if sort == 'Remark':
+            else:
                 context['description'] = f'{nsd.description}'
-            if context.get('description')!= '':
-                ledgers.append(context) 
-                debit_total += nsd.purchase_amount
+            ledgers.append(context) 
+            debit_total += nsd.purchase_amount
         for cash in cashs:
             context = {
                 'transaction_no':f'{cash.cash_no}',
@@ -160,31 +156,34 @@ class SupplierLedgerView(View):
                 'balance':cash.party_balance,
                 'created_at':cash.created_at,
             }
-            if sort == 'Detailed':
+            if sort != 'Remark':
                 context['description'] = f'{cash.cash_bank.name}' 
-            if sort == 'Remark':
+            else:
                 context['description'] = f'{cash.description}' 
-            if context.get('description')!= '':
-                ledgers.append(context) 
-                if cash.transaction == 'Received':
-                    credit_total += cash.amount
-                else:
-                    debit_total += cash.amount
-        for entry in ledgers:
-
-            d = entry["created_at"]
-            if not isinstance(d, datetime):
-                d = datetime.combine(d, datetime.min.time())
-            entry["created_at"] = timezone.make_aware(d) if timezone.is_naive(d) else d
-
-            date_val = entry["date"]
-            if not isinstance(date_val, datetime):
-                date_val = datetime.combine(date_val, datetime.min.time())
-            entry["date"] = timezone.make_aware(date_val) if timezone.is_naive(date_val) else date_val
-
-
-        ledgers = sorted(ledgers, key=lambda x: (x['date'], x['created_at']))
+            ledgers.append(context) 
+            if cash.transaction == 'Received':
+                credit_total += cash.amount
+            else:
+                debit_total += cash.amount
+        
         total_balance = ledgers[len(ledgers)-1]['balance'] if ledgers else 0
+        if sort != 'Serial':
+            for entry in ledgers:
+
+                d = entry["created_at"]
+                if not isinstance(d, datetime):
+                    d = datetime.combine(d, datetime.min.time())
+                entry["created_at"] = timezone.make_aware(d) if timezone.is_naive(d) else d
+
+                date_val = entry["date"]
+                if not isinstance(date_val, datetime):
+                    date_val = datetime.combine(date_val, datetime.min.time())
+                entry["date"] = timezone.make_aware(date_val) if timezone.is_naive(date_val) else date_val
+
+
+            ledgers = sorted(ledgers, key=lambda x: (x['date'], x['created_at']))
+        else:
+            ledgers = sorted(ledgers, key=lambda x: x['transaction_no'])
         opening_balance = 0
         if date_from and supplier:
             prev_sales = Sales.objects.filter(

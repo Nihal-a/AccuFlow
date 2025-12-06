@@ -23,9 +23,20 @@ class AddGodownView(View):
         open_debit = request.POST.get('open_debit',0)
         otc_credit = request.POST.get('otc_credit',0)
         otc_debit = request.POST.get('otc_debit',0)
+        open_balance = float(open_debit)-float(open_credit)
+        otc_balance = float(otc_debit) - float(otc_credit)
+        balance = otc_balance + open_balance
         country_code = request.POST.get('country_code')
         wa = request.POST.get('whatsapp_number')
         
+        credit = 0
+        debit = 0
+        if balance> 0:
+            debit = balance
+            credit = 0 
+        elif balance< 0:
+            credit = -balance 
+            debit = 0
         godown = Godowns.objects.create(
             name=name,
             phone=phone,
@@ -35,7 +46,12 @@ class AddGodownView(View):
             otc_credit=otc_credit,
             otc_debit=otc_debit,
             godownId=new_godown_id(client=getClient(request.user)),
-            client=getClient(request.user)
+            client=getClient(request.user),
+            open_balance = open_balance,
+            otc_balance = otc_balance,
+            balance = balance,
+            credit = credit,
+            debit = debit
         )
         if wa:
             godown.country_code = country_code
@@ -68,6 +84,20 @@ class UpdateGodownView(View):
         country_code = request.POST.get('country_code')
         wa = request.POST.get('whatsapp_number')
         godown.client = getClient(request.user)
+        godown.balance -= (godown.otc_balance + godown.open_balance)
+        godown.credit -= godown.credit
+        godown.debit -= godown.debit
+        open_balance = float(request.POST.get('open_debit', 0))-float(request.POST.get('open_credit', 0))
+        otc_balance = float(request.POST.get('otc_debit', 0))-float(request.POST.get('otc_credit', 0))
+        godown.open_balance = open_balance
+        godown.otc_balance = otc_balance
+        godown.balance += (otc_balance + open_balance)
+        if (otc_balance + open_balance)> 0:
+            godown.debit = (otc_balance + open_balance)
+            godown.credit = 0
+        elif (otc_balance + open_balance)< 0:
+            godown.credit = -(otc_balance + open_balance)
+            godown.debit = 0
         if wa:
             godown.country_code = country_code
             godown.wa = wa

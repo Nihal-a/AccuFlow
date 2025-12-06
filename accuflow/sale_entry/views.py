@@ -76,6 +76,8 @@ class SaleAddView(View):
         for id in sale_ids:
             customer = None 
             seller = None
+            print(types[count])
+            print(customer_ids[count])
             if types[count] == 'customers':
                 supplier = None
                 customer = get_object_or_404(Customers, id=customer_ids[count]) if customer_ids[count] else None
@@ -83,12 +85,12 @@ class SaleAddView(View):
             else:
                 customer = None
                 supplier = get_object_or_404(Suppliers, id=customer_ids[count]) if customer_ids[count] else None
-                seller = customer
+                seller = supplier
             godown = get_object_or_404(Godowns, id=godown_ids[count]) if godown_ids[count] else None
             sale = Sales.objects.get(id=id)
             godown.qty -= float(qtys[count])    
             godown.save()
-            update_ledger(where=None,to=sale.party,old_purchase=sale.total_amount,old_sale=sale.total_amount)
+            # update_ledger(where=None,to=sale.party,old_purchase=sale.total_amount,old_sale=sale.total_amount)
             update_ledger(where=None,to=seller,new_purchase=total_amounts[count],new_sale=total_amounts[count]) 
             sale.seller_balance = seller.balance
             sale.purchaser_balance = godown.get_balance

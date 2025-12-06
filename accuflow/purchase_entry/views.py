@@ -86,8 +86,8 @@ class PurchaseAddView(View):
             purchase = Purchases.objects.get(id=id)
             godown.qty += float(qtys[count])  
             godown.save()
-            update_ledger(where=purchase.party,to=None,old_purchase=purchase.total_amount,old_sale=purchase.total_amount)
-            update_ledger(where=seller,to=None,new_purchase=total_amounts[count],new_sale=total_amounts[count]) 
+            # update_ledger(where=purchase.party,to=None,old_purchase=purchase.total_amount,old_sale=purchase.total_amount)
+            update_ledger(where=seller,to=None,new_purchase=total_amounts[count],new_sale=0) 
             purchase.seller_balance = seller.balance
             purchase.purchaser_balance = godown.get_balance
             purchase.supplier = supplier
@@ -137,14 +137,16 @@ class PurchaseHold(View):
 
             old_seller = purchase.customer or purchase.supplier
             if not purchase.hold:
+                print('updating ledger for old seller')
                 update_ledger(
                     where=purchase.party,  
-        to=None,
+                    to=None,
                     old_purchase=purchase.total_amount,
-                    old_sale=purchase.total_amount,
+                    old_sale=0,
                     new_purchase=0,
                     new_sale=0
                 )
+                purchase.party.save()
                 godown.qty -= purchase.qty
                 godown.save()
                 purchase.purchaser_balance = purchase.purchaser_balance - purchase.qty
@@ -169,7 +171,7 @@ class PurchaseHold(View):
                     old_purchase=0, 
                     old_sale=0,
                     new_purchase=total_amount,
-                    new_sale=total_amount,
+                    new_sale=0,
                 )
                 godown.qty += float(qty)
                 godown.save()

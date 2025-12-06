@@ -38,35 +38,40 @@ def update_party(party):
         cancel = min(party.debit, party.credit)
         party.debit -= cancel
         party.credit -= cancel
-
+    
     party.balance = party.debit - party.credit
-    party.save()
 
 
-def update_ledger(where, to, old_purchase=0, new_purchase=0, old_sale=0, new_sale=0):
-    if where and where != None:
-        if old_purchase:
-            where.credit = where.credit - float(old_purchase)
+def update_ledger(where, to=None, old_purchase=0, new_purchase=0, old_sale=0, new_sale=0):
+
+    if where:
+        where.refresh_from_db()
+
+        if float(old_purchase) > 0:
+            where.credit -= float(old_purchase)
             if where.credit < 0:
                 where.debit += abs(where.credit)
                 where.credit = 0
 
-        if new_purchase:
-            print("before the + seller:",where.credit)
+        if float(new_purchase) > 0:
             where.credit += float(new_purchase)
-        where.save()
-        print("after the + seller:",where.credit)
-        update_party(where)
 
-    if to and to != None:
-        if old_sale:
-            to.debit = to.debit - float(old_sale)
+        update_party(where)
+        where.save()
+
+    if to:
+        to.refresh_from_db()
+
+        if float(old_sale) > 0:
+            to.debit -= float(old_sale)
             if to.debit < 0:
                 to.credit += abs(to.debit)
                 to.debit = 0
 
-        if new_sale:
-            to.debit += float(new_sale) 
-        to.save()
+        if float(new_sale) > 0:
+            to.debit += float(new_sale)
+
         update_party(to)
+        to.save()
+
 

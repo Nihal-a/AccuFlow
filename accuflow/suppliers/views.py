@@ -27,6 +27,14 @@ class AddSupplierView(View):
         open_balance = float(open_debit)-float(open_credit)
         otc_balance = float(otc_debit) - float(otc_credit)
         balance = otc_balance + open_balance
+        credit = 0
+        debit = 0
+        if balance> 0:
+            debit = balance
+            credit = 0 
+        elif balance< 0:
+            credit = -balance 
+            debit = 0
         supplier = Suppliers.objects.create(
             name=name,
             phone=phone,
@@ -39,7 +47,9 @@ class AddSupplierView(View):
             client=getClient(request.user),
             open_balance = open_balance,
             otc_balance = otc_balance,
-            balance = balance
+            balance = balance,
+            credit = credit,
+            debit = debit
         )
         if wa:
             supplier.country_code = country_code
@@ -72,11 +82,19 @@ class UpdateSupplierView(View):
         country_code = request.POST.get('country_code')
         wa = request.POST.get('whatsapp_number')
         supplier.balance -= (supplier.otc_balance + supplier.open_balance)
+        supplier.credit -= supplier.credit
+        supplier.debit -= supplier.debit
         open_balance = float(request.POST.get('open_debit', 0))-float(request.POST.get('open_credit', 0))
         otc_balance = float(request.POST.get('otc_debit', 0))-float(request.POST.get('otc_credit', 0))
         supplier.open_balance = open_balance
         supplier.otc_balance = otc_balance
         supplier.balance += (otc_balance + open_balance)
+        if (otc_balance + open_balance)> 0:
+            supplier.debit = (otc_balance + open_balance)
+            supplier.credit = 0
+        elif (otc_balance + open_balance)< 0:
+            supplier.credit = -(otc_balance + open_balance)
+            supplier.debit = 0
         if wa:
             supplier.country_code = country_code
             supplier.wa = wa
