@@ -167,23 +167,39 @@ class SupplierLedgerView(View):
                 debit_total += cash.amount
         
         total_balance = ledgers[len(ledgers)-1]['balance'] if ledgers else 0
-        if sort != 'Serial':
+
+                    
+                    
+        
+        for entry in ledgers:
+
+            d = entry["created_at"]
+            if not isinstance(d, datetime):
+                d = datetime.combine(d, datetime.min.time())
+            entry["created_at"] = timezone.make_aware(d) if timezone.is_naive(d) else d
+
+            date_val = entry["date"]
+            if not isinstance(date_val, datetime):
+                date_val = datetime.combine(date_val, datetime.min.time())
+            entry["date"] = timezone.make_aware(date_val) if timezone.is_naive(date_val) else date_val
+
+
+        ledgers = sorted(ledgers, key=lambda x: (x['date'], x['created_at']))
+        
+        if opening == 'on' and ledgers:
+            running_balance = 0
             for entry in ledgers:
-
-                d = entry["created_at"]
-                if not isinstance(d, datetime):
-                    d = datetime.combine(d, datetime.min.time())
-                entry["created_at"] = timezone.make_aware(d) if timezone.is_naive(d) else d
-
-                date_val = entry["date"]
-                if not isinstance(date_val, datetime):
-                    date_val = datetime.combine(date_val, datetime.min.time())
-                entry["date"] = timezone.make_aware(date_val) if timezone.is_naive(date_val) else date_val
+                credit = float(entry.get('credit') or 0)
+                debit = float(entry.get('debit') or 0)
 
 
-            ledgers = sorted(ledgers, key=lambda x: (x['date'], x['created_at']))
-        else:
+                entry['balance'] = running_balance
+                if entry['type'] in ['PR', 'NS', 'JL', 'SL']:
+                    running_balance += debit - credit
+            total_balance = ledgers[len(ledgers)-1]['balance'] if ledgers else 0
+        if sort == 'Serial':
             ledgers = sorted(ledgers, key=lambda x: x['transaction_no'])
+
         opening_balance = 0
         if date_from and supplier:
             prev_sales = Sales.objects.filter(
@@ -203,23 +219,22 @@ class SupplierLedgerView(View):
             )
 
             for p in prev_purchases:
-                opening_balance += p.total_amount
+                opening_balance -= p.total_amount
 
             for s in prev_sales:
-                opening_balance -= s.total_amount
+                opening_balance += s.total_amount
 
             for ns in prev_sender:
-                opening_balance += ns.sell_amount
+                opening_balance -= ns.sell_amount
 
             for nr in prev_receiver:
-                opening_balance -= nr.purchase_amount
+                opening_balance += nr.purchase_amount
 
             for c in prev_cash:
                 if c.transaction == "Received":
-                    opening_balance += c.amount
-                else:
                     opening_balance -= c.amount
-
+                else:
+                    opening_balance += c.amount
         context = {
             'suppliers':suppliers,
             'date_from':date_from,
