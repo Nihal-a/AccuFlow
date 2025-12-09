@@ -203,8 +203,7 @@ class PurchaseHold(View):
 
 def getLastPurchaseNo(client):
     last_purchase_no = Purchases.objects.filter(is_active=True,client=client).order_by('-purchase_no').first() 
-    print(last_purchase_no.purchase_no) 
-    if last_purchase_no and last_purchase_no.purchase_no.isdigit():
+    if last_purchase_no and last_purchase_no.purchase_no  and last_purchase_no.purchase_no.isdigit() :
         new_purchase_no = int(last_purchase_no.purchase_no) + 1   
     else:
         new_purchase_no = 1
