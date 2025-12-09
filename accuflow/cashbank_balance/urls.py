@@ -3,4 +3,5 @@ from . import views
 
 urlpatterns = [
     path('', views.CashBankView.as_view(), name='cashbankbalance'),
+    path('ledger/', views.CashBankLedgerView.as_view(), name='cashbankledger'),
 ]

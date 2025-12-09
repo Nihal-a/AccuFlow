@@ -102,7 +102,6 @@ class NSDAddView(View):
                 sender_customer = None
                 sender_supplier = get_object_or_404(Suppliers, id=supplier_ids[count]) if supplier_ids[count] else None
                 sender = sender_supplier
-            # update_ledger(where=nsd.sender,to=nsd.receiver,old_purchase=nsd.purchase_amount,old_sale=nsd.sell_amount)
             update_ledger(where=sender,to=receiver,new_purchase=purchase_amount[count],new_sale=sell_amount[count]) 
             nsd.sender_balance = sender.balance
             nsd.receiver_balance = receiver.balance

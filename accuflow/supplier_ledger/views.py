@@ -1,254 +1,221 @@
-from django.shortcuts import render,redirect, get_object_or_404
-from core.models import Suppliers
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
-from core.views import getClient
-from core.models import *
-from datetime import datetime
+from django.db.models import Sum, Q, Value, CharField, F
 from django.utils import timezone
-
+from datetime import datetime
+from core.models import Suppliers, Purchases, Sales, NSDs, Cashs
+from core.views import getClient
 
 class SupplierLedgerView(View):
-    def get(self,request):
-        suppliers = Suppliers.objects.filter(is_active=True,client = getClient(request.user))
-        return render(request,'supplier_ledger/supplier_ledger.html',{'suppliers':suppliers,'sort':'Serial'})
+    def get(self, request):
+        suppliers = Suppliers.objects.filter(is_active=True, client=getClient(request.user))
+        return render(request, 'supplier_ledger/supplier_ledger.html', {'suppliers': suppliers, 'sort': 'Serial'})
 
-    def post(self,request): 
-        supplier = request.POST.get('supplier')
-        opening = request.POST.get('opening')
+    def post(self, request):
+        supplier_id = request.POST.get('supplier')
+        opening_flag = request.POST.get('opening')
         sort = request.POST.get('sort')
-        suppliers = Suppliers.objects.filter(is_active=True,client = getClient(request.user))
-        purchases = Purchases.objects.filter(is_active=True,hold=False,client = getClient(request.user))
-        sales = Sales.objects.filter(is_active=True,hold=False,client = getClient(request.user))
-        nsds = NSDs.objects.filter(is_active=True,hold=False,client = getClient(request.user))
-        cashs = Cashs.objects.filter(is_active=True,hold=False,client = getClient(request.user))
-        sender_nsds = []
-        receiver_nsds = []
-        date_from = None
-        date_to = None
-        ledgers = []
-        date_from = request.POST.get("dateFrom")
-        date_to = request.POST.get("dateTo")
-        total_balance = 0
-        credit_total = 0
-        debit_total = 0
-        if supplier:
-            supplier = Suppliers.objects.get(id=supplier)
-            if opening != 'on': 
-                ledgers.append({
-                    'transaction_no':'Opening Balance',
-                    'date':supplier.created_at,
-                    'supplier':supplier if supplier else '',
-                    'type':'OB',
-                    'qty':'1',
-                    'rate':supplier.open_balance,
-                    'credit':supplier.open_credit,
-                    'debit':supplier.open_debit,
-                    'balance':supplier.open_balance, 
-                    'created_at':supplier.created_at,
-                    'description':''
-                })
-            sales = sales.filter(supplier=supplier)
-            purchases = purchases.filter(supplier=supplier) 
-            sender_nsds = nsds.filter(sender_supplier=supplier)
-            receiver_nsds = nsds.filter(receiver_supplier=supplier)
-            cashs = cashs.filter(supplier=supplier)
+        date_from_str = request.POST.get("dateFrom")
+        date_to_str = request.POST.get("dateTo")
+        
+        client = getClient(request.user)
+        suppliers = Suppliers.objects.filter(is_active=True, client=client)
+
+        context = {
+            'suppliers': suppliers,
+            'date_from': date_from_str,
+            'date_to': date_to_str,
+            'sort': sort,
+            'supplier': '',
+            'opening': opening_flag if opening_flag == 'on' else '',
+            'ledgers': [],
+            'credit_total': 0,
+            'debit_total': 0,
+            'total_balance': 0,
+            'open_balance': 0,
+        }
+
+        if not supplier_id:
+            return render(request, 'supplier_ledger/supplier_ledger.html', context)
+
+        supplier = get_object_or_404(Suppliers, id=supplier_id)
+        context['supplier'] = supplier
+
+        date_from = self.parse_date(date_from_str)
+        date_to = self.parse_date(date_to_str)
 
         if date_from:
-            sales = sales.filter(date__gte=date_from)
-            purchases = purchases.filter(date__gte=date_from)
-            sender_nsds = sender_nsds.filter(date__gte=date_from)
-            receiver_nsds = receiver_nsds.filter(date__gte=date_from)
-            cashs = cashs.filter(date__gte=date_from)
+            opening_balance = self.calculate_opening_balance(supplier, client, date_from)
+        else:
+            opening_balance = (supplier.open_debit or 0) - (supplier.open_credit or 0)
+        
+        context['open_balance'] = opening_balance
 
+        ledger_items = []
+        
+        base_filter = Q(is_active=True, hold=False, client=client)
+        date_filter = Q()
+        if date_from:
+            date_filter &= Q(date__gte=date_from)
         if date_to:
-            sales = sales.filter(date__lte=date_to)
-            purchases = purchases.filter(date__lte=date_to)
-            sender_nsds = sender_nsds.filter(date__lte=date_to)
-            receiver_nsds = receiver_nsds.filter(date__lte=date_to)
-            cashs = cashs.filter(date__lte=date_to)
+            date_filter &= Q(date__lte=date_to)
+
+        purchases = Purchases.objects.filter(base_filter, date_filter, supplier=supplier)
+        for p in purchases:
+            desc = f"{p.godown.name}\n{p.description}" if sort != 'Remark' else p.description
+            ledger_items.append({
+                'transaction_no': str(p.purchase_no),
+                'date': p.date,
+                'type': 'PR',
+                'description': desc,
+                'qty': p.qty,
+                'rate': p.amount,
+                'credit': p.total_amount,
+                'debit': 0,
+                'created_at': p.created_at,
+                'original_obj': p
+            })
+
+        sales = Sales.objects.filter(base_filter, date_filter, supplier=supplier)
+        for s in sales:
+            desc = f"{s.godown.name}\n{s.description}" if sort != 'Detailed' else s.description
+            ledger_items.append({
+                'transaction_no': str(s.sale_no),
+                'date': s.date,
+                'type': 'SL',
+                'description': desc,
+                'qty': s.qty,
+                'rate': s.amount,
+                'credit': 0,
+                'debit': s.total_amount,
+                'created_at': s.created_at,
+                'original_obj': s
+            })
+
+        sender_nsds = NSDs.objects.filter(base_filter, date_filter, sender_supplier=supplier)
+        for n in sender_nsds:
+            desc = f"{n.receiver.name}\n{n.description}" if sort != 'Remark' else n.description
+            ledger_items.append({
+                'transaction_no': str(n.nsd_no),
+                'date': n.date,
+                'type': 'NS',
+                'description': desc,
+                'qty': n.qty,
+                'rate': n.sell_rate,
+                'credit': n.sell_amount,
+                'debit': 0,
+                'created_at': n.created_at,
+                'original_obj': n
+            })
+
+        receiver_nsds = NSDs.objects.filter(base_filter, date_filter, receiver_supplier=supplier)
+        for n in receiver_nsds:
+            desc = f"{n.sender.name}\n{n.description}" if sort != 'Remark' else n.description
+            ledger_items.append({
+                'transaction_no': str(n.nsd_no),
+                'date': n.date,
+                'type': 'NS',
+                'description': desc,
+                'qty': n.qty,
+                'rate': n.purchase_rate,
+                'credit': 0,
+                'debit': n.purchase_amount,
+                'created_at': n.created_at,
+                'original_obj': n
+            })
+
+        cashs = Cashs.objects.filter(base_filter, date_filter, supplier=supplier)
+        for c in cashs:
+            is_received = (c.transaction == 'Received')
+            desc = c.cash_bank.name if sort != 'Remark' else c.description
+            ledger_items.append({
+                'transaction_no': str(c.cash_no),
+                'date': c.date,
+                'type': 'JL',
+                'description': desc,
+                'qty': '',
+                'rate': c.amount,
+                'credit': c.amount if is_received else 0,
+                'debit': c.amount if not is_received else 0,
+                'created_at': c.created_at,
+                'original_obj': c
+            })
+
+        start_balance = 0
+        if opening_flag != 'on':
+             start_balance = opening_balance
+             ledger_items.append({
+                'transaction_no': 'Opening Balance',
+                'date': supplier.created_at.date() if supplier.created_at else (date_from or datetime.min.date()),
+                'type': 'OB',
+                'description': '',
+                'qty': '1',
+                'rate': supplier.open_balance,
+                'credit': supplier.open_credit,
+                'debit': supplier.open_debit,
+                'balance': supplier.open_balance, 
+                'created_at': supplier.created_at,
+                'is_ob': True
+             })
         
-        for purchase in purchases:
-            context = {
-                'transaction_no':f'{purchase.purchase_no}',
-                'date':purchase.date,
-                'supplier':purchase.supplier if purchase.supplier else '',
-                'type':'PR',
-                'qty':purchase.qty,
-                'rate':purchase.amount,
-                'credit':purchase.total_amount,
-                'debit':'0',
-                'balance':purchase.seller_balance,
-                'created_at':purchase.created_at,
-            }
-            if sort != 'Remark':
-                context['description'] = f'{purchase.godown.name}\n{purchase.description}'
-            else:
-                context['description'] = f'{purchase.description}'
-            ledgers.append(context) 
-            credit_total += purchase.total_amount
-        for sale in sales:
-            context = {
-                'transaction_no':f'{sale.sale_no}',
-                'date':sale.date,
-                'supplier':sale.supplier if sale.supplier else '',
-                'type':'SL',
-                'qty':sale.qty,
-                'rate':sale.amount,
-                'credit':'0',
-                'debit':sale.total_amount,
-                'balance':sale.seller_balance,
-                'created_at':sale.created_at,
-            }
-            if sort != 'Detailed':
-                context['description'] = f'{sale.godown.name}\n{sale.description}'
-            else:
-                context['description'] = f'{sale.description}'
-            ledgers.append(context) 
-            debit_total += sale.total_amount
-        for nsd in sender_nsds:
-            context = {
-                'transaction_no':f'{nsd.nsd_no}',
-                'date':nsd.date,
-                'supplier':nsd.sender_supplier if nsd.sender_supplier else '',
-                'type':'NS',
-                'qty':nsd.qty,
-                'rate':nsd.sell_rate,
-                'credit':nsd.sell_amount,
-                'debit':'0',
-                'balance':nsd.sender_balance,
-                'created_at':nsd.created_at,
-            }
-            if sort != 'Remark':
-                context['description'] = f'{nsd.receiver.name}\n{nsd.description}'
-            else:
-                context['description'] = f'{nsd.description}'
-            ledgers.append(context) 
-            credit_total += nsd.sell_amount
-        for nsd in receiver_nsds:
-            context = {
-                'transaction_no':f'{nsd.nsd_no}',
-                'date':nsd.date,
-                'supplier':nsd.sender_supplier if nsd.sender_supplier else '',
-                'type':'NS',
-                'qty':nsd.qty,
-                'rate':nsd.purchase_rate,
-                'debit':nsd.purchase_amount,
-                'credit':'0',
-                'balance':nsd.receiver_balance,
-                'created_at':nsd.created_at,
-            }
-            if sort != 'Remark':
-                context['description'] = f'{nsd.sender.name}\n{nsd.description}'
-            else:
-                context['description'] = f'{nsd.description}'
-            ledgers.append(context) 
-            debit_total += nsd.purchase_amount
-        for cash in cashs:
-            context = {
-                'transaction_no':f'{cash.cash_no}',
-                'date':cash.date,
-                'supplier':cash.supplier if cash.supplier else '', 
-                'type':'JL',
-                'qty':'',
-                'rate':cash.amount,
-                'credit':cash.amount if cash.transaction == 'Received' else '',
-                'debit':cash.amount if cash.transaction == 'Paid' else '',
-                'balance':cash.party_balance,
-                'created_at':cash.created_at,
-            }
-            if sort != 'Remark':
-                context['description'] = f'{cash.cash_bank.name}' 
-            else:
-                context['description'] = f'{cash.description}' 
-            ledgers.append(context) 
-            if cash.transaction == 'Received':
-                credit_total += cash.amount
-            else:
-                debit_total += cash.amount
-        
-        total_balance = ledgers[len(ledgers)-1]['balance'] if ledgers else 0
+        ledger_items.sort(key=lambda x: (x['date'], x['created_at']))
 
-                    
-                    
-        
-        for entry in ledgers:
-
-            d = entry["created_at"]
-            if not isinstance(d, datetime):
-                d = datetime.combine(d, datetime.min.time())
-            entry["created_at"] = timezone.make_aware(d) if timezone.is_naive(d) else d
-
-            date_val = entry["date"]
-            if not isinstance(date_val, datetime):
-                date_val = datetime.combine(date_val, datetime.min.time())
-            entry["date"] = timezone.make_aware(date_val) if timezone.is_naive(date_val) else date_val
-
-
-        ledgers = sorted(ledgers, key=lambda x: (x['date'], x['created_at']))
-        
-        if opening == 'on' and ledgers:
-            running_balance = 0
-            for entry in ledgers:
-                credit = float(entry.get('credit') or 0)
-                debit = float(entry.get('debit') or 0)
-
-
-                entry['balance'] = running_balance
-                if entry['type'] in ['PR', 'NS', 'JL', 'SL']:
-                    running_balance += debit - credit
-            total_balance = ledgers[len(ledgers)-1]['balance'] if ledgers else 0
         if sort == 'Serial':
-            ledgers = sorted(ledgers, key=lambda x: x['transaction_no'])
+             ledger_items.sort(key=lambda x: x['transaction_no'])
 
-        opening_balance = 0
-        if date_from and supplier:
-            prev_sales = Sales.objects.filter(
-                is_active=True, hold=False, supplier=supplier, client=getClient(request.user), date__lt=date_from
-            )
-            prev_purchases = Purchases.objects.filter(
-                is_active=True, hold=False, supplier=supplier, client=getClient(request.user), date__lt=date_from
-            )
-            prev_sender = NSDs.objects.filter(
-                is_active=True, hold=False, sender_supplier=supplier, client=getClient(request.user), date__lt=date_from
-            )
-            prev_receiver = NSDs.objects.filter(
-                is_active=True, hold=False, receiver_supplier=supplier, client=getClient(request.user), date__lt=date_from
-            )
-            prev_cash = Cashs.objects.filter(
-                is_active=True, hold=False, supplier=supplier, client=getClient(request.user), date__lt=date_from
-            )
-
-            for p in prev_purchases:
-                opening_balance -= p.total_amount
-
-            for s in prev_sales:
-                opening_balance += s.total_amount
-
-            for ns in prev_sender:
-                opening_balance -= ns.sell_amount
-
-            for nr in prev_receiver:
-                opening_balance += nr.purchase_amount
-
-            for c in prev_cash:
-                if c.transaction == "Received":
-                    opening_balance -= c.amount
-                else:
-                    opening_balance += c.amount
-        context = {
-            'suppliers':suppliers,
-            'date_from':date_from,
-            'date_to':date_to,
-            'ledgers':ledgers,
-            'supplier':supplier if supplier else '',
-            'opening':opening if opening == 'on' else '',
-            'credit_total':credit_total,
-            'debit_total':debit_total,
-            'total_balance':total_balance,
-            'open_balance':opening_balance,
-            'sort':sort,
-            }
-        return render(request,'supplier_ledger/supplier_ledger.html',context)
-            
-            
+        running_val = start_balance
+        credit_sum = 0
+        debit_sum = 0
         
+        final_ledgers = []
+        
+        for item in ledger_items:
+            c_val = float(item.get('credit') or 0)
+            d_val = float(item.get('debit') or 0)
+            
+            if item.get('type') == 'OB':
+                item['balance'] = start_balance
+            else:
+                running_val += (d_val - c_val)
+                item['balance'] = running_val
+                
+                credit_sum += c_val
+                debit_sum += d_val
+            
+            final_ledgers.append(item)
+            
+        if opening_flag == 'on':
+            context['open_balance'] = 0
+
+        context['ledgers'] = final_ledgers
+        context['credit_total'] = credit_sum
+        context['debit_total'] = debit_sum
+        context['total_balance'] = running_val
+        
+        return render(request, 'supplier_ledger/supplier_ledger.html', context)
+
+    def parse_date(self, date_str):
+        if date_str:
+            try:
+                return datetime.strptime(date_str, "%Y-%m-%d").date()
+            except ValueError:
+                return None
+        return None
+
+    def calculate_opening_balance(self, supplier, client, date_limit):
+        base_filter = Q(is_active=True, hold=False, client=client, supplier=supplier, date__lt=date_limit)
+        nsd_base = Q(is_active=True, hold=False, client=client, date__lt=date_limit)
+        
+        purchases_sum = Purchases.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or 0
+        sales_sum = Sales.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or 0
+        sender_sum = NSDs.objects.filter(nsd_base, sender_supplier=supplier).aggregate(s=Sum('sell_amount'))['s'] or 0
+        receiver_sum = NSDs.objects.filter(nsd_base, receiver_supplier=supplier).aggregate(s=Sum('purchase_amount'))['s'] or 0
+        
+        cash_received = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or 0
+        cash_paid = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or 0
+        
+        transaction_balance = (sales_sum + receiver_sum + cash_paid) - (purchases_sum + sender_sum + cash_received)
+        
+        static_ob = (supplier.open_debit or 0) - (supplier.open_credit or 0)
+        
+        return static_ob + transaction_balance
