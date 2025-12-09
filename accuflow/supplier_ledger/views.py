@@ -41,23 +41,18 @@ class SupplierLedgerView(View):
         supplier = get_object_or_404(Suppliers, id=supplier_id)
         context['supplier'] = supplier
 
-        # Parse dates
         date_from = self.parse_date(date_from_str)
         date_to = self.parse_date(date_to_str)
 
-        # 1. Calculate Opening Balance (Everything before date_from + Static OB)
         if date_from:
             opening_balance = self.calculate_opening_balance(supplier, client, date_from)
         else:
-            # If no date filter, start with the static opening balance
             opening_balance = (supplier.open_debit or 0) - (supplier.open_credit or 0)
         
         context['open_balance'] = opening_balance
 
-        # 2. Fetch Transactions (Within date range)
         ledger_items = []
         
-        # Base filters
         base_filter = Q(is_active=True, hold=False, client=client)
         date_filter = Q()
         if date_from:
@@ -65,7 +60,6 @@ class SupplierLedgerView(View):
         if date_to:
             date_filter &= Q(date__lte=date_to)
 
-        # Purchases (Credit to Supplier)
         purchases = Purchases.objects.filter(base_filter, date_filter, supplier=supplier)
         for p in purchases:
             desc = f"{p.godown.name}\n{p.description}" if sort != 'Remark' else p.description
@@ -82,7 +76,6 @@ class SupplierLedgerView(View):
                 'original_obj': p
             })
 
-        # Sales (Debit to Supplier - e.g. Return)
         sales = Sales.objects.filter(base_filter, date_filter, supplier=supplier)
         for s in sales:
             desc = f"{s.godown.name}\n{s.description}" if sort != 'Detailed' else s.description
@@ -99,7 +92,6 @@ class SupplierLedgerView(View):
                 'original_obj': s
             })
 
-        # NSDs (Sender) -> Credit
         sender_nsds = NSDs.objects.filter(base_filter, date_filter, sender_supplier=supplier)
         for n in sender_nsds:
             desc = f"{n.receiver.name}\n{n.description}" if sort != 'Remark' else n.description
@@ -116,7 +108,6 @@ class SupplierLedgerView(View):
                 'original_obj': n
             })
 
-        # NSDs (Receiver) -> Debit
         receiver_nsds = NSDs.objects.filter(base_filter, date_filter, receiver_supplier=supplier)
         for n in receiver_nsds:
             desc = f"{n.sender.name}\n{n.description}" if sort != 'Remark' else n.description
@@ -133,7 +124,6 @@ class SupplierLedgerView(View):
                 'original_obj': n
             })
 
-        # Cash (Received -> Credit, Paid -> Debit)
         cashs = Cashs.objects.filter(base_filter, date_filter, supplier=supplier)
         for c in cashs:
             is_received = (c.transaction == 'Received')
@@ -151,7 +141,6 @@ class SupplierLedgerView(View):
                 'original_obj': c
             })
 
-        # 3. Add Opening Balance Entry
         start_balance = 0
         if opening_flag != 'on':
              start_balance = opening_balance
@@ -169,13 +158,11 @@ class SupplierLedgerView(View):
                 'is_ob': True
              })
         
-        # 4. Sorting
         ledger_items.sort(key=lambda x: (x['date'], x['created_at']))
 
         if sort == 'Serial':
              ledger_items.sort(key=lambda x: x['transaction_no'])
 
-        # 5. Calculate Running Balance
         running_val = start_balance
         credit_sum = 0
         debit_sum = 0
@@ -190,12 +177,15 @@ class SupplierLedgerView(View):
                 item['balance'] = start_balance
             else:
                 running_val += (d_val - c_val)
-                item['balance'] = running_val # Post-Balance
+                item['balance'] = running_val
                 
                 credit_sum += c_val
                 debit_sum += d_val
             
             final_ledgers.append(item)
+            
+        if opening_flag == 'on':
+            context['open_balance'] = 0
 
         context['ledgers'] = final_ledgers
         context['credit_total'] = credit_sum

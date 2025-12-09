@@ -86,7 +86,6 @@ class PurchaseAddView(View):
             purchase = Purchases.objects.get(id=id)
             godown.qty += float(qtys[count])  
             godown.save()
-            # update_ledger(where=purchase.party,to=None,old_purchase=purchase.total_amount,old_sale=purchase.total_amount)
             update_ledger(where=seller,to=None,new_purchase=total_amounts[count],new_sale=0) 
             purchase.seller_balance = seller.balance
             purchase.purchaser_balance = godown.get_balance

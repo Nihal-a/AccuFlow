@@ -310,19 +310,7 @@ class Commissions(models.Model):
     def __str__(self):
         return self.commission_no
     
-    # @property
-    # def which_type(self):
-    #     if (self.supplier == None) and (self.customer != None):
-    #         return 'customers'
-    #     elif (self.customer == None) and (self.supplier != None):
-    #         return 'suppliers'
         
-    # @property
-    # def party(self):
-    #     if self.which_type == 'customers':
-    #         return self.customer
-    #     elif self.which_type == 'suppliers':
-    #         return self.supplier
 
 class NSDs(models.Model):
     nsd_no = models.TextField(blank=True,null=True)
