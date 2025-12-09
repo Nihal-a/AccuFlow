@@ -1,9 +1,12 @@
 from django.shortcuts import render,redirect, get_object_or_404
-from core.models import Godowns
+from core.models import Godowns, Purchases, Sales, Commissions
 from django.views import View
-from core.views import getClient
+from django.views.generic.edit import DeleteView
+from django.db.models import Sum, Q 
+from datetime import datetime
 
 from core.views import getClient
+
 
 class GodownView(View):
     def get(self,request):
@@ -115,3 +118,170 @@ def new_godown_id(client):
     else: 
         new_godown_id = 'G-1'
     return str(new_godown_id)
+
+class GodownLedgerView(View):
+    def get(self, request):
+        godowns = Godowns.objects.filter(is_active=True, client=getClient(request.user))
+        return render(request, 'godown/godown_ledger.html', {'godowns': godowns, 'sort': 'Serial'})
+
+    def post(self, request):
+        godown_id = request.POST.get('godown')
+        opening_flag = request.POST.get('opening')
+        sort = request.POST.get('sort')
+        date_from_str = request.POST.get("dateFrom")
+        date_to_str = request.POST.get("dateTo")
+        
+        client = getClient(request.user)
+        godowns = Godowns.objects.filter(is_active=True, client=client)
+
+        context = {
+            'godowns': godowns,
+            'date_from': date_from_str,
+            'date_to': date_to_str,
+            'sort': sort,
+            'godown': '',
+            'opening': opening_flag if opening_flag == 'on' else '',
+            'ledgers': [],
+            'in_total': 0,
+            'out_total': 0,
+            'total_balance': 0,
+            'open_balance': 0,
+        }
+
+        if not godown_id:
+            return render(request, 'godown/godown_ledger.html', context)
+
+        godown = get_object_or_404(Godowns, id=godown_id)
+        context['godown'] = godown
+
+        date_from = self.parse_date(date_from_str)
+        date_to = self.parse_date(date_to_str)
+
+        if date_from:
+            opening_balance = self.calculate_opening_stock(godown, client, date_from)
+        else:
+            opening_balance = 0 # No field for opening Qty
+        
+        context['open_balance'] = opening_balance
+
+        ledger_items = []
+        
+        base_filter = Q(is_active=True, hold=False, client=client, godown=godown)
+        date_filter = Q()
+        if date_from:
+            date_filter &= Q(date__gte=date_from)
+        if date_to:
+            date_filter &= Q(date__lte=date_to)
+
+        # Purchases (In Qty)
+        purchases = Purchases.objects.filter(base_filter, date_filter)
+        for p in purchases:
+            desc = p.description if sort != 'Detailed' else p.description
+            ledger_items.append({
+                'transaction_no': str(p.purchase_no),
+                'date': p.date,
+                'type': 'Purchase',
+                'description': desc,
+                'in_qty': p.qty,
+                'out_qty': 0,
+                'created_at': p.created_at,
+                'original_obj': p
+            })
+            
+        # Sales (Out Qty)
+        sales = Sales.objects.filter(base_filter, date_filter)
+        for s in sales:
+            desc = s.description if sort != 'Detailed' else s.description
+            ledger_items.append({
+                'transaction_no': str(s.sale_no),
+                'date': s.date,
+                'type': 'Sale',
+                'description': desc,
+                'in_qty': 0,
+                'out_qty': s.qty,
+                'created_at': s.created_at,
+                'original_obj': s
+            })
+            
+        # Commissions (Out Qty)
+        commissions = Commissions.objects.filter(base_filter, date_filter)
+        for c in commissions:
+            desc = c.description if sort != 'Detailed' else c.description
+            ledger_items.append({
+                'transaction_no': str(c.commission_no),
+                'date': c.date,
+                'type': 'Commission',
+                'description': desc,
+                'in_qty': 0,
+                'out_qty': c.qty,
+                'created_at': c.created_at,
+                'original_obj': c
+            })
+
+        start_balance = 0
+        if opening_flag != 'on':
+             start_balance = opening_balance
+             ledger_items.append({
+                'transaction_no': 'Opening Stock',
+                'date': godown.created_at.date() if godown.created_at else (date_from or datetime.min.date()),
+                'type': 'OB',
+                'description': '',
+                'in_qty': '',
+                'out_qty': '',
+                'balance': start_balance, 
+                'created_at': godown.created_at,
+                'is_ob': True
+             })
+        
+        ledger_items.sort(key=lambda x: (x['date'], x['created_at']))
+
+        running_val = start_balance
+        in_sum = 0
+        out_sum = 0
+        
+        final_ledgers = []
+        
+        for item in ledger_items:
+            in_q = float(item.get('in_qty') or 0)
+            out_q = float(item.get('out_qty') or 0)
+            
+            if item.get('type') == 'OB':
+                item['balance'] = start_balance
+            else:
+                running_val += (in_q - out_q)
+                item['balance'] = running_val
+                
+                in_sum += in_q
+                out_sum += out_q
+            
+            final_ledgers.append(item)
+            
+        if opening_flag == 'on':
+            context['open_balance'] = 0
+
+        context['ledgers'] = final_ledgers
+        context['in_total'] = in_sum
+        context['out_total'] = out_sum
+        context['total_balance'] = running_val
+        
+        return render(request, 'godown/godown_ledger.html', context)
+
+    def parse_date(self, date_str):
+        if date_str:
+            try:
+                return datetime.strptime(date_str, "%Y-%m-%d").date()
+            except ValueError:
+                return None
+        return None
+
+    def calculate_opening_stock(self, godown, client, date_limit):
+        base_filter = Q(is_active=True, hold=False, client=client, godown=godown, date__lt=date_limit)
+        
+        purchases_sum = Purchases.objects.filter(base_filter).aggregate(s=Sum('qty'))['s'] or 0
+        sales_sum = Sales.objects.filter(base_filter).aggregate(s=Sum('qty'))['s'] or 0
+        commission_sum = Commissions.objects.filter(base_filter).aggregate(s=Sum('qty'))['s'] or 0
+        
+        # Stock = In - Out
+        stock_balance = purchases_sum - (sales_sum + commission_sum)
+        
+        return stock_balance
