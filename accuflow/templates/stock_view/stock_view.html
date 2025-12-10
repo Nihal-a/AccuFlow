@@ -21,35 +21,40 @@
         
 
             <div class="col-span-6 w-full flex items-end gap-3">
-                <div class="w-[20%]">
+                {% comment %} <div class="w-[20%]">
                     <label class="block text-gray-700 mb-1">From*</label>
                     <div class="flex items-center gap-4">
                         <div class="flex-1">
                             <input type="date"
                                 id="dateFrom"
+                                name="dateFrom"
+                                value="{{date_from}}"
                                 class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                required>
+                                >
                         </div>
                     </div>
-                </div>
+                </div> {% endcomment %}
 
                 <div class="w-[20%]">
-                    <label class="block text-gray-700 mb-1">To*</label>
+                    <label class="block text-gray-700 mb-1">Date*</label>
                     <div class="flex items-center gap-4">
                         <div class="flex-1">
                             <input type="date"
                                 id="dateTo"
+                                name="dateTo"
+                                value="{{date_to}}"
                                 class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                required>
+                                >
                         </div>
                     </div>
                 </div>
 
-                <div>
-                     <a id="btnView"
-                        href="#"
+
+                <div class="flex gap-2">
+                    <button id="btnView"
+                        type="submit"
                         class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
-                        View Stocks
+                        Current Stock View
                     </a>
                 </div>
             </div>
@@ -99,7 +104,31 @@
                             <th class="px-4 py-3 text-right font-medium">Amount</th>
                         </tr>
                     </thead>
-                    <tbody id="purchaseTableBody" class="bg-gray-100"></tbody>
+                    <tbody id="stockviewTableBody" class="bg-gray-100">
+                        {% for godown in godowns %}
+                        {% comment %} {% if ledger.type != 'OB' %} {% endcomment %}
+                        <tr>
+                            <td  class="px-4 py-3 text-left font-medium">{{forloop.counter}}</td>
+                            {% comment %} <td  class="px-4 py-3 text-left font-medium">{{godown.name|date:"d-m-Y"}}</td> {% endcomment %}
+                            <td  class="px-4 py-3 text-left font-medium">{{godown.name}}</td>
+                            <td  class="px-4 py-3 text-left font-medium">{{godown.qty}}</td>
+                            <td  class="px-4 py-3 text-left font-medium">{{ledger.description}}</td>
+                            <td  class="px-4 py-3 text-right font-medium">{{ledger.qty}}</td>
+                            <td  class="px-4 py-3 text-right font-medium">{{ledger.rate}}</td>
+                            <td  class="px-4 py-3 text-right font-medium">{{ledger.debit}}</td>
+                            <td  class="px-4 py-3 text-right font-medium">{{ledger.credit}}</td>
+                            <td  class="px-4 py-3 text-right font-medium">{{ledger.balance}}</td>
+                        </tr>
+                        {% comment %} {% endif %} {% endcomment %}
+                        {% endfor %}
+                        <tr class="bg-blue-200 text-gray-700 uppercase text-sm">
+                            <td colspan="6"></td> 
+                            <td class="px-4 py-3 text-right font-medium font-bold">Total :</td>
+                            <td class="px-4 py-3 text-right font-medium font-bold">{{debit_total|default:'0.00'}}</td>
+                            <td class="px-4 py-3 text-right font-medium font-bold">{{credit_total|default:'0.00'}}</td>
+                            <td class="px-4 py-3 text-right font-medium font-bold">{{total_balance|default:'0.00'}}</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
 
