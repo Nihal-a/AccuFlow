@@ -406,3 +406,25 @@ class Cashs(models.Model):
             return self.customer
         elif self.which_type == 'suppliers':
             return self.supplier
+        
+
+class StockTransfers(models.Model):
+    transfer_no = models.TextField(blank=True, null=True)
+    transfer_from = models.ForeignKey(Godowns,on_delete=models.CASCADE,related_name='transfers_from',blank=True, null=True)
+    transfer_to = models.ForeignKey(Godowns,on_delete=models.CASCADE,related_name='transfers_to',blank=True,null=True)
+    date = models.DateField(blank=True, null=True)
+    code = models.TextField(blank=True, null=True)
+    qty = models.FloatField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    description = models.TextField(blank=True, null=True)
+    hold = models.BooleanField(default=False)
+    type = models.TextField(blank=True, null=True)
+    client = models.ForeignKey(Clients, on_delete=models.CASCADE, blank=True, null=True)
+
+    
+    
+    def __str__(self):
+        return self.transfer_no
+    
+        
