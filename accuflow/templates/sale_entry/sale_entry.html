@@ -1,413 +1,338 @@
 {% extends "base.html" %}
 {% block title %}
-    Sales Entry
+Sales Entry
 {% endblock title %}
 {% block externalCSS %}
 {% endblock externalCSS %}
 {% block content %}
-    <div class="bg-white rounded-xl p-6 mt-3">
-        <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">Sale Management</h1>
-        <div class="mt-4 flex flex-wrap items-center gap-3">
-            <!-- 🟦 New -->
-            <a id="btnNew"
-               href="#"
-               class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
-                <svg xmlns="http://www.w3.org/2000/svg"
-                     class="h-4 w-4"
-                     fill="none"
-                     viewBox="0 0 24 24"
-                     stroke="currentColor"
-                     stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-                New
-            </a>
-            <a id="btnView"
-               href="#"
-               class="leading-none inline-flex items-center gap-1.5 bg-green-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-green-600 transition-all duration-300">
-                <svg xmlns="http://www.w3.org/2000/svg"
-                     class="h-4 w-4"
-                     fill="none"
-                     viewBox="0 0 24 24"
-                     stroke="currentColor"
-                     stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                View
-            </a>
+<div class="bg-white rounded-xl p-6 mt-3">
+  <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">Sale Management</h1>
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <!-- 🟦 New -->
+    <a id="btnNew" href="#"
+      class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+        stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+      </svg>
+      New
+    </a>
+    <a id="btnView" href="#"
+      class="leading-none inline-flex items-center gap-1.5 bg-green-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-green-600 transition-all duration-300">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+        stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+      </svg>
+      View
+    </a>
+  </div>
+  <hr class="mt-5">
+  <div class=" mt-5 w-100" id="createView">
+    <div class="grid grid-cols-8 gap-4 ">
+      <div class="col-span-6 flex gap-2 ">
+        <div class="w-[50%]">
+          <label class="block text-gray-700">Sale No*</label>
+          <input type="text" name="" value="{{ last_sale_no }}" id="sale_name" placeholder="Enter Sale No"
+            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" disabled
+            required />
         </div>
-        <hr class="mt-5">
-        <div class=" mt-5 w-100" id="createView">
-            <div class="grid grid-cols-8 gap-4 ">
-                <div class="col-span-6 flex gap-2 ">
-                    <div class="w-[50%]">
-                        <label class="block text-gray-700">Sale No*</label>
-                        <input type="text"
-                               name=""
-                               value="{{ last_sale_no }}"
-                               id="sale_name"
-                               placeholder="Enter Sale No"
-                               class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               disabled
-                               required />
-                    </div>
-                    <input type="hidden" name="" id="saleId" placeholder="" />
-                    <div class="w-[50%]">
-                        <label class="block text-gray-700">Date*</label>
-                        <input type="date"
-                               name=""
-                               id="date"
-                               class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               required />
-                    </div>
-                </div>
-                <div class="col-span-6 w-full flex items-center gap-3">
-                    <div class=" w-[80%]">
-                        <!-- Label -->
-                        <label class="block text-gray-700 mb-1">Customer*</label>
-                        <div class="flex items-center gap-4">
-                            <div class="flex items-center gap-4 w-full">
-                                <div class="flex items-center">
-                                    <input type="checkbox"
-                                           id="allCustomers"
-                                           name=""
-                                           tabindex="-1"
-                                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
-                                    <label for="allCustomers" class="ml-2 text-gray-700">All</label>
-                                </div>
-                                <!-- Dropdown -->
-                                <div class="flex-1">
-                                    <select name=""
-                                            id="customer"
-                                            class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            required>
-                                        <option value="" selected>Select Customer</option>
-                                        {% for customer in customers %}
-                                            <option value="{{ customer.id }}"
-                                                    data-code="{{ customer.customerId }}"
-                                                    data-balance="{{ customer.balance }}"
-                                                    data-type="customers">{{ customer.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class=" w-[20%]">
-                        <!-- Label -->
-                        <label class="block text-gray-700 mb-1">code*</label>
-                        <div class="flex items-center gap-4 ">
-                            <!-- Row: Checkbox + Dropdown -->
-                            <div class="flex items-center gap-4 w-full">
-                                <!-- Dropdown -->
-                                <div class="flex-1">
-                                    <input type="text"
-                                           name=""
-                                           id="customerID"
-                                           placeholder=""
-                                           disabled
-                                           class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                           required />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="w[20%]">
-                        <div id="customerCredit"></div>
-                    </div>
-                </div>
-                <div class="col-span-6 w-full flex items-center gap-3">
-                    <div class=" w-[80%]">
-                        <!-- Label -->
-                        <label class="block text-gray-700 mb-1">Godown*</label>
-                        <!-- Row: Checkbox + Dropdown -->
-                        <div class="flex items-center gap-4">
-                            <!-- Dropdown -->
-                            <div class="flex-1">
-                                <select name=""
-                                        id="godown"
-                                        class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        required>
-                                    <option value="" selected>Select Godown</option>
-                                    {% for godown in godowns %}
-                                        <option value="{{ godown.id }}"
-                                                data-code="{{ godown.godownId }}"
-                                                data-balance="{{ godown.get_balance }}">{{ godown.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class=" w-[30%]">
-                        <!-- Label -->
-                        <label class="block text-gray-700 mb-1">G.code*</label>
-                        <div class="flex items-center gap-4 ">
-                            <!-- Row: Checkbox + Dropdown -->
-                            <div class="flex items-center gap-4 w-full">
-                                <!-- Dropdown -->
-                                <div class="flex-1">
-                                    <input type="text"
-                                           name=""
-                                           id="godownID"
-                                           placeholder=""
-                                           disabled
-                                           class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                           required />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="w[20%]">
-                        <div id="godownCredit"></div>
-                    </div>
-                </div>
-                <div class="col-span-6 w-full flex gap-2">
-                    <div class="flex-1">
-                        <label class="block text-gray-700">Qty*</label>
-                        <input type="number"
-                               name=""
-                               id="qty"
-                               placeholder="Enter Quantity"
-                               class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               required />
-                    </div>
-                    <div class="flex-1">
-                        <label class="block text-gray-700">Rate*</label>
-                        <input type="number"
-                               name=""
-                               id="amount"
-                               placeholder="Enter Amount"
-                               class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               required />
-                    </div>
-                    <div class="flex-1">
-                        <label class="block text-gray-700">Total Amount*</label>
-                        <input type="number"
-                               name=""
-                               id="total_amount"
-                               placeholder=""
-                               disabled
-                               class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               required />
-                    </div>
-                </div>
-                <div class="description col-span-6">
-                    <div>
-                        <label class="block text-gray-700">Description</label>
-                        <textarea name=""
-                                  id="description"
-                                  class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-                    </div>
-                </div>
+        <input type="hidden" name="" id="saleId" placeholder="" />
+        <div class="w-[50%]">
+          <label class="block text-gray-700">Date*</label>
+          <input type="date" name="" id="date"
+            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required />
+        </div>
+      </div>
+      <div class="col-span-6 w-full flex items-center gap-3">
+        <div class=" w-[80%]">
+          <!-- Label -->
+          <label class="block text-gray-700 mb-1">Customer*</label>
+          <div class="flex items-center gap-4">
+            <div class="flex items-center gap-4 w-full">
+              <div class="flex items-center">
+                <input type="checkbox" id="allCustomers" name="" tabindex="-1"
+                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
+                <label for="allCustomers" class="ml-2 text-gray-700">All</label>
+              </div>
+              <!-- Dropdown -->
+              <div class="flex-1">
+                <select name="" id="customer"
+                  class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required>
+                  <option value="" selected>Select Customer</option>
+                  {% for customer in customers %}
+                  <option value="{{ customer.id }}" data-code="{{ customer.customerId }}"
+                    data-balance="{{ customer.balance }}" data-type="customers">{{ customer.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
             </div>
-            <hr class="mt-5 mb-5">
-            <form action="{% url 'sale-create' %}" method="post">
-                {% csrf_token %}
-                <div class="flex items-center justify-between">
-                    <div class="flex gap-2 items-center">
-                        <a id="addGrid"
-                           href="#"
-                           onclick="addToSaleGrid()"
-                           class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
-                            <!-- <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          </div>
+        </div>
+        <div class=" w-[20%]">
+          <!-- Label -->
+          <label class="block text-gray-700 mb-1">code*</label>
+          <div class="flex items-center gap-4 ">
+            <!-- Row: Checkbox + Dropdown -->
+            <div class="flex items-center gap-4 w-full">
+              <!-- Dropdown -->
+              <div class="flex-1">
+                <input type="text" name="" id="customerID" placeholder="" disabled
+                  class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="w[20%]">
+          <div id="customerCredit"></div>
+        </div>
+      </div>
+      <div class="col-span-6 w-full flex items-center gap-3">
+        <div class=" w-[80%]">
+          <!-- Label -->
+          <label class="block text-gray-700 mb-1">Godown*</label>
+          <!-- Row: Checkbox + Dropdown -->
+          <div class="flex items-center gap-4">
+            <!-- Dropdown -->
+            <div class="flex-1">
+              <select name="" id="godown"
+                class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required>
+                <option value="" selected>Select Godown</option>
+                {% for godown in godowns %}
+                <option value="{{ godown.id }}" data-code="{{ godown.godownId }}"
+                  data-balance="{{ godown.get_balance }}">{{ godown.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class=" w-[30%]">
+          <!-- Label -->
+          <label class="block text-gray-700 mb-1">G.code*</label>
+          <div class="flex items-center gap-4 ">
+            <!-- Row: Checkbox + Dropdown -->
+            <div class="flex items-center gap-4 w-full">
+              <!-- Dropdown -->
+              <div class="flex-1">
+                <input type="text" name="" id="godownID" placeholder="" disabled
+                  class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="w[20%]">
+          <div id="godownCredit"></div>
+        </div>
+      </div>
+      <div class="col-span-6 w-full flex gap-2">
+        <div class="flex-1">
+          <label class="block text-gray-700">Qty*</label>
+          <input type="number" name="" id="qty" placeholder="Enter Quantity"
+            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required />
+        </div>
+        <div class="flex-1">
+          <label class="block text-gray-700">Rate*</label>
+          <input type="number" name="" id="amount" placeholder="Enter Amount"
+            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required />
+        </div>
+        <div class="flex-1">
+          <label class="block text-gray-700">Total Amount*</label>
+          <input type="number" name="" id="total_amount" placeholder="" disabled
+            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required />
+        </div>
+      </div>
+      <div class="description col-span-6">
+        <div>
+          <label class="block text-gray-700">Description</label>
+          <textarea name="" id="description"
+            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+        </div>
+      </div>
+    </div>
+    <hr class="mt-5 mb-5">
+    <form action="{% url 'sale-create' %}" method="post">
+      {% csrf_token %}
+      <div class="flex items-center justify-between">
+        <div class="flex gap-2 items-center">
+          <a id="addGrid" href="#" onclick="addToSaleGrid()"
+            class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
+            <!-- <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
       </svg> -->
-                            <span id="addToGridText">Add to Grid</span>
-                        </a>
-                        <a id="btnCancel"
-                           href="#"
-                           onclick="oncancelData()"
-                           class="leading-none inline-flex items-center gap-1.5 bg-gray-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-gray-600 transition-all duration-300">
-                            <svg xmlns="http://www.w3.org/2000/svg"
-                                 class="h-4 w-4"
-                                 fill="none"
-                                 viewBox="0 0 24 24"
-                                 stroke="currentColor"
-                                 stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                            Cancel
-                        </a>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <div class="relative w-full md:w-3/4">
-                            <input type="text"
-                                   id="searchInput"
-                                   placeholder="Search sale..."
-                                   class="w-full bg-white rounded-xl px-4 py-2 pl-10 border  focus:border-transparent ring-2 ring-blue-200  focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none" />
-                            <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5 pointer-events-none"
-                                 fill="none"
-                                 stroke="currentColor"
-                                 stroke-width="2"
-                                 viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 3a7.5 7.5 0 006.15 13.65z" />
-                            </svg>
-                        </div>
-                        <button id="btnSave"
-                                type="submit"
-                                class="leading-none inline-flex items-center gap-1.5 bg-green-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-green-600 transition-all duration-300">
-                            <svg xmlns="http://www.w3.org/2000/svg"
-                                 class="h-4 w-4"
-                                 fill="none"
-                                 viewBox="0 0 24 24"
-                                 stroke="currentColor"
-                                 stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                            </svg>
-                            Save
-                        </button>
-                    </div>
-                </div>
-                <div class="overflow-x-auto mt-5 w-full" id="saleCreateDiv">
-                    <table class="min-w-full rounded-t-lg overflow-hidden">
-                        <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
-                            <tr>
-                                <th class="px-4 py-3 text-left font-medium w-1">Actions</th>
-                                <th class="px-4 py-3 text-left font-medium w-1">#</th>
-                                <th class="px-4 py-3 text-left font-medium">Date</th>
-                                <th class="px-4 py-3 text-left font-medium">Customer</th>
-                                <th class="px-4 py-3 text-left font-medium">Godown</th>
-                                <th class="px-4 py-3 text-right font-medium">Qty</th>
-                                <th class="px-4 py-3 text-right font-medium">Rate</th>
-                                <th class="px-4 py-3 text-right font-medium">Total Amount</th>
-                                <th class="px-4 py-3 text-right font-medium">Description</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-gray-100" id="saleTableBody">
-                        </tbody>
-                    </table>
-                </div>
-            </form>
+            <span id="addToGridText">Add to Grid</span>
+          </a>
+          <a id="btnCancel" href="#" onclick="oncancelData()"
+            class="leading-none inline-flex items-center gap-1.5 bg-gray-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-gray-600 transition-all duration-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Cancel
+          </a>
         </div>
-        <div id="viewDiv" class="hidden">
-            <div class="dateDiv mt-3">
-                <div class="flex justify-center items-end gap-5 mt-4">
-                    <div>
-                        <label class="block text-gray-700">From Date*</label>
-                        <input type="date"
-                               id="from_date"
-                               class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               required />
-                    </div>
-                    <div>
-                        <label class="block text-gray-700">End Date*</label>
-                        <input type="date"
-                               id="end_date"
-                               class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               required />
-                    </div>
-                    <div>
-                        <button id="dateFilter"
-                                class="bg-blue-600 text-white px-5 py-2 mt-6 rounded-xl hover:bg-blue-700 transition-all">
-                            Filter
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div id="viewSaleDiv" class="hidden">
-                <hr class="mt-5">
-                <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mt-3 mb-3">
-                    <div class="flex items-end gap-3 w-full md:w-auto">
-                        <div>
-                            <label for="from_price" class="block text-gray-700 text-sm font-medium">From</label>
-                            <input type="number"
-                                   id="from_price"
-                                   placeholder="0.00"
-                                   class="w-32 mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                        </div>
-                        <div>
-                            <label for="to_price" class="block text-gray-700 text-sm font-medium">To</label>
-                            <input type="number"
-                                   id="to_price"
-                                   placeholder="0.00"
-                                   class="w-32 mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                        </div>
-                        <button id="btnFilter"
-                                class="mt-5 bg-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
-                            Filter
-                        </button>
-                    </div>
-                    <h2 id="showDate" class="underline"></h2>
-                    <div class="relative w-full md:w-1/4">
-                        <input type="text"
-                               id="searchInput"
-                               placeholder="Search sale..."
-                               class="w-full bg-white searchInput rounded-xl px-4 py-2 pl-10 border focus:border-transparent ring-2 ring-blue-200 focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none" />
-                        <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5 pointer-events-none"
-                             fill="none"
-                             stroke="currentColor"
-                             stroke-width="2"
-                             viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 3a7.5 7.5 0 006.15 13.65z" />
-                        </svg>
-                    </div>
-                </div>
-                <div class="overflow-x-auto mt-5 w-full">
-                    <table class="min-w-full rounded-t-lg overflow-hidden" id="viewSaleTable">
-                        <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
-                            <tr>
-                                <th class="px-4 py-3 text-left font-medium w-1">Actions</th>
-                                <th class="px-4 py-3 text-left font-medium w-1">#</th>
-                                <th class="px-4 py-3 text-left font-medium">Sale No</th>
-                                <th class="px-4 py-3 text-left font-medium">Date</th>
-                                <th class="px-4 py-3 text-left font-medium">Customer</th>
-                                <th class="px-4 py-3 text-left font-medium">Godown</th>
-                                <th class="px-4 py-3 text-right font-medium">Qty</th>
-                                <th class="px-4 py-3 text-right font-medium">Rate</th>
-                                <th class="px-4 py-3 text-right font-medium">Total Amount</th>
-                                <th class="px-4 py-3 text-right font-medium">Description</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-gray-100" id="saleTableBody">
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        <div class="flex items-center gap-2">
+          <div class="relative w-full md:w-3/4">
+            <input type="text" id="searchInput" placeholder="Search sale..."
+              class="w-full bg-white rounded-xl px-4 py-2 pl-10 border  focus:border-transparent ring-2 ring-blue-200  focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none" />
+            <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5 pointer-events-none" fill="none"
+              stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 3a7.5 7.5 0 006.15 13.65z" />
+            </svg>
+          </div>
+          <button id="btnSave" type="submit"
+            class="leading-none inline-flex items-center gap-1.5 bg-green-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-green-600 transition-all duration-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            Save
+          </button>
         </div>
+      </div>
+      <div class="overflow-x-auto mt-5 w-full" id="saleCreateDiv">
+        <table class="min-w-full rounded-t-lg overflow-hidden">
+          <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
+            <tr>
+              <th class="px-4 py-3 text-left font-medium w-1">Actions</th>
+              <th class="px-4 py-3 text-left font-medium w-1">#</th>
+              <th class="px-4 py-3 text-left font-medium">Date</th>
+              <th class="px-4 py-3 text-left font-medium">Customer</th>
+              <th class="px-4 py-3 text-left font-medium">Godown</th>
+              <th class="px-4 py-3 text-right font-medium">Qty</th>
+              <th class="px-4 py-3 text-right font-medium">Rate</th>
+              <th class="px-4 py-3 text-right font-medium">Total Amount</th>
+              <th class="px-4 py-3 text-right font-medium">Description</th>
+            </tr>
+          </thead>
+          <tbody class="bg-gray-100" id="saleTableBody">
+          </tbody>
+        </table>
+      </div>
+    </form>
+  </div>
+  <div id="viewDiv" class="hidden">
+    <div class="dateDiv mt-3">
+      <div class="flex justify-center items-end gap-5 mt-4">
+        <div>
+          <label class="block text-gray-700">From Date*</label>
+          <input type="date" id="from_date"
+            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required />
+        </div>
+        <div>
+          <label class="block text-gray-700">End Date*</label>
+          <input type="date" id="end_date"
+            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required />
+        </div>
+        <div>
+          <button id="dateFilter"
+            class="bg-blue-600 text-white px-5 py-2 mt-6 rounded-xl hover:bg-blue-700 transition-all">
+            Filter
+          </button>
+        </div>
+      </div>
     </div>
-    <div id="editModal"
-         class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
-        <div class="bg-white rounded-xl shadow-lg p-6 w-80 text-center">
-            <h2 class="text-lg font-semibold mb-4 text-gray-800">Confirm Edit</h2>
-            <p class="mb-6 text-gray-600 ">Are you sure you want to edit this sale's details?</p>
-            <div class="flex justify-center space-x-4">
-                <button onclick="closeEditModal()"
-                        class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
-                <a id="confirmEditBtn"
-                   href="#"
-                   class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Edit</a>
-            </div>
+    <div id="viewSaleDiv" class="hidden">
+      <hr class="mt-5">
+      <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mt-3 mb-3">
+        <div class="flex items-end gap-3 w-full md:w-auto">
+          <div>
+            <label for="from_price" class="block text-gray-700 text-sm font-medium">From</label>
+            <input type="number" id="from_price" placeholder="0.00"
+              class="w-32 mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div>
+            <label for="to_price" class="block text-gray-700 text-sm font-medium">To</label>
+            <input type="number" id="to_price" placeholder="0.00"
+              class="w-32 mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <button id="btnFilter"
+            class="mt-5 bg-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
+            Filter
+          </button>
         </div>
-    </div>
-    <div id="confirmModal"
-         class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
-        <div class="bg-white rounded-xl shadow-lg p-6 w-80 text-center">
-            <h2 class="text-lg font-semibold mb-4">Confirm Deletion</h2>
-            <p class="mb-6 text-gray-600">Are you sure you want to delete this sale?</p>
-            <div class="flex justify-center space-x-4">
-                <button id="cancelBtn"
-                        class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
-                        onclick="closeModal()">Cancel</button>
-                <a id="confirmDeleteBtn"
-                   href="#"
-                   class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                   onclick="deleteItem()">Delete</a>
-            </div>
+        <h2 id="showDate" class="underline"></h2>
+        <div class="relative w-full md:w-1/4">
+          <input type="text" id="searchInput" placeholder="Search sale..."
+            class="w-full bg-white searchInput rounded-xl px-4 py-2 pl-10 border focus:border-transparent ring-2 ring-blue-200 focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none" />
+          <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5 pointer-events-none" fill="none"
+            stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 3a7.5 7.5 0 006.15 13.65z" />
+          </svg>
         </div>
+      </div>
+      <div class="overflow-x-auto mt-5 w-full">
+        <table class="min-w-full rounded-t-lg overflow-hidden" id="viewSaleTable">
+          <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
+            <tr>
+              <th class="px-4 py-3 text-left font-medium w-1">Actions</th>
+              <th class="px-4 py-3 text-left font-medium w-1">#</th>
+              <th class="px-4 py-3 text-left font-medium">Sale No</th>
+              <th class="px-4 py-3 text-left font-medium">Date</th>
+              <th class="px-4 py-3 text-left font-medium">Customer</th>
+              <th class="px-4 py-3 text-left font-medium">Godown</th>
+              <th class="px-4 py-3 text-right font-medium">Qty</th>
+              <th class="px-4 py-3 text-right font-medium">Rate</th>
+              <th class="px-4 py-3 text-right font-medium">Total Amount</th>
+              <th class="px-4 py-3 text-right font-medium">Description</th>
+            </tr>
+          </thead>
+          <tbody class="bg-gray-100" id="saleTableBody">
+          </tbody>
+        </table>
+      </div>
     </div>
+  </div>
+</div>
+<div id="editModal"
+  class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50">
+  <div class="bg-white rounded-xl shadow-lg p-6 w-80 text-center">
+    <h2 class="text-lg font-semibold mb-4 text-gray-800">Confirm Edit</h2>
+    <p class="mb-6 text-gray-600 ">Are you sure you want to edit this sale's details?</p>
+    <div class="flex justify-center space-x-4">
+      <button onclick="closeEditModal()"
+        class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
+      <a id="confirmEditBtn" href="#" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Edit</a>
+    </div>
+  </div>
+</div>
+<div id="confirmModal"
+  class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50">
+  <div class="bg-white rounded-xl shadow-lg p-6 w-80 text-center">
+    <h2 class="text-lg font-semibold mb-4">Confirm Deletion</h2>
+    <p class="mb-6 text-gray-600">Are you sure you want to delete this sale?</p>
+    <div class="flex justify-center space-x-4">
+      <button id="cancelBtn" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
+        onclick="closeModal()">Cancel</button>
+      <a id="confirmDeleteBtn" href="#" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+        onclick="deleteItem()">Delete</a>
+    </div>
+  </div>
+</div>
 {% endblock content %}
 {% block externalJS %}
-    <script>
-    isUpdate = false;
-  function addLastRow(){
+<script>
+  isUpdate = false;
+  function addLastRow() {
     const tableBody = document.getElementById("saleTableBody");
     $('#totalRow').remove();
     var totalQty = 0;
     var totalAmount = 0;
     var rateSum = 0;
     count = 0;
-    tableBody.querySelectorAll("tr").forEach(function(row) {
+    tableBody.querySelectorAll("tr").forEach(function (row) {
       const qty = parseFloat(row.cells[5].innerText) || 0;
       const amount = parseFloat(row.cells[6].innerText) || 0;
       const total = parseFloat(row.cells[7].innerText) || 0;
@@ -431,8 +356,8 @@
 
 
   let selectedTR = '';
-    $('#btnNew').on('click', function(e) {
-      e.preventDefault();
+  $('#btnNew').on('click', function (e) {
+    e.preventDefault();
     $('#date').val(new Date().toISOString().split('T')[0]);
     $('#from_date').val('');
     $('#end_date').val('');
@@ -442,12 +367,12 @@
     $('#viewDiv').addClass('hidden');
     $('#sale_name, #amount, #qty, #description, #total_amount').val('');
     $('#customer, #godown').prop('selectedIndex', 0);
-      $('#customerCredit').empty();
-  getLastSaleNo()
+    $('#customerCredit').empty();
+    getLastSaleNo()
 
-    });
-    $('#btnView').on('click', function(e) {
-      e.preventDefault();
+  });
+  $('#btnView').on('click', function (e) {
+    e.preventDefault();
     $('#createView').addClass('hidden');
     $('#viewDiv').removeClass('hidden');
     clearSaleForm();
@@ -456,77 +381,80 @@
     $(selectedTR).removeClass('bg-blue-300');
     $(selectedTR).find('button').removeAttr('disabled');
     selectedTR = '';
-    
-    });
 
-    $('#customer').on('change', function() {
-      $('#customerCredit').empty();
-      var selectedOption = $(this).find('option:selected');
-      var code = selectedOption.data('code') || '';
-      var balance = selectedOption.data('balance') || '0';
-      $('#customerID').val(code);
-      $('#customerCredit').empty();
-      $('#customerCredit').append(`
-      <p class="font-semibold ${parseFloat(balance).toFixed(2)<= 0 ? `text-red`: ``}">Balance:${parseFloat(balance).toFixed(2)} </p> 
+  });
+
+  $('#customer').on('change', function () {
+    $('#customerCredit').empty();
+    var selectedOption = $(this).find('option:selected');
+    var code = selectedOption.data('code') || '';
+    var balance = selectedOption.data('balance') || '0';
+    $('#customerID').val(code);
+    $('#customerCredit').empty();
+    $('#customerCredit').append(`
+      <p class="font-semibold ${parseFloat(balance).toFixed(2) <= 0 ? `text-red` : ``}">Balance:${parseFloat(balance).toFixed(2)} </p> 
       `);
-    });
-    $('#allCustomers').on('change', function() {
-      if($(this).is(':checked')) {
-        const suppliers = {{ suppliers|safe }}
+  });
+  $('#allCustomers').on('change', function () {
+    if ($(this).is(':checked')) {
+      const suppliers = {{ suppliers| safe
+    }
+  }
         var customerSelect = $('#customer');
-        $('#customerID').val('');
-        $('#customerCredit').text('');
-        suppliers.forEach(function(supplier) {
-          var option = $('<option></option>')
-            .attr('value', supplier.id)
-            .attr('data-code', supplier.supplierId)
-            .attr('data-balance', supplier.balance) 
-            .attr('data-type', 'suppliers')
-            .text(supplier.name);
-          customerSelect.append(option);
-        });
+  $('#customerID').val('');
+  $('#customerCredit').text('');
+  suppliers.forEach(function (supplier) {
+    var option = $('<option></option>')
+      .attr('value', supplier.id)
+      .attr('data-code', supplier.supplierId)
+      .attr('data-balance', supplier.balance)
+      .attr('data-type', 'suppliers')
+      .text(supplier.name);
+    customerSelect.append(option);
+  });
       } else {
-        const customers = {{ customers|safe }}
-        var customerSelect = $('#customer');
-        customerSelect.empty();
-        $('#customerID').val('');
-        $('#customerCredit').text('');
-        customerSelect.append('<option value="" selected>Select Customer</option>');
-        customers.forEach(function(customer) {
-          var option = $('<option></option>')
-            .attr('value', customer.id)
-            .attr('data-code', customer.customerId)
-            .attr('data-balance', customer.balance)
-            .attr('data-type', 'customers')
-            .text(customer.name);
-          customerSelect.append(option);
-        });
+    const customers = {{ customers| safe
+  }}
+  var customerSelect = $('#customer');
+  customerSelect.empty();
+  $('#customerID').val('');
+  $('#customerCredit').text('');
+  customerSelect.append('<option value="" selected>Select Customer</option>');
+  customers.forEach(function (customer) {
+    var option = $('<option></option>')
+      .attr('value', customer.id)
+      .attr('data-code', customer.customerId)
+      .attr('data-balance', customer.balance)
+      .attr('data-type', 'customers')
+      .text(customer.name);
+    customerSelect.append(option);
+  });
       }
     });
-    $('#godown').on('change', function() {
-      var selectedOption = $(this).find('option:selected');
-      var code = selectedOption.data('code') || '';
-      var balance = selectedOption.data('balance') || '0';
-      $('#godownCredit').empty();
-      $('#godownCredit').append(`
-      <p class="font-semibold ${parseFloat(balance).toFixed(2)<= 0 ? `text-red`: ``}">Balance:${parseFloat(balance).toFixed(2)} </p> 
+  $('#godown').on('change', function () {
+    var selectedOption = $(this).find('option:selected');
+    var code = selectedOption.data('code') || '';
+    var balance = selectedOption.data('balance') || '0';
+    $('#godownCredit').empty();
+    $('#godownCredit').append(`
+      <p class="font-semibold ${parseFloat(balance).toFixed(2) <= 0 ? `text-red` : ``}">Balance:${parseFloat(balance).toFixed(2)} </p> 
       `);
-      $('#godownID').val(code); 
-    });
-    </script>
-    <script>
-    var sales = {{ sales|safe }};
+    $('#godownID').val(code);
+  });
+</script>
+<script>
+  var sales = {{ sales| safe }};
 
-    for (let i=0; i<sales.length; i++) {
-      const sale = sales[i];
-      var tableBody = document.getElementById("saleTableBody");
-      var newRow = `
+  for (let i = 0; i < sales.length; i++) {
+    const sale = sales[i];
+    var tableBody = document.getElementById("saleTableBody");
+    var newRow = `
       <tr>
         <td class="px-3 py-3 text-left w-1 flex">
           <button type='button' class="text-blue-500 hover:underline mr-2" onclick="updateSale(this)">Edit</button>
           <button type='button' class="text-red-500 hover:underline" onclick="deleteSale(this)">Delete</button>
         </td>
-        <td class="px-4 py-3 text-left w-1 sl">${i+1}</td>
+        <td class="px-4 py-3 text-left w-1 sl">${i + 1}</td>
         <td class="px-4 py-3 text-left search-area">
           ${sale.date.split('T')[0]}    
           <input type="hidden" name="dates" value="${sale.date.split('T')[0]}">
@@ -559,30 +487,30 @@
         </td>
         <input type="hidden" name="sale_ids" id="sale_id" value="${sale.id}"> 
         <input type="hidden" name="type" id="type" value="${sale.type}"> 
-      </tr>`; 
-      tableBody.insertAdjacentHTML('beforeend', newRow);
-      $('#amount, #qty, #description, #total_amount').val('');
-      $('#customer, #godown').prop('selectedIndex', 0);
+      </tr>`;
+    tableBody.insertAdjacentHTML('beforeend', newRow);
+    $('#amount, #qty, #description, #total_amount').val('');
+    $('#customer, #godown').prop('selectedIndex', 0);
     addLastRow()
-    }
-    </script>
-    <script>
-      navActive("saleMasterLink");
-      let deleteUrl = "";
-    
-      function openModal(saleId) {
-      }
+  }
+</script>
+<script>
+  navActive("saleMasterLink");
+  let deleteUrl = "";
 
-      function closeModal() {
-        document.getElementById("confirmModal").classList.add("hidden");
-      }
+  function openModal(saleId) {
+  }
 
-    </script>
-    <script>
-  $('#amount, #qty').on('input', function() {
+  function closeModal() {
+    document.getElementById("confirmModal").classList.add("hidden");
+  }
+
+</script>
+<script>
+  $('#amount, #qty').on('input', function () {
     const amount = parseFloat($('#amount').val()) || 0;
     const qty = parseFloat($('#qty').val()) || 0;
-    const total = amount * qty; 
+    const total = amount * qty;
     $('#total_amount').val(total.toFixed(2));
   });
 
@@ -601,7 +529,7 @@
     const description = document.getElementById("description").value.trim();
     const total_amount = qty * amount;
     const type_value = $('#customer').find('option:selected').data('type');
-    if ( !date || !customerSelect || !godownSelect || !qty || !amount) {
+    if (!date || !customerSelect || !godownSelect || !qty || !amount) {
       alert("⚠️ Please fill in all required fields before adding.");
       return;
     }
@@ -622,9 +550,9 @@
         amount: amount,
         total_amount: total_amount,
         description: description,
-        sale_id:sale_id,
-        type: type_value 
-      }), 
+        sale_id: sale_id,
+        type: type_value
+      }),
     })
       .then((response) => response.json())
       .then((data) => {
@@ -632,12 +560,12 @@
         sale_id = data.sale_id;
         hold = data.hold
 
-    clearSaleForm();
-    isUpdate = false;
-        if (hold){
-          if (selectedTR){
+        clearSaleForm();
+        isUpdate = false;
+        if (hold) {
+          if (selectedTR) {
             $(selectedTR).empty();
-             $(selectedTR).removeClass('bg-blue-300');
+            $(selectedTR).removeClass('bg-blue-300');
             $(selectedTR).append(`
         <td class="px-4 py-3 text-left w-1 flex">
           <button type='button' class="text-blue-500 hover:underline mr-2" onclick="updateSale(this)">Edit</button>
@@ -676,8 +604,8 @@
             `);
             selectedTR = '';
           }
-          else{
-    const newRow = `
+          else {
+            const newRow = `
       <tr>
         <td class="px-4 py-3 text-left w-1 flex">
           <button type='button' class="text-blue-500 hover:underline mr-2" onclick="updateSale(this)">Edit</button>
@@ -715,23 +643,23 @@
         <input type="hidden" name="type" id="type" value="${type_value}"> 
       </tr>`;
 
-    tableBody.insertAdjacentHTML('beforeend', newRow);
-        }
+            tableBody.insertAdjacentHTML('beforeend', newRow);
+          }
 
-      $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-green-500 text-white');
-      $('#addToGridText').text('Add to Grid');
-    $('#sale_name').val(getLastSaleNo());
-    isUpdate = false
-    resetSLNo()
-    addLastRow()
-        }else{
+          $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-green-500 text-white');
+          $('#addToGridText').text('Add to Grid');
+          $('#sale_name').val(getLastSaleNo());
+          isUpdate = false
+          resetSLNo()
+          addLastRow()
+        } else {
           $('#viewSaleDiv').removeClass('hidden');
-    $('#viewDiv').removeClass('hidden');
+          $('#viewDiv').removeClass('hidden');
           $('#createView').addClass('hidden');
           $('#dateFilter').click();
           $('#saleTableBody').removeClass('hidden')
-      $('#addToGridText').text('Add to Grid');
-    isUpdate = false
+          $('#addToGridText').text('Add to Grid');
+          isUpdate = false
         }
       })
       .catch((error) => {
@@ -741,7 +669,7 @@
 
 
   }
-function getLastSaleNo() {
+  function getLastSaleNo() {
     let lastSaleNo = '';
     fetch("{% url 'api-sale-no' %}")
       .then(response => response.json())
@@ -752,8 +680,8 @@ function getLastSaleNo() {
       .catch(error => {
         console.error('Error fetching sale no:', error);
       });
-    return lastSaleNo;  
-}
+    return lastSaleNo;
+  }
 
   function updateSale(link) {
     $('#viewSaleDiv').addClass('hidden');
@@ -761,45 +689,45 @@ function getLastSaleNo() {
     $('#createView').removeClass('hidden');
     $('#viewDiv').addClass('hidden');
     const selectedRow = link.closest('tr');
-    if (!isUpdate){
+    if (!isUpdate) {
       selectedTR = selectedRow;
       makeRowHighlight(selectedRow);
-    document.getElementById("sale_name").value = selectedRow.cells[1].innerText.trim();
-    document.getElementById("date").value = selectedRow.cells[2].innerText.trim();
-    document.getElementById("godown").value = selectedRow.cells[4].querySelector('input').value;
-    document.getElementById("amount").value = selectedRow.cells[6].innerText.trim();
-    document.getElementById("qty").value = selectedRow.cells[5].innerText.trim();
-    document.getElementById("total_amount").value = selectedRow.cells[7].innerText.trim();
-    document.getElementById("description").value = selectedRow.cells[8].innerText.trim();
-    document.getElementById("saleId").value = selectedRow.querySelector('#sale_id').value;
-    var type = selectedRow.querySelector('#type') ? selectedRow.querySelector('#type').value : 'suppliers';
-    if (type == 'customers') {
-      $('#allCustomers').prop('checked', false).change();
+      document.getElementById("sale_name").value = selectedRow.cells[1].innerText.trim();
+      document.getElementById("date").value = selectedRow.cells[2].innerText.trim();
+      document.getElementById("godown").value = selectedRow.cells[4].querySelector('input').value;
+      document.getElementById("amount").value = selectedRow.cells[6].innerText.trim();
+      document.getElementById("qty").value = selectedRow.cells[5].innerText.trim();
+      document.getElementById("total_amount").value = selectedRow.cells[7].innerText.trim();
+      document.getElementById("description").value = selectedRow.cells[8].innerText.trim();
+      document.getElementById("saleId").value = selectedRow.querySelector('#sale_id').value;
+      var type = selectedRow.querySelector('#type') ? selectedRow.querySelector('#type').value : 'suppliers';
+      if (type == 'customers') {
+        $('#allCustomers').prop('checked', false).change();
+      } else {
+        $('#allCustomers').prop('checked', true).change();
+      }
+      document.getElementById("customer").value = selectedRow.cells[3].querySelector('input').value;
+
     } else {
-      $('#allCustomers').prop('checked', true).change();
-    }
-    document.getElementById("customer").value = selectedRow.cells[3].querySelector('input').value;
 
-    }else{
+      document.getElementById("sale_name").value = selectedRow.cells[2].innerText.trim();
+      document.getElementById("date").value = selectedRow.cells[3].innerText.trim();
+      document.getElementById("godown").value = selectedRow.cells[5].querySelector('input').value;
+      document.getElementById("amount").value = selectedRow.cells[7].innerText.trim();
+      document.getElementById("qty").value = selectedRow.cells[6].innerText.trim();
+      document.getElementById("total_amount").value = selectedRow.cells[8].innerText.trim();
+      document.getElementById("description").value = selectedRow.cells[9].innerText.trim();
+      document.getElementById("saleId").value = selectedRow.querySelector('#sale_id').value;
+      var type = selectedRow.querySelector('#type') ? selectedRow.querySelector('#type').value : 'supplier';
+      console.log(type)
+      console.log(selectedRow.cells[4].querySelector('input').value)
 
-    document.getElementById("sale_name").value = selectedRow.cells[2].innerText.trim();
-    document.getElementById("date").value = selectedRow.cells[3].innerText.trim();
-    document.getElementById("godown").value = selectedRow.cells[5].querySelector('input').value;
-    document.getElementById("amount").value = selectedRow.cells[7].innerText.trim();
-    document.getElementById("qty").value = selectedRow.cells[6].innerText.trim();
-    document.getElementById("total_amount").value = selectedRow.cells[8].innerText.trim();
-    document.getElementById("description").value = selectedRow.cells[9].innerText.trim();
-    document.getElementById("saleId").value = selectedRow.querySelector('#sale_id').value;
-    var type = selectedRow.querySelector('#type') ? selectedRow.querySelector('#type').value : 'supplier';
-    console.log(type)
-    console.log(selectedRow.cells[4].querySelector('input').value)
-
-    if (type === 'customers') {
-      $('#allCustomers').prop('checked', false).change();
-    } else {
-      $('#allCustomers').prop('checked', true).change();
-    }
-    document.getElementById("customer").value = selectedRow.cells[4].querySelector('input').value;
+      if (type === 'customers') {
+        $('#allCustomers').prop('checked', false).change();
+      } else {
+        $('#allCustomers').prop('checked', true).change();
+      }
+      document.getElementById("customer").value = selectedRow.cells[4].querySelector('input').value;
     }
     $('#addToGridText').text('Update Grid');
     $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-blue-500 text-white');
@@ -807,11 +735,11 @@ function getLastSaleNo() {
     $('#customer, #godown').change()
     resetSLNo()
     addLastRow()
-    
+
   }
 
 
-  function makeRowHighlight(tr){
+  function makeRowHighlight(tr) {
     $('#saleTableBody tr').removeClass('bg-yellow-100');
     $(tr).addClass('bg-blue-300');
     $(tr).find('button').attr('disabled', true);
@@ -820,63 +748,63 @@ function getLastSaleNo() {
 
 
   function deleteSale(link) {
-        const selectedRow = link.closest('tr');
-        selectedTR = selectedRow;
-        const saleId = selectedRow.querySelector('#sale_id').value;
+    const selectedRow = link.closest('tr');
+    selectedTR = selectedRow;
+    const saleId = selectedRow.querySelector('#sale_id').value;
 
-    
-        deleteUrl = "/sale/api/delete_sale/?id=0".replace("0", saleId);
-        document.getElementById("confirmModal").classList.remove("hidden");
+
+    deleteUrl = "/sale/api/delete_sale/?id=0".replace("0", saleId);
+    document.getElementById("confirmModal").classList.remove("hidden");
   }
   function deleteItem() {
 
-  fetch(deleteUrl, {
-    method: 'GET', 
-  })
-    .then(response => response.json())
-    .then(data => {
-      console.log('sale deleted successfully:', data);
-
-      if (data.status === 'success') {
-        selectedTR.remove();
-        deleteUrl = "";
-        resetSLNo();
-        getLastSaleNo()
-        closeModal();
-      } else {
-        console.error('Delete failed:', data.message);
-      }
+    fetch(deleteUrl, {
+      method: 'GET',
     })
-    .catch(error => {
-      console.error('Error while deleting sale:', error);
-    }).finally(() => {
-  selectedTR = '';
-});
-  } 
-function resetSLNo() {
-  $('#saleTableBody .sl').each(function (index) {
-    $(this).text(index + 1);
-    $(this).find('input').val(index + 1);
-  });
-}
+      .then(response => response.json())
+      .then(data => {
+        console.log('sale deleted successfully:', data);
+
+        if (data.status === 'success') {
+          selectedTR.remove();
+          deleteUrl = "";
+          resetSLNo();
+          getLastSaleNo()
+          closeModal();
+        } else {
+          console.error('Delete failed:', data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error while deleting sale:', error);
+      }).finally(() => {
+        selectedTR = '';
+      });
+  }
+  function resetSLNo() {
+    $('#saleTableBody .sl').each(function (index) {
+      $(this).text(index + 1);
+      $(this).find('input').val(index + 1);
+    });
+  }
 
   function clearSaleForm() {
     $('#amount, #qty, #description, #total_amount, #customerID, #godownID,#saleId').val('');
     $('#customer, #godown').prop('selectedIndex', 0);
     $('#allcustomers').prop('checked', false);
-      $('#customerCredit').empty();
-      $('#godownCredit').empty()
+    $('#customerCredit').empty();
+    $('#godownCredit').empty()
     $('#sale_name').val(getLastSaleNo());
   }
 
-    </script>
-    <script>
-  $('#btnFilter').on('click', function(e) {
+</script>
+<script>
+  $('#btnFilter').on('click', function (e) {
     e.preventDefault();
     const fromPrice = parseFloat($('#from_price').val()) || 0;
     const toPrice = parseFloat($('#to_price').val()) || Infinity;
 
-    $('#viewSaleTable tbody tr').each(function() {
+    $('#viewSaleTable tbody tr').each(function () {
       const totalAmount = parseFloat($(this).find('td:nth-child(9)').text()) || 0;
 
       if (totalAmount >= fromPrice && totalAmount <= toPrice) {
@@ -886,7 +814,7 @@ function resetSLNo() {
       }
     });
   });
-  $('#dateFilter').on('click', function(){
+  $('#dateFilter').on('click', function () {
     const startDate = $('#from_date').val()
     const endDate = $('#end_date').val()
     if (!startDate || !endDate) {
@@ -898,7 +826,7 @@ function resetSLNo() {
       .then(response => response.json())
       .then(data => {
         const tableBody = $('#viewSaleTable tbody');
-        tableBody.empty(); 
+        tableBody.empty();
         totalQty = data.total_qty || 0;
         totalAmount = data.total_amount || 0;
         rateAvg = data.rate_avg || 0;
@@ -957,7 +885,7 @@ function resetSLNo() {
       });
   })
   const searchInputfilter = document.getElementsByClassName("searchInput");
-  searchInputfilter[0].addEventListener("keyup", function() {
+  searchInputfilter[0].addEventListener("keyup", function () {
     const filter = searchInputfilter[0].value.toLowerCase();
     const table = document.getElementById("viewSaleTable");
     const tr = table.getElementsByTagName("tr");
@@ -976,37 +904,37 @@ function resetSLNo() {
     }
   });
 
-document.addEventListener("focusin", (event) => {
-  const el = event.target;
-  if (el.tagName === "SELECT") {
-    el.click();
+  document.addEventListener("focusin", (event) => {
+    const el = event.target;
+    if (el.tagName === "SELECT") {
+      el.click();
+    }
+  });
+
+  function onViewUpdate(button) {
+
+    $('#saleTableBody').addClass('hidden');
+    isUpdate = true;
+    updateSale(button);
   }
-});
-
-function onViewUpdate(button){
-
-  $('#saleTableBody').addClass('hidden'); 
-  isUpdate = true;
-  updateSale(button);
-}
 
 
-  function oncancelData(){
+  function oncancelData() {
     clearSaleForm();
-    if (isUpdate){
+    if (isUpdate) {
 
-          $('#viewSaleDiv').removeClass('hidden');
-          $('#viewDiv').removeClass('hidden');
-          $('#createView').addClass('hidden');
-          $('#dateFilter').click();
-          $('#saleTableBody').removeClass('hidden')
+      $('#viewSaleDiv').removeClass('hidden');
+      $('#viewDiv').removeClass('hidden');
+      $('#createView').addClass('hidden');
+      $('#dateFilter').click();
+      $('#saleTableBody').removeClass('hidden')
     }
     isUpdate = false;
     $('#addToGridText').text('Add to Grid');
-    $(selectedTR).removeClass('bg-blue-300'); 
+    $(selectedTR).removeClass('bg-blue-300');
     $(selectedTR).find('button').removeAttr('disabled');
     selectedTR = '';
   }
 
-    </script>
+</script>
 {% endblock externalJS %}

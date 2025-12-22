@@ -19,7 +19,7 @@ class LedgerLogicTest(TestCase):
         update_party(self.supplier)
         self.assertEqual(self.supplier.credit, 60)
         self.assertEqual(self.supplier.debit, 0)
-        self.assertEqual(self.supplier.balance, -60) # Balance = Debit - Credit
+        self.assertEqual(self.supplier.balance, -60)
 
         self.supplier.credit = 30
         self.supplier.debit = 80

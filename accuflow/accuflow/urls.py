@@ -40,6 +40,7 @@ urlpatterns = [
     path('stockview/', include('stock_view.urls')),
     path('stocktransfer/', include('stock_transfer.urls')),
     path('cashbankbalance/', include('cashbank_balance.urls')),
+    path('general-ledger/', include('general_ledger.urls')),
     path('viewcollections/', include('view_collections.urls')),
     path('changepass/', include('change_pass.urls')),
 ]

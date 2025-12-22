@@ -29,7 +29,8 @@ INSTALLED_APPS = [
     'cash_entry',
     'cashbank',
     'sale_entry',
-    'commission_entry'
+    'commission_entry',
+    'general_ledger'
 ]
 
 MIDDLEWARE = [

@@ -254,7 +254,9 @@
                     <a href="{% url 'cashbankledger' %}" class="nav-link" id="cashbankLedgerLink">
                         <span>Cash/Bank Ledger</span>
                     </a>
-                    <div class="nav-link">General Ledger</div>
+                    <a href="{% url 'general_ledger' %}" class="nav-link" id="generalLedgerLink">
+                        <span>General Ledger</span>
+                    </a>
                 </div>
             </div>
             <!-- Collection -->
@@ -386,7 +388,7 @@
             </div>
         </div>
         <div id="logoutModal"
-            class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
+            class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50">
             <div class="bg-white rounded-xl shadow-lg p-6 w-80 text-center">
                 <h2 class="text-lg font-semibold mb-4 text-gray-800">Confirm Logout</h2>
                 <p class="mb-6 text-gray-600">Are you sure you want to log out?</p>

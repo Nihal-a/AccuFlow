@@ -1,0 +1,468 @@
+from django.shortcuts import render, redirect, get_object_or_404
+from django.views import View
+from django.db.models import Sum, Q
+from datetime import datetime
+from core.models import Suppliers, Customers, Godowns, Purchases, Sales, NSDs, Cashs, StockTransfers
+from core.views import getClient
+
+class GeneralLedgerView(View):
+    def get(self, request):
+        client = getClient(request.user)
+        suppliers = Suppliers.objects.filter(is_active=True, client=client)
+        customers = Customers.objects.filter(is_active=True, client=client)
+        godowns = Godowns.objects.filter(is_active=True, client=client)
+        
+        context = {
+            'suppliers': suppliers,
+            'customers': customers,
+            'godowns': godowns,
+            'sort': 'Serial',
+            'party_type': 'supplier' # Default
+        }
+        return render(request, 'general_ledger/general_ledger.html', context)
+
+    def post(self, request):
+        party_selection = request.POST.get('party') # Format: "type_id" e.g "supplier_15"
+        opening_flag = request.POST.get('opening')
+        sort = request.POST.get('sort')
+        date_from_str = request.POST.get("dateFrom")
+        date_to_str = request.POST.get("dateTo")
+        
+        client = getClient(request.user)
+        
+        # Re-fetch lists for the dropdowns
+        suppliers = Suppliers.objects.filter(is_active=True, client=client)
+        customers = Customers.objects.filter(is_active=True, client=client)
+        godowns = Godowns.objects.filter(is_active=True, client=client)
+
+        context = {
+            'suppliers': suppliers,
+            'customers': customers,
+            'godowns': godowns,
+            'date_from': date_from_str,
+            'date_to': date_to_str,
+            'sort': sort,
+            'party_selection': party_selection,
+            'opening': opening_flag if opening_flag == 'on' else '',
+            'ledgers': [],
+            'credit_total': 0,
+            'debit_total': 0,
+            'total_balance': 0,
+            'open_balance': 0,
+        }
+
+        if not party_selection:
+            return render(request, 'general_ledger/general_ledger.html', context)
+
+        try:
+            party_type, party_id = party_selection.split('_')
+        except ValueError:
+            return render(request, 'general_ledger/general_ledger.html', context)
+
+        party = None
+        if party_type == 'supplier':
+            party = get_object_or_404(Suppliers, id=party_id)
+        elif party_type == 'customer':
+            party = get_object_or_404(Customers, id=party_id)
+        elif party_type == 'godown':
+            party = get_object_or_404(Godowns, id=party_id)
+            
+        context['selected_party'] = party
+        context['selected_party_type'] = party_type # Helper for template if needed
+
+        date_from = self.parse_date(date_from_str)
+        date_to = self.parse_date(date_to_str)
+
+        if date_from:
+            opening_balance = self.calculate_opening_balance(party, party_type, client, date_from)
+        else:
+            if party_type == 'godown':
+                # For Godown, balance is quantity based (Dr - Cr) usually, but logic in godown_ledger was (OpenDr - OpenCr)
+                opening_balance = (party.open_debit or 0) - (party.open_credit or 0)
+            else:
+                 # Standard Financial: (Dr - Cr) for Asset/Exp, (Cr - Dr) for Liab/Inc? 
+                 # Existing SupplierLedger uses: (open_debit - open_credit).
+                 # Supplier is usually Credit balance. Let's stick to the formula used in supplier_ledger.py:
+                 # opening_balance = (supplier.open_debit or 0) - (supplier.open_credit or 0)
+                opening_balance = (party.open_debit or 0) - (party.open_credit or 0)
+        
+        context['open_balance'] = opening_balance
+
+        ledger_items = []
+        
+        base_filter = Q(is_active=True, hold=False, client=client)
+        date_filter = Q()
+        if date_from:
+            date_filter &= Q(date__gte=date_from)
+        if date_to:
+            date_filter &= Q(date__lte=date_to)
+
+        if party_type == 'supplier':
+            self.get_supplier_transactions(party, base_filter, date_filter, sort, ledger_items)
+        elif party_type == 'customer':
+            self.get_customer_transactions(party, base_filter, date_filter, sort, ledger_items)
+        elif party_type == 'godown':
+             self.get_godown_transactions(party, base_filter, date_filter, sort, ledger_items)
+
+        # Opening Balance Item
+        start_balance = 0
+        if opening_flag != 'on':
+             start_balance = opening_balance
+             ledger_items.append({
+                'transaction_no': 'Opening Balance',
+                'date': party.created_at.date() if party.created_at else (date_from or datetime.min.date()),
+                'type': 'OB',
+                'description': '',
+                'qty': '1',
+                'rate': party.open_balance, # Note: godown uses 'open_balance' field too?
+                'credit': party.open_credit,
+                'debit': party.open_debit,
+                'balance': party.open_balance if hasattr(party, 'open_balance') else 0, 
+                'created_at': party.created_at,
+                'is_ob': True
+             })
+        
+        ledger_items.sort(key=lambda x: (x['date'], x['created_at']))
+
+        if sort == 'Serial':
+             ledger_items.sort(key=lambda x: x['transaction_no'])
+
+        running_val = start_balance
+        credit_sum = 0
+        debit_sum = 0
+        
+        final_ledgers = []
+        
+        for item in ledger_items:
+            c_val = float(item.get('credit') or 0)
+            d_val = float(item.get('debit') or 0)
+            
+            if item.get('type') == 'OB':
+                item['balance'] = start_balance
+            else:
+                # Running balance logic:
+                # For Supplier/Customer: Debit increases, Credit decreases (Asset/Exp nature?) or reverse?
+                # supplier_ledger.py: running_val += (d_val - c_val)
+                # This implies Debit is positive, Credit is negative.
+                running_val += (d_val - c_val)
+                item['balance'] = running_val
+                
+                credit_sum += c_val
+                debit_sum += d_val
+            
+            final_ledgers.append(item)
+            
+        if opening_flag == 'on':
+            context['open_balance'] = 0
+
+        context['ledgers'] = final_ledgers
+        context['credit_total'] = credit_sum
+        context['debit_total'] = debit_sum
+        context['total_balance'] = running_val
+        
+        return render(request, 'general_ledger/general_ledger.html', context)
+
+    def parse_date(self, date_str):
+        if date_str:
+            try:
+                return datetime.strptime(date_str, "%Y-%m-%d").date()
+            except ValueError:
+                return None
+        return None
+
+    def calculate_opening_balance(self, party, party_type, client, date_limit):
+        base_filter = Q(is_active=True, hold=False, client=client, date__lt=date_limit)
+        
+        if party_type == 'supplier':
+            # Logic from supplier_ledger
+             s_filter = base_filter & Q(supplier=party)
+             nsd_base = Q(is_active=True, hold=False, client=client, date__lt=date_limit)
+             
+             purchases_sum = Purchases.objects.filter(s_filter).aggregate(s=Sum('total_amount'))['s'] or 0
+             sales_sum = Sales.objects.filter(s_filter).aggregate(s=Sum('total_amount'))['s'] or 0
+             sender_sum = NSDs.objects.filter(nsd_base, sender_supplier=party).aggregate(s=Sum('sell_amount'))['s'] or 0
+             receiver_sum = NSDs.objects.filter(nsd_base, receiver_supplier=party).aggregate(s=Sum('purchase_amount'))['s'] or 0
+             
+             cash_received = Cashs.objects.filter(s_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or 0
+             cash_paid = Cashs.objects.filter(s_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or 0
+             
+             transaction_balance = (sales_sum + receiver_sum + cash_paid) - (purchases_sum + sender_sum + cash_received)
+             static_ob = (party.open_debit or 0) - (party.open_credit or 0)
+             return static_ob + transaction_balance
+
+        elif party_type == 'customer':
+             # Logic from customer_ledger
+             c_filter = base_filter & Q(customer=party)
+             nsd_base = Q(is_active=True, hold=False, client=client, date__lt=date_limit)
+
+             purchases_sum = Purchases.objects.filter(c_filter).aggregate(s=Sum('total_amount'))['s'] or 0
+             sales_sum = Sales.objects.filter(c_filter).aggregate(s=Sum('total_amount'))['s'] or 0
+             sender_sum = NSDs.objects.filter(nsd_base, sender_customer=party).aggregate(s=Sum('sell_amount'))['s'] or 0
+             receiver_sum = NSDs.objects.filter(nsd_base, receiver_customer=party).aggregate(s=Sum('purchase_amount'))['s'] or 0
+             
+             cash_received = Cashs.objects.filter(c_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or 0
+             cash_paid = Cashs.objects.filter(c_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or 0
+             
+             transaction_balance = (sales_sum + receiver_sum + cash_paid) - (purchases_sum + sender_sum + cash_received)
+             static_ob = (party.open_debit or 0) - (party.open_credit or 0)
+             return static_ob + transaction_balance
+
+        elif party_type == 'godown':
+            # Logic for godown (Quantity based)
+            # Purchase -> In (Debit)
+            # Sale -> Out (Credit)
+            # Transfer From -> Out (Credit)
+            # Transfer To -> In (Debit)
+            
+            g_filter = base_filter & Q(godown=party)
+            
+            purchases_qty = Purchases.objects.filter(g_filter).aggregate(s=Sum('qty'))['s'] or 0
+            sales_qty = Sales.objects.filter(g_filter).aggregate(s=Sum('qty'))['s'] or 0
+            
+            transfers_out = StockTransfers.objects.filter(base_filter, transfer_from=party).aggregate(s=Sum('qty'))['s'] or 0
+            transfers_in = StockTransfers.objects.filter(base_filter, transfer_to=party).aggregate(s=Sum('qty'))['s'] or 0
+            
+            # Debit (In) - Credit (Out)
+            transaction_balance = (purchases_qty + transfers_in) - (sales_qty + transfers_out)
+            static_ob = (party.open_debit or 0) - (party.open_credit or 0)
+            return static_ob + transaction_balance
+            
+        return 0
+
+    def get_supplier_transactions(self, supplier, base_filter, date_filter, sort, ledger_items):
+        # ... logic from supplier_ledger ...
+        purchases = Purchases.objects.filter(base_filter, date_filter, supplier=supplier)
+        for p in purchases:
+            desc = f"{p.godown.name}\n{p.description}" if sort != 'Remark' else p.description
+            ledger_items.append({
+                'transaction_no': str(p.purchase_no),
+                'date': p.date,
+                'type': 'PR',
+                'description': desc,
+                'qty': p.qty,
+                'rate': p.amount,
+                'credit': p.total_amount,
+                'debit': 0,
+                'created_at': p.created_at,
+                'original_obj': p
+            })
+            
+        sales = Sales.objects.filter(base_filter, date_filter, supplier=supplier)
+        for s in sales:
+            desc = f"{s.godown.name}\n{s.description}" if sort != 'Detailed' else s.description
+            ledger_items.append({
+                'transaction_no': str(s.sale_no),
+                'date': s.date,
+                'type': 'SL',
+                'description': desc,
+                'qty': s.qty,
+                'rate': s.amount,
+                'credit': 0,
+                'debit': s.total_amount,
+                'created_at': s.created_at,
+                'original_obj': s
+            })
+            
+        sender_nsds = NSDs.objects.filter(base_filter, date_filter, sender_supplier=supplier)
+        for n in sender_nsds:
+            desc = f"{n.receiver.name}\n{n.description}" if sort != 'Remark' else n.description
+            ledger_items.append({
+                'transaction_no': str(n.nsd_no),
+                'date': n.date,
+                'type': 'NS',
+                'description': desc,
+                'qty': n.qty,
+                'rate': n.sell_rate,
+                'credit': n.sell_amount,
+                'debit': 0,
+                'created_at': n.created_at,
+                'original_obj': n
+            })
+
+        receiver_nsds = NSDs.objects.filter(base_filter, date_filter, receiver_supplier=supplier)
+        for n in receiver_nsds:
+            desc = f"{n.sender.name}\n{n.description}" if sort != 'Remark' else n.description
+            ledger_items.append({
+                'transaction_no': str(n.nsd_no),
+                'date': n.date,
+                'type': 'NS',
+                'description': desc,
+                'qty': n.qty,
+                'rate': n.purchase_rate,
+                'credit': 0,
+                'debit': n.purchase_amount,
+                'created_at': n.created_at,
+                'original_obj': n
+            })
+
+        cashs = Cashs.objects.filter(base_filter, date_filter, supplier=supplier)
+        for c in cashs:
+            is_received = (c.transaction == 'Received')
+            desc = c.cash_bank.name if sort != 'Remark' else c.description
+            ledger_items.append({
+                'transaction_no': str(c.cash_no),
+                'date': c.date,
+                'type': 'JL',
+                'description': desc,
+                'qty': '',
+                'rate': c.amount,
+                'credit': c.amount if is_received else 0,
+                'debit': c.amount if not is_received else 0,
+                'created_at': c.created_at,
+                'original_obj': c
+            })
+
+    def get_customer_transactions(self, customer, base_filter, date_filter, sort, ledger_items):
+        # ... logic from customer_ledger ...
+        purchases = Purchases.objects.filter(base_filter, date_filter, customer=customer)
+        for p in purchases:
+            desc = f"{p.godown.name}\n{p.description}" if sort != 'Remark' else p.description
+            ledger_items.append({
+                'transaction_no': str(p.purchase_no),
+                'date': p.date,
+                'type': 'PR',
+                'description': desc,
+                'qty': p.qty,
+                'rate': p.amount,
+                'credit': p.total_amount,
+                'debit': 0,
+                'created_at': p.created_at,
+                'original_obj': p
+            })
+
+        sales = Sales.objects.filter(base_filter, date_filter, customer=customer)
+        for s in sales:
+            desc = f"{s.godown.name}\n{s.description}" if sort != 'Detailed' else s.description
+            ledger_items.append({
+                'transaction_no': str(s.sale_no),
+                'date': s.date,
+                'type': 'SL',
+                'description': desc,
+                'qty': s.qty,
+                'rate': s.amount,
+                'credit': 0,
+                'debit': s.total_amount,
+                'created_at': s.created_at,
+                'original_obj': s
+            })
+
+        sender_nsds = NSDs.objects.filter(base_filter, date_filter, sender_customer=customer)
+        for n in sender_nsds:
+            desc = f"{n.receiver.name}\n{n.description}" if sort != 'Remark' else n.description
+            ledger_items.append({
+                'transaction_no': str(n.nsd_no),
+                'date': n.date,
+                'type': 'NS',
+                'description': desc,
+                'qty': n.qty,
+                'rate': n.sell_rate,
+                'credit': n.sell_amount,
+                'debit': 0,
+                'created_at': n.created_at,
+                'original_obj': n
+            })
+
+        receiver_nsds = NSDs.objects.filter(base_filter, date_filter, receiver_customer=customer)
+        for n in receiver_nsds:
+            desc = f"{n.sender.name}\n{n.description}" if sort != 'Remark' else n.description
+            ledger_items.append({
+                'transaction_no': str(n.nsd_no),
+                'date': n.date,
+                'type': 'NS',
+                'description': desc,
+                'qty': n.qty,
+                'rate': n.purchase_rate,
+                'credit': 0,
+                'debit': n.purchase_amount,
+                'created_at': n.created_at,
+                'original_obj': n
+            })
+
+        cashs = Cashs.objects.filter(base_filter, date_filter, customer=customer)
+        for c in cashs:
+            is_received = (c.transaction == 'Received')
+            desc = c.cash_bank.name if sort != 'Remark' else c.description
+            ledger_items.append({
+                'transaction_no': str(c.cash_no),
+                'date': c.date,
+                'type': 'JL',
+                'description': desc,
+                'qty': '',
+                'rate': c.amount,
+                'credit': c.amount if is_received else 0,
+                'debit': c.amount if not is_received else 0,
+                'created_at': c.created_at,
+                'original_obj': c
+            })
+
+    def get_godown_transactions(self, godown, base_filter, date_filter, sort, ledger_items):
+        # Godown logic: Debit = In, Credit = Out. Value is Qty.
+        
+        # Purchases (In -> Debit)
+        # Note: In godown_ledger logic it was 'debit': p.qty
+        purchases = Purchases.objects.filter(base_filter, date_filter, godown=godown)
+        for p in purchases:
+            desc = f"{p.supplier.name}\n{p.description}" if sort != 'Remark' else (p.description or "")
+            ledger_items.append({
+                'transaction_no': str(p.purchase_no),
+                'date': p.date,
+                'type': 'PR',
+                'description': desc,
+                'qty': p.qty,
+                'rate': p.amount,
+                'credit': 0,
+                'debit': p.qty, # In
+                'created_at': p.created_at,
+                'original_obj': p
+            })
+
+        # Sales (Out -> Credit)
+        sales = Sales.objects.filter(base_filter, date_filter, godown=godown)
+        for s in sales:
+            desc = f"{s.customer.name}\n{s.description}" if sort != 'Detailed' else (s.description or "")
+            ledger_items.append({
+                'transaction_no': str(s.sale_no),
+                'date': s.date,
+                'type': 'SL',
+                'description': desc,
+                'qty': s.qty,
+                'rate': s.amount,
+                'credit': s.qty, # Out
+                'debit': 0,
+                'created_at': s.created_at,
+                'original_obj': s
+            })
+
+        # Stock Transfers FROM this godown (Out -> Credit)
+        transfers_out = StockTransfers.objects.filter(base_filter, date_filter, transfer_from=godown)
+        for t in transfers_out:
+            desc = f"To: {t.transfer_to.name}\n{t.description}" if sort != 'Remark' else (t.description or "")
+            ledger_items.append({
+                 'transaction_no': str(t.transfer_no),
+                 'date': t.date,
+                 'type': 'TR',
+                 'description': desc,
+                 'qty': t.qty,
+                 'rate': '',
+                 'credit': t.qty, # Out
+                 'debit': 0,
+                 'created_at': t.created_at,
+                 'original_obj': t
+            })
+
+        # Stock Transfers TO this godown (In -> Debit)
+        transfers_in = StockTransfers.objects.filter(base_filter, date_filter, transfer_to=godown)
+        for t in transfers_in:
+            desc = f"From: {t.transfer_from.name}\n{t.description}" if sort != 'Remark' else (t.description or "")
+            ledger_items.append({
+                 'transaction_no': str(t.transfer_no),
+                 'date': t.date,
+                 'type': 'TR',
+                 'description': desc,
+                 'qty': t.qty,
+                 'rate': '',
+                 'credit': 0,
+                 'debit': t.qty, # In
+                 'created_at': t.created_at,
+                 'original_obj': t
+            })

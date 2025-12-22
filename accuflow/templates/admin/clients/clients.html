@@ -1,111 +1,90 @@
-{% extends 'base.html' %} 
-{% block title %}Clients{% endblock %} 
-{% block externalCSS %} 
-{% endblock %} 
+{% extends 'base.html' %}
+{% block title %}Clients{% endblock %}
+{% block externalCSS %}
+{% endblock %}
 {% block content %}
 
 <div class="flex justify-end items-center">
 
-    <div class="relative w-full md:w-1/4">
-      <input
-        type="text"
-        id="searchInput"
-        placeholder="Search clients..."
-        class="w-full bg-white rounded-xl px-4 py-2 pl-10 border  focus:border-transparent ring-2 ring-blue-200  focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none"
-      />
-      <svg
-        class="w-5 h-5 text-gray-400 absolute left-3 top-2.5 pointer-events-none"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 3a7.5 7.5 0 006.15 13.65z"
-        />
-      </svg>
-    </div>
+  <div class="relative w-full md:w-1/4">
+    <input type="text" id="searchInput" placeholder="Search clients..."
+      class="w-full bg-white rounded-xl px-4 py-2 pl-10 border  focus:border-transparent ring-2 ring-blue-200  focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none" />
+    <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5 pointer-events-none" fill="none" stroke="currentColor"
+      stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round"
+        d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 3a7.5 7.5 0 006.15 13.65z" />
+    </svg>
+  </div>
 </div>
 
 <div class="bg-white rounded-xl p-6 mt-3">
-<div class="flex justify-between items-center">
+  <div class="flex justify-between items-center">
 
-  <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">Client Management</h1>
-<a
-  href="{% url 'create-client' %}"
-  class="leading-none float-end inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-300"
->
-  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
-       viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-    <path stroke-linecap="round" stroke-linejoin="round"
-          d="M12 4v16m8-8H4" />
-  </svg>
-  New
-</a>
-</div>
-    <div class="overflow-x-auto mt-5 w-full">
-  <table class="min-w-full rounded-t-lg overflow-hidden">
-    <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
-      <tr>
-        <th class="px-4 py-3 text-left font-medium">Actions</th>
-        <th class="px-4 py-3 text-left font-medium">#</th>
-        <th class="px-4 py-3 text-left font-medium">Name</th>
-        <th class="px-4 py-3 text-left font-medium">Phone</th>
-        <th class="px-4 py-3 text-left font-medium">Email</th>
-        <th class="px-4 py-3 text-right font-medium">Username</th>
-      </tr>
-    </thead>
-    <tbody class="bg-gray-100">
-      {% if clients %}
-      {% for client in clients %}
-      <tr class="hover:bg-gray-50  divide-x divide-y divide-gray-300 odd:bg-white even:bg-gray-100">
-        
-        <td class="px-4 py-2 w-1">
-          <div class="flex gap-2">
-            <button
-              onclick="openEditModal('{{ client.id }}')"
-              class="bg-blue-500 text-white px-2 py-1.5 rounded hover:bg-blue-600 text-xs"
-            >
-              <i class="fa-solid fa-pen"></i>
-            </button>
-            <button
-              onclick="openModal('{{ client.id }}')"
-              class="bg-red-500 text-white px-2 py-1.5 rounded hover:bg-red-600 text-xs"
-            >
-              <i class="fa-solid fa-trash"></i>
-            </button>
-          </div>
-        </td>
-        <td class="px-4 py-2 w-1">
-          {{forloop.counter}}
-        </td>
-        <td class="px-4 py-2 font-semibold uppercase search-area">{{ client.name }} ({{client.clientId}})</td>
-        <td class="px-4 py-2 text-gray-700 search-area"> {{ client.phone }}</td>
-        <td class="px-4 py-2 text-gray-700 search-area">{{ client.email }}</td>
-        <td class="px-4 py-2 text-gray-700  text-right font-bold">{{ client.user.username }}</td>
-      </tr>
-      {% endfor %}
+    <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">Client Management</h1>
+    <a href="{% url 'create-client' %}"
+      class="leading-none float-end inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-300">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+        stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+      </svg>
+      New
+    </a>
+  </div>
+  <div class="overflow-x-auto mt-5 w-full">
+    <table class="min-w-full rounded-t-lg overflow-hidden">
+      <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
+        <tr>
+          <th class="px-4 py-3 text-left font-medium">Actions</th>
+          <th class="px-4 py-3 text-left font-medium">#</th>
+          <th class="px-4 py-3 text-left font-medium">Name</th>
+          <th class="px-4 py-3 text-left font-medium">Phone</th>
+          <th class="px-4 py-3 text-left font-medium">Email</th>
+          <th class="px-4 py-3 text-right font-medium">Username</th>
+        </tr>
+      </thead>
+      <tbody class="bg-gray-100">
+        {% if clients %}
+        {% for client in clients %}
+        <tr class="hover:bg-gray-50  divide-x divide-y divide-gray-300 odd:bg-white even:bg-gray-100">
+
+          <td class="px-4 py-2 w-1">
+            <div class="flex gap-2">
+              <button onclick="openEditModal('{{ client.id }}')"
+                class="bg-blue-500 text-white px-2 py-1.5 rounded hover:bg-blue-600 text-xs">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <button onclick="openModal('{{ client.id }}')"
+                class="bg-red-500 text-white px-2 py-1.5 rounded hover:bg-red-600 text-xs">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </td>
+          <td class="px-4 py-2 w-1">
+            {{forloop.counter}}
+          </td>
+          <td class="px-4 py-2 font-semibold uppercase search-area">{{ client.name }} ({{client.clientId}})</td>
+          <td class="px-4 py-2 text-gray-700 search-area"> {{ client.phone }}</td>
+          <td class="px-4 py-2 text-gray-700 search-area">{{ client.email }}</td>
+          <td class="px-4 py-2 text-gray-700  text-right font-bold">{{ client.user.username }}</td>
+        </tr>
+        {% endfor %}
         {% else %}
-    <tr>
-      <td colspan="10" class="text-center py-2 text-gray-500">
-        No data found
-      </td>
-    </tr>
-  {% endif %}
-    </tbody>
-  </table>
-</div>
+        <tr>
+          <td colspan="10" class="text-center py-2 text-gray-500">
+            No data found
+          </td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
 
 </div>
 
 
 <!-- 🟦 Edit Confirmation Modal -->
-<div
-  id="editModal"
-  class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50"
->
+<div id="editModal"
+  class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50">
   <div class="bg-white rounded-xl shadow-lg p-6 w-80 text-center">
     <h2 class="text-lg font-semibold mb-4 text-gray-800">Confirm Edit</h2>
     <p class="mb-6 text-gray-600">
@@ -113,26 +92,17 @@
     </p>
 
     <div class="flex justify-center space-x-4">
-      <button
-        onclick="closeEditModal()"
-        class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
-      >
+      <button onclick="closeEditModal()" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">
         Cancel
       </button>
-      <a
-        id="confirmEditBtn"
-        href="#"
-        class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-      >
+      <a id="confirmEditBtn" href="#" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
         Edit
       </a>
     </div>
   </div>
 </div>
-<div
-  id="confirmModal"
-  class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50"
->
+<div id="confirmModal"
+  class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50">
   <div class="bg-white rounded-xl shadow-lg p-6 w-80 text-center">
     <h2 class="text-lg font-semibold mb-4">Confirm Deletion</h2>
     <p class="mb-6 text-gray-600">
@@ -140,18 +110,11 @@
     </p>
 
     <div class="flex justify-center space-x-4">
-      <button
-        id="cancelBtn"
-        class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
-        onclick="closeModal()"
-      >
+      <button id="cancelBtn" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
+        onclick="closeModal()">
         Cancel
       </button>
-      <a
-        id="confirmDeleteBtn"
-        href="#"
-        class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-      >
+      <a id="confirmDeleteBtn" href="#" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
         Delete
       </a>
     </div>
@@ -161,7 +124,7 @@
 
 {% block externalJS %}
 <script>
-     let deleteUrl = "";
+  let deleteUrl = "";
 
   function openEditModal(clientId) {
     const editUrl = "{% url 'update-client' 0 %}".replace("0", clientId);
