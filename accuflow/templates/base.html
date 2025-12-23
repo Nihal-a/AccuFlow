@@ -265,8 +265,12 @@
                     <i data-lucide="list-check" class="w-4 h-4 "></i><span>Collection</span>
                 </div>
                 <div class="ml-4 space-y-0.5 text-gray-500">
-                    <div class="nav-link">Add New Collection</div>
-                    <div class="nav-link">Pending Approval</div>
+                    <a href="{% url 'newcollection' %}" class="nav-link" id="newcollectionLink">
+                        <span>Add New Collection</span>
+                    </a>
+                     <a href="{% url 'pendingcollection' %}" class="nav-link" id="pendingcollectionLink">
+                        <span>Pending Approval</span>
+                    </a>
                     <a href="{% url 'viewcollections' %}" class="nav-link" id="">
                         <span>View Collections</span>
                     </a>

@@ -43,6 +43,8 @@ urlpatterns = [
     path('general-ledger/', include('general_ledger.urls')),
     path('viewcollections/', include('view_collections.urls')),
     path('changepass/', include('change_pass.urls')),
+    path('newcollection/', include('new_collection.urls')),
+    path('pendingcollection/', include('pending_collection.urls')),
 ]
 
 if settings.DEBUG:
