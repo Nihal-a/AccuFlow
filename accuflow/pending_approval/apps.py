@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class PendingCollectionsConfig(AppConfig):
+class PendingApprovalConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'pending_collections'
+    name = 'pending_approval'

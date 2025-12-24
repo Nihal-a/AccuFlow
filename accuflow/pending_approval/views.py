@@ -9,7 +9,7 @@ from core.views import getClient
 class GodownLedgerView(View):
     def get(self, request):
         collectors = Collectors.objects.filter(is_active=True, client=getClient(request.user))
-        return render(request, 'new_collection/new_collection.html', {'collectors': collectors, 'sort': 'Serial'})
+        return render(request, 'pending_approval/pending_approval.html', {'collectors': collectors, 'sort': 'Serial'})
 
     def post(self, request):
         godown_id = request.POST.get('godown')

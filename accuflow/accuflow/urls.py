@@ -44,7 +44,7 @@ urlpatterns = [
     path('viewcollections/', include('view_collections.urls')),
     path('changepass/', include('change_pass.urls')),
     path('newcollection/', include('new_collection.urls')),
-    path('pendingcollection/', include('pending_collection.urls')),
+    path('pendingapproval/', include('pending_approval.urls')),
 ]
 
 if settings.DEBUG:

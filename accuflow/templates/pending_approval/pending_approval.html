@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Supplier Ledger
+{% endblock title %}
+
+{% block content %}
+<div class="bg-white rounded-xl p-6 mt-3">
+    <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">
+        Supplier Ledger
+    </h1>
+
+    <p class="text-sm text-gray-500 mt-2">
+        (Fixed: table now stretches full width)
+    </p>
+
+    <hr class="mt-5">
+
+    <div id="createView" class="mt-5 w-full">
+        <div class="grid w-full">
+            <form method="post" action="{% url 'supplierledger' %}" class="grid  grid-cols-12 gap-4 ">
+                {% csrf_token %}
+            <div class="col-span-6 w-full flex items-center gap-3">
+                <div class="w-[45%]">
+                    <div class="flex items-center gap-4 w-full">
+                        <div class="flex-1">
+                            <select
+                                id="collector"
+                                name="collector"
+                                class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                required>
+                                <option value="" selected>Select Collector</option>
+                                {% for collector in collectors %}
+                                <option
+                                    value="{{ collector.id }}"
+                                    data-code="{{ collector.supplierId }}"
+                                    data-balance="{{ collector.balance }}"
+                                    data-type="collectors">
+                                    {{ collector.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-[20%]">
+                    <div class="flex items-center gap-4 w-full">
+                        <div class="flex-1">
+                            <input type="text"
+                                id="supplierID"
+                                disabled
+                                class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-span-12 w-full flex items-center gap-3">
+                <div class="w-[20%]">
+                    <label class="block text-gray-700 mb-1">Date*</label>
+                    <div class="flex items-center gap-4">
+                        <div class="flex-1">
+                            <input type="date"
+                                id="date"
+                                name="date"
+                                value="{{date}}"
+                                class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-[25%]">
+                    <label class="block text-gray-700 mb-1">Sort Order*</label>
+                    <div class="flex items-center gap-4">
+                        <div class="flex-1">
+                            <select
+                                id="sortOrder"
+                                name="sort"
+                                class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                <option value="All"selected>All</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Pending">Pending</option>
+                                
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-span-6 w-full flex items-center gap-3">
+                <div class="w-full">
+                    <div class="flex items-center gap-4">
+
+                        <div class="w-full flex items-center gap-5">
+                            <div class="flex gap-2">
+                                <a id="btnClear"
+                                    href="{% url 'supplierledger' %}"
+                                    class="leading-none inline-flex items-center gap-1.5 bg-gray-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-gray-600 transition-all duration-300">
+                                    Clear Details
+                                </a>
+
+                                <button id="btnView"
+                                    type="submit"
+                                    class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
+                                    View Results
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </form>
+
+            <div class="overflow-x-auto mt-5 w-full col-span-8">
+                <table id="viewPurchaseTable"
+                    class="w-full min-w-max rounded-t-lg overflow-hidden">
+                    <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
+                        <tr>
+                            <!-- <th class="px-4 py-3 text-left font-medium w-1">Actions</th> -->
+                            <th class="px-4 py-3 text-left font-medium w-1">#</th>
+                            <th class="px-4 py-3 text-left font-medium">C.No</th>
+                            <th class="px-4 py-3 text-left font-medium">View</th>
+                            <th class="px-4 py-3 text-left font-medium">Description</th>
+                            <th class="px-4 py-3 text-right font-medium">Approval Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="purchaseTableBody" class="bg-gray-100">
+                        {% for ledger in ledgers %}
+                        {% if ledger.type != 'OB' %}
+                        <tr>
+                            <td  class="px-4 py-3 text-left font-medium">{{forloop.counter}}</td>
+                            <td  class="px-4 py-3 text-left font-medium">{{ledger.transaction_no}}</td>
+                            <td  class="px-4 py-3 text-left font-medium">{{ledger.type}}</td>
+                            <td  class="px-4 py-3 text-left font-medium">{{ledger.description}}</td>
+                            <td  class="px-4 py-3 text-right font-medium">{{ledger.qty}}</td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                     
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block externalJS %}
+<script>
+    navActive("supplierMasterLink");
+ 
+
+    $('#supplier').on('change', function() {
+      var selectedOption = $(this).find('option:selected');
+      var code = selectedOption.data('code') || '';
+      $('#supplierID').val(code);
+    });
+    {% if supplier %}
+    $('#supplier').val('{{supplier.id}}').change()
+    {% endif %}
+    console.log('{{opening}}')
+    {% if opening == 'on' %}
+    $('#noOpeningBalance').prop('checked', true).change();
+    {% else %}
+    $('#noOpeningBalance').prop('checked', false).change(); 
+{% endif %}
+$('#sortOrder').val('{{sort}}').change();  
+</script>
+{% endblock externalJS %}
