@@ -282,8 +282,12 @@
                     <i data-lucide="clipboard-list" class="w-4 h-4 "></i><span>Reports</span>
                 </div>
                 <div class="ml-4 space-y-0.5 text-gray-500">
-                    <div class="nav-link">Purchase Report</div>
-                    <div class="nav-link">Sales Report</div>
+                    <a href="{% url 'purchasereport' %}" class="nav-link" id="purchasereportLink">
+                        <span>Purchase Report</span>
+                    </a>
+                    <a href="{% url 'salesreport' %}" class="nav-link" id="salesreportLink">
+                        <span>Sales Report</span>
+                    </a>
                     <div class="nav-link">Entry View</div>
                     <div class="nav-link">Receivables</div>
                     <div class="nav-link">Payable</div>

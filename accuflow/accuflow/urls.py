@@ -41,10 +41,12 @@ urlpatterns = [
     path('stocktransfer/', include('stock_transfer.urls')),
     path('cashbankbalance/', include('cashbank_balance.urls')),
     path('general-ledger/', include('general_ledger.urls')),
-    path('viewcollections/', include('view_collections.urls')),
     path('changepass/', include('change_pass.urls')),
     path('newcollection/', include('new_collection.urls')),
     path('pendingapproval/', include('pending_approval.urls')),
+    path('viewcollections/', include('view_collections.urls')),
+    path('purchasereport/', include('purchase_report.urls')),
+    path('salesreport/', include('sales_report.urls')),
 ]
 
 if settings.DEBUG:

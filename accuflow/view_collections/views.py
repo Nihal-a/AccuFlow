@@ -9,7 +9,7 @@ from django.utils.dateparse import parse_date
 
 from core.views import getClient
 
-class StockTransferView(View):
+class ViewCOllectionsView(View):
     def get(self,request):
         
         return render(request,'view_collections/view_collections.html')

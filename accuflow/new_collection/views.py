@@ -6,7 +6,7 @@ from datetime import datetime
 from core.models import Collectors, Godowns, Purchases, Sales, NSDs, Cashs
 from core.views import getClient
 
-class GodownLedgerView(View):
+class NewCollectionView(View):
     def get(self, request):
         collectors = Collectors.objects.filter(is_active=True, client=getClient(request.user))
         return render(request, 'new_collection/new_collection.html', {'collectors': collectors, 'sort': 'Serial'})
