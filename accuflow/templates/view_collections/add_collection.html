@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if instance %}Update Collection{% else %}Add Collection{% endif %}
+{% endblock title %}
+
+{% block content %}
+<div class="bg-white rounded-xl p-6 mt-3">
+    <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">
+        {% if instance %}Update Collection #{{ instance.id }}{% else %}Add New Collection{% endif %}
+    </h1>
+
+    <p class="text-sm text-gray-500 mt-2">
+        {% if instance %}
+            Modify the selected transactions for this collection.
+        {% else %}
+            Select a collector and date to create a new collection.
+        {% endif %}
+    </p>
+
+    <hr class="mt-5">
+    
+    <form method="GET" action="{% url 'add_collection' %}" class="mt-5 w-full">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div>
+                <label class="block text-gray-700 mb-1">Collector*</label>
+                <select name="collector" class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <option value="">Select Collector</option>
+                    {% for c in collectors %}
+                    <option value="{{ c.id }}" {% if selected_collector and selected_collector.id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-gray-700 mb-1">Date*</label>
+                <input type="date" name="date" value="{{ selected_date|default:'' }}" class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            </div>
+            <div>
+                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-medium px-6 py-2 rounded-xl transition-all">
+                    Search
+                </button>
+            </div>
+            {% if instance %}
+            <div>
+                <a href="{% url 'collection_list' %}" class="text-gray-500 hover:text-gray-700 underline text-sm ml-2">Cancel Edit</a>
+            </div>
+            {% endif %}
+        </div>
+    </form>
+
+    {% if transactions %}
+    <hr class="mt-8 mb-5">
+    
+    <form method="POST" action="{% if instance %}{% url 'update_collection' id=instance.id %}{% else %}{% url 'add_collection' %}{% endif %}">
+        {% csrf_token %}
+        <input type="hidden" name="collector" value="{{ selected_collector.id }}">
+        <input type="hidden" name="date" value="{{ selected_date }}">
+        
+        <div class="flex justify-between items-center mb-4">
+             <h2 class="text-lg font-medium text-gray-700">Transactions</h2>
+             <button type="submit" class="bg-green-500 hover:bg-green-600 text-white font-medium px-6 py-2 rounded-xl transition-all">
+                {% if instance %}Update{% else %}Save{% endif %} Collection
+            </button>
+        </div>
+
+        <div class="overflow-x-auto w-full">
+            <table class="w-full min-w-max rounded-t-lg overflow-hidden">
+                <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-medium w-1">
+                            <input type="checkbox" id="selectAll" class="rounded text-blue-500 focus:ring-0 cursor-pointer">
+                        </th>
+                        <th class="px-4 py-3 text-left font-medium">Txn ID</th>
+                        <th class="px-4 py-3 text-left font-medium">Type</th>
+                        <th class="px-4 py-3 text-left font-medium">From</th>
+                        <th class="px-4 py-3 text-left font-medium">To</th>
+                        <th class="px-4 py-3 text-right font-medium">Credit</th>
+                        <th class="px-4 py-3 text-right font-medium">Debit</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-gray-100 divide-y divide-gray-200">
+                    {% for t in transactions %}
+                    <tr class="hover:bg-gray-50 transition-colors cursor-pointer txn-row">
+                        <td class="px-4 py-3">
+                            <input type="checkbox" name="selected_transactions" value="{{ t.id }}" class="txn-checkbox rounded text-blue-500 focus:ring-0 cursor-pointer" {% if t.is_selected %}checked{% endif %}>
+                        </td>
+                        <td class="px-4 py-3 text-gray-800">{{ t.transaction_id }}</td>
+                        <td class="px-4 py-3 text-gray-600">{{ t.type }}</td>
+                        <td class="px-4 py-3 text-gray-600">{{ t.from }}</td>
+                        <td class="px-4 py-3 text-gray-600">{{ t.to }}</td>
+                        <td class="px-4 py-3 text-right text-green-600">{{ t.credit|default:'-' }}</td>
+                        <td class="px-4 py-3 text-right text-red-600">{{ t.debit|default:'-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </form>
+    {% elif selected_collector %}
+        <div class="mt-8 text-center text-gray-500">
+            No active transactions found.
+        </div>
+    {% endif %}
+
+</div>
+{% endblock content %}
+
+{% block externalJS %}
+<script>
+    document.getElementById('selectAll').addEventListener('change', function(e) {
+        const checkboxes = document.querySelectorAll('.txn-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+    });
+
+    document.querySelectorAll('.txn-row').forEach(row => {
+        row.addEventListener('click', function(e) {
+            if (e.target.type !== 'checkbox') {
+                const checkbox = this.querySelector('.txn-checkbox');
+                checkbox.checked = !checkbox.checked;
+            }
+        });
+    });
+</script>
+{% endblock externalJS %}

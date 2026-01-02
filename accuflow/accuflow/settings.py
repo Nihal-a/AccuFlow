@@ -30,7 +30,8 @@ INSTALLED_APPS = [
     'cashbank',
     'sale_entry',
     'commission_entry',
-    'general_ledger'
+    'general_ledger',
+    'view_collections'
 ]
 
 MIDDLEWARE = [

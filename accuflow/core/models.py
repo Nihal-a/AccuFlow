@@ -426,5 +426,24 @@ class StockTransfers(models.Model):
     
     def __str__(self):
         return self.transfer_no
+
+class Collection(models.Model):
+    collector = models.ForeignKey(Collectors, on_delete=models.CASCADE, null=True, blank=True)
+    date = models.DateField(null=True, blank=True)
+    total_amount = models.FloatField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    client = models.ForeignKey(Clients, on_delete=models.CASCADE, null=True, blank=True)
+
+    def __str__(self):
+        name = self.collector.name if self.collector else "Unknown"
+        return f"Collection {self.id} - {name}"
+
+class CollectionItem(models.Model):
+    collection = models.ForeignKey(Collection, on_delete=models.CASCADE, related_name='items')
+    transaction_id = models.CharField(max_length=100, null=True, blank=True)
+    transaction_type = models.CharField(max_length=50, null=True, blank=True)
+    amount = models.FloatField(default=0)
+    is_credit = models.BooleanField(default=False) 
     
-        
+    def __str__(self):
+        return f"{self.transaction_type} - {self.transaction_id}"
