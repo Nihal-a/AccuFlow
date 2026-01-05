@@ -45,6 +45,7 @@ urlpatterns = [
     path('newcollection/', include('new_collection.urls')),
     path('pendingapproval/', include('pending_approval.urls')),
     path('viewcollections/', include('view_collections.urls')),
+    path('my-collections/', include('collector_view.urls')),
     path('purchasereport/', include('purchase_report.urls')),
     path('salesreport/', include('sales_report.urls')),
 ]

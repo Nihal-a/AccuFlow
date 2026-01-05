@@ -1,76 +1,263 @@
-{% extends 'base.html' %}
-
-{% block title %}Collectors{% endblock %}
-
-
+{% extends 'base.html' %} 
+{% block title %}Update Collector{% endblock %} 
 {% block externalCSS %}
 <style>
-    input.no-spinners::-webkit-outer-spin-button,
-    input.no-spinners::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-    }
-    input.no-spinners {
-        -moz-appearance: textfield;
-    }
+  /* Remove number input arrows */
+  input.no-spinners::-webkit-outer-spin-button,
+  input.no-spinners::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input.no-spinners {
+    -moz-appearance: textfield;
+  }
+  .password-strength {
+    height: 6px;
+    border-radius: 4px;
+    background-color: #ddd;
+    margin-top: 4px;
+  }
+  .strength-weak { background-color: red; width: 33%; }
+  .strength-medium { background-color: orange; width: 66%; }
+  .strength-strong { background-color: green; width: 100%; }
 </style>
-{% endblock %}
+{% endblock %} {% block content %}
+<h1 class="text-3xl font-bold mb-4 text-gray-700">Update Collector</h1>
+<div class="bg-white rounded-xl p-6">
+  <form method="post" action="{% url 'edit-collector' collector.id %}">
+    {% csrf_token %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-gray-700">Name*</label>
+        <input
+          type="text"
+          placeholder="Enter collector name..."
+          name="name"
+          value="{{ collector.name }}"
+          class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
+        />
+      </div>
+      <div>
+        <label class="block text-gray-700">Address</label>
+        <input
+          type="text"
+          placeholder="Enter Address..."
+          name="address"
+          value="{{ collector.address|default:'' }}"
+          class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      <div>
+        <label class="block text-gray-700">Phone</label>
+        <input
+          type="number"
+          placeholder="Enter phone number..."
+          name="phone"
+          value="{{ collector.phone|default:'' }}"
+          class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 no-spinners"
+          oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+        />
+      </div>
+      <div>
+        <label class="block text-gray-700">Whatsapp No.</label>
+        <div class="flex mt-1">
+          <select
+            name="country_code"
+            class="border rounded-l-xl px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            id="countryCode"
+            data-selected="{{ collector.country_code|default:'91' }}"
+          ></select>
 
-{% block content %}
-<h1 class="text-3xl font-bold mb-4 text-gray-700">Update Collectors</h1>
-<div class="bg-white shadow rounded-xl p-6 ">
-    <form method="post" action="{% url 'edit-collector' collector.id %}"> 
-        {% csrf_token %}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label class="block text-gray-700">Name*</label>
-                <input type="text" name="name" value="{{ collector.name }}" class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-            </div>
-              <div>
-                <label class="block text-gray-700">Address</label>
-                <input type="text" name="address" value="{{ collector.address }}" class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" >
-            </div>
-            <div>
-                <label class="block text-gray-700">Phone</label> 
-                <input type="number" name="phone" value="{{ collector.phone }}" 
-                class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 no-spinners" 
-                oninput="this.value=this.value.replace(/[^0-9]/g,'')"
-                >
-            </div>
-              <div> 
-            <label class="block text-gray-700">WhatsApp Number</label>
-            <div class="flex mt-1">
-                <select name="country_code"
-                class="border rounded-l-xl px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" id="countryCode">
-              
-                </select>
+          <input
+            type="tel"
+            name="whatsapp_number"
+            value="{{ collector.wa|default:'' }}"
+            placeholder="Enter whatsapp number..."
+            class="w-full px-3 py-2 border-t border-b border-r rounded-r-xl focus:outline-none focus:ring-2 focus:ring-blue-500 no-spinners"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+          />
+        </div>
+      </div>
+      
+      <div>
+        <label class="block text-gray-700">Username*</label>
+        <div class="relative">
+          <input
+            type="text"
+            id="usernameInput"
+            name="username"
+            value="{{ collector.user.username|default:'' }}"
+            placeholder="Enter Username"
+            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+          <span
+            id="usernameStatus"
+            class="absolute right-3 top-3 text-sm"
+          ></span>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-gray-700">
+            {% if collector.user %}New Password (Optional){% else %}Password*{% endif %}
+          </label>
+          <div class="relative">
+            <input
+              type="password"
+              id="passwordInput"
+              name="password"
+              placeholder="{% if collector.user %}Leave blank to keep existing{% else %}Enter Password{% endif %}"
+              class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+              {% if not collector.user %}required{% endif %}
+            />
+            <button
+              type="button"
+              id="togglePassword"
+              class="absolute right-3 top-3 text-gray-500"
+            >
+              👁️
+            </button>
+          </div>
+          <div id="password-strength" class="password-strength"></div>
+        </div>
 
-                <input
-                type="tel"
-                name="whatsapp_number"
-                placeholder="Enter WhatsApp number..."
-                class="w-full px-3 py-2 border-t border-b border-r rounded-r-xl focus:outline-none focus:ring-2 focus:ring-blue-500 no-spinners"
-                inputmode="numeric"
-                pattern="[0-9]*"
-                value="{{ collector.wa | default:'' }}"
-                oninput="this.value=this.value.replace(/[^0-9]/g,'')"
-                >
-            </div>
-            </div>
+        <div>
+          <label class="block text-gray-700">Confirm Password</label>
+          <div class="relative">
+            <input
+              type="password"
+              id="confirmPasswordInput"
+              name="confirm_password"
+              placeholder="Confirm password"
+              class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+              {% if not collector.user %}required{% endif %}
+            />
+            <button
+              type="button"
+              id="toggleConfirmPassword"
+              class="absolute right-3 top-3 text-gray-500"
+            >
+              👁️
+            </button>
+          </div>
+          <small id="passwordMatch" class="text-sm"></small>
         </div>
-        <div class="mt-6 flex gap-2 justify-end">
-            <a href="{% url 'collectors'%}" type="submit" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 font-semibold">Cancel</a>
-            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 font-semibold">Update Colelctor</button>
-        </div>
-    </form>
+      </div>
+
+    </div>
+    <div class="mt-6 flex gap-2 justify-end">
+      <a
+        href="{% url 'collectors'%}"
+        type="submit"
+        class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 font-semibold"
+        >Cancel</a
+      >
+      <button
+        type="submit"
+        class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 font-semibold"
+      >
+        Update Collector
+      </button>
+    </div>
+  </form>
 </div>
+{% endblock %} 
 
-{% endblock %}  
 {% block externalJS %}
 <script>
+  const usernameInput = document.getElementById('usernameInput');
+  const usernameStatus = document.getElementById('usernameStatus');
+  const currentUsername = "{{ collector.user.username|default:'' }}";
 
-  navActive("collectorMasterLink");
-    countryCode()
-    $('#countryCode').val("{{ collector.country_code }}");
+  if (usernameInput) {
+    usernameInput.addEventListener('input', async () => {
+        const username = usernameInput.value.trim();
+        if (username.length < 3) {
+            usernameStatus.textContent = '';
+            return;
+        }
+
+        if (currentUsername && username === currentUsername) {
+            usernameStatus.textContent = '';
+            return;
+        }
+
+        const response = await fetch("{% url 'check-username' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}',
+        },
+        body: JSON.stringify({ username }),
+        });
+
+        const data = await response.json();
+        if (data.available) {
+        usernameStatus.textContent = '✅ Available';
+        usernameStatus.className = 'absolute right-3 top-3 text-green-600 text-sm';
+        } else {
+        usernameStatus.textContent = '❌ Taken';
+        usernameStatus.className = 'absolute right-3 top-3 text-red-600 text-sm';
+        }
+    });
+  }
+
+  const passwordInput = document.getElementById('passwordInput');
+  const confirmPasswordInput = document.getElementById('confirmPasswordInput');
+  const passwordStrength = document.getElementById('password-strength');
+  const passwordMatch = document.getElementById('passwordMatch');
+  const togglePassword = document.getElementById('togglePassword');
+  const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+
+  function toggleVisibility(input, icon) {
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.textContent = '🙈';
+    } else {
+      input.type = 'password';
+      icon.textContent = '👁️';
+    }
+  }
+  
+  if (togglePassword) togglePassword.addEventListener('click', () => toggleVisibility(passwordInput, togglePassword));
+  if (toggleConfirmPassword) toggleConfirmPassword.addEventListener('click', () => toggleVisibility(confirmPasswordInput, toggleConfirmPassword));
+
+  if (passwordInput) {
+    passwordInput.addEventListener('input', () => {
+        const val = passwordInput.value;
+        let strength = 0;
+        if (val.length > 6) strength++;
+        if (/[A-Z]/.test(val)) strength++;
+        if (/[0-9]/.test(val)) strength++;
+        if (/[^A-Za-z0-9]/.test(val)) strength++;
+
+        passwordStrength.className = "password-strength";
+        if (strength <= 1 && val) passwordStrength.classList.add("strength-weak");
+        else if (strength === 2) passwordStrength.classList.add("strength-medium");
+        else if (strength >= 3) passwordStrength.classList.add("strength-strong");
+    });
+  }
+
+  if (confirmPasswordInput) {
+    confirmPasswordInput.addEventListener('input', () => {
+        if (!passwordInput.value) {
+             passwordMatch.textContent = '';
+             return;
+        }
+        if (confirmPasswordInput.value === passwordInput.value) {
+        passwordMatch.textContent = '✅ Passwords match';
+        passwordMatch.className = 'text-green-600 text-sm';
+        } else {
+        passwordMatch.textContent = '❌ Passwords do not match';
+        passwordMatch.className = 'text-red-600 text-sm';
+        }
+    });
+  }
+
+  countryCode();
 </script>
 {% endblock %}

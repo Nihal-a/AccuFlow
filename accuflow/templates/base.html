@@ -15,7 +15,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     {% block externalCSS %}{% endblock externalCSS %}
     <style>
-        /* ✅ Fonts */
         body {
             font-family: 'Inter', 'Roboto', 'Segoe UI', sans-serif !important;
         }
@@ -26,68 +25,51 @@
             font-family: 'Inter', !important;
         }
 
-        /* ✅ Sidebar navigation links */
         .nav-link {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            /* same as Tailwind gap-2 */
             padding: 0.25rem 0.75rem;
-            /* px-3 py-1 */
             border-radius: 0.375rem;
-            /* rounded */
             cursor: pointer;
             color: #374151;
-            /* gray-700 */
             transition: all 0.2s ease;
             text-decoration: none;
         }
 
-        /* ✅ Normal hover effect */
         .nav-link:hover {
             background-color: #f3f4f6;
-            /* gray-100 */
         }
 
-        /* ✅ Active (selected) state */
         .nav-link.active {
             background-color: #3b82f6;
-            /* blue-500 */
             color: #ffffff;
-            /* white text */
             font-weight: 600;
             box-shadow: inset 3px 0 0 0 #1d4ed8;
-            /* left bar blue-700 */
         }
 
-        /* ✅ Disable hover effect for active link */
         .nav-link.active:hover {
             background-color: #3b82f6 !important;
             color: #ffffff !important;
             cursor: default !important;
         }
 
-        /* ✅ Icon color for normal + active links */
         .nav-link i,
         .nav-link svg {
             transition: color 0.2s ease;
             color: #6b7280;
-            /* gray-500 */
         }
 
         .nav-link:hover i,
         .nav-link:hover svg {
             color: #3b82f6;
-            /* blue-500 */
         }
 
         .nav-link.active i,
         .nav-link.active svg {
             color: #ffffff !important;
-            /* icon turns white when active */
         }
 
-        /* ✅ Scrollbar hide (if needed for sidebar) */
         .custom-scrollbar {
             scrollbar-width: none;
             -ms-overflow-style: none;
@@ -97,7 +79,6 @@
             display: none;
         }
 
-        /* ✅ Arrow buttons (if any) */
         .arrow-buttons .disabled-btn i {
             color: #3b82f661 !important;
         }
@@ -118,7 +99,6 @@
         }
     </style>
     <script>
-        /* ✅ Highlight active sidebar link based on URL path */
         document.addEventListener("DOMContentLoaded", function () {
             const currentPath = window.location.pathname;
             document.querySelectorAll(".nav-link").forEach((link) => {
@@ -135,26 +115,21 @@
     </script>
 
 <body class="flex h-screen bg-gray-100 font-sans" x-data="{ sidebarOpen: false }">
-    <!-- Mobile Overlay -->
     <div class="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" x-show="sidebarOpen" x-transition.opacity
         @click="sidebarOpen = false" style="display: none">
     </div>
-    <!-- Sidebar -->
-    <!-- Sidebar -->
     <aside x-data="{ sidebarOpen: false }"
         class="bg-white fixed inset-y-0 left-0 w-72 transform md:translate-x-0 transition-transform duration-200 ease-in-out z-50 flex flex-col">
         <div class="md:hidden flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
             <p class="font-semibold text-gray-800">NS TRADING</p>
             <button @click="sidebarOpen = false" class="text-gray-700 focus:outline-none text-2xl">&times;</button>
         </div>
-        <!-- Desktop Header -->
         <div class="p-6 md:flex hidden items-center space-x-3 flex-shrink-0">
             <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
             <div>
                 <p class="text-blue-500 text-md font-bold">NS TRADING</p>
             </div>
         </div>
-        <!-- Sidebar nav -->
         <nav class="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
             {% if request.user.is_admin %}
             <div class="space-y-0">
@@ -196,7 +171,6 @@
                     </a>
                 </div>
             </div>
-            <!-- Transaction -->
             <div class="space-y-0">
                 <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-medium uppercase">
                     <i data-lucide="repeat" class="w-4 h-4 "></i><span>Transaction</span>
@@ -219,7 +193,6 @@
                     </a>
                 </div>
             </div>
-            <!-- Stock Overview -->
             <div class="space-y-0">
                 <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-medium uppercase">
                     <i data-lucide="chart-candlestick" class="w-4 h-4 "></i><span>Stock Overview</span>
@@ -236,7 +209,6 @@
                     </a>
                 </div>
             </div>
-            <!-- Statement -->
             <div class="space-y-0">
                 <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-medium uppercase">
                     <i data-lucide="file-text" class="w-4 h-4 "></i><span>Statement</span>
@@ -259,7 +231,6 @@
                     </a>
                 </div>
             </div>
-            <!-- Collection -->
             <div class="space-y-0">
                 <div class="flex items-center gap-2  px-3 py-1 rounded-lg text-gray-700 font-medium uppercase">
                     <i data-lucide="list-check" class="w-4 h-4 "></i><span>Collection</span>
@@ -276,7 +247,6 @@
                     </a>
                 </div>
             </div>
-            <!-- Report -->
             <div class="space-y-0">
                 <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-medium uppercase">
                     <i data-lucide="clipboard-list" class="w-4 h-4 "></i><span>Reports</span>
@@ -294,7 +264,6 @@
                     <div class="nav-link">Collection Report</div>
                 </div>
             </div>
-            <!-- Online Currency-->
             <div class="space-y-0">
                 <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-medium uppercase">
                     <i data-lucide="clipboard-list" class="w-4 h-4 "></i><span>Online Currency</span>
@@ -304,7 +273,6 @@
                     <div class="nav-link">KITCO</div>
                 </div>
             </div>
-            <!-- MIS Report-->
             <div class="space-y-0">
                 <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-medium uppercase">
                     <i data-lucide="clipboard-list" class="w-4 h-4 "></i><span>MIS Reports</span>
@@ -320,7 +288,20 @@
                 </div>
             </div>
             {% endif %}
-            <!-- Utilities -->
+            
+            {% if request.user.is_collector %}
+            <div class="space-y-0">
+                <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-medium uppercase">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i><span>Dashboard</span>
+                </div>
+                <div class="ml-4 space-y-0.5 text-gray-500">
+                    <a href="{% url 'my_collections' %}" class="nav-link">
+                        <span>My Collections</span>
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
             <div class="space-y-0">
                 <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-medium uppercase">
                     <i data-lucide="settings" class="w-4 h-4 "></i><span>Utilities</span>
@@ -337,13 +318,9 @@
             </div>
         </nav>
     </aside>
-    {% comment %} <div class="md:hidden fixed top-4 left-4 z-50">
-        <button @click="sidebarOpen = true" class="text-gray-700 bg-white p-2 rounded shadow">&#9776;</button>
-    </div> {% endcomment %}
-    <!-- Main Content -->
+    
     <main class="flex-1 px-14 py-7 md:ml-72 overflow-auto">
         <div class="flex justify-between border-b border-gray-400 pb-2 mb-8 items-center">
-            <!-- Welcome Text -->
             <div class="flex gap-4 items-center">
                 <div class="flex gap-2 arrow-buttons">
                     <a href="#" id="back-button" class=" p-2 border border-gray-400 rounded-xl" onclick="goBack();"><i
@@ -360,8 +337,6 @@
                 </div>
             </div>
             <div class="relative flex items-center space-x-4">
-                <!-- Search Bar -->
-                <!-- Email Icon -->
                 <button
                     class="relative flex items-center justify-center text-gray-700 p-3 border border-gray-700 rounded-full hover:bg-gray-100 focus:outline-none">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -370,9 +345,7 @@
                     </svg>
                     <span class="absolute top-0 right-0 inline-block w-2 h-2 bg-red-500 rounded-full"></span>
                 </button>
-                <!-- Notification Icon -->
                 <div class="relative inline-block">
-                    <!-- Notification Button -->
                     <button id="notificationBtn"
                         class="relative flex items-center justify-center text-gray-700 p-3 border border-gray-700 rounded-full focus:outline-none  hover:bg-blue-500 hover:border-white hover:text-white">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -382,7 +355,6 @@
                         <!-- Optional Badge -->
                         <span class="absolute top-0 right-0 inline-block w-2 h-2 bg-red-500 rounded-full"></span>
                     </button>
-                    <!-- Notification Popup -->
                     <div id="notificationPopup"
                         class="hidden absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                         <div class="p-3 border-b border-gray-200 font-semibold text-gray-700">Notifications</div>

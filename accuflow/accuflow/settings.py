@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'sale_entry',
     'commission_entry',
     'general_ledger',
+    'collector_view',
     'view_collections'
 ]
 

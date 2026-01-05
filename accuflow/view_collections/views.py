@@ -30,8 +30,16 @@ class AddCollectionView(View):
         if collector_id:
             selected_collector = get_object_or_404(Collectors, id=collector_id)
             
+            # Get set of already assigned transaction IDs for this client
+            used_items_query = CollectionItem.objects.filter(collection__client=client)
+            if instance:
+                used_items_query = used_items_query.exclude(collection=instance)
+            used_transaction_ids = set(used_items_query.values_list('transaction_id', flat=True))
+            
             sales = Sales.objects.filter(client=client, is_active=True)
             for s in sales:
+                if s.sale_no in used_transaction_ids:
+                    continue
                 t_id = f"SALE_{s.id}"
                 transactions.append({
                     'id': t_id,
@@ -48,6 +56,8 @@ class AddCollectionView(View):
                 
             purchases = Purchases.objects.filter(client=client, is_active=True)
             for p in purchases:
+                if p.purchase_no in used_transaction_ids:
+                    continue
                 t_id = f"PURCHASE_{p.id}"
                 transactions.append({
                     'id': t_id,
@@ -64,6 +74,8 @@ class AddCollectionView(View):
                 
             nsds = NSDs.objects.filter(client=client, is_active=True)
             for n in nsds:
+                if n.nsd_no in used_transaction_ids:
+                    continue
                 sender = n.sender_customer.name if n.sender_customer else (n.sender_supplier.name if n.sender_supplier else 'N/A')
                 receiver = n.receiver_customer.name if n.receiver_customer else (n.receiver_supplier.name if n.receiver_supplier else 'N/A')
                 t_id = f"NSD_{n.id}"

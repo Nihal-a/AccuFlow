@@ -204,6 +204,7 @@ class CashBanks(models.Model):
     
 class Collectors(models.Model):
     name = models.TextField(blank=True,null=True)
+    user = models.ForeignKey(UserAccount,on_delete=models.CASCADE,blank=True,null=True)
     collectorId = models.TextField(blank=True,null=True)
     phone = models.TextField(blank=True,null=True)
     address = models.TextField(blank=True,null=True)

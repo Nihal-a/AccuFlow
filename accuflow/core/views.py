@@ -14,6 +14,8 @@ def user_login(request):
                 return redirect('clients')
             elif user.is_client:
                 return redirect('customers')
+            elif user.is_collector:
+                return redirect('my_collections')
             else:
                 pass
         return redirect('login')
