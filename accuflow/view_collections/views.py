@@ -30,16 +30,8 @@ class AddCollectionView(View):
         if collector_id:
             selected_collector = get_object_or_404(Collectors, id=collector_id)
             
-            # Get set of already assigned transaction IDs for this client
-            used_items_query = CollectionItem.objects.filter(collection__client=client)
-            if instance:
-                used_items_query = used_items_query.exclude(collection=instance)
-            used_transaction_ids = set(used_items_query.values_list('transaction_id', flat=True))
-            
             sales = Sales.objects.filter(client=client, is_active=True)
             for s in sales:
-                if s.sale_no in used_transaction_ids:
-                    continue
                 t_id = f"SALE_{s.id}"
                 transactions.append({
                     'id': t_id,
@@ -47,49 +39,12 @@ class AddCollectionView(View):
                     'type': 'Sale',
                     'from': s.godown.name if s.godown else 'N/A',
                     'to': s.customer.name if s.customer else 'N/A',
+                    'customer_phone': s.customer.phone if s.customer else 'N/A',
                     'credit': 0,
                     'debit': s.total_amount,
                     'amount': s.total_amount,
                     'is_selected': False,
                     'obj': s
-                })
-                
-            purchases = Purchases.objects.filter(client=client, is_active=True)
-            for p in purchases:
-                if p.purchase_no in used_transaction_ids:
-                    continue
-                t_id = f"PURCHASE_{p.id}"
-                transactions.append({
-                    'id': t_id,
-                    'transaction_id': p.purchase_no,
-                    'type': 'Purchase',
-                    'from': p.supplier.name if p.supplier else 'N/A',
-                    'to': p.godown.name if p.godown else 'N/A',
-                    'credit': p.total_amount,
-                    'debit': 0,
-                    'amount': p.total_amount,
-                    'is_selected': False,
-                    'obj': p
-                })
-                
-            nsds = NSDs.objects.filter(client=client, is_active=True)
-            for n in nsds:
-                if n.nsd_no in used_transaction_ids:
-                    continue
-                sender = n.sender_customer.name if n.sender_customer else (n.sender_supplier.name if n.sender_supplier else 'N/A')
-                receiver = n.receiver_customer.name if n.receiver_customer else (n.receiver_supplier.name if n.receiver_supplier else 'N/A')
-                t_id = f"NSD_{n.id}"
-                transactions.append({
-                    'id': t_id,
-                    'transaction_id': n.nsd_no,
-                    'type': 'NSD',
-                    'from': sender,
-                    'to': receiver,
-                    'credit': n.sell_amount,
-                    'debit': n.purchase_amount,
-                    'amount': n.sell_amount, 
-                    'is_selected': False,
-                    'obj': n
                 })
                 
             if instance:
@@ -213,6 +168,18 @@ class CollectionDetailView(View):
         client = getClient(request.user)
         collection = get_object_or_404(Collection, id=id, client=client)
         items = collection.items.all()
+        
+        for item in items:
+            item.customer_name = "-"
+            item.customer_phone = "-"
+            
+            if item.transaction_type == 'Sale':
+                sale = Sales.objects.filter(sale_no=item.transaction_id, client=client).first()
+                if sale and sale.customer:
+                    item.customer_name = sale.customer.name
+                    item.customer_phone = sale.customer.phone
+                    item.customer_wa = sale.customer.wa
+                    item.customer_cc = sale.customer.country_code
         
         context = {
             'collection': collection,

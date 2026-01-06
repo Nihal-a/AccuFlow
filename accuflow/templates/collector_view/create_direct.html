@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Direct Collection{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex items-center gap-4 mb-6">
+        <a href="{% url 'my_collections' %}" class="bg-gray-100 p-2 rounded-lg hover:bg-gray-200 transition-colors">
+            <i data-lucide="arrow-left" class="w-5 h-5 text-gray-600"></i>
+        </a>
+        <h1 class="text-2xl font-bold text-gray-800">Create Direct Collection</h1>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+        <form method="POST" id="createForm">
+            {% csrf_token %}
+            
+            <div class="p-6 border-b border-gray-100 bg-gray-50 flex flex-wrap gap-4 items-end">
+                <div class="w-full md:w-auto">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Collection Date</label>
+                    <input type="date" name="date" value="{{ today_date }}" class="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" required>
+                </div>
+                
+                <div class="flex-1 w-full md:w-auto relative">
+                    <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"></i>
+                    <input type="text" id="searchInput" placeholder="Search customer, transaction #" class="pl-10 w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                
+                <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-md flex items-center gap-2">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    Create Collection
+                </button>
+            </div>
+
+            <div class="max-h-[600px] overflow-y-auto custom-scrollbar">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-gray-50 sticky top-0 z-10">
+                        <tr>
+                            <th class="p-4 border-b border-gray-200 w-12">
+                                <input type="checkbox" id="selectAll" class="rounded text-blue-600 focus:ring-0 cursor-pointer w-4 h-4">
+                            </th>
+                            <th class="p-4 border-b border-gray-200 font-medium text-gray-600">Customer / Transaction</th>
+                            <th class="p-4 border-b border-gray-200 font-medium text-gray-600 text-right">Invoice Amount</th>
+                            <th class="p-4 border-b border-gray-200 font-medium text-gray-600 text-right">Date</th>
+                            <th class="p-4 border-b border-gray-200 font-medium text-gray-600 text-right">Current Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100" id="transactionTable">
+                        {% for t in transactions %}
+                        <tr class="hover:bg-blue-50 transition-colors cursor-pointer group txn-row" onclick="toggleRow(this)">
+                            <td class="p-4">
+                                <input type="checkbox" name="selected_transactions" value="{{ t.id }}" class="row-cb rounded text-blue-600 focus:ring-0 cursor-pointer w-4 h-4" onclick="event.stopPropagation()">
+                            </td>
+                            <td class="p-4">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                     {% if t.type == 'SALE' %}
+                                     <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700 border border-green-200">SALE</span>
+                                     {% elif t.type == 'PURCHASE' %}
+                                     <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-700 border border-orange-200">PUR</span>
+                                     {% elif t.type == 'NSD' %}
+                                     <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700 border border-purple-200">NSD</span>
+                                     {% endif %}
+                                     <span class="font-medium text-gray-800">{{ t.customer_name }}</span>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1 pl-1">Ref: {{ t.transaction_id }}</div>
+                            </td>
+                            <td class="p-4 text-right font-medium text-gray-700">{{ t.amount|floatformat:2 }}</td>
+                            <td class="p-4 text-right text-gray-500 text-sm">{{ t.date|date:"Y-m-d" }}</td>
+                             <td class="p-4 text-right font-bold {% if t.balance > 0 %}text-red-500{% else %}text-green-500{% endif %}">
+                                {{ t.balance|floatformat:2 }}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="p-8 text-center text-gray-500">
+                                No active transactions found for this client.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="p-4 border-t border-gray-100 bg-gray-50 flex justify-between items-center text-sm text-gray-600">
+                <span id="selectedCount">0 transactions selected</span>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% block externalJS %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        lucide.createIcons();
+        
+        const searchInput = document.getElementById('searchInput');
+        const rows = document.querySelectorAll('.txn-row');
+        const selectAll = document.getElementById('selectAll');
+        const rowCbs = document.querySelectorAll('.row-cb');
+        const countSpan = document.getElementById('selectedCount');
+        
+        // Search Filter
+        searchInput.addEventListener('keyup', function(e) {
+            const term = e.target.value.toLowerCase();
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                if(text.includes(term)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+        
+        // Selection Logic
+        function updateCount() {
+            const checked = document.querySelectorAll('.row-cb:checked').length;
+            countSpan.innerText = `${checked} transactions selected`;
+        }
+        
+        window.toggleRow = function(row) {
+            const cb = row.querySelector('.row-cb');
+            cb.checked = !cb.checked;
+            updateCount();
+        }
+        
+        selectAll.addEventListener('change', function(e) {
+            const visibleRows = Array.from(rows).filter(r => r.style.display !== 'none');
+            visibleRows.forEach(row => {
+                const cb = row.querySelector('.row-cb');
+                cb.checked = e.target.checked;
+            });
+            updateCount();
+        });
+        
+        rowCbs.forEach(cb => {
+            cb.addEventListener('click', (e) => {
+                e.stopPropagation(); // prevent row click
+                updateCount();
+            });
+            cb.addEventListener('change', updateCount);
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

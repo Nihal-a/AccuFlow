@@ -212,6 +212,7 @@ class Collectors(models.Model):
     is_active = models.BooleanField(default=True)
     country_code = models.TextField(blank=True,null=True)
     wa = models.TextField(blank=True,null=True)
+    can_collect_directly = models.BooleanField(default=False)
     client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
     
     
@@ -434,6 +435,16 @@ class Collection(models.Model):
     total_amount = models.FloatField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     client = models.ForeignKey(Clients, on_delete=models.CASCADE, null=True, blank=True)
+    
+    STATUS_CHOICES = (
+        ('New', 'New'),
+        ('Pending', 'Pending Approval'),
+        ('Approved', 'Approved'),
+        ('Rejected', 'Rejected'),
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='New')
+    approved_by = models.ForeignKey(UserAccount, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_collections')
+    approval_date = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         name = self.collector.name if self.collector else "Unknown"
@@ -444,6 +455,7 @@ class CollectionItem(models.Model):
     transaction_id = models.CharField(max_length=100, null=True, blank=True)
     transaction_type = models.CharField(max_length=50, null=True, blank=True)
     amount = models.FloatField(default=0)
+    collected_amount = models.FloatField(default=0)
     is_credit = models.BooleanField(default=False) 
     
     def __str__(self):

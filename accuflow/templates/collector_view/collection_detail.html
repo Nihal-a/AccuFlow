@@ -20,52 +20,221 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-            <p class="text-xs text-blue-500 uppercase font-medium mb-1">Total Amount Collected</p>
-            <p class="text-3xl font-bold text-gray-800">{{ collection.total_amount }}</p>
+            <p class="text-xs text-blue-500 uppercase font-medium mb-1">Total Amount</p>
+            <p class="text-3xl font-bold text-gray-800" id="totalAmountDisplay">{{ collection.total_amount }}</p>
+        </div>
+        <div class="bg-green-50 p-4 rounded-xl border border-green-100">
+            <p class="text-xs text-green-500 uppercase font-medium mb-1">Total Collected</p>
+            <p class="text-3xl font-bold text-gray-800" id="totalCollectedDisplay">0.00</p>
         </div>
         <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
-             <p class="text-xs text-gray-500 uppercase font-medium mb-1">Items Count</p>
+             <p class="text-xs text-gray-500 uppercase font-medium mb-1">Count</p>
             <p class="text-3xl font-bold text-gray-800">{{ items.count }}</p>
         </div>
     </div>
 
     <h2 class="text-lg font-medium text-gray-700 mb-4">Assigned Transactions</h2>
-    <div class="overflow-x-auto w-full">
-        <table class="w-full min-w-max rounded-t-lg overflow-hidden border border-gray-200">
-            <thead class="bg-blue-50 text-gray-700 uppercase text-xs">
-                <tr>
-                    <th class="px-4 py-3 text-left font-medium">Txn ID</th>
-                    <th class="px-4 py-3 text-left font-medium">Type</th>
-                    <th class="px-4 py-3 text-right font-medium">Amount</th>
-                    <th class="px-4 py-3 text-left font-medium">Status</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200 text-sm">
-                {% for item in items %}
-                <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="px-4 py-3 text-gray-800 font-medium">{{ item.transaction_id }}</td>
-                    <td class="px-4 py-3 text-gray-600">{{ item.transaction_type }}</td>
-                    <td class="px-4 py-3 text-right font-medium text-gray-800">{{ item.amount }}</td>
-                    <td class="px-4 py-3">
-                        {% if item.is_credit %}
-                        <span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-medium">Credit</span>
-                        {% else %}
-                        <span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-medium">Debit</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="4" class="px-4 py-8 text-center text-gray-500">
-                        No transactions found in this collection.
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+    <form method="POST" id="collectionForm">
+        {% csrf_token %}
+        <div class="overflow-x-auto w-full pb-{{ read_only|yesno:'4,20' }}">
+            <table class="w-full min-w-max rounded-t-lg overflow-hidden border border-gray-200">
+                <thead class="bg-blue-50 text-gray-700 uppercase text-xs">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-medium w-1">
+                            <input type="checkbox" id="selectAll" class="rounded text-blue-600 focus:ring-0 cursor-pointer w-4 h-4" {% if read_only %}disabled{% endif %}>
+                        </th>
+                        <th class="px-4 py-3 text-left font-medium">Contact</th>
+                        <th class="px-4 py-3 text-left font-medium">Customer</th>
+                        <th class="px-4 py-3 text-right font-medium">Total Amount</th>
+                        <th class="px-4 py-3 text-right font-medium w-32">Collected Amount</th>
+                        <th class="px-4 py-3 text-right font-medium">Balance</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200 text-sm">
+                    {% for item in items %}
+                    <tr class="transition-colors {% if item.is_submitted %}bg-gray-50 opacity-75{% else %}hover:bg-gray-50{% endif %}">
+                        <td class="px-4 py-3">
+                            {% if item.is_submitted %}
+                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold bg-blue-100 text-blue-800" title="{{ item.status_label }}">
+                                {{ item.status_label|slice:":1" }}
+                            </span>
+                            {% else %}
+                            <input type="checkbox" class="row-cb rounded text-blue-600 focus:ring-0 cursor-pointer w-4 h-4" data-id="{{ item.id }}" data-amount="{{ item.amount }}" {% if read_only %}disabled{% endif %}>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="flex items-center gap-3">
+                                {% if item.customer_phone and item.customer_phone != '-' %}
+                                <a href="tel:{{ item.customer_phone }}" class="bg-blue-100 text-blue-600 p-2 rounded-full hover:bg-blue-200 transition-colors" title="Call">
+                                    <i data-lucide="phone" class="w-4 h-4"></i>
+                                </a>
+                                {% endif %}
+                                {% if item.customer_wa %}
+                                <a href="https://wa.me/{{ item.customer_cc|cut:'+'|default:'' }}{{ item.customer_wa }}" target="_blank" class="bg-green-100 text-green-600 p-2 rounded-full hover:bg-green-200 transition-colors" title="WhatsApp">
+                                    <i data-lucide="message-circle" class="w-4 h-4"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 text-gray-800 font-medium">{{ item.customer_name }}</td>
+                        <td class="px-4 py-3 text-right text-gray-800 font-medium"><span class="total-amount">{{ item.amount }}</span></td>
+                        <td class="px-4 py-3 text-right">
+                             <input type="number" name="collected_amount_{{ item.id }}" value="{% if item.collected_amount > 0 %}{{ item.collected_amount }}{% endif %}" class="collected-input w-32 p-2 border rounded-lg text-right focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 disabled:bg-gray-100 disabled:text-gray-500" placeholder="0" data-max="{{ item.amount }}" {% if read_only or item.is_submitted %}disabled{% endif %}>
+                             {% if item.is_submitted %}
+                             <div class="text-[10px] text-blue-600 font-medium mt-1 uppercase tracking-wide">Submitted</div>
+                             {% endif %}
+                        </td>
+                        <td class="px-4 py-3 text-right text-red-600 font-bold"><span class="balance-display">{{ item.amount }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                            No transactions found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if not read_only %}
+        <div class="mt-6 flex justify-end">
+            <button type="submit" id="saveBtn" class="bg-blue-600 text-white px-8 py-3 rounded-xl hover:bg-blue-700 transition-all font-medium shadow-lg hover:shadow-xl hidden">
+                Save for Approval
+            </button>
+        </div>
+        {% else %}
+        <div class="mt-6 p-4 bg-yellow-50 text-yellow-800 rounded-xl border border-yellow-100 flex items-center gap-3">
+            <i data-lucide="lock" class="w-5 h-5"></i>
+            <span class="font-medium">This collection is {{ collection.status|lower }} and cannot be edited.</span>
+        </div>
+        {% endif %}
+    </form>
 
 </div>
 {% endblock content %}
+
+{% block externalJS %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+
+        const totalCollectedDisplay = document.getElementById('totalCollectedDisplay');
+        const selectAllCb = document.getElementById('selectAll');
+        const rowCbs = document.querySelectorAll('.row-cb');
+        const inputs = document.querySelectorAll('.collected-input');
+        const balances = document.querySelectorAll('.balance-display');
+        const saveBtn = document.getElementById('saveBtn');
+
+        function checkSaveButton() {
+            if(!saveBtn) return;
+            let hasValue = false;
+            inputs.forEach(input => {
+                if (parseFloat(input.value) > 0) hasValue = true;
+            });
+            if (hasValue) {
+                saveBtn.classList.remove('hidden');
+            } else {
+                saveBtn.classList.add('hidden');
+            }
+        }
+
+        function updateTotal() {
+            let total = 0;
+            inputs.forEach(input => {
+                const val = parseFloat(input.value) || 0;
+                total += val;
+            });
+            if(totalCollectedDisplay) totalCollectedDisplay.textContent = total.toFixed(2);
+            checkSaveButton();
+        }
+
+        function updateRowBalance(index) {
+            const input = inputs[index];
+            const balanceSpan = balances[index];
+            const totalAmountSpan = document.querySelectorAll('.total-amount')[index];
+            
+            const total = parseFloat(totalAmountSpan.textContent) || 0;
+            const collected = parseFloat(input.value) || 0;
+            
+            const balance = total - collected;
+            balanceSpan.textContent = balance.toFixed(2);
+        }
+
+        // Initialize values on load
+        inputs.forEach((input, index) => {
+             updateRowBalance(index);
+             const val = parseFloat(input.value);
+             if (val > 0 && rowCbs[index]) {
+                  rowCbs[index].checked = true;
+             }
+        });
+        updateTotal();
+
+        rowCbs.forEach((cb, index) => {
+            const input = inputs[index];
+            if(input.disabled) return;
+
+            cb.addEventListener('change', function() {
+                const amount = parseFloat(this.getAttribute('data-amount')) || 0;
+                const currentVal = parseFloat(input.value) || 0;
+
+                if (this.checked) {
+                    // Only auto-fill if empty or 0
+                    if (currentVal === 0) {
+                        input.value = amount;
+                    }
+                } else {
+                    input.value = '';
+                }
+                updateRowBalance(index);
+                updateTotal();
+            });
+        });
+
+        inputs.forEach((input, index) => {
+            const cb = rowCbs[index];
+            if(input.disabled) return;
+
+            input.addEventListener('input', function() {
+                const val = parseFloat(this.value);
+                if (val > 0) {
+                    cb.checked = true;
+                } else {
+                    if (this.value === '' || val === 0) cb.checked = false;
+                }
+                updateRowBalance(index);
+                updateTotal();
+            });
+        });
+        
+        if(selectAllCb && !selectAllCb.disabled) {
+            selectAllCb.addEventListener('change', function() {
+                const checked = this.checked;
+                rowCbs.forEach((cb, index) => {
+                     const input = inputs[index];
+                     if(input.disabled) return;
+                     const amount = parseFloat(cb.getAttribute('data-amount')) || 0;
+                     const currentVal = parseFloat(input.value) || 0;
+                     
+                     if (checked) {
+                         cb.checked = true;
+                         if (currentVal === 0) {
+                             input.value = amount;
+                         }
+                     } else {
+                         cb.checked = false;
+                         input.value = '';
+                     }
+                     updateRowBalance(index);
+                });
+                updateTotal();
+            });
+        }
+    });
+</script>
+{% endblock externalJS %}

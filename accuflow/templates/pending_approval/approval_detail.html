@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %} Review Collection #{{ collection.id }} {% endblock title %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto mt-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <div class="flex items-center gap-2 text-gray-500 text-sm mb-1">
+                <a href="{% url 'pendingapproval' %}" class="hover:text-blue-600 transition-colors">Pending Approvals</a>
+                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                <span>Review</span>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-800">Review Collection #{{ collection.id }}</h1>
+        </div>
+        <div class="flex items-center gap-3">
+             <button type="button" onclick="confirmReject()" class="px-5 py-2.5 rounded-xl border border-red-200 text-red-600 font-medium hover:bg-red-50 transition-colors">
+                 Reject
+             </button>
+             <button type="button" onclick="submitApprove()" class="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700 shadow-lg shadow-blue-200 transition-colors flex items-center gap-2">
+                 <i data-lucide="check-circle" class="w-4 h-4"></i>
+                 Approve & Post
+             </button>
+        </div>
+    </div>
+
+    <form method="POST" id="approvalForm" class="space-y-6">
+        {% csrf_token %}
+        <input type="hidden" name="action" id="formAction" value="">
+
+        <!-- Info Card -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+                <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Collector</label>
+                <div class="mt-1 flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">
+                        {{ collection.collector.name|slice:":2" }}
+                    </div>
+                    <span class="font-medium text-gray-900">{{ collection.collector.name }}</span>
+                </div>
+            </div>
+            <div>
+                 <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Collection Date</label>
+                 <div class="mt-1 font-medium text-gray-900">{{ collection.date }}</div>
+            </div>
+            <div>
+                 <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Deposit To (Cash/Bank)</label>
+                 <div class="mt-1">
+                     <select name="cash_bank" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                         <option value="">Select Account...</option>
+                         {% for cb in cashbanks %}
+                         <option value="{{ cb.id }}">{{ cb.name }}</option>
+                         {% endfor %}
+                     </select>
+                 </div>
+            </div>
+        </div>
+
+        <!-- Items Table -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                <h3 class="font-semibold text-gray-800">Collection Entries</h3>
+                <div class="text-sm text-gray-500">
+                    Total Approved: <span class="font-bold text-emerald-600 text-lg ml-2" id="totalDisplay">0.00</span>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-gray-50 text-gray-500 text-xs uppercase font-semibold">
+                        <tr>
+                            <th class="px-6 py-3">Transaction</th>
+                            <th class="px-6 py-3">Customer</th>
+                            <th class="px-6 py-3 text-right">Amount Due</th>
+                            <th class="px-6 py-3 text-right">Collected (Collector)</th>
+                            <th class="px-6 py-3 text-right w-40">Approved Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        {% for item in items %}
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4">
+                                <span class="font-medium text-gray-900">{{ item.transaction_id }}</span>
+                                <div class="text-xs text-gray-500">{{ item.transaction_type }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                {% if item.customer_name %}
+                                <div class="font-medium text-gray-900">{{ item.customer_name }}</div>
+                                {% else %}
+                                <span class="text-gray-400">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-right text-gray-500">
+                                {{ item.amount }}
+                            </td>
+                            <td class="px-6 py-4 text-right font-medium text-gray-700">
+                                {{ item.collected_amount }}
+                            </td>
+                            <td class="px-6 py-4">
+                                <input type="number" step="0.01" 
+                                       name="amount_{{ item.id }}" 
+                                       value="{{ item.collected_amount }}"
+                                       class="approved-input w-full text-right bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium text-emerald-600">
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock content %}
+
+{% block externalJS %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+
+        const form = document.getElementById('approvalForm');
+        const actionInput = document.getElementById('formAction');
+        const inputs = document.querySelectorAll('.approved-input');
+        const totalDisplay = document.getElementById('totalDisplay');
+
+        function updateTotal() {
+            let total = 0;
+            inputs.forEach(input => {
+                total += parseFloat(input.value) || 0;
+            });
+            totalDisplay.textContent = total.toFixed(2);
+        }
+
+        inputs.forEach(input => {
+            input.addEventListener('input', updateTotal);
+        });
+        updateTotal();
+
+        window.submitApprove = function() {
+            // Validate Cash Bank
+            const cbSelect = form.querySelector('select[name="cash_bank"]');
+            if(!cbSelect.value) {
+                alert("Please select a Cash/Bank account for deposit.");
+                cbSelect.focus();
+                return;
+            }
+            if(confirm("Confirm approval? Ledger entries will be created.")) {
+                actionInput.value = 'approve';
+                form.submit();
+            }
+        };
+
+        window.confirmReject = function() {
+            if(confirm("Are you sure you want to REJECT this collection?")) {
+                actionInput.value = 'reject';
+                form.submit();
+            }
+        }
+    });
+</script>
+{% endblock externalJS %}

@@ -1,223 +1,119 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
-from django.db.models import Sum, Q, Value, CharField, F
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib import messages
 from django.utils import timezone
-from datetime import datetime
-from core.models import Collectors, Godowns, Purchases, Sales, NSDs, Cashs
-from core.views import getClient
+from core.models import Collection, Cashs, CashBanks, Sales
+from core.views import getClient, update_ledger
+from cash_entry.views import getLastCashNo
+from django.db.models import Sum, Count
 
-class PendingApprovalView(View):
+class PendingApprovalView(LoginRequiredMixin, View):
     def get(self, request):
-        collectors = Collectors.objects.filter(is_active=True, client=getClient(request.user))
-        return render(request, 'pending_approval/pending_approval.html', {'collectors': collectors, 'sort': 'Serial'})
-
-    def post(self, request):
-        godown_id = request.POST.get('godown')
-        opening_flag = request.POST.get('opening')
-        sort = request.POST.get('sort')
-        date_from_str = request.POST.get("dateFrom")
-        date_to_str = request.POST.get("dateTo")
-        
         client = getClient(request.user)
-        godowns = Godowns.objects.filter(is_active=True, client=client)
+        # Fetch collections pending approval with total amount
+        collections = Collection.objects.filter(client=client, status='Pending').annotate(
+            pending_total=Sum('items__collected_amount'),
+            items_count=Count('items')
+        ).order_by('-date')
+        return render(request, 'pending_approval/pending_approval.html', {'collections': collections})
 
-        context = {
-            'godowns': godowns,
-            'date_from': date_from_str,
-            'date_to': date_to_str,
-            'sort': sort,
-            'godown': '',
-            'opening': opening_flag if opening_flag == 'on' else '',
-            'ledgers': [],
-            'credit_total': 0,
-            'debit_total': 0,
-            'total_balance': 0,
-            'open_balance': 0,
-        }
-
-        if not godown_id:
-            return render(request, 'godown_ledger/godown_ledger.html', context)
-
-        godown = get_object_or_404(Godowns, id=godown_id)
-        context['godown'] = godown
-
-        date_from = self.parse_date(date_from_str)
-        date_to = self.parse_date(date_to_str)
-
-        if date_from:
-            opening_balance = self.calculate_opening_balance(godown, client, date_from)
-        else:
-            opening_balance = (godown.open_debit or 0) - (godown.open_credit or 0)
+class PendingApprovalDetailView(LoginRequiredMixin, View):
+    def get(self, request, id):
+        client = getClient(request.user)
+        collection = get_object_or_404(Collection, id=id, client=client)
+        items = list(collection.items.all())
         
-        context['open_balance'] = opening_balance
-
-        ledger_items = []
+        # Enrich items with customer info for display
+        for item in items:
+            if item.transaction_type == 'Sale':
+                sale = Sales.objects.filter(sale_no=item.transaction_id, client=client).first()
+                if sale and sale.customer:
+                    item.customer_name = sale.customer.name
+                    item.customer_obj = sale.customer # Pass object if needed
         
-        base_filter = Q(is_active=True, hold=False, client=client)
-        date_filter = Q()
-        if date_from:
-            date_filter &= Q(date__gte=date_from)
-        if date_to:
-            date_filter &= Q(date__lte=date_to)
+        cashbanks = CashBanks.objects.filter(client=client, is_active=True)
+        return render(request, 'pending_approval/approval_detail.html', {
+            'collection': collection,
+            'items': items,
+            'cashbanks': cashbanks
+        })
 
-        purchases = Purchases.objects.filter(base_filter, date_filter, godown=godown)
-        for p in purchases:
-            desc = f"{p.supplier.name}\n{p.description}" if sort != 'Remark' else p.description
-            ledger_items.append({
-                'transaction_no': str(p.purchase_no),
-                'date': p.date,
-                'type': 'PR',
-                'description': desc,
-                'qty': p.qty,
-                'rate': p.amount,
-                'credit': 0,
-                'debit': p.qty,
-                'created_at': p.created_at,
-                'original_obj': p
-            })
-
-        sales = Sales.objects.filter(base_filter, date_filter, godown=godown)
-        for s in sales:
-            desc = f"{s.customer.name}\n{s.description}" if sort != 'Detailed' else s.description
-            ledger_items.append({
-                'transaction_no': str(s.sale_no),
-                'date': s.date,
-                'type': 'SL',
-                'description': desc,
-                'qty': s.qty,
-                'rate': s.amount,
-                'credit': s.qty,
-                'debit': 0,
-                'created_at': s.created_at,
-                'original_obj': s
-            })
-
-        # sender_nsds = NSDs.objects.filter(base_filter, date_filter, sender_customer=customer)
-        # for n in sender_nsds:
-        #     desc = f"{n.receiver.name}\n{n.description}" if sort != 'Remark' else n.description
-        #     ledger_items.append({
-        #         'transaction_no': str(n.nsd_no),
-        #         'date': n.date,
-        #         'type': 'NS',
-        #         'description': desc,
-        #         'qty': n.qty,
-        #         'rate': n.sell_rate,
-        #         'credit': n.sell_amount,
-        #         'debit': 0,
-        #         'created_at': n.created_at,
-        #         'original_obj': n
-        #     })
-
-        # receiver_nsds = NSDs.objects.filter(base_filter, date_filter, receiver_customer=customer)
-        # for n in receiver_nsds:
-        #     desc = f"{n.sender.name}\n{n.description}" if sort != 'Remark' else n.description
-        #     ledger_items.append({
-        #         'transaction_no': str(n.nsd_no),
-        #         'date': n.date,
-        #         'type': 'NS',
-        #         'description': desc,
-        #         'qty': n.qty,
-        #         'rate': n.purchase_rate,
-        #         'credit': 0,
-        #         'debit': n.purchase_amount,
-        #         'created_at': n.created_at,
-        #         'original_obj': n
-        #     })
-
-        # cashs = Cashs.objects.filter(base_filter, date_filter, customer=customer)
-        # for c in cashs:
-        #     is_received = (c.transaction == 'Received')
-        #     desc = c.cash_bank.name if sort != 'Remark' else c.description
-        #     ledger_items.append({
-        #         'transaction_no': str(c.cash_no),
-        #         'date': c.date,
-        #         'type': 'JL',
-        #         'description': desc,
-        #         'qty': '',
-        #         'rate': c.amount,
-        #         'credit': c.amount if is_received else 0,
-        #         'debit': c.amount if not is_received else 0,
-        #         'created_at': c.created_at,
-        #         'original_obj': c
-        #     })
-
-        start_balance = 0
-        if opening_flag != 'on':
-             start_balance = opening_balance
-             ledger_items.append({
-                'transaction_no': 'Opening Balance',
-                'date': godown.created_at.date() if godown.created_at else (date_from or datetime.min.date()),
-                'type': 'OB',
-                'description': '',
-                'qty': '1',
-                'rate': godown.open_balance,
-                'credit': godown.open_credit,
-                'debit': godown.open_debit,
-                'balance': godown.open_balance, 
-                'created_at': godown.created_at,
-                'is_ob': True
-             })
+    def post(self, request, id):
+        client = getClient(request.user)
+        collection = get_object_or_404(Collection, id=id, client=client)
+        action = request.POST.get('action')
         
-        ledger_items.sort(key=lambda x: (x['date'], x['created_at']))
-
-        if sort == 'Serial':
-             ledger_items.sort(key=lambda x: x['transaction_no'])
-
-        running_val = start_balance
-        credit_sum = 0
-        debit_sum = 0
+        if action == 'reject':
+            collection.status = 'Rejected'
+            collection.approved_by = request.user
+            collection.approval_date = timezone.now()
+            collection.save()
+            messages.info(request, "Collection rejected.")
+            return redirect('pendingapproval')
         
-        final_ledgers = []
-        
-        for item in ledger_items:
-            c_val = float(item.get('credit') or 0)
-            d_val = float(item.get('debit') or 0)
+        if action == 'approve':
+            cb_id = request.POST.get('cash_bank')
+            if not cb_id:
+                messages.error(request, "Please select a Cash/Bank account for deposit.")
+                return redirect('pending_approval_detail', id=id)
             
-            if item.get('type') == 'OB':
-                item['balance'] = start_balance
-            else:
-                running_val += (d_val - c_val)
-                item['balance'] = running_val
+            cash_bank = get_object_or_404(CashBanks, id=cb_id, client=client)
+            
+            items = collection.items.all()
+            approved_count = 0
+            
+            for item in items:
+                # Get updated amount from Admin input
+                amount_str = request.POST.get(f'amount_{item.id}')
+                try:
+                    amount = float(amount_str)
+                except (ValueError, TypeError):
+                    amount = 0
                 
-                credit_sum += c_val
-                debit_sum += d_val
+                # Update item amount if changed
+                if item.collected_amount != amount:
+                    item.collected_amount = amount
+                    item.save()
+                
+                if amount > 0:
+                    approved_count += 1
+                    # Logic to find Customer
+                    customer = None
+                    if item.transaction_type == 'Sale':
+                        sale = Sales.objects.filter(sale_no=item.transaction_id, client=client).first()
+                        if sale:
+                            customer = sale.customer
+                    
+                    if customer:
+                        # 1. Update Ledger (Credit Customer)
+                        # 'Received' transaction reduces customer balance (Credit side)
+                        # Using pattern from CashAddView: update_ledger(where=customer, to=None, new_purchase=amount, old_purchase=0)
+                        update_ledger(where=customer, to=None, new_purchase=amount, old_purchase=0)
+                        
+                        # 2. Create Cashs Entry
+                        Cashs.objects.create(
+                            client=client,
+                            cash_no=getLastCashNo(client=client), # Helper function
+                            supplier=None,
+                            customer=customer,
+                            cash_bank=cash_bank,
+                            date=timezone.now().date(), # Or collection.date? Usually approval date is posting date.
+                            amount=amount,
+                            party_balance=customer.balance, # Updated balance
+                            transaction='Received',
+                            # which_type='customers', # Computed property
+                            description=customer.name,
+                            hold=False,
+                            is_active=True
+                        )
+
+            collection.status = 'Approved'
+            collection.approved_by = request.user
+            collection.approval_date = timezone.now()
+            collection.save()
             
-            final_ledgers.append(item)
+            messages.success(request, f"Collection approved. {approved_count} entries posted.")
+            return redirect('pendingapproval')
             
-        if opening_flag == 'on':
-            context['open_balance'] = 0
-
-        context['ledgers'] = final_ledgers
-        context['credit_total'] = credit_sum
-        context['debit_total'] = debit_sum
-        context['total_balance'] = running_val
-        
-        return render(request, 'godown_ledger/godown_ledger.html', context)
-
-    def parse_date(self, date_str):
-        if date_str:
-            try:
-                return datetime.strptime(date_str, "%Y-%m-%d").date()
-            except ValueError:
-                return None
-        return None
-
-    def calculate_opening_balance(self, godown, client, date_limit):
-        base_filter = Q(is_active=True, hold=False, client=client, godown=godown, date__lt=date_limit)
-        nsd_base = Q(is_active=True, hold=False, client=client, date__lt=date_limit)
-        
-        purchases_sum = Purchases.objects.filter(base_filter).aggregate(s=Sum('qty'))['s'] or 0
-        sales_sum = Sales.objects.filter(base_filter).aggregate(s=Sum('qty'))['s'] or 0
-        # sender_sum = NSDs.objects.filter(nsd_base, sender_customer=customer).aggregate(s=Sum('sell_amount'))['s'] or 0
-        # receiver_sum = NSDs.objects.filter(nsd_base, receiver_customer=customer).aggregate(s=Sum('purchase_amount'))['s'] or 0
-        
-        # cash_received = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or 0
-        # cash_paid = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or 0
-        
-        # transaction_balance = (sales_sum + receiver_sum + cash_paid) - (purchases_sum + sender_sum + cash_received)
-        transaction_balance = (sales_sum ) - (purchases_sum )
-        
-        static_ob = (godown.open_debit or 0) - (godown.open_credit or 0)
-        
-        return static_ob + transaction_balance
-    
+        return redirect('pendingapproval')

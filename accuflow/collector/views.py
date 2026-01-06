@@ -40,12 +40,15 @@ class AddCollectorView(View):
                 password=password
             )
             
+            can_collect = request.POST.get('can_collect_directly') == 'on'
+            
             collector = Collectors.objects.create(
                 name=name,
                 phone=phone,
                 address=address,
                 client=getClient(request.user),
-                user=user
+                user=user,
+                can_collect_directly=can_collect
             )
             if wa:
                 collector.country_code = country_code
@@ -124,6 +127,8 @@ class UpdateCollectorView(View):
         if wa:
             collector.country_code = country_code
             collector.wa = wa
+            
+        collector.can_collect_directly = request.POST.get('can_collect_directly') == 'on'
         collector.save()
         
         messages.success(request, f"Collector '{name}' updated successfully.")

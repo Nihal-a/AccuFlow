@@ -74,6 +74,7 @@
                         <th class="px-4 py-3 text-left font-medium">Type</th>
                         <th class="px-4 py-3 text-left font-medium">From</th>
                         <th class="px-4 py-3 text-left font-medium">To</th>
+                        <th class="px-4 py-3 text-left font-medium">Customer Phone</th>
                         <th class="px-4 py-3 text-right font-medium">Credit</th>
                         <th class="px-4 py-3 text-right font-medium">Debit</th>
                     </tr>
@@ -88,6 +89,7 @@
                         <td class="px-4 py-3 text-gray-600">{{ t.type }}</td>
                         <td class="px-4 py-3 text-gray-600">{{ t.from }}</td>
                         <td class="px-4 py-3 text-gray-600">{{ t.to }}</td>
+                        <td class="px-4 py-3 text-gray-600">{{ t.customer_phone }}</td>
                         <td class="px-4 py-3 text-right text-green-600">{{ t.credit|default:'-' }}</td>
                         <td class="px-4 py-3 text-right text-red-600">{{ t.debit|default:'-' }}</td>
                     </tr>

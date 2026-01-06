@@ -397,9 +397,7 @@ Sales Entry
   });
   $('#allCustomers').on('change', function () {
     if ($(this).is(':checked')) {
-      const suppliers = {{ suppliers| safe
-    }
-  }
+      const suppliers = {{ suppliers| safe}}
         var customerSelect = $('#customer');
   $('#customerID').val('');
   $('#customerCredit').text('');
@@ -413,8 +411,7 @@ Sales Entry
     customerSelect.append(option);
   });
       } else {
-    const customers = {{ customers| safe
-  }}
+    const customers = {{ customers| safe}}
   var customerSelect = $('#customer');
   customerSelect.empty();
   $('#customerID').val('');
