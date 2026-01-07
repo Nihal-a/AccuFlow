@@ -48,6 +48,11 @@ urlpatterns = [
     path('my-collections/', include('collector_view.urls')),
     path('purchasereport/', include('purchase_report.urls')),
     path('salesreport/', include('sales_report.urls')),
+    path('receivablereport/', include('receivable_report.urls')),
+    path('payablereport/', include('payable_report.urls')),
+    path('transactionreport/', include('transaction_report.urls')),
+    path('collectionreport/', include('collection_report.urls')),
+    path('outstanding/', include('outstanding_report.urls')),
 ]
 
 if settings.DEBUG:

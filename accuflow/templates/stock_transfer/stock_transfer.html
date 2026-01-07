@@ -8,7 +8,6 @@
     <div class="bg-white rounded-xl p-6 mt-3">
         <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">Stock Transfer</h1>
         <div class="mt-4 flex flex-wrap items-center gap-3">
-            <!-- 🟦 New -->
             <a id="btnNew"
                href="#"
                class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
@@ -39,204 +38,155 @@
         </div>
         <hr class="mt-5">
         <div class=" mt-5 w-100" id="createView">
-             <form method="post" action="{% url 'stockview' %}" class="grid grid-cols-8 gap-4 ">
+             <form method="post" action="{% url 'stocktransfer_add' %}" id="stockTransferForm">
                 {% csrf_token %}
-                <div class="col-span-6 flex gap-2 ">
-                    <div class="w-[50%]">
-                        <label class="block text-gray-700">Transfer No*</label>
-                        <input type="text"
-                               name=""
-                               value="{{ last_stock_transfer_no }}"
-                               id="stock_transfer_name"
-                               placeholder="Transfer No"
-                               class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               disabled
-                               required />
-                    </div>
-                    <input type="hidden" name="" id="commissionId" placeholder="" />
-                    <div class="w-[50%]">
-                        <label class="block text-gray-700">Date*</label>
-                        <input type="date"
-                               name=""
-                               id="date"
-                               class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               required />
-                    </div>
-                </div>
-                <div class="col-span-6 w-full flex items-center gap-3">
-                    <div class=" w-[80%]">
-                        <label class="block text-gray-700 mb-1">Godown From*</label>
-                        <div class="flex items-center gap-4">
-                            <div class="flex-1">
-                                <select name=""
-                                        id="godownFrom"
-                                        class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        required>
-                                    <option value="" selected>Select Godown</option>
-                                    {% for godown in godowns %}
-                                        <option value="{{ godown.id }}"
-                                                data-code="{{ godown.godownId }}"
-                                                data-balance="{{ godown.get_balance }}">{{ godown.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
+                <div class="grid grid-cols-8 gap-4">
+                    <div class="col-span-6 flex gap-2 ">
+                        <div class="w-[50%]">
+                            <label class="block text-gray-700">Transfer No*</label>
+                            <input type="text"
+                                   name="transfer_no"
+                                   value="{{ last_transfer_no }}"
+                                   id="transfer_no"
+                                   placeholder="Transfer No"
+                                   class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   readonly
+                                   required />
+                        </div>
+                        <div class="w-[50%]">
+                            <label class="block text-gray-700">Date*</label>
+                            <input type="date"
+                                   name="date"
+                                   id="date"
+                                   class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   required />
                         </div>
                     </div>
-                    <div class=" w-[30%]">
-                        <!-- Label -->
-                        <label class="block text-gray-700 mb-1">G.code*</label>
-                        <div class="flex items-center gap-4 ">
-                            <!-- Row: Checkbox + Dropdown -->
-                            <div class="flex items-center gap-4 w-full">
-                                <!-- Dropdown -->
+    
+                    <!-- Godown From Row -->
+                    <div class="col-span-6 w-full flex items-center gap-3">
+                        <div class=" w-[80%]">
+                            <label class="block text-gray-700 mb-1">Godown From*</label>
+                            <div class="flex items-center gap-4">
                                 <div class="flex-1">
-                                    <input type="text"
-                                           name=""
-                                           id="godownID"
-                                           placeholder=""
-                                           disabled
-                                           class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                           required />
+                                    <select id="godownFrom"
+                                            class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="" selected>Select Godown</option>
+                                        {% for godown in godowns %}
+                                            <option value="{{ godown.id }}"
+                                                    data-code="{{ godown.godownId }}"
+                                                    data-qty="{{ godown.qty }}">{{ godown.name }}</option>
+                                        {% endfor %}
+                                    </select>
                                 </div>
                             </div>
                         </div>
+                        <div class=" w-[20%]">
+                            <label class="block text-gray-700 mb-1">Code</label>
+                            <input type="text" id="godownFromCode" disabled
+                                   class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        </div>
+                        <div class="w-[20%]">
+                            <div id="godownFromBalance"></div>
+                        </div>
                     </div>
-                    <div class="w[20%]">
-                        <div id="godownCredit"></div>
+    
+                    <!-- Godown To Row -->
+                    <div class="col-span-6 w-full flex items-center gap-3">
+                        <div class=" w-[80%]">
+                            <label class="block text-gray-700 mb-1">Godown To*</label>
+                            <div class="flex items-center gap-4">
+                                <div class="flex-1">
+                                    <select id="godownTo"
+                                            class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="" selected>Select Godown</option>
+                                        {% for godown in godowns %}
+                                            <option value="{{ godown.id }}"
+                                                    data-code="{{ godown.godownId }}"
+                                                    data-qty="{{ godown.qty }}">{{ godown.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                         <div class=" w-[20%]">
+                            <label class="block text-gray-700 mb-1">Code</label>
+                            <input type="text" id="godownToCode" disabled
+                                   class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        </div>
+                        <div class="w-[20%]">
+                            <div id="godownToBalance"></div>
+                        </div>
+                    </div>
+    
+                    <!-- Qty Row -->
+                    <div class="col-span-6 w-full flex items-center gap-3">
+                         <div class="w-full">
+                            <label class="block text-gray-700 mb-1">Qty*</label>
+                            <input type="number"
+                                   id="qty"
+                                   placeholder="Qty"
+                                   class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   step="0.01" />
+                        </div>
+                    </div>
+
+                    <!-- Description Row -->
+                    <div class="description col-span-6">
+                        <div>
+                            <label class="block text-gray-700">Description</label>
+                            <textarea id="description"
+                                      class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                        </div>
                     </div>
                 </div>
+
+                <hr class="mt-5 mb-5">
                 
-                <div class="col-span-6 w-full flex items-center gap-3">
-                    <div class=" w-[80%]">
-                        <label class="block text-gray-700 mb-1">Godown To*</label>
-                        <div class="flex items-center gap-4">
-                            <div class="flex-1">
-                                <select name=""
-                                        id="godownTo"
-                                        class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        required>
-                                    <option value="" selected>Select Godown</option>
-                                    {% for godown in godowns %}
-                                        <option value="{{ godown.id }}"
-                                                data-code="{{ godown.godownId }}"
-                                                data-balance="{{ godown.get_balance }}">{{ godown.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class=" w-[30%]">
-                        <!-- Label -->
-                        <label class="block text-gray-700 mb-1">G.code*</label>
-                        <div class="flex items-center gap-4 ">
-                            <!-- Row: Checkbox + Dropdown -->
-                            <div class="flex items-center gap-4 w-full">
-                                <!-- Dropdown -->
-                                <div class="flex-1">
-                                    <input type="text"
-                                           name=""
-                                           id="godownID"
-                                           placeholder=""
-                                           disabled
-                                           class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                           required />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="w[20%]">
-                        <div id="godownCredit"></div>
-                    </div>
-                </div>
-               
-                <div class="col-span-6 w-[35%] flex gap-2">
-                    <div class="flex-1">
-                        <label class="block text-gray-700">Qty*</label>
-                        <input type="number"
-                               name=""
-                               id="qty"
-                               placeholder="Enter Quantity"
-                               class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               required />
-                    </div>
-                </div>
-                <div class="description col-span-6">
-                    <div>
-                        <label class="block text-gray-700">Description</label>
-                        <textarea name=""
-                                  id="description"
-                                  class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-                    </div>
-                </div>
-            </form>
-            <hr class="mt-5 mb-5">
                 <div class="flex items-center justify-between">
-                    <div class="flex gap-2 items-center">
-                        <a id="addGrid"
+                     <div class="flex gap-2 items-center">
+                        <a id="addToGrid"
                            href="#"
-                           onclick="addToCommissionGrid()"
+                           onclick="addToTransferGrid()"
                            class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
-                            <!-- <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                          </svg> -->
-                            <span id="addToGridText">Add to Grid</span>
+                            Add to Grid
                         </a>
                         <a id="btnCancel"
                            href="#"
-                           onclick="oncancelData()"
+                           onclick="clearForm();"
                            class="leading-none inline-flex items-center gap-1.5 bg-gray-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-gray-600 transition-all duration-300">
-                            <svg xmlns="http://www.w3.org/2000/svg"
-                                 class="h-4 w-4"
-                                 fill="none"
-                                 viewBox="0 0 24 24"
-                                 stroke="currentColor"
-                                 stroke-width="2">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                             Cancel
                         </a>
                     </div>
+                    
                     <div class="flex items-center gap-2">
-                        <div class="relative w-full md:w-3/4">
-                            <input type="text"
-                                   id="searchInput"
-                                   placeholder="Search commission..."
-                                   class="w-full bg-white rounded-xl px-4 py-2 pl-10 border  focus:border-transparent ring-2 ring-blue-200  focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none" />
-                            <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5 pointer-events-none"
-                                 fill="none"
-                                 stroke="currentColor"
-                                 stroke-width="2"
-                                 viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 3a7.5 7.5 0 006.15 13.65z" />
-                            </svg>
-                        </div>
-                        <button id="btnSave"
-                                type="submit"
+                         <button id="btnSave"
+                                type="button"
+                                onclick="submitForm()"
                                 class="leading-none inline-flex items-center gap-1.5 bg-green-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-green-600 transition-all duration-300">
-                            <svg xmlns="http://www.w3.org/2000/svg"
-                                 class="h-4 w-4"
-                                 fill="none"
-                                 viewBox="0 0 24 24"
-                                 stroke="currentColor"
-                                 stroke-width="2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                                 stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                             </svg>
                             Save
                         </button>
                     </div>
                 </div>
-                <div class="overflow-x-auto mt-5 w-full" id="commissionCreateDiv">
+
+                <div class="overflow-x-auto mt-5 w-full" id="transferCreateDiv">
                     <table class="min-w-full rounded-t-lg overflow-hidden">
                         <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
                             <tr>
                                 <th class="px-4 py-3 text-left font-medium w-1">Actions</th>
                                 <th class="px-4 py-3 text-left font-medium w-1">#</th>
                                 <th class="px-4 py-3 text-left font-medium">Date</th>
-                                <th class="px-4 py-3 text-left font-medium">Expense</th>
-                                <th class="px-4 py-3 text-left font-medium">Godown</th>
+                                <th class="px-4 py-3 text-left font-medium">Godown From</th>
+                                <th class="px-4 py-3 text-left font-medium">Godown To</th>
                                 <th class="px-4 py-3 text-right font-medium">Qty</th>
-                                <th class="px-4 py-3 text-right font-medium">Rate</th>
-                                <th class="px-4 py-3 text-right font-medium">Total Amount</th>
                                 <th class="px-4 py-3 text-right font-medium">Description</th>
                             </tr>
                         </thead>
@@ -244,683 +194,237 @@
                         </tbody>
                     </table>
                 </div>
+            </form>
         </div>
+        
+
         <div id="viewDiv" class="hidden">
-            <div class="dateDiv mt-3">
+            <!-- Filter Section -->
+             <div class="dateDiv mt-3">
+                <form method="get" action="{% url 'stocktransfer' %}">
                 <div class="flex justify-center items-end gap-5 mt-4">
                     <div>
-                        <label class="block text-gray-700">From Date*</label>
+                        <label class="block text-gray-700">From Date</label>
                         <input type="date"
-                               id="from_date"
-                               class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               required />
+                               name="from_date"
+                               value="{{ from_date }}"
+                               class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"/>
                     </div>
                     <div>
-                        <label class="block text-gray-700">End Date*</label>
+                        <label class="block text-gray-700">End Date</label>
                         <input type="date"
-                               id="end_date"
-                               class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               required />
+                               name="to_date"
+                               value="{{ to_date }}"
+                               class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"/>
                     </div>
                     <div>
-                        <button id="dateFilter"
+                        <button type="submit"
                                 class="bg-blue-600 text-white px-5 py-2 mt-6 rounded-xl hover:bg-blue-700 transition-all">
                             Filter
                         </button>
                     </div>
                 </div>
+                </form>
             </div>
-            <div id="viewStockTransferDiv" class="hidden">
+
+            <div id="viewStockTransferDiv">
                 <hr class="mt-5">
-                <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mt-3 mb-3">
-                    <div class="flex items-end gap-3 w-full md:w-auto">
-                        <div>
-                            <label for="from_price" class="block text-gray-700 text-sm font-medium">From</label>
-                            <input type="number"
-                                   id="from_price"
-                                   placeholder="0.00"
-                                   class="w-32 mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                        </div>
-                        <div>
-                            <label for="to_price" class="block text-gray-700 text-sm font-medium">To</label>
-                            <input type="number"
-                                   id="to_price"
-                                   placeholder="0.00"
-                                   class="w-32 mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                        </div>
-                        <button id="btnFilter"
-                                class="mt-5 bg-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
-                            Filter
-                        </button>
-                    </div>
-                    <h2 id="showDate" class="underline"></h2>
-                    <div class="relative w-full md:w-1/4">
-                        <input type="text"
-                               id="searchInput"
-                               placeholder="Search commission..."
-                               class="w-full bg-white searchInput rounded-xl px-4 py-2 pl-10 border focus:border-transparent ring-2 ring-blue-200 focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none" />
-                        <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5 pointer-events-none"
-                             fill="none"
-                             stroke="currentColor"
-                             stroke-width="2"
-                             viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 3a7.5 7.5 0 006.15 13.65z" />
-                        </svg>
-                    </div>
-                </div>
                 <div class="overflow-x-auto mt-5 w-full">
                     <table class="min-w-full rounded-t-lg overflow-hidden"
                            id="viewStockTransferTable">
                         <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
                             <tr>
-                                <th class="px-4 py-3 text-left font-medium w-1">Actions</th>
-                                <th class="px-4 py-3 text-left font-medium w-1">#</th>
                                 <th class="px-4 py-3 text-left font-medium">Transfer No</th>
                                 <th class="px-4 py-3 text-left font-medium">Date</th>
-                                <th class="px-4 py-3 text-right font-medium">Qty</th>
                                 <th class="px-4 py-3 text-left font-medium">Godown From</th>
-                                <th class="px-4 py-3 text-right font-medium">Godown To</th>
+                                <th class="px-4 py-3 text-left font-medium">Godown To</th>
+                                <th class="px-4 py-3 text-right font-medium">Qty</th>
                                 <th class="px-4 py-3 text-right font-medium">Description</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-gray-100" id="stockTransferTableBody">
+                        <tbody class="bg-gray-100">
+                            {% for transfer in transfers %}
+                            <tr>
+                                <td class="px-4 py-3 border-b">{{ transfer.transfer_no }}</td>
+                                <td class="px-4 py-3 border-b">{{ transfer.date }}</td>
+                                <td class="px-4 py-3 border-b">{{ transfer.godown_from }}</td>
+                                <td class="px-4 py-3 border-b">{{ transfer.godown_to }}</td>
+                                <td class="px-4 py-3 border-b text-right">{{ transfer.qty }}</td>
+                                <td class="px-4 py-3 border-b text-right">{{ transfer.description }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="px-4 py-3 text-center text-gray-500">No transfers found.</td>
+                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
-    <!-- 🟦 Edit Confirmation Modal -->
-    <div id="editModal"
-         class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
-        <div class="bg-white rounded-xl shadow-lg p-6 w-80 text-center">
-            <h2 class="text-lg font-semibold mb-4 text-gray-800">Confirm Edit</h2>
-            <p class="mb-6 text-gray-600 ">Are you sure you want to edit this commission's details?</p>
-            <div class="flex justify-center space-x-4">
-                <button onclick="closeEditModal()"
-                        class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
-                <a id="confirmEditBtn"
-                   href="#"
-                   class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Edit</a>
-            </div>
-        </div>
-    </div>
-    <div id="confirmModal"
-         class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
-        <div class="bg-white rounded-xl shadow-lg p-6 w-80 text-center">
-            <h2 class="text-lg font-semibold mb-4">Confirm Deletion</h2>
-            <p class="mb-6 text-gray-600">Are you sure you want to delete this transfer?</p>
-            <div class="flex justify-center space-x-4">
-                <button id="cancelBtn"
-                        class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
-                        onclick="closeModal()">Cancel</button>
-                <a id="confirmDeleteBtn"
-                   href="#"
-                   class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                   onclick="deleteItem()">Delete</a>
-            </div>
-        </div>
-    </div>
+
 {% endblock content %}
 {% block externalJS %}
     <script>
-    var isUpdate = false;
-
-  function addLastRow(){
-    const tableBody = document.getElementById("stockTransferTableBody");
-    $('#totalRow').remove();
-    var totalQty = 0;
-    count = 0;
-    tableBody.querySelectorAll("tr").forEach(function(row) {
-      const qty = parseFloat(row.cells[4].innerText) || 0;
-      totalQty += qty;
-      count += 1;
+    
+    $(document).ready(function() {
+        $('#date').val(new Date().toISOString().split('T')[0]);
     });
-    const lastRow = `
-      <tr class="bg-blue-200 font-bold" id="totalRow">
-        <td class="px-4 py-3 text-left" colspan="5">Totals:</td>
-        <td class="px-4 py-3 text-right">${parseFloat(totalQty).toFixed(2)}</td>
-        <td class="px-4 py-3 text-right"></td>
-        <td class="px-4 py-3 text-right"></td>
-        <td class="px-4 py-3 text-right"></td>
-      </tr>`;
-    tableBody.insertAdjacentHTML('beforeend', lastRow);
 
-  }
-
-
-  let selectedTR = '';
     $('#btnNew').on('click', function(e) {
-      e.preventDefault();
-    $('#date').val(new Date().toISOString().split('T')[0]);
-    $('#viewStockTransferDiv').addClass('hidden');
-    $('#viewStockTransferTable tbody').empty();
-    $('#createView').removeClass('hidden');
-    $('#viewDiv').addClass('hidden');
-    $('#commission_name, #amount, #qty, #description, #total_amount').val('');
-    $('#expense, #godown').prop('selectedIndex', 0);
-  getLastCommissionNo()
-
+        e.preventDefault();
+        $('#createView').removeClass('hidden');
+        $('#viewDiv').addClass('hidden');
+        
+        fetch("{% url 'api-transfer-no' %}")
+            .then(response => response.json())
+            .then(data => {
+                $('#transfer_no').val(data.transfer_no);
+            })
+            .catch(error => console.error('Error fetching transfer number:', error));
+            
+        clearForm();
+        $('#date').val(new Date().toISOString().split('T')[0]);
     });
+
     $('#btnView').on('click', function(e) {
-      e.preventDefault();
-    $('#createView').addClass('hidden');
-    $('#viewDiv').removeClass('hidden');
-
-    clearCommissionForm();
-    isUpdate = false;
-    $('#addToGridText').text('Add to Grid');
-    $(selectedTR).removeClass('bg-blue-300');
-    $(selectedTR).find('button').removeAttr('disabled');
-    selectedTR = '';
+        e.preventDefault();
+        $('#createView').addClass('hidden');
+        $('#viewDiv').removeClass('hidden');
     });
 
-    $('#expense').on('change', function() {
-      var selectedOption = $(this).find('option:selected');
-      var code = selectedOption.data('code') || '';
-      var balance = selectedOption.data('balance') || '0';
-      $('#expenseID').val(code);
-    });
-    $('#godown').on('change', function() {
-      var selectedOption = $(this).find('option:selected');
-      var code = selectedOption.data('code') || '';
-      var balance = selectedOption.data('balance') || '0';
-      $('#godownCredit').empty();
-      $('#godownCredit').append(`
-      <p class="font-semibold ${parseFloat(balance).toFixed(2)<= 0 ? `text-red`: ``}">Balance:${parseFloat(balance).toFixed(2)} </p> 
-      `);
-      $('#godownID').val(code); 
-    });
-    </script>
-    <script>
-    var commissions = {{ commissions|safe }};
-
-    for (let i=0; i<commissions.length; i++) {
-      const commission = commissions[i];
-      var tableBody = document.getElementById("stockTransferTableBody");
-      var newRow = `
-      <tr>
-        <td class="px-3 py-3 text-left w-1 flex">
-          <button type='button' class="text-blue-500 hover:underline mr-2" onclick="updateCommission(this)">Edit</button>
-          <button type='button' class="text-red-500 hover:underline" onclick="deleteCommission(this)">Delete</button>
-        </td>
-        <td class="px-4 py-3 text-left w-1 sl">${i+1}</td>
-        <td class="px-4 py-3 text-left search-area">
-          ${commission.date.split('T')[0]}    
-          <input type="hidden" name="dates" value="${commission.date.split('T')[0]}">
-        </td>
-        <td class="px-4 py-3 text-left search-area">
-        ${commission.type === 'expenses' ? commission.expense : commission.expense}
-        <input type="hidden" name="expenses" value="${commission.type === 'expenses' ? commission.expense_id : commission.expense_id}">
-      </td>
-
-
-        <td class="px-4 py-3 text-left search-area">
-          ${commission.godown}
-          <input type="hidden" name="godowns" value="${commission.godown_id}">
-        </td>
-        <td class="px-4 py-3 text-right search-area">
-          ${commission.qty}
-          <input type="hidden" name="qtys" value="${commission.qty}">
-        </td>
-        <td class="px-4 py-3 text-right search-area">
-          ${parseFloat(commission.amount).toFixed(2)}
-          <input type="hidden" name="amounts" value="${commission.amount}">   
-        </td>
-        <td class="px-4 py-3 text-right search-area">
-          ${parseFloat(commission.total_amount).toFixed(2)}
-          <input type="hidden" name="total_amounts" value="${parseFloat(commission.total_amount).toFixed(2)}">
-        </td>
-        <td class="px-4 py-3 text-right search-area">
-          ${commission.description}
-          <input type="hidden" name="descriptions" value="${commission.description}">
-        </td>
-        <input type="hidden" name="commission_ids" id="commission_id" value="${commission.id}"> 
-        <input type="hidden" name="type" id="type" value="${commission.type}"> 
-      </tr>`; 
-      tableBody.insertAdjacentHTML('beforeend', newRow);
-      $('#amount, #qty, #description, #total_amount').val('');
-      $('#expense, #godown').prop('selectedIndex', 0);
-    addLastRow()
-    }
-    </script>
-    <script>
-      navActive("stockTransferMasterLink");
-      let deleteUrl = "";
-    
-      function openModal(commissionId) {
-      }
-
-      function closeModal() {
-        document.getElementById("confirmModal").classList.add("hidden");
-      }
-
-    </script>
-    <script>
-  $('#amount, #qty').on('input', function() {
-    const amount = parseFloat($('#amount').val()) || 0;
-    const qty = parseFloat($('#qty').val()) || 0;
-    const total = amount * qty; 
-    $('#total_amount').val(total.toFixed(2));
-  });
-
-  function addToCommissionGrid() {
-    const commission_no = document.getElementById("commission_name").value.trim();
-    let commission_id = document.getElementById("commissionId").value.trim();
-    const date = document.getElementById("date").value;
-    const expenseEl = document.getElementById("expense");
-    const expense = expenseEl.options[expenseEl.selectedIndex]?.text || "";
-    const expenseSelect = expenseEl.value;
-    const godownEl = document.getElementById("godown");
-    const godown = godownEl.options[godownEl.selectedIndex]?.text || "";
-    const godownSelect = godownEl.value;
-    const qty = parseFloat(document.getElementById("qty").value) || 0;
-    const amount = parseFloat(document.getElementById("amount").value) || 0;
-    const description = document.getElementById("description").value.trim();
-    const total_amount = qty * amount;
-    const type_value = $('#expense').find('option:selected').data('type');
-    if ( !date || !expenseSelect || !godownSelect || !qty || !amount) {
-      alert("⚠️ Please fill in all required fields before adding.");
-      return;
-    }
-    const tableBody = document.getElementById("stockTransferTableBody");
-    const rowCount = tableBody.querySelectorAll("tr").length + 1;
-    fetch("/commission/api/hold_commission/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": "{{ csrf_token }}",
-      },
-      body: JSON.stringify({
-        commission_no: commission_no,
-        date: date,
-        expense: expenseSelect,
-        godown: godownSelect,
-        qty: qty,
-        amount: amount,
-        total_amount: total_amount,
-        description: description,
-        commission_id:commission_id,
-        type: type_value 
-      }), 
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log(data)
-        commission_id = data.commission_id;
-        hold = data.hold
-
-    clearCommissionForm();
-    isUpdate = false;
-        if (hold){
-          if (selectedTR){
-        $(selectedTR).removeClass('bg-blue-300');
-        $(selectedTR).empty();
-        $(selectedTR).append(`
-          <td class="px-4 py-3 text-left w-1 flex">
-          <button type='button' class="text-blue-500 hover:underline mr-2" onclick="updateCommission(this)">Edit</button>
-          <button type='button' class="text-red-500 hover:underline" onclick="deleteCommission(this)">Delete</button>
-        </td>
-        <td class="px-4 py-3 text-left sl"></td>
-        <td class="px-4 py-3 text-left">${date}
-          <input type="hidden" name="dates" value="${date}">
-          </td>
-        <td class="px-4 py-3 text-left search-area">
-          ${expense}
-          <input type="hidden" name="expenses" value="${expenseSelect}">
-        </td>
-        <td class="px-4 py-3 text-left search-area">
-          ${godown}
-          <input type="hidden" name="godowns" value="${godownSelect}">
-        </td>
-        <td class="px-4 py-3 text-right search-area">
-          ${qty}
-          <input type="hidden" name="qtys" value="${qty}">
-        </td>
-        <td class="px-4 py-3 text-right search-area">
-          ${amount.toFixed(2)}
-          <input type="hidden" name="amounts" value="${amount}">
-        </td>
-        <td class="px-4 py-3 text-right search-area">
-          ${total_amount.toFixed(2)}
-          <input type="hidden" name="total_amounts" value="${total_amount.toFixed(2)}">
-        </td>
-         <td class="px-4 py-3 text-left search-area">
-          ${description}
-          <input type="hidden" name="descriptions" value="${description}">
-        </td>
-        <input type="hidden" name="commission_ids" id="commission_id" value="${commission_id}"> 
-        <input type="hidden" name="type" id="type" value="${type_value}"> 
+    // Code and Balance Display Logic
+    $('#godownFrom').on('change', function() {
+        var selectedOption = $(this).find('option:selected');
+        var code = selectedOption.data('code') || '';
+        var qty = selectedOption.data('qty') || 0;
+        
+        $('#godownFromCode').val(code);
+        $('#godownFromBalance').empty();
+        $('#godownFromBalance').append(`
+            <p class="font-semibold ${qty <= 0 ? 'text-red-500' : 'text-gray-700'}">Balance: ${parseFloat(qty).toFixed(2)}</p>
         `);
-        selectedTR = '';
-          }else{
-    const newRow = `
-      <tr>
-        <td class="px-4 py-3 text-left w-1 flex">
-          <button type='button' class="text-blue-500 hover:underline mr-2" onclick="updateCommission(this)">Edit</button>
-          <button type='button' class="text-red-500 hover:underline" onclick="deleteCommission(this)">Delete</button>
-        </td>
-        <td class="px-4 py-3 text-left sl"></td>
-        <td class="px-4 py-3 text-left">${date}
-          <input type="hidden" name="dates" value="${date}">
-          </td>
-        <td class="px-4 py-3 text-left search-area">
-          ${expense}
-          <input type="hidden" name="expenses" value="${expenseSelect}">
-        </td>
-        <td class="px-4 py-3 text-left search-area">
-          ${godown}
-          <input type="hidden" name="godowns" value="${godownSelect}">
-        </td>
-        <td class="px-4 py-3 text-right search-area">
-          ${qty}
-          <input type="hidden" name="qtys" value="${qty}">
-        </td>
-        <td class="px-4 py-3 text-right search-area">
-          ${amount.toFixed(2)}
-          <input type="hidden" name="amounts" value="${amount}">
-        </td>
-        <td class="px-4 py-3 text-right search-area">
-          ${total_amount.toFixed(2)}
-          <input type="hidden" name="total_amounts" value="${total_amount.toFixed(2)}">
-        </td>
-         <td class="px-4 py-3 text-left search-area">
-          ${description}
-          <input type="hidden" name="descriptions" value="${description}">
-        </td>
-        <input type="hidden" name="commission_ids" id="commission_id" value="${commission_id}"> 
-        <input type="hidden" name="type" id="type" value="${type_value}"> 
-      </tr>`;
+        updateDescription();
+    });
 
-    tableBody.insertAdjacentHTML('beforeend', newRow);
-          }
+    $('#godownTo').on('change', function() {
+        var selectedOption = $(this).find('option:selected');
+        var code = selectedOption.data('code') || '';
+        var qty = selectedOption.data('qty') || 0;
+        
+        $('#godownToCode').val(code);
+        $('#godownToBalance').empty();
+        $('#godownToBalance').append(`
+             <p class="font-semibold ${qty <= 0 ? 'text-red-500' : 'text-gray-700'}">Balance: ${parseFloat(qty).toFixed(2)}</p>
+        `);
+        updateDescription();
+    });
 
-      $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-green-500 text-white');
-      $('#addToGridText').text('Add to Grid');
-    $('#commission_name').val(getLastCommissionNo());
-    resetSLNo()
-    addLastRow()
-    isUpdate = false
-        }else{
-          $('#viewStockTransferDiv').removeClass('hidden');
-    $('#viewDiv').removeClass('hidden');
-          $('#createView').addClass('hidden');
-          $('#dateFilter').click();
-          $('#stockTransferTableBody').removeClass('hidden')
-      $('#addToGridText').text('Add to Grid');
-      isUpdate = false
+    function updateDescription() {
+        var from = $('#godownFrom option:selected').text();
+        var to = $('#godownTo option:selected').text();
+        
+        if (from && from !== 'Select Godown' && to && to !== 'Select Godown') {
+            $('#description').val(`${from} -> ${to}`);
+        } else {
+            $('#description').val('');
         }
-      })
-      .catch((error) => {
-        console.error("Error holding commission:", error);
-      });
-
-
-
-  }
-function getLastCommissionNo() {
-    let lastCommissionNo = '';
-    fetch("{% url 'api-commission-no' %}")
-      .then(response => response.json())
-      .then(data => {
-        lastCommissionNo = data.commission_no;
-        document.getElementById("commission_name").value = lastCommissionNo;
-      })
-      .catch(error => {
-        console.error('Error fetching commission no:', error);
-      });
-    return lastCommissionNo;  
-}
-
-  function updateCommission(link) {
-    $('#viewStockTransferDiv').addClass('hidden');
-    // $('#viewStockTransferTable tbody').empty();
-    $('#createView').removeClass('hidden');
-    $('#viewDiv').addClass('hidden');
-    const selectedRow = link.closest('tr');
-    selectedTR = selectedRow;
-    if (isUpdate){
-    document.getElementById("commission_name").value = selectedRow.cells[2].innerText.trim();
-    document.getElementById("date").value = selectedRow.cells[3].innerText.trim();
-    document.getElementById("godown").value = selectedRow.cells[5].querySelector('input').value;
-    document.getElementById("amount").value = selectedRow.cells[7].innerText.trim();
-    document.getElementById("qty").value = selectedRow.cells[6].innerText.trim();
-    document.getElementById("total_amount").value = selectedRow.cells[8].innerText.trim();
-    document.getElementById("description").value = selectedRow.cells[9].innerText.trim();
-    document.getElementById("commissionId").value = selectedRow.querySelector('#commission_id').value;
-
-    if (type === 'customers') {
-      $('#allExpenses').prop('checked', true).change();
-    } else {
-      $('#allExpenses').prop('checked', false).change();
-    }
-    document.getElementById("expense").value = selectedRow.cells[4].querySelector('input').value;
-    }else{
-      makeRowHighlight(selectedRow);
-    document.getElementById("commission_name").value = selectedRow.cells[1].innerText.trim();
-    document.getElementById("date").value = selectedRow.cells[2].innerText.trim();
-    document.getElementById("godown").value = selectedRow.cells[4].querySelector('input').value;
-    document.getElementById("amount").value = selectedRow.cells[6].innerText.trim();
-    document.getElementById("qty").value = selectedRow.cells[5].innerText.trim();
-    document.getElementById("total_amount").value = selectedRow.cells[7].innerText.trim();
-    document.getElementById("description").value = selectedRow.cells[8].innerText.trim();
-    document.getElementById("commissionId").value = selectedRow.querySelector('#commission_id').value;
-
-    if (type === 'customers') {
-      $('#allExpenses').prop('checked', true).change();
-    } else {
-      $('#allExpenses').prop('checked', false).change();
     }
 
-    document.getElementById("expense").value = selectedRow.cells[3].querySelector('input').value;
-  }
 
-    // selectedRow.remove();
-    $('#addToGridText').text('Update Grid');
-    $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-blue-500 text-white');
+    function addToTransferGrid() {
+        const date = $('#date').val();
+        const godownFromId = $('#godownFrom').val();
+        const godownFromText = $('#godownFrom option:selected').text();
+        const godownToId = $('#godownTo').val();
+        const godownToText = $('#godownTo option:selected').text();
+        const qty = parseFloat($('#qty').val());
+        const description = $('#description').val();
 
-    $('#expense, #godown').change()
-    resetSLNo()
-    addLastRow()
-    
-  }
+        if (!date || !godownFromId || !godownToId || !qty || qty <= 0) {
+            alert("Please fill all required fields correctly.");
+            return;
+        }
 
+        if (godownFromId === godownToId) {
+            alert("From and To Godowns cannot be the same.");
+            return;
+        }
 
+        const tableBody = $('#stockTransferTableBody');
+        const rowCount = tableBody.find('tr').length + 1;
 
-  function makeRowHighlight(tr){
-    $('#stockTransferTableBody tr').removeClass('bg-yellow-100');
-    $(tr).addClass('bg-blue-300');
-    $(tr).find('button').attr('disabled', true);
-  }
-
-
-
-
-  function deleteCommission(link) {
-        const selectedRow = link.closest('tr');
-        selectedTR = selectedRow;
-        const commissionId = selectedRow.querySelector('#commission_id').value;
-
-    
-        deleteUrl = "/commission/api/delete_commission/?id=0".replace("0", commissionId);
-        document.getElementById("confirmModal").classList.remove("hidden");
-  }
-  function deleteItem() {
-
-  fetch(deleteUrl, {
-    method: 'GET', 
-  })
-    .then(response => response.json())
-    .then(data => {
-      console.log('Commission deleted successfully:', data);
-
-      if (data.status === 'success') {
-        selectedTR.remove();
-        deleteUrl = "";
-        resetSLNo();
-        getLastCommissionNo()
-        closeModal();
-      } else {
-        console.error('Delete failed:', data.message);
-      }
-    })
-    .catch(error => {
-      console.error('Error while deleting commission:', error);
-    }).finally(() => {
-  selectedTR = '';
-});
-  } 
-function resetSLNo() {
-  $('#stockTransferTableBody .sl').each(function (index) {
-    $(this).text(index + 1);
-    $(this).find('input').val(index + 1);
-  });
-}
-
-  function clearCommissionForm() {
-    $('#amount, #qty, #description, #total_amount, #expenseID, #godownID,#commissionId').val('');
-    $('#expense, #godown').prop('selectedIndex', 0);
-    $('#allExpenses').prop('checked', false);
-      $('#godownCredit').empty()
-    $('#commission_name').val(getLastCommissionNo());
-  }
-
-    </script>
-    <script>
-  $('#btnFilter').on('click', function(e) {
-    e.preventDefault();
-    const fromPrice = parseFloat($('#from_price').val()) || 0;
-    const toPrice = parseFloat($('#to_price').val()) || Infinity;
-
-    $('#viewStockTransferTable tbody tr').each(function() {
-      const totalAmount = parseFloat($(this).find('td:nth-child(9)').text()) || 0;
-
-      if (totalAmount >= fromPrice && totalAmount <= toPrice) {
-        $(this).show();
-      } else {
-        $(this).hide();
-      }
-    });
-  });
-  $('#dateFilter').on('click', function(){
-    const startDate = $('#from_date').val()
-    const endDate = $('#end_date').val()
-    if (!startDate || !endDate) {
-      alert("⚠️ Please select both From Date and End Date.");
-      return;
-    }
-    $('#viewStockTransferDiv').removeClass('hidden');
-    fetch(`{% url 'api-commissions-by-date' %}?from=${startDate}&&to=${endDate}`)
-      .then(response => response.json())
-      .then(data => {
-        const tableBody = $('#viewStockTransferTable tbody');
-        tableBody.empty(); 
-        totalQty = data.total_qty || 0;
-        totalAmount = data.total_amount || 0;
-        rateAvg = data.rate_avg || 0;
-        data.commissions.forEach((commission, index) => {
-          const newRow = `
+        const row = `
             <tr>
-              <td class="px-4 py-3 text-left w-1 flex">
-                <a href="#" class="text-blue-500 hover:underline mr-2" onclick="updateViewData(this)">Edit</a>
-                <a href="#" class="text-red-500 hover:underline" onclick="deleteCommission(this)">Delete</a>
-              </td>
-              <td class="px-4 py-3 text-left sl">${index + 1}</td>
-              <td class="px-4 py-3 text-left search-area">${commission.commission_no}
-                <input type="hidden" name="commission_nos" value="${commission.commission_no}">
+                <td class="px-4 py-3 text-left w-1">
+                    <button type="button" class="text-red-500 hover:underline" onclick="$(this).closest('tr').remove(); updateSl();">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
                 </td>
-              <td class="px-4 py-3 text-left search-area">${commission.date.split('T')[0]}
-                <input type="hidden" name="dates" value="${commission.date.split('T')[0]}">
+                <td class="px-4 py-3 text-left sl">${rowCount}</td>
+                <td class="px-4 py-3 text-left">
+                    ${date}
+                    <input type="hidden" name="dates" value="${date}">
                 </td>
-              <td class="px-4 py-3 text-left search-area">
-        ${commission.expense} 
-        <input type="hidden" name="expenses" value="${commission.id}">
+                <td class="px-4 py-3 text-left">
+                    ${godownFromText}
+                    <input type="hidden" name="godowns_from" value="${godownFromId}">
                 </td>
-              <td class="px-4 py-3 text-left search-area">${commission.godown}
-                <input type="hidden" name="godowns" value="${commission.godown_id}">
+                <td class="px-4 py-3 text-left">
+                    ${godownToText}
+                    <input type="hidden" name="godowns_to" value="${godownToId}">
                 </td>
-              <td class="px-4 py-3 text-right font-bold">${parseFloat(commission.qty).toFixed(2)}
-                <input type="hidden" name="qtys" value="${commission.qty}">
+                <td class="px-4 py-3 text-right">
+                    ${qty}
+                    <input type="hidden" name="qtys" value="${qty}">
                 </td>
-              <td class="px-4 py-3 text-right font-bold">${parseFloat(commission.amount).toFixed(2)}
-                <input type="hidden" name="amounts" value="${commission.amount}">
+                <td class="px-4 py-3 text-right">
+                    ${description}
+                    <input type="hidden" name="descriptions" value="${description}">
                 </td>
-              <td class="px-4 py-3 text-right font-bold">${parseFloat(commission.total_amount).toFixed(2)}
-                <input type="hidden" name="total_amounts" value="${parseFloat(commission.total_amount).toFixed(2)}">
-                </td>
-              <td class="px-4 py-3 text-right search-area">${commission.description}
-                <input type="hidden" name="descriptions" value="${commission.description}">
-                </td>
-              <input type="hidden" name="commission_ids" id="commission_id" value="${commission.id}"> 
-              <input type="hidden" name="type" id="type" value="${commission.type}">
-            </tr>`;
-          tableBody.append(newRow);
+            </tr>
+        `;
+
+        tableBody.append(row);
+        
+        // Clear inputs except date
+        $('#qty').val('');
+        $('#description').val('');
+        // We don't clear Godowns by default as user might be doing multiple transfers between same godowns, 
+        // but to match 'sale' behavior we might want to reset? 
+        // Sale clears them: $('#customer, #godown').prop('selectedIndex', 0);
+        $('#godownFrom').prop('selectedIndex', 0).trigger('change');
+        $('#godownTo').prop('selectedIndex', 0).trigger('change');
+    }
+
+    function updateSl() {
+        $('#stockTransferTableBody .sl').each(function(index) {
+            $(this).text(index + 1);
         });
-        tableBody.append(`
-          <tr class="bg-blue-200 font-bold">
-            <td class="px-4 py-3 text-left" colspan="6">Totals:</td>
-            <td class="px-4 py-3 text-right">${parseFloat(totalQty).toFixed(2)}</td>
-            <td class="px-4 py-3 text-right">${parseFloat(rateAvg).toFixed(2)}</td>
-            <td class="px-4 py-3 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
-            <td class="px-4 py-3 text-right"></td>
-          </tr>
-        `);
-
-        $('#showDate').text(`Showing commissions from ${startDate} to ${endDate}`);
-      })
-      .catch(error => {
-        console.error('Error fetching commissions by date:', error);
-      });
-  })
-  const searchInputfilter = document.getElementsByClassName("searchInput");
-  searchInputfilter[0].addEventListener("keyup", function() {
-    const filter = searchInputfilter[0].value.toLowerCase();
-    const table = document.getElementById("viewStockTransferTable");
-    const tr = table.getElementsByTagName("tr");
-
-    for (let i = 1; i < tr.length; i++) {
-      let tdArray = tr[i].getElementsByClassName("search-area");
-      let rowText = "";
-      for (let j = 0; j < tdArray.length; j++) {
-        rowText += tdArray[j].textContent.toLowerCase() + " ";
-      }
-      if (rowText.indexOf(filter) > -1) {
-        tr[i].style.display = "";
-      } else {
-        tr[i].style.display = "none";
-      }
     }
-  });
 
-document.addEventListener("focusin", (event) => {
-  const el = event.target;
-  if (el.tagName === "SELECT") {
-    el.click();
-  }
-});
-
-function updateViewData(button){
-  $('#stockTransferTableBody').addClass('hidden'); 
-  isUpdate = true;
-  updateCommission(button);
-}
- 
-  function oncancelData(){
-    clearCommissionForm();
-    if (isUpdate){
-
-          $('#viewStockTransferDiv').removeClass('hidden');
-          $('#viewDiv').removeClass('hidden');
-          $('#createView').addClass('hidden');
-          $('#dateFilter').click();
-          $('#stockTransferTableBody').removeClass('hidden')
+    function clearForm() {
+        $('#godownFrom').prop('selectedIndex', 0).trigger('change');
+        $('#godownTo').prop('selectedIndex', 0).trigger('change');
+        $('#qty').val('');
+        $('#description').val('');
+        $('#stockTransferTableBody').empty();
+        $('#godownFromCode').val('');
+        $('#godownToCode').val('');
+        $('#godownFromBalance').empty();
+        $('#godownToBalance').empty();
     }
-    isUpdate = false;
-    $('#addToGridText').text('Add to Grid');
-    $(selectedTR).removeClass('bg-blue-300'); 
-    $(selectedTR).find('button').removeAttr('disabled');
-    selectedTR = '';
-  }
-
+    
+    function submitForm() {
+        if ($('#stockTransferTableBody tr').length === 0) {
+            alert("Please add at least one transfer item.");
+            return;
+        }
+        document.getElementById('stockTransferForm').requestSubmit();
+    }
+    
     </script>
 {% endblock externalJS %}

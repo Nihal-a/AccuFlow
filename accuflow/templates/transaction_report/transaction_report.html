@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Transaction View
+{% endblock title %}
+
+{% block content %}
+<div class="bg-white rounded-xl p-6 mt-3">
+    <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">
+        Transaction View
+    </h1>
+
+    <hr class="mt-5">
+
+    <div id="createView" class="mt-5 w-full">
+        <div class="grid w-full">
+            <form method="post" action="{% url 'transaction_report' %}" class="grid grid-cols-12 gap-4">
+                {% csrf_token %}
+                <div class="col-span-12 w-full flex items-center gap-3">
+                    
+                    <div class="w-[20%]">
+                        <label class="block text-gray-700 mb-1">From</label>
+                        <input type="date"
+                            id="dateFrom"
+                            name="dateFrom"
+                            value="{{date_from}}"
+                            class="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div class="w-[20%]">
+                        <label class="block text-gray-700 mb-1">To</label>
+                        <input type="date"
+                            id="dateTo"
+                            name="dateTo"
+                            value="{{date_to}}"
+                            class="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div class="w-[20%] flex items-end">
+                         <div class="flex gap-2">
+                            <a href="{% url 'transaction_report' %}"
+                                class="leading-none inline-flex items-center gap-1.5 bg-gray-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-gray-600 transition-all duration-300">
+                                Clear
+                            </a>
+
+                            <button type="submit"
+                                class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
+                                View Results
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <div class="overflow-x-auto mt-5 w-full col-span-12">
+                <table class="w-full min-w-max rounded-t-lg overflow-hidden">
+                    <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
+                        <tr>
+                            <th class="px-4 py-3 text-left font-medium">Account Name</th>
+                            <th class="px-4 py-3 text-left font-medium">Date</th>
+                            <th class="px-4 py-3 text-left font-medium">TranNo</th>
+                            <th class="px-4 py-3 text-left font-medium">Description</th>
+                            <th class="px-4 py-3 text-left font-medium">Type</th>
+                            <th class="px-4 py-3 text-right font-medium">Debit</th>
+                            <th class="px-4 py-3 text-right font-medium">Credit</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-gray-100">
+                        {% for item in transactions %}
+                        <tr class="border-b border-gray-200 hover:bg-gray-50">
+                            <td class="px-4 py-3 text-left">{{ item.account_name }}</td>
+                            <td class="px-4 py-3 text-left">{{ item.date|date:"d-m-Y" }}</td>
+                            <td class="px-4 py-3 text-left">{{ item.tran_no }}</td>
+                            <td class="px-4 py-3 text-left">{{ item.description }}</td>
+                            <td class="px-4 py-3 text-left">{{ item.type }}</td>
+                            <td class="px-4 py-3 text-right">{{ item.debit|floatformat:2 }}</td>
+                            <td class="px-4 py-3 text-right">{{ item.credit|floatformat:2 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="px-4 py-3 text-center text-gray-500">No transactions found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block externalJS %}
+<script>
+    navActive("transactionReportLink"); 
+</script>
+{% endblock externalJS %}

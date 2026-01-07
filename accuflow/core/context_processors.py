@@ -10,11 +10,11 @@ def notifications(request):
     try:
         client = getClient(request.user)
         if client:
-             pending = Collection.objects.filter(client=client, status='Pending').order_by('-date')
+             pending = Collection.objects.filter(client=client, status='Pending', is_viewed=False).order_by('-date')
              notifications_data['pending_notifs'] = pending
         elif request.user.is_superuser:
              # Fallback for Superuser without Client link: Show all pending
-             pending = Collection.objects.filter(status='Pending').order_by('-date')
+             pending = Collection.objects.filter(status='Pending', is_viewed=False).order_by('-date')
              notifications_data['pending_notifs'] = pending
     except Exception as e:
         pass

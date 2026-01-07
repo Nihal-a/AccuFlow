@@ -1,7 +1,10 @@
 from django.shortcuts import render,redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-from .models import Clients
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+from .models import Clients, Collection
 
 def user_login(request):
     if request.method == 'POST':
@@ -75,5 +78,16 @@ def update_ledger(where, to=None, old_purchase=0, new_purchase=0, old_sale=0, ne
 
         update_party(to)
         to.save()
+
+@login_required
+@require_POST
+def mark_notifications_read(request):
+    client = getClient(request.user)
+    if client:
+        Collection.objects.filter(client=client, status='Pending', is_viewed=False).update(is_viewed=True)
+    elif request.user.is_superuser:
+        Collection.objects.filter(status='Pending', is_viewed=False).update(is_viewed=True)
+        
+    return JsonResponse({'status': 'success'})
 
 

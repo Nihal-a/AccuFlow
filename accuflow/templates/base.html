@@ -258,10 +258,18 @@
                     <a href="{% url 'salesreport' %}" class="nav-link" id="salesreportLink">
                         <span>Sales Report</span>
                     </a>
-                    <div class="nav-link">Entry View</div>
-                    <div class="nav-link">Receivables</div>
-                    <div class="nav-link">Payable</div>
-                    <div class="nav-link">Collection Report</div>
+                    <a href="{% url 'transaction_report' %}" class="nav-link" id="transactionReportLink">
+                        Entry View
+                    </a>
+                    <a href="{% url 'receivablereport' %}" class="nav-link" id="receivableReportLink">
+                        Receivables
+                    </a>
+                    <a href="{% url 'payablereport' %}" class="nav-link" id="payableReportLink">
+                         Payable
+                    </a>
+                    <a href="{% url 'collectionreport' %}" class="nav-link" id="collectionReportLink">
+                        Collection Report
+                    </a>
                 </div>
             </div>
             <div class="space-y-0">
@@ -269,8 +277,14 @@
                     <i data-lucide="clipboard-list" class="w-4 h-4 "></i><span>Online Currency</span>
                 </div>
                 <div class="ml-4 space-y-0.5 text-gray-500">
-                    <div class="nav-link">XE</div>
-                    <div class="nav-link">KITCO</div>
+                    <div class="nav-link">Payable</div>
+                    <div class="nav-link">Collection Report</div>
+                    <a href="{% url 'outstanding_customer' %}" class="nav-link" id="outstandingCustomerLink">
+                        Outstanding Customer
+                    </a>
+                    <a href="{% url 'outstanding_supplier' %}" class="nav-link" id="outstandingSupplierLink">
+                        Outstanding Supplier
+                    </a>
                 </div>
             </div>
             <div class="space-y-0">
@@ -431,14 +445,53 @@
             // Notification Logic
             const btn = document.getElementById("notificationBtn");
             const popup = document.getElementById("notificationPopup");
+             // The badge on the bell icon
+            const bellBadge = btn.querySelector("span.absolute");
+
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        // Does this cookie string begin with the name we want?
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
 
             if (btn && popup) {
                 btn.addEventListener("click", (e) => {
                     e.stopPropagation();
+                    const wasHidden = popup.classList.contains("hidden");
                     popup.classList.toggle("hidden");
                     btn.classList.toggle('bg-blue-500');
                     btn.classList.toggle('border-white');
                     btn.classList.toggle('text-white');
+                    
+                    // If we just opened the popup and there is a badge, mark as read
+                    if (wasHidden && bellBadge) {
+                         fetch("{% url 'mark_notifications_read' %}", {
+                            method: "POST",
+                            headers: {
+                                "X-CSRFToken": getCookie("csrftoken"),
+                                "Content-Type": "application/json"
+                            },
+                        }).then(response => {
+                             if(response.ok) {
+                                 // Remove badges visually
+                                 bellBadge.remove(); 
+                                 
+                                 // Also remove the 'New' count inside the popup
+                                 const headerBadge = popup.querySelector(".bg-blue-100");
+                                 if(headerBadge) headerBadge.remove();
+                             }
+                        });
+                    }
                 });
 
                 document.addEventListener("click", (e) => {

@@ -1,5 +1,5 @@
 from django.shortcuts import render,redirect, get_object_or_404
-from core.models import Godowns, Purchases, Sales, Commissions
+from core.models import Godowns, Purchases, Sales, Commissions, StockTransfers
 from django.views import View
 from django.views.generic.edit import DeleteView
 from django.db.models import Sum, Q 
@@ -167,6 +167,9 @@ class GodownLedgerView(View):
         ledger_items = []
         
         base_filter = Q(is_active=True, hold=False, client=client, godown=godown)
+        transfer_filter_from = Q(is_active=True, hold=False, client=client, transfer_from=godown)
+        transfer_filter_to = Q(is_active=True, hold=False, client=client, transfer_to=godown)
+
         date_filter = Q()
         if date_from:
             date_filter &= Q(date__gte=date_from)
@@ -217,6 +220,37 @@ class GodownLedgerView(View):
                 'created_at': c.created_at,
                 'original_obj': c
             })
+
+        # Stock Transfers OUT (Out Qty)
+        transfers_out = StockTransfers.objects.filter(transfer_filter_from, date_filter)
+        for t in transfers_out:
+            desc = f"To: {t.transfer_to.name if t.transfer_to else ''} - {t.description}"
+            ledger_items.append({
+                'transaction_no': str(t.transfer_no),
+                'date': t.date,
+                'type': 'Transfer Out',
+                'description': desc,
+                'in_qty': 0,
+                'out_qty': t.qty,
+                'created_at': t.created_at,
+                'original_obj': t
+            })
+
+        # Stock Transfers IN (In Qty)
+        transfers_in = StockTransfers.objects.filter(transfer_filter_to, date_filter)
+        for t in transfers_in:
+            desc = f"From: {t.transfer_from.name if t.transfer_from else ''} - {t.description}"
+            ledger_items.append({
+                'transaction_no': str(t.transfer_no),
+                'date': t.date,
+                'type': 'Transfer In',
+                'description': desc,
+                'in_qty': t.qty,
+                'out_qty': 0,
+                'created_at': t.created_at,
+                'original_obj': t
+            })
+
 
         start_balance = 0
         if opening_flag != 'on':
@@ -276,12 +310,17 @@ class GodownLedgerView(View):
 
     def calculate_opening_stock(self, godown, client, date_limit):
         base_filter = Q(is_active=True, hold=False, client=client, godown=godown, date__lt=date_limit)
+        transfer_filter_from = Q(is_active=True, hold=False, client=client, transfer_from=godown, date__lt=date_limit)
+        transfer_filter_to = Q(is_active=True, hold=False, client=client, transfer_to=godown, date__lt=date_limit)
         
         purchases_sum = Purchases.objects.filter(base_filter).aggregate(s=Sum('qty'))['s'] or 0
         sales_sum = Sales.objects.filter(base_filter).aggregate(s=Sum('qty'))['s'] or 0
         commission_sum = Commissions.objects.filter(base_filter).aggregate(s=Sum('qty'))['s'] or 0
+
+        transfers_in_sum = StockTransfers.objects.filter(transfer_filter_to).aggregate(s=Sum('qty'))['s'] or 0
+        transfers_out_sum = StockTransfers.objects.filter(transfer_filter_from).aggregate(s=Sum('qty'))['s'] or 0
         
         # Stock = In - Out
-        stock_balance = purchases_sum - (sales_sum + commission_sum)
+        stock_balance = (purchases_sum + transfers_in_sum) - (sales_sum + commission_sum + transfers_out_sum)
         
         return stock_balance

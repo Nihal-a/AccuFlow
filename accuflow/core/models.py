@@ -445,6 +445,7 @@ class Collection(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='New')
     approved_by = models.ForeignKey(UserAccount, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_collections')
     approval_date = models.DateTimeField(null=True, blank=True)
+    is_viewed = models.BooleanField(default=False)
 
     def __str__(self):
         name = self.collector.name if self.collector else "Unknown"
