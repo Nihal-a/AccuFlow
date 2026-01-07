@@ -25,7 +25,6 @@ class ReceivableReportView(View):
         
         receivables = []
         
-        # 1. Customers
         customers = Customers.objects.filter(is_active=True, client=client)
         for c in customers:
             if date_limit:
@@ -42,7 +41,6 @@ class ReceivableReportView(View):
                     'type': 'customer'
                 })
 
-        # 2. Suppliers
         suppliers = Suppliers.objects.filter(is_active=True, client=client)
         for s in suppliers:
             if date_limit:
