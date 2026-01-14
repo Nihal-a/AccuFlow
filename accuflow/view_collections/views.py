@@ -1,7 +1,7 @@
 import datetime
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
-from core.models import Collectors, Sales, Purchases, NSDs, Collection, CollectionItem
+from core.models import Collectors, Sales, Purchases, NSDs, Collection, CollectionItem, Customers, Suppliers
 from core.views import getClient
 from django.contrib import messages
 from django.urls import reverse
@@ -14,48 +14,108 @@ class AddCollectionView(View):
         collectors = Collectors.objects.filter(is_active=True, client=client)
         
         instance = None
-        selected_transaction_ids = []
+        receivables = []
+        
+        collector_id = request.GET.get('collector')
+        date_str = request.GET.get('date')
+        
+        # Check if editing specific ID
         if id:
             instance = get_object_or_404(Collection, id=id, client=client)
+        
+        # If not specific ID, check if we have a pending/new collection for this criteria
+        elif collector_id and date_str:
+            try:
+                date_obj = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
+                instance = Collection.objects.filter(
+                    client=client, 
+                    collector_id=collector_id, 
+                    date=date_obj, 
+                    status__in=['New', 'Pending']
+                ).first()
+            except ValueError:
+                pass
+
+        # If instance found (explicit or implicit), sync params
+        if instance:
             collector_id = instance.collector.id
             date_str = instance.date.strftime('%Y-%m-%d')
-            selected_transaction_ids = list(instance.items.values_list('transaction_id', flat=True))
-        else:
-            collector_id = request.GET.get('collector')
-            date_str = request.GET.get('date')
         
-        transactions = []
         selected_collector = None
         
         if collector_id:
             selected_collector = get_object_or_404(Collectors, id=collector_id)
             
-            sales = Sales.objects.filter(client=client, is_active=True)
-            for s in sales:
-                t_id = f"SALE_{s.id}"
-                transactions.append({
-                    'id': t_id,
-                    'transaction_id': s.sale_no,
-                    'type': 'Sale',
-                    'from': s.godown.name if s.godown else 'N/A',
-                    'to': s.customer.name if s.customer else 'N/A',
-                    'customer_phone': s.customer.phone if s.customer else 'N/A',
-                    'credit': 0,
-                    'debit': s.total_amount,
-                    'amount': s.total_amount,
-                    'is_selected': False,
-                    'obj': s
+            # Fetch Customers with positive balance
+            customers = Customers.objects.filter(client=client, is_active=True, balance__gt=0)
+            for c in customers:
+                receivables.append({
+                    'id': f"Customer_{c.id}",
+                    'type': 'Customer',
+                    'obj_id': c.id,
+                    'name': c.name,
+                    'phone': c.phone,
+                    'balance': c.balance,
+                    'collected_amount': 0,
+                    'is_selected': False
                 })
-                
+
+            # Fetch Suppliers with positive balance
+            suppliers = Suppliers.objects.filter(client=client, is_active=True, balance__gt=0)
+            for s in suppliers:
+                 receivables.append({
+                    'id': f"Supplier_{s.id}",
+                    'type': 'Supplier',
+                    'obj_id': s.id,
+                    'name': s.name,
+                    'phone': s.phone,
+                    'balance': s.balance,
+                    'collected_amount': 0,
+                    'is_selected': False
+                })
+            
             if instance:
-                existing_txn_ids = set(instance.items.values_list('transaction_id', flat=True))
-                for t in transactions:
-                    if t['transaction_id'] in existing_txn_ids:
-                        t['is_selected'] = True
+                existing_items = {f"{item.transaction_type}_{item.transaction_id}": item.amount for item in instance.items.all()}
+                
+                # Update receivables list with existing values
+                for r in receivables:
+                    key = f"{r['type']}_{r['obj_id']}"
+                    if key in existing_items:
+                        r['collected_amount'] = existing_items[key]
+                        r['is_selected'] = True
+                        del existing_items[key]
+                
+                # Fetch missing partners (those who might have 0 balance now but are in collection)
+                for key, amount in existing_items.items():
+                    type_str, id_str = key.split('_')
+                    if type_str == 'Customer':
+                        c = Customers.objects.get(id=id_str)
+                        receivables.insert(0, {
+                            'id': key,
+                            'type': 'Customer',
+                            'obj_id': c.id,
+                            'name': c.name,
+                            'phone': c.phone,
+                            'balance': c.balance,
+                            'collected_amount': amount,
+                            'is_selected': True
+                        })
+                    elif type_str == 'Supplier':
+                        s = Suppliers.objects.get(id=id_str)
+                        receivables.insert(0, {
+                            'id': key,
+                            'type': 'Supplier',
+                            'obj_id': s.id,
+                            'name': s.name,
+                            'phone': s.phone,
+                            'balance': s.balance,
+                            'collected_amount': amount,
+                            'is_selected': True
+                        })
 
         context = {
             'collectors': collectors,
-            'transactions': transactions,
+            'receivables': receivables,
             'selected_collector': selected_collector,
             'selected_date': date_str,
             'instance': instance,
@@ -66,20 +126,37 @@ class AddCollectionView(View):
         client = getClient(request.user)
         collector_id = request.POST.get('collector')
         date_str = request.POST.get('date')
-        selected_ids = request.POST.getlist('selected_transactions')
         
-        if not collector_id or not date_str or not selected_ids:
-            messages.error(request, "Please select collector, date and at least one transaction.")
+        selected_ids = request.POST.getlist('selected_receivables')
+        
+        if not collector_id or not date_str:
+            messages.error(request, "Please select collector and date.")
             return redirect('add_collection')
+        
+        if not selected_ids:
+             messages.error(request, "Please select at least one partner and enter amount.")
+             return redirect('add_collection')
 
         try:
             collector = get_object_or_404(Collectors, id=collector_id)
             date_obj = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
             
+            collection = None
             if id:
                 collection = get_object_or_404(Collection, id=id, client=client)
+            else:
+                 # Check if exists to merge
+                 collection = Collection.objects.filter(
+                     client=client, 
+                     collector=collector, 
+                     date=date_obj,
+                     status__in=['New', 'Pending']
+                 ).first()
+
+            if collection:
                 collection.collector = collector
                 collection.date = date_obj
+                collection.status = 'New' # Reset status to New so collector can see/edit
                 collection.save()
                 collection.items.all().delete()
                 action_msg = "updated"
@@ -88,43 +165,32 @@ class AddCollectionView(View):
                     collector=collector,
                     date=date_obj,
                     client=client,
+                    status='New',
                     total_amount=0
                 )
                 action_msg = "saved"
             
             total_amt = 0
             
-            for item_str in selected_ids:
-                type_str, id_str = item_str.split('_')
-                db_id = int(id_str)
+            for item_key in selected_ids:
+                type_str, id_str = item_key.split('_')
                 
-                if type_str == 'SALE':
-                    obj = Sales.objects.get(id=db_id)
-                    amt = obj.total_amount
-                    is_credit = False
-                    trans_id = obj.sale_no
-                    trans_type = 'Sale'
-                elif type_str == 'PURCHASE':
-                    obj = Purchases.objects.get(id=db_id)
-                    amt = obj.total_amount
-                    is_credit = True
-                    trans_type = 'Purchase'
-                    trans_id = obj.purchase_no
-                elif type_str == 'NSD':
-                    obj = NSDs.objects.get(id=db_id)
-                    amt = obj.sell_amount
-                    is_credit = True
-                    trans_type = 'NSD'
-                    trans_id = obj.nsd_no
+                amount_val = request.POST.get(f'amount_{item_key}')
+                try:
+                    amt = float(amount_val)
+                except (ValueError, TypeError):
+                    amt = 0
                 
-                CollectionItem.objects.create(
-                    collection=collection,
-                    transaction_id=trans_id,
-                    transaction_type=trans_type,
-                    amount=amt,
-                    is_credit=is_credit
-                )
-                total_amt += amt
+                if amt > 0:
+                    CollectionItem.objects.create(
+                        collection=collection,
+                        transaction_id=id_str,
+                        transaction_type=type_str,
+                        amount=amt,
+                        collected_amount=amt,
+                        is_credit=False
+                    )
+                    total_amt += amt
             
             collection.total_amount = total_amt
             collection.save()
@@ -144,7 +210,7 @@ class CollectionListView(View):
         collector_id = request.GET.get('collector')
         date_str = request.GET.get('date')
         
-        collections = Collection.objects.filter(client=client).order_by('-date')
+        collections = Collection.objects.filter(client=client, status='Approved').order_by('-date')
         
         selected_collector = None
         if collector_id:
@@ -170,16 +236,26 @@ class CollectionDetailView(View):
         items = collection.items.all()
         
         for item in items:
-            item.customer_name = "-"
-            item.customer_phone = "-"
+            item.partner_name = "-"
+            item.partner_phone = "-"
             
-            if item.transaction_type == 'Sale':
+            if item.transaction_type == 'Customer':
+                c = Customers.objects.filter(id=item.transaction_id).first()
+                if c:
+                    item.partner_name = c.name
+                    item.partner_phone = c.phone
+            elif item.transaction_type == 'Supplier':
+                s = Suppliers.objects.filter(id=item.transaction_id).first()
+                if s:
+                    item.partner_name = s.name
+                    item.partner_phone = s.phone
+            
+            # Keep backward compatibility if old Sale items exist?
+            elif item.transaction_type == 'Sale':
                 sale = Sales.objects.filter(sale_no=item.transaction_id, client=client).first()
                 if sale and sale.customer:
-                    item.customer_name = sale.customer.name
-                    item.customer_phone = sale.customer.phone
-                    item.customer_wa = sale.customer.wa
-                    item.customer_cc = sale.customer.country_code
+                    item.partner_name = sale.customer.name
+                    item.partner_phone = sale.customer.phone
         
         context = {
             'collection': collection,

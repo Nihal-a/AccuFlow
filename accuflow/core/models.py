@@ -458,6 +458,7 @@ class CollectionItem(models.Model):
     amount = models.FloatField(default=0)
     collected_amount = models.FloatField(default=0)
     is_credit = models.BooleanField(default=False) 
+    remark = models.TextField(blank=True, null=True) 
     
     def __str__(self):
         return f"{self.transaction_type} - {self.transaction_id}"

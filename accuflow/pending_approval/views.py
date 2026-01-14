@@ -3,7 +3,7 @@ from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.utils import timezone
-from core.models import Collection, Cashs, CashBanks, Sales
+from core.models import Collection, Cashs, CashBanks, Sales, Customers, Suppliers
 from core.views import getClient, update_ledger
 from cash_entry.views import getLastCashNo
 from django.db.models import Sum, Count
@@ -26,11 +26,18 @@ class PendingApprovalDetailView(LoginRequiredMixin, View):
         
         # Enrich items with customer info for display
         for item in items:
-            if item.transaction_type == 'Sale':
+            item.partner_name = "Unknown"
+            
+            if item.transaction_type == 'Customer':
+                c = Customers.objects.filter(id=item.transaction_id).first()
+                if c: item.partner_name = c.name
+            elif item.transaction_type == 'Supplier':
+                s = Suppliers.objects.filter(id=item.transaction_id).first()
+                if s: item.partner_name = s.name
+            elif item.transaction_type == 'Sale':
                 sale = Sales.objects.filter(sale_no=item.transaction_id, client=client).first()
                 if sale and sale.customer:
-                    item.customer_name = sale.customer.name
-                    item.customer_obj = sale.customer # Pass object if needed
+                    item.partner_name = sale.customer.name
         
         cashbanks = CashBanks.objects.filter(client=client, is_active=True)
         return render(request, 'pending_approval/approval_detail.html', {
@@ -78,32 +85,40 @@ class PendingApprovalDetailView(LoginRequiredMixin, View):
                 
                 if amount > 0:
                     approved_count += 1
-                    # Logic to find Customer
+                    
                     customer = None
-                    if item.transaction_type == 'Sale':
+                    supplier = None
+                    
+                    if item.transaction_type == 'Customer':
+                        customer = Customers.objects.filter(id=item.transaction_id).first()
+                    elif item.transaction_type == 'Supplier':
+                        supplier = Suppliers.objects.filter(id=item.transaction_id).first()
+                    elif item.transaction_type == 'Sale':
                         sale = Sales.objects.filter(sale_no=item.transaction_id, client=client).first()
                         if sale:
                             customer = sale.customer
                     
-                    if customer:
-                        # 1. Update Ledger (Credit Customer)
-                        # 'Received' transaction reduces customer balance (Credit side)
-                        # Using pattern from CashAddView: update_ledger(where=customer, to=None, new_purchase=amount, old_purchase=0)
-                        update_ledger(where=customer, to=None, new_purchase=amount, old_purchase=0)
+                    party = customer or supplier
+                    
+                    if party:
+                        # 1. Update Ledger (Credit the Party)
+                        # 'Received' transaction reduces debt (Credit side for Customer)
+                        # update_ledger(where=party_to_credit, ..., new_purchase=amount) 
+                        # This adds to 'credit' field of the party model.
+                        update_ledger(where=party, to=None, new_purchase=amount, old_purchase=0)
                         
                         # 2. Create Cashs Entry
                         Cashs.objects.create(
                             client=client,
-                            cash_no=getLastCashNo(client=client), # Helper function
-                            supplier=None,
-                            customer=customer,
+                            cash_no=getLastCashNo(client=client), 
+                            supplier=supplier, # Set only if supplier
+                            customer=customer, # Set only if customer
                             cash_bank=cash_bank,
-                            date=timezone.now().date(), # Or collection.date? Usually approval date is posting date.
+                            date=timezone.now().date(),
                             amount=amount,
-                            party_balance=customer.balance, # Updated balance
+                            party_balance=party.balance, # Updated balance
                             transaction='Received',
-                            # which_type='customers', # Computed property
-                            description=customer.name,
+                            description=party.name,
                             hold=False,
                             is_active=True
                         )

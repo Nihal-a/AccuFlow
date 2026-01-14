@@ -71,7 +71,7 @@
                     <thead class="bg-gray-50 text-gray-500 text-xs uppercase font-semibold">
                         <tr>
                             <th class="px-6 py-3">Transaction</th>
-                            <th class="px-6 py-3">Customer</th>
+                            <th class="px-6 py-3">Party</th>
                             <th class="px-6 py-3 text-right">Amount Due</th>
                             <th class="px-6 py-3 text-right">Collected (Collector)</th>
                             <th class="px-6 py-3 text-right w-40">Approved Amount</th>
@@ -85,8 +85,8 @@
                                 <div class="text-xs text-gray-500">{{ item.transaction_type }}</div>
                             </td>
                             <td class="px-6 py-4">
-                                {% if item.customer_name %}
-                                <div class="font-medium text-gray-900">{{ item.customer_name }}</div>
+                                {% if item.partner_name %}
+                                <div class="font-medium text-gray-900">{{ item.partner_name }}</div>
                                 {% else %}
                                 <span class="text-gray-400">-</span>
                                 {% endif %}

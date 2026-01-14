@@ -59,12 +59,7 @@
                 <a href="{% url 'collection_detail' id=c.id %}" class="bg-green-500 text-white px-2 py-1.5 rounded hover:bg-green-600 text-xs" title="View Details">
                     <i class="fa-solid fa-eye"></i>
                 </a>
-                <a href="{% url 'update_collection' id=c.id %}" class="bg-blue-500 text-white px-2 py-1.5 rounded hover:bg-blue-600 text-xs" title="Edit">
-                    <i class="fa-solid fa-pen"></i>
-                </a>
-                <button onclick="openDeleteModal('{{ c.id }}')" class="bg-red-500 text-white px-2 py-1.5 rounded hover:bg-red-600 text-xs" title="Delete">
-                    <i class="fa-solid fa-trash"></i>
-                </button>
+        
             </div>
           </td>
           <td class="px-4 py-2 w-1">

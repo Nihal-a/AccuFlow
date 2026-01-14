@@ -501,9 +501,7 @@
   });
   $('#allSuppliers').on('change', function () {
     if ($(this).is(':checked')) {
-      const customers = {{ customers| safe
-    }
-  }
+      const customers = {{ customers| safe }} 
         var supplierSelect = $('#supplier');
   $('#supplierID').val('');
   $('#supplierCredit').text('');
@@ -517,8 +515,8 @@
     supplierSelect.append(option);
   });
       } else {
-    const suppliers = {{ suppliers| safe
-  }}
+    const suppliers = {{ suppliers| safe }}
+
   var supplierSelect = $('#supplier');
   supplierSelect.empty();
   $('#supplierID').val('');
@@ -537,9 +535,7 @@
     });
   $('#allCustomer').on('change', function () {
     if ($(this).is(':checked')) {
-      const suppliers = {{ suppliers| safe
-    }
-  }
+      const suppliers = {{ suppliers| safe}}
         var customerSelect = $('#customer');
   $('#customerID').val('');
   $('#customerCredit').text('');
@@ -553,8 +549,7 @@
     customerSelect.append(option);
   });
       } else {
-    const customers = {{ customers| safe
-  }}
+    const customers = {{ customers| safe}}
   var customerSelect = $('#customer');
   customerSelect.empty();
   $('#customerID').val('');

@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
-from core.models import Collectors, Collection, Sales, CollectionItem, Purchases, NSDs
+from core.models import Collectors, Collection, Sales, CollectionItem, Purchases, NSDs, Customers, Suppliers
 from django.utils.decorators import method_decorator
 import datetime
 from django.contrib.auth.decorators import login_required
@@ -49,7 +49,23 @@ class CollectorCollectionDetailView(LoginRequiredMixin, UserPassesTestMixin, Vie
             item.customer_name = "-"
             item.customer_phone = "-"
             
-            if item.transaction_type == 'Sale':
+            if item.transaction_type == 'Customer':
+                c = Customers.objects.filter(id=item.transaction_id).first()
+                if c:
+                     item.customer_name = c.name
+                     item.customer_phone = c.phone
+                     item.customer_wa = c.wa if hasattr(c, 'wa') else '' 
+                     item.customer_cc = c.country_code if hasattr(c, 'country_code') else ''
+                     item.customer_balance = c.balance
+            elif item.transaction_type == 'Supplier':
+                s = Suppliers.objects.filter(id=item.transaction_id).first()
+                if s: 
+                     item.customer_name = s.name
+                     item.customer_phone = s.phone
+                     item.customer_wa = s.wa if hasattr(s, 'wa') else ''
+                     item.customer_cc = s.country_code if hasattr(s, 'country_code') else ''
+                     item.customer_balance = s.balance
+            elif item.transaction_type == 'Sale':
                 sale = Sales.objects.filter(sale_no=item.transaction_id, client=collector.client).first()
                 if sale and sale.customer:
                     item.customer_name = sale.customer.name
@@ -90,6 +106,7 @@ class CollectorCollectionDetailView(LoginRequiredMixin, UserPassesTestMixin, Vie
                     amount = 0
             
             item.collected_amount = amount
+            item.remark = request.POST.get(f'remark_{item.id}', '')
             item.save()
             
             if amount > 0:
@@ -120,8 +137,8 @@ class CollectorCollectionDetailView(LoginRequiredMixin, UserPassesTestMixin, Vie
             messages.success(request, "Collection submitted for approval.")
             return redirect('my_collection_detail', id=collection.id)
 
-class DirectCollectionCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
-    template_name = 'collector_view/create_direct.html'
+class CollectorAddItemsView(LoginRequiredMixin, UserPassesTestMixin, View):
+    template_name = 'collector_view/add_items.html'
     
     def test_func(self):
         if not (self.request.user.is_authenticated and self.request.user.is_collector):
@@ -132,87 +149,95 @@ class DirectCollectionCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
         except:
              return False
 
-    def get(self, request):
+    def get(self, request, id):
         try:
             collector = Collectors.objects.get(user=request.user, is_active=True)
+            collection = get_object_or_404(Collection, id=id, collector=collector)
         except Collectors.DoesNotExist:
              return redirect('my_collections')
-
+             
         client = collector.client
-        transactions = []
+        existing_keys = [f"{item.transaction_type}_{item.transaction_id}" for item in collection.items.all()]
         
-        sales = Sales.objects.filter(client=client, is_active=True).select_related('customer')
-        for s in sales:
-             if s.customer and s.customer.balance > 0:
-                 transactions.append({
-                     'id': f"SALE_{s.id}",
-                     'transaction_id': s.sale_no,
-                     'label': f"SALE: {s.customer.name} - {s.sale_no}",
-                     'amount': s.total_amount, 
-                     'customer_name': s.customer.name,
-                     'date': s.date,
-                     'balance': s.customer.balance,
-                     'type': 'SALE'
-                 })
+        receivables = []
         
-        transactions.sort(key=lambda x: x['date'], reverse=True)
+        customers = Customers.objects.filter(client=client, is_active=True, balance__gt=0)
+        for c in customers:
+             key = f"Customer_{c.id}"
+             if key not in existing_keys:
+                receivables.append({
+                    'id': key,
+                    'type': 'Customer',
+                    'name': c.name,
+                    'phone': c.phone,
+                    'balance': c.balance
+                })
+
+        suppliers = Suppliers.objects.filter(client=client, is_active=True, balance__gt=0)
+        for s in suppliers:
+             key = f"Supplier_{s.id}"
+             if key not in existing_keys:
+                receivables.append({
+                    'id': key,
+                    'type': 'Supplier',
+                    'name': s.name,
+                    'phone': s.phone,
+                    'balance': s.balance
+                })
         
         context = {
-            'transactions': transactions, 
-            'today_date': datetime.date.today().strftime('%Y-%m-%d')
+            'collection': collection,
+            'receivables': receivables
         }
         return render(request, self.template_name, context)
 
-    def post(self, request):
+    def post(self, request, id):
         try:
             collector = Collectors.objects.get(user=request.user, is_active=True)
+            collection = get_object_or_404(Collection, id=id, collector=collector)
         except Collectors.DoesNotExist:
              return redirect('my_collections')
              
-        date_str = request.POST.get('date')
-        selected_ids = request.POST.getlist('selected_transactions') 
+        selected_ids = request.POST.getlist('selected_receivables')
         
-        if not selected_ids:
-             messages.error(request, "Please select at least one transaction.")
-             return redirect('create_direct_collection')
-             
-        try:
-            if date_str:
-                date_obj = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
-            else:
-                date_obj = datetime.date.today()
-            
-            collection = Collection.objects.create(
-                collector=collector,
-                date=date_obj,
-                client=collector.client,
-                status='New',
-                total_amount=0
-            )
-            
-            total_amt = 0
-            for item_str in selected_ids:
-                type_str, id_str = item_str.split('_')
-                db_id = int(id_str)
-                
-                if type_str == 'SALE':
-                    obj = Sales.objects.get(id=db_id)
+        if selected_ids:
+            # If collection is Approved, start a fresh one for the same date
+            if collection.status == 'Approved':
+                 collection = Collection.objects.create(
+                    collector=collector,
+                    client=collection.client,
+                    date=collection.date,
+                    status='New',
+                    total_amount=0
+                )
+            # If it was Pending, reset to New so it can be edited
+            elif collection.status == 'Pending':
+                 collection.status = 'New'
+                 collection.save()
+
+            for item_key in selected_ids:
+                type_str, id_str = item_key.split('_')
+                # Check uniqueness again to be safe
+                if not CollectionItem.objects.filter(collection=collection, transaction_type=type_str, transaction_id=id_str).exists():
+                     # Determine amount (current balance)
+                    amount = 0
+                    if type_str == 'Customer':
+                        c = Customers.objects.filter(id=id_str).first()
+                        if c: amount = c.balance
+                    elif type_str == 'Supplier':
+                        s = Suppliers.objects.filter(id=id_str).first()
+                        if s: amount = s.balance
                     
-                    CollectionItem.objects.create(
-                        collection=collection,
-                        transaction_id=obj.sale_no,
-                        transaction_type='Sale',
-                        amount=obj.total_amount,
-                        is_credit=False
-                    )
-                    total_amt += obj.total_amount
+                    if amount > 0:
+                        CollectionItem.objects.create(
+                            collection=collection,
+                            transaction_id=id_str,
+                            transaction_type=type_str,
+                            amount=amount,
+                            collected_amount=0, # Initially 0, collector enters it
+                            is_credit=False
+                        )
             
-            collection.total_amount = total_amt
-            collection.save()
+            messages.success(request, f"{len(selected_ids)} partners added to collection.")
             
-            messages.success(request, "Direct collection created. Please enter collected amounts.")
-            return redirect('my_collection_detail', id=collection.id)
-            
-        except Exception as e:
-            messages.error(request, f"Error creating collection: {e}")
-            return redirect('create_direct_collection')
+        return redirect('my_collection_detail', id=collection.id)

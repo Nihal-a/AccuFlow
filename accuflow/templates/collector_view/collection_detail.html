@@ -14,6 +14,11 @@
             </p>
         </div>
         <div class="flex gap-2 mt-3 md:mt-0">
+            {% if collection.collector.can_collect_directly %}
+            <a href="{% url 'collector_add_items' id=collection.id %}" class="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors font-medium text-sm flex items-center gap-2 shadow-sm">
+                <i data-lucide="plus" class="w-4 h-4"></i> Add Partners
+            </a>
+            {% endif %}
             <a href="{% url 'my_collections' %}" class="bg-gray-100 text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-lg transition-colors font-medium text-sm flex items-center gap-2">
                 <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to My Collections
             </a>
@@ -50,6 +55,7 @@
                         <th class="px-4 py-3 text-right font-medium">Total Amount</th>
                         <th class="px-4 py-3 text-right font-medium w-32">Collected Amount</th>
                         <th class="px-4 py-3 text-right font-medium">Balance</th>
+                        <th class="px-4 py-3 text-left font-medium">Remark</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200 text-sm">
@@ -87,6 +93,9 @@
                              {% endif %}
                         </td>
                         <td class="px-4 py-3 text-right text-red-600 font-bold"><span class="balance-display">{{ item.amount }}</span></td>
+                        <td class="px-4 py-3">
+                            <input type="text" name="remark_{{ item.id }}" value="{{ item.remark|default:'' }}" class="w-full p-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 disabled:bg-gray-100 disabled:text-gray-500" placeholder="Remark..." {% if read_only or item.is_submitted %}disabled{% endif %}>
+                        </td>
                     </tr>
                     {% empty %}
                     <tr>
@@ -165,40 +174,80 @@
             balanceSpan.textContent = balance.toFixed(2);
         }
 
-        // Initialize values on load
-        inputs.forEach((input, index) => {
-             updateRowBalance(index);
-             const val = parseFloat(input.value);
-             if (val > 0 && rowCbs[index]) {
-                  rowCbs[index].checked = true;
-             }
-        });
-        updateTotal();
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        const saveItemToDb = debounce((id, data) => {
+            if ("{{ read_only }}" === "True") return;
+
+            fetch(`/my-collections/update-item/${id}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(data)
+            }).then(res => {
+                if(!res.ok) console.error("Failed to save item", id);
+            }).catch(err => console.error(err));
+        }, 500);
+
+        function saveItemImmediate(id, data) {
+             if ("{{ read_only }}" === "True") return;
+             
+             fetch(`/my-collections/update-item/${id}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(data)
+            }).catch(err => console.error(err));
+        }
 
         rowCbs.forEach((cb, index) => {
             const input = inputs[index];
-            if(input.disabled) return;
+            const id = cb.getAttribute('data-id');
+            const row = cb.closest('tr');
+            const remarkInput = row.querySelector('input[name^="remark_"]');
+
+            if (input.disabled) return;
+
+            updateRowBalance(index);
+            const val = parseFloat(input.value);
+            if (val > 0) {
+                cb.checked = true;
+            }
 
             cb.addEventListener('change', function() {
                 const amount = parseFloat(this.getAttribute('data-amount')) || 0;
-                const currentVal = parseFloat(input.value) || 0;
+                let valToSave = 0;
 
                 if (this.checked) {
-                    // Only auto-fill if empty or 0
-                    if (currentVal === 0) {
+                    if (parseFloat(input.value) === 0 || input.value === '') {
                         input.value = amount;
+                        valToSave = amount;
+                    } else {
+                        valToSave = parseFloat(input.value);
                     }
                 } else {
                     input.value = '';
+                    valToSave = 0;
                 }
+                
                 updateRowBalance(index);
                 updateTotal();
+                
+                saveItemImmediate(id, {
+                    amount: valToSave,
+                    remark: remarkInput ? remarkInput.value : ''
+                });
             });
-        });
-
-        inputs.forEach((input, index) => {
-            const cb = rowCbs[index];
-            if(input.disabled) return;
 
             input.addEventListener('input', function() {
                 const val = parseFloat(this.value);
@@ -207,34 +256,70 @@
                 } else {
                     if (this.value === '' || val === 0) cb.checked = false;
                 }
+                
                 updateRowBalance(index);
                 updateTotal();
+
+                saveItemToDb(id, {
+                    amount: this.value,
+                    remark: remarkInput ? remarkInput.value : ''
+                });
             });
+
+            if(remarkInput){
+                remarkInput.addEventListener('input', function() {
+                    saveItemToDb(id, {
+                        amount: input.value,
+                        remark: this.value
+                    });
+                });
+            }
         });
-        
+
         if(selectAllCb && !selectAllCb.disabled) {
             selectAllCb.addEventListener('change', function() {
                 const checked = this.checked;
+                
                 rowCbs.forEach((cb, index) => {
                      const input = inputs[index];
                      if(input.disabled) return;
                      const amount = parseFloat(cb.getAttribute('data-amount')) || 0;
-                     const currentVal = parseFloat(input.value) || 0;
-                     
+                     const id = cb.getAttribute('data-id');
+                     const row = cb.closest('tr');
+                     const remarkInput = row.querySelector('input[name^="remark_"]');
+
+                     let valToSave = 0;
+                     let changed = false;
+
                      if (checked) {
-                         cb.checked = true;
-                         if (currentVal === 0) {
+                         if (!cb.checked || parseFloat(input.value) === 0) {
+                             cb.checked = true;
                              input.value = amount;
+                             valToSave = amount;
+                             changed = true;
                          }
                      } else {
-                         cb.checked = false;
-                         input.value = '';
+                         if (cb.checked) {
+                             cb.checked = false;
+                             input.value = '';
+                             valToSave = 0;
+                             changed = true;
+                         }
                      }
-                     updateRowBalance(index);
+                     
+                     if (changed) {
+                         updateRowBalance(index);
+                         saveItemImmediate(id, {
+                             amount: valToSave,
+                             remark: remarkInput ? remarkInput.value : ''
+                         });
+                     }
                 });
                 updateTotal();
             });
         }
+
+        updateTotal();
     });
 </script>
 {% endblock externalJS %}
