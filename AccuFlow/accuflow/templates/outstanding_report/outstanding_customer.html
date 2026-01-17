@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Outstanding Customer
+{% endblock title %}
+
+{% block content %}
+<div class="bg-white rounded-xl p-6 mt-3">
+    <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">
+        Outstanding Customer (Top Partners)
+    </h1>
+    <p class="text-sm text-gray-500 mt-1">Sorted by total value of trade</p>
+
+    <hr class="mt-5">
+
+    <div class="overflow-x-auto mt-5 w-full">
+        <table class="w-full min-w-max rounded-t-lg overflow-hidden">
+            <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
+                <tr>
+                    <th class="px-4 py-3 text-left font-medium w-1">#</th>
+                    <th class="px-4 py-3 text-left font-medium">Code</th>
+                    <th class="px-4 py-3 text-left font-medium">Name</th>
+                    <th class="px-4 py-3 text-left font-medium">Phone</th>
+                    <th class="px-4 py-3 text-right font-medium">Current Balance</th>
+                    <th class="px-4 py-3 text-right font-medium">Total Trade Volume</th>
+                </tr>
+            </thead>
+            <tbody class="bg-gray-100">
+                {% for c in customers %}
+                <tr class="border-b border-gray-200 hover:bg-gray-50">
+                    <td class="px-4 py-3 text-left">{{ forloop.counter }}</td>
+                    <td class="px-4 py-3 text-left">{{ c.code }}</td>
+                    <td class="px-4 py-3 text-left font-semibold text-gray-700">{{ c.name }}</td>
+                    <td class="px-4 py-3 text-left">{{ c.phone }}</td>
+                    <td class="px-4 py-3 text-right">{{ c.balance|floatformat:2 }}</td>
+                    <td class="px-4 py-3 text-right font-bold text-blue-600">{{ c.total_trade|floatformat:2 }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="px-4 py-3 text-center text-gray-500">No data found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock content %}
+
+{% block externalJS %}
+<script>
+    navActive("outstandingCustomerLink"); 
+</script>
+{% endblock externalJS %}
