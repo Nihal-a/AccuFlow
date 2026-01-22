@@ -1,9 +1,18 @@
 from django.shortcuts import render
+from django.template.loader import render_to_string
+from django.http import HttpResponse
 from django.views import View
 from django.db.models import Sum, Q, F
 from datetime import datetime
 from core.models import Customers, Suppliers, Purchases, Sales, NSDs, Cashs
 from core.views import getClient
+import openpyxl
+from io import BytesIO
+try:
+    from weasyprint import HTML, CSS
+except ImportError:
+    pass 
+from weasyprint import HTML
 
 class ReceivableReportView(View):
     def get(self, request):
@@ -17,11 +26,21 @@ class ReceivableReportView(View):
         date_from_str = request.POST.get("dateFrom")
         date_to_str = request.POST.get("dateTo")
         
+        date_limit = None
         if date_to_str:
             try:
                 date_limit = datetime.strptime(date_to_str, "%Y-%m-%d").date()
             except ValueError:
                 pass
+        
+        # Optimization: If no date filter is applied, do not show any data initially
+        if not date_from_str and not date_to_str:
+             return render(request, 'receivable_report/receivable_report.html', {
+                'receivables': [],
+                'total_amount': 0,
+                'date_from': '',
+                'date_to': '',
+            })
         
         receivables = []
         
@@ -32,7 +51,14 @@ class ReceivableReportView(View):
             else:
                 balance = c.balance 
 
-            if balance > 0:
+            show_item = False
+            if min_amount is not None:
+                if balance >= min_amount:
+                    show_item = True
+            elif balance > 0:
+                show_item = True
+
+            if show_item:
                 receivables.append({
                     'code': c.customerId,
                     'name': c.name,
@@ -48,7 +74,14 @@ class ReceivableReportView(View):
             else:
                 balance = s.balance 
 
-            if balance > 0: 
+            show_item = False
+            if min_amount is not None:
+                if balance >= min_amount:
+                     show_item = True
+            elif balance > 0:
+                 show_item = True
+
+            if show_item: 
                 receivables.append({
                     'code': s.supplierId,
                     'name': s.name,
@@ -66,7 +99,45 @@ class ReceivableReportView(View):
             'total_amount': total_amount,
             'date_from': date_from_str,
             'date_to': date_to_str,
+            'min_amount': min_amount_str or ''
         }
+
+        export_type = request.POST.get('export')
+        
+        if export_type == 'pdf':
+            html_string = render_to_string('receivable_report/receivable_report_pdf.html', context)
+            pdf_file = HTML(string=html_string).write_pdf()
+            response = HttpResponse(pdf_file, content_type='application/pdf')
+            response['Content-Disposition'] = 'inline; filename="receivable_report.pdf"'
+            return response
+        
+        elif export_type == 'excel':
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.title = "Receivable Report"
+            
+            headers = ["Code", "Name", "Phone", "Amount"]
+            ws.append(headers)
+            
+            for item in receivables:
+                row = [
+                    item['code'],
+                    item['name'],
+                    item['phone'],
+                    item['amount']
+                ]
+                ws.append(row)
+            
+            ws.append(["", "", "TOTAL", total_amount])
+            
+            output = BytesIO()
+            wb.save(output)
+            output.seek(0)
+            
+            response = HttpResponse(output.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = 'attachment; filename="receivable_report.xlsx"'
+            return response
+
         return render(request, 'receivable_report/receivable_report.html', context)
 
     def calculate_balance(self, entity, client, date_limit, is_customer=True):

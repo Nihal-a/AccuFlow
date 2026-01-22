@@ -74,7 +74,7 @@ class CollectorCollectionDetailView(LoginRequiredMixin, UserPassesTestMixin, Vie
                     item.customer_cc = sale.customer.country_code
                     item.customer_balance = sale.customer.balance
         
-        read_only = collection.status != 'New'
+        read_only = collection.status not in ['New', 'Rejected']
         context = {
             'collection': collection,
             'items': items,
@@ -89,7 +89,7 @@ class CollectorCollectionDetailView(LoginRequiredMixin, UserPassesTestMixin, Vie
         except Collectors.DoesNotExist:
             return render(request, '404.html', status=404)
             
-        if collection.status != 'New':
+        if collection.status not in ['New', 'Rejected']:
              messages.error(request, "This collection cannot be edited.")
              return redirect('my_collection_detail', id=id)
 
@@ -116,6 +116,13 @@ class CollectorCollectionDetailView(LoginRequiredMixin, UserPassesTestMixin, Vie
             messages.warning(request, "No collected amounts entered.")
             return redirect('my_collection_detail', id=id)
             
+        # If specifically Rejected, we reuse the SAME collection ID for re-approval
+        if collection.status == 'Rejected':
+            collection.status = 'Pending'
+            collection.save()
+            messages.success(request, "Collection re-submitted for approval.")
+            return redirect('my_collection_detail', id=collection.id)
+
         if len(filled_items) < len(items):
             new_collection = Collection.objects.create(
                 collector=collector,

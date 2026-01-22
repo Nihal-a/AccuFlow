@@ -1,9 +1,18 @@
 from django.shortcuts import render
+from django.template.loader import render_to_string
+from django.http import HttpResponse
 from django.views import View
 from django.db.models import Sum, Q
 from datetime import datetime
 from core.models import Customers, Suppliers, Purchases, Sales, NSDs, Cashs
 from core.views import getClient
+import openpyxl
+from io import BytesIO
+try:
+    from weasyprint import HTML, CSS
+except ImportError:
+    pass 
+from weasyprint import HTML
 
 class PayableReportView(View):
     def get(self, request):
@@ -23,6 +32,15 @@ class PayableReportView(View):
                 date_limit = datetime.strptime(date_to_str, "%Y-%m-%d").date()
             except ValueError:
                 pass
+
+        # Optimization: If no date filter is applied, do not show any data initially
+        if not date_from_str and not date_to_str:
+             return render(request, 'payable_report/payable_report.html', {
+                'payables': [],
+                'total_amount': 0,
+                'date_from': '',
+                'date_to': '',
+            })
         
         payables = []
         
@@ -34,12 +52,23 @@ class PayableReportView(View):
             else:
                 balance = c.balance 
 
+            abs_balance = abs(balance)
+            show_item = False
+            
+            # Payable means balance is negative
             if balance < 0:
+                if min_amount is not None:
+                     if abs_balance >= min_amount:
+                         show_item = True
+                else:
+                    show_item = True
+
+            if show_item:
                 payables.append({
                     'code': c.customerId,
                     'name': c.name,
                     'phone': c.phone,
-                    'amount': abs(balance), 
+                    'amount': abs_balance, 
                     'type': 'customer'
                 })
 
@@ -51,12 +80,22 @@ class PayableReportView(View):
             else:
                 balance = s.balance 
 
+            abs_balance = abs(balance)
+            show_item = False
+
             if balance < 0:
+                if min_amount is not None:
+                     if abs_balance >= min_amount:
+                         show_item = True
+                else:
+                    show_item = True
+
+            if show_item:
                 payables.append({
                     'code': s.supplierId,
                     'name': s.name,
                     'phone': s.phone,
-                    'amount': abs(balance),
+                    'amount': abs_balance,
                     'type': 'supplier'
                 })
 
@@ -69,7 +108,45 @@ class PayableReportView(View):
             'total_amount': total_amount,
             'date_from': date_from_str,
             'date_to': date_to_str,
+            'min_amount': min_amount_str or ''
         }
+
+        export_type = request.POST.get('export')
+        
+        if export_type == 'pdf':
+            html_string = render_to_string('payable_report/payable_report_pdf.html', context)
+            pdf_file = HTML(string=html_string).write_pdf()
+            response = HttpResponse(pdf_file, content_type='application/pdf')
+            response['Content-Disposition'] = 'inline; filename="payable_report.pdf"'
+            return response
+        
+        elif export_type == 'excel':
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.title = "Payable Report"
+            
+            headers = ["Code", "Name", "Phone", "Amount"]
+            ws.append(headers)
+            
+            for item in payables:
+                row = [
+                    item['code'],
+                    item['name'],
+                    item['phone'],
+                    item['amount']
+                ]
+                ws.append(row)
+            
+            ws.append(["", "", "TOTAL", total_amount])
+            
+            output = BytesIO()
+            wb.save(output)
+            output.seek(0)
+            
+            response = HttpResponse(output.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = 'attachment; filename="payable_report.xlsx"'
+            return response
+
         return render(request, 'payable_report/payable_report.html', context)
 
     def calculate_balance(self, entity, client, date_limit, is_customer=True):

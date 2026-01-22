@@ -1,9 +1,18 @@
 from django.shortcuts import render
+from django.template.loader import render_to_string
+from django.http import HttpResponse
 from django.views import View
 from django.db.models import Q
 from datetime import datetime
 from core.models import Sales, Purchases, NSDs, Cashs, Commissions, StockTransfers
 from core.views import getClient
+import openpyxl
+from io import BytesIO
+try:
+    from weasyprint import HTML, CSS
+except ImportError:
+    pass 
+from weasyprint import HTML
 
 class TransactionReportView(View):
     def get(self, request):
@@ -25,6 +34,14 @@ class TransactionReportView(View):
             base_filter &= Q(date__gte=date_from_str)
         if date_to_str:
             base_filter &= Q(date__lte=date_to_str)
+            
+        # Optimization: If no date filter is applied, do not show any transactions initially
+        if not date_from_str and not date_to_str:
+             return render(request, 'transaction_report/transaction_report.html', {
+                'transactions': [],
+                'date_from': '',
+                'date_to': '',
+            })
 
         # 1. Sales
         sales = Sales.objects.filter(base_filter)
@@ -143,4 +160,42 @@ class TransactionReportView(View):
             'date_from': date_from_str,
             'date_to': date_to_str,
         }
+
+        export_type = request.POST.get('export')
+        
+        if export_type == 'pdf':
+            html_string = render_to_string('transaction_report/transaction_report_pdf.html', context)
+            pdf_file = HTML(string=html_string).write_pdf()
+            response = HttpResponse(pdf_file, content_type='application/pdf')
+            response['Content-Disposition'] = 'inline; filename="transaction_report.pdf"'
+            return response
+        
+        elif export_type == 'excel':
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.title = "Transaction Report"
+            
+            headers = ["Account Name", "Date", "Tran No", "Type", "Debit", "Credit"]
+            ws.append(headers)
+            
+            for item in transactions:
+                d_str = item['date'].strftime("%d-%m-%Y") if item['date'] else ""
+                row = [
+                    item['account_name'],
+                    d_str,
+                    item['tran_no'],
+                    item['type'],
+                    item['debit'],
+                    item['credit']
+                ]
+                ws.append(row)
+            
+            output = BytesIO()
+            wb.save(output)
+            output.seek(0)
+            
+            response = HttpResponse(output.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = 'attachment; filename="transaction_report.xlsx"'
+            return response
+
         return render(request, 'transaction_report/transaction_report.html', context)

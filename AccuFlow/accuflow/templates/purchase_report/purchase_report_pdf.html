@@ -1,0 +1,51 @@
+{% extends "pdf_base.html" %}
+
+{% block title %}Purchase Report{% endblock %}
+
+{% block report_title %}Purchase Report{% endblock %}
+
+{% block content %}
+<p>
+    <strong>From:</strong> {{ date_from|default:"-" }}
+    <strong>To:</strong> {{ date_to|default:"-" }}
+    {% if selected_filter_value %}
+    <br><strong>Trade Partner:</strong> {{ selected_filter_name }}
+    {% endif %}
+</p>
+
+<table>
+    <thead>
+        <tr>
+            <th style="width: 5%;">#</th>
+            <th style="width: 25%;">Trade Partner</th>
+            <th style="width: 15%;">Date</th>
+            <th style="width: 15%;">Txn No</th>
+            <th style="width: 20%;">Description</th>
+            <th style="width: 10%; text-align: right;">Qty</th>
+            <th style="width: 10%; text-align: right;">Amount</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in purchases %}
+        <tr>
+            <td class="text-center">{{ forloop.counter }}</td>
+            <td>{{ item.trade_partner }}</td>
+            <td>{{ item.date|date:"d-m-Y" }}</td>
+            <td>{{ item.transaction_no }}</td>
+            <td>{{ item.description|default:""|truncatechars:30 }}</td>
+            <td class="text-right">{{ item.qty }}</td>
+            <td class="text-right">{{ item.total_amount|floatformat:2 }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7" class="text-center">No purchases found.</td>
+        </tr>
+        {% endfor %}
+        <tr class="total-row">
+            <td colspan="5" class="text-right">Total:</td>
+            <td class="text-right">{{ total_qty|default:"0" }}</td>
+            <td class="text-right">{{ total_amount|floatformat:2|default:"0.00" }}</td>
+        </tr>
+    </tbody>
+</table>
+{% endblock %}

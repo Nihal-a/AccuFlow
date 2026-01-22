@@ -20,7 +20,7 @@ class CollectorUpdateItemView(LoginRequiredMixin, UserPassesTestMixin, View):
             if item.collection.collector.user != request.user:
                  return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
             
-            if item.collection.status != 'New':
+            if item.collection.status not in ['New', 'Rejected']:
                  return JsonResponse({'status': 'error', 'message': 'Collection is not editable'}, status=400)
 
             data = json.loads(request.body)

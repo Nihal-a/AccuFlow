@@ -1,9 +1,18 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.template.loader import render_to_string
+from django.http import HttpResponse
 from django.views import View
 from django.db.models import Sum, Q
 from datetime import datetime
 from core.models import Suppliers, Purchases, Customers
 from core.views import getClient
+import openpyxl
+from io import BytesIO
+try:
+    from weasyprint import HTML, CSS
+except ImportError:
+    pass 
+from weasyprint import HTML
 
 class PurchaseReportView(View):
     def get(self, request):
@@ -25,10 +34,10 @@ class PurchaseReportView(View):
 
         combined_partners = []
         for s in suppliers:
-             combined_partners.append({'id': s.id, 'name': s.name, 'type': 'supplier'})
+             combined_partners.append({'id': s.id, 'name': s.name, 'type': 'supplier', 'key': f"supplier_{s.id}"})
         
         for c in customers:
-             combined_partners.append({'id': c.id, 'name': c.name, 'type': 'customer'})
+             combined_partners.append({'id': c.id, 'name': c.name, 'type': 'customer', 'key': f"customer_{c.id}"})
 
         context = {
             'trade_partners': combined_partners,
@@ -50,10 +59,10 @@ class PurchaseReportView(View):
         
         combined_partners = []
         for s in suppliers:
-             combined_partners.append({'id': s.id, 'name': s.name, 'type': 'supplier'})
+             combined_partners.append({'id': s.id, 'name': s.name, 'type': 'supplier', 'key': f"supplier_{s.id}"})
         
         for c in customers:
-             combined_partners.append({'id': c.id, 'name': c.name, 'type': 'customer'})
+             combined_partners.append({'id': c.id, 'name': c.name, 'type': 'customer', 'key': f"customer_{c.id}"})
 
         filter_kwargs = {
             'client': client,
@@ -82,6 +91,29 @@ class PurchaseReportView(View):
         
         if date_to_str:
             filter_kwargs['date__lte'] = date_to_str
+
+        # Optimization: If no date filter is applied, do not show any data initially
+        min_amount_str = request.POST.get('min_amount')
+        
+        if not date_from_str and not date_to_str and not filter_value:
+             return render(request, 'purchase_report/purchase_report.html', {
+                'trade_partners': combined_partners,
+                'purchases': [],
+                'total_qty': 0,
+                'total_amount': 0,
+                'date_from': '',
+                'date_to': '',
+                'selected_filter_value': '',
+                'min_amount': min_amount_str or ''
+            })
+            
+        if min_amount_str:
+            try:
+                min_amount = float(min_amount_str)
+                if min_amount > 0:
+                    filter_kwargs['total_amount__gte'] = min_amount
+            except ValueError:
+                pass
 
         date_from = date_from_str
         date_to = date_to_str
@@ -135,7 +167,56 @@ class PurchaseReportView(View):
             'date_from': date_from,
             'date_to': date_to,
             'selected_filter_value': filter_value if filter_value else '',
+            'min_amount': min_amount_str or '',
             'sort': sort
         }
+
+        export_type = request.POST.get('export')
+        
+        if export_type == 'pdf':
+            context['selected_filter_name'] = ""
+            if selected_id and selected_type:
+                for p in combined_partners:
+                    if p['key'] == filter_value:
+                        context['selected_filter_name'] = f"{p['name']} ({p['type'].title()})"
+                        break
+            
+            html_string = render_to_string('purchase_report/purchase_report_pdf.html', context)
+            pdf_file = HTML(string=html_string).write_pdf()
+            response = HttpResponse(pdf_file, content_type='application/pdf')
+            response['Content-Disposition'] = 'inline; filename="purchase_report.pdf"'
+            return response
+        
+        elif export_type == 'excel':
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.title = "Purchase Report"
+            
+            headers = ["#", "Trade Partner", "Date", "Transaction No", "Description", "Qty", "Rate", "Amount"]
+            ws.append(headers)
+            
+            for index, item in enumerate(report_data, 1):
+                d_str = item['date'].strftime("%d-%m-%Y") if item['date'] else ""
+                row = [
+                    index,
+                    item['trade_partner'],
+                    d_str,
+                    item['transaction_no'],
+                    item['description'],
+                    item['qty'],
+                    item['rate'],
+                    item['total_amount']
+                ]
+                ws.append(row)
+            
+            ws.append(["", "", "", "", "TOTAL", total_qty, "", total_amount])
+            
+            output = BytesIO()
+            wb.save(output)
+            output.seek(0)
+            
+            response = HttpResponse(output.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = 'attachment; filename="purchase_report.xlsx"'
+            return response
 
         return render(request, 'purchase_report/purchase_report.html', context)

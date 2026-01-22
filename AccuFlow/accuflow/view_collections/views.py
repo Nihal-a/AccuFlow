@@ -196,7 +196,7 @@ class AddCollectionView(View):
             collection.save()
             
             messages.success(request, f"Collection {action_msg} successfully.")
-            return redirect('collection_list')
+            return redirect('add_collection')
             
         except Exception as e:
             messages.error(request, f"Error saving collection: {str(e)}")
