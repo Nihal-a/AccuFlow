@@ -135,7 +135,7 @@
             {% if request.user.is_admin %}
             <div class="space-y-0">
                 <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-medium uppercase">
-                    <i data-lucide="user-plus" class="w-4 h-4 "></i><span>Client Management</span>
+                    <i data-lucide="user-plus" class="w-3.5 h-3.5 "></i><span>Client Management</span>
                 </div>
                 <div class="ml-4 space-y-0.5 text-gray-500">
                     <a href="{% url 'clients' %}" class="nav-link " id="clientLink">
@@ -146,10 +146,10 @@
             {% endif %}
             {% if request.user.is_client %}
             <div class="space-y-0">
-                <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-medium uppercase">
-                    <i data-lucide="user-plus" class="w-4 h-4"></i><span>Master File</span>
+                <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-semibold uppercase">
+                    <i data-lucide="user-plus" class="w-3.5 h-3.5"></i><span class="text-xs">Master File</span>
                 </div>
-                <div class="pl-6 space-y-0 text-gray-500">
+                <div class="pl-6 space-y-0 text-gray-500 text-xs">
                     <a href="{% url 'suppliers' %}" class="nav-link " id="supplierMasterLink">
                         <span>Supplier Master</span>
                     </a>
@@ -171,10 +171,10 @@
                 </div>
             </div>
             <div class="space-y-0">
-                <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-medium uppercase">
-                    <i data-lucide="repeat" class="w-4 h-4 "></i><span>Transaction</span>
+                <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-semibold uppercase">
+                    <i data-lucide="repeat" class="w-3.5 h-3.5 "></i><span class="text-xs">Transaction</span>
                 </div>
-                <div class="pl-6 space-y-0 text-gray-500">
+                <div class="pl-6 space-y-0 text-gray-500 text-xs">
                     <a href="{% url 'purchase' %}" class="nav-link" id="">
                         <span>Purchase Entry</span>
                     </a>
@@ -193,10 +193,10 @@
                 </div>
             </div>
             <div class="space-y-0">
-                <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-medium uppercase">
-                    <i data-lucide="chart-candlestick" class="w-4 h-4 "></i><span>Stock Overview</span>
+                <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-semibold uppercase">
+                    <i data-lucide="chart-candlestick" class="w-3.5 h-3.5 "></i><span class="text-xs">Stock Overview</span>
                 </div>
-                <div class="pl-6 space-y-0 text-gray-500">
+                <div class="pl-6 space-y-0 text-gray-500 text-xs">
                     <a href="{% url 'stockview' %}" class="nav-link" id="">
                         <span>Stock View</span>
                     </a>
@@ -209,10 +209,10 @@
                 </div>
             </div>
             <div class="space-y-0">
-                <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-medium uppercase">
-                    <i data-lucide="file-text" class="w-4 h-4 "></i><span>Statement</span>
+                <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-semibold uppercase">
+                    <i data-lucide="file-text" class="w-3.5 h-3.5 "></i><span class="text-xs">Statement</span>
                 </div>
-                <div class="pl-6 space-y-0 text-gray-500">
+                <div class="pl-6 space-y-0 text-gray-500 text-xs">
                     <a href="{% url 'supplierledger' %}" class="nav-link" id="">
                         <span>Supplier Ledger</span>
                     </a>
@@ -231,10 +231,10 @@
                 </div>
             </div>
             <div class="space-y-0">
-                <div class="flex items-center gap-2  px-3 py-1 rounded-lg text-gray-700 font-medium uppercase">
-                    <i data-lucide="list-check" class="w-4 h-4 "></i><span>Collection</span>
+                <div class="flex items-center gap-2  px-3 py-1 rounded-lg text-gray-700 font-semibold uppercase">
+                    <i data-lucide="list-check" class="w-3.5 h-3.5 "></i><span class="text-xs">Collection</span>
                 </div>
-                <div class="pl-6 space-y-0 text-gray-500">
+                <div class="pl-6 space-y-0 text-gray-500 text-xs">
                     <a href="{% url 'add_collection' %}" class="nav-link" id="newcollectionLink">
                         <span>Add New Collection</span>
                     </a>
@@ -247,10 +247,10 @@
                 </div>
             </div>
             <div class="space-y-0">
-                <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-medium uppercase">
-                    <i data-lucide="clipboard-list" class="w-4 h-4 "></i><span>Reports</span>
+                <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-semibold uppercase">
+                    <i data-lucide="clipboard-list" class="w-3.5 h-3.5 "></i><span class="text-xs">Reports</span>
                 </div>
-                <div class="pl-6 space-y-0 text-gray-500">
+                <div class="pl-6 space-y-0 text-gray-500 text-xs">
                     <a href="{% url 'purchasereport' %}" class="nav-link" id="purchasereportLink">
                         <span>Purchase Report</span>
                     </a>
@@ -265,10 +265,10 @@
                 </div>
             </div>
             <div class="space-y-0">
-                <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-medium uppercase">
-                    <i data-lucide="clipboard-list" class="w-4 h-4 "></i><span>Online Currency</span>
+                <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-semibold uppercase">
+                    <i data-lucide="clipboard-list" class="w-3.5 h-3.5 "></i><span class="text-xs">Online Currency</span>
                 </div>
-                <div class="ml-4 space-y-0.5 text-gray-500">
+                <div class="pl-6 space-y-0 text-gray-500 text-xs">
                     <a href="{% url 'outstanding_customer' %}" class="nav-link" id="outstandingCustomerLink">Outstanding
                         Customer</a>
                     <a href="{% url 'outstanding_supplier' %}" class="nav-link" id="outstandingSupplierLink">Outstanding
@@ -276,10 +276,10 @@
                 </div>
             </div>
             <div class="space-y-0">
-                <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-medium uppercase">
-                    <i data-lucide="clipboard-list" class="w-4 h-4 "></i><span>MIS Reports</span>
+                <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-semibold uppercase">
+                    <i data-lucide="clipboard-list" class="w-3.5 h-3.5 "></i><span class="text-xs">MIS Reports</span>
                 </div>
-                <div class="pl-6 space-y-0 text-gray-500">
+                <div class="pl-6 space-y-0 text-gray-500 text-xs">
                     <div class="nav-link">Trial Balance</div>
                     <div class="nav-link">
                         <span>Profit & Loss</span>
@@ -292,8 +292,8 @@
             {% endif %}
             {% if request.user.is_collector %}
             <div class="space-y-0">
-                <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-medium uppercase">
-                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i><span>Dashboard</span>
+                <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-semibold uppercase">
+                    <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i><span class="text-xs">Dashboard</span>
                 </div>
                 <div class="ml-4 space-y-0.5 text-gray-500">
                     <a href="{% url 'my_collections' %}" class="nav-link">
@@ -303,10 +303,10 @@
             </div>
             {% endif %}
             <div class="space-y-0">
-                <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-medium uppercase">
-                    <i data-lucide="settings" class="w-4 h-4 "></i><span>Utilities</span>
+                <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-semibold uppercase">
+                    <i data-lucide="settings" class="w-3.5 h-3.5 "></i><span class="text-xs">Utilities</span>
                 </div>
-                <div class="pl-6 space-y-0 text-gray-500">
+                <div class="pl-6 space-y-0 text-gray-500 text-xs">
                     <div class="nav-link">Address View</div>
                     <a href="{% url 'changepass' %}" class="nav-link" id="">
                         <span>Change Password</span>
@@ -338,7 +338,7 @@
             <div class="relative flex items-center space-x-4">
                 <button
                     class="relative flex items-center justify-center text-gray-700 p-3 border border-gray-700 rounded-full hover:bg-gray-100 focus:outline-none">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round"
                             d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8m0 0v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8m18 0L12 13 3 8" />
                     </svg>
@@ -347,7 +347,7 @@
                 <div class="relative inline-block">
                     <button id="notificationBtn"
                         class="relative flex items-center justify-center text-gray-700 p-3 border border-gray-700 rounded-full focus:outline-none  hover:bg-blue-500 hover:border-white hover:text-white transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                         </svg>
@@ -375,7 +375,7 @@
                                     <div class="flex items-start gap-3">
                                         <div
                                             class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                                            <i data-lucide="file-clock" class="w-4 h-4"></i>
+                                            <i data-lucide="file-clock" class="w-3.5 h-3.5"></i>
                                         </div>
                                         <div>
                                             <p class="text-sm font-semibold text-gray-800">Approval Request</p>

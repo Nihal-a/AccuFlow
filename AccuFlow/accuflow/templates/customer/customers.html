@@ -5,39 +5,33 @@
 {% block content %}
 
 <div class="flex justify-end items-center">
-
-  <div class="relative w-full md:w-1/4">
+  <div class="relative w-full md:w-1/5 text-sm">
     <input type="text" id="searchInput" placeholder="Search customers..."
-      class="w-full bg-white rounded-xl px-4 py-2 pl-10 border  focus:border-transparent ring-2 ring-blue-200  focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none" />
-    <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5 pointer-events-none" fill="none" stroke="currentColor"
-      stroke-width="2" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round"
-        d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 3a7.5 7.5 0 006.15 13.65z" />
-    </svg>
+      class="w-full bg-white rounded-md px-2 py-1.5 pl-8 border border-transparent focus:border-transparent ring-2 ring-blue-200  focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none" />
+     <i
+    data-lucide="search"
+    class="w-5 h-5 text-gray-400 absolute left-2 top-1.5 pointer-events-none">
+    </i>
   </div>
 </div>
 
 <div class="bg-white rounded-xl p-6 mt-3">
   <div class="flex justify-between items-center">
-
-    <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">Customer Management</h1>
+    <h1 class="text-lg font-medium text-gray-700 uppercase">Customer Management</h1>
     <a href="{% url 'create-customer' %}"
-      class="leading-none float-end inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-300">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-        stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-      </svg>
-      Create Customer
+     class="inline-flex items-center gap-1 bg-blue-500 text-white text-sm font-medium px-3 py-2 rounded-md shadow-sm hover:bg-blue-600 transition-all">
+       <i data-lucide="plus" class="w-4 h-4"></i>
+      <span class="text-xs">Create Customer</span>
     </a>
   </div>
   <div class="overflow-x-auto mt-5 w-full">
-    <table class="min-w-full rounded-t-lg overflow-hidden">
-      <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
+    <table class="min-w-[50%] rounded-t-sm overflow-hidden">
+      <thead class="bg-blue-200 text-gray-700 uppercase text-xs">
         <tr>
           <th class="px-4 py-3 text-left font-medium">Actions</th>
           <th class="px-4 py-3 text-left font-medium">#</th>
           <th class="px-4 py-3 text-left font-medium">Name</th>
-          <th class="px-4 py-3 text-left font-medium">Phone</th>
+          {% comment %} <th class="px-4 py-3 text-left font-medium">Phone</th>
           <th class="px-4 py-3 text-left font-medium">WhatsApp</th>
           <th class="px-4 py-3 text-left font-medium">Address</th>
           <th class="px-4 py-3 text-right font-medium">Open Credit</th>
@@ -46,7 +40,7 @@
           <th class="px-4 py-3 text-right font-medium">OTC Debit</th>
           <th class="px-4 py-3 text-right font-medium">OTC Balance</th>
           <th class="px-4 py-3 text-right font-medium">Open Balance</th>
-          <th class="px-4 py-3 text-right font-medium">Balance</th>
+          <th class="px-4 py-3 text-right font-medium">Balance</th> {% endcomment %}
         </tr>
       </thead>
       <tbody class="bg-gray-100">

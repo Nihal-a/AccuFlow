@@ -42,7 +42,17 @@ class PayableReportView(View):
                 'date_to': '',
             })
         
+        min_amount_str = request.POST.get("minAmount")
+        min_amount = None
+
+        if min_amount_str:
+            try:
+                min_amount = float(min_amount_str)
+            except ValueError:
+                min_amount = None
+        
         payables = []
+        
         
         # 1. Customers
         customers = Customers.objects.filter(is_active=True, client=client)

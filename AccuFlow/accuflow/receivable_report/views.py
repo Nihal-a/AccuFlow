@@ -32,6 +32,14 @@ class ReceivableReportView(View):
                 date_limit = datetime.strptime(date_to_str, "%Y-%m-%d").date()
             except ValueError:
                 pass
+        min_amount_str = request.POST.get("minAmount")
+        min_amount = None
+
+        if min_amount_str:
+            try:
+                min_amount = float(min_amount_str)
+            except ValueError:
+                min_amount = None
         
         # Optimization: If no date filter is applied, do not show any data initially
         if not date_from_str and not date_to_str:
