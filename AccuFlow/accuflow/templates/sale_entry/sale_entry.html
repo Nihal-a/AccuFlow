@@ -185,18 +185,18 @@
                     </div>
                 </div>
                 <div class="overflow-x-auto mt-5 w-full" id="saleCreateDiv">
-                    <table class="min-w-full rounded-t-lg overflow-hidden">
-                        <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
+                    <table class="min-w-[70%] rounded-t-lg overflow-hidden border-collapse">
+                        <thead class="bg-blue-200 text-gray-700 text-xs">
                             <tr>
-                                <th class="px-4 py-3 text-left  font-medium w-1">Actions</th>
-                                <th class="px-2 py-1 text-left font-medium w-1">#</th>
-                                <th class="px-2 py-1 text-left font-medium">Date</th>
-                                <th class="px-2 py-1 text-left font-medium">Customer</th>
-                                <th class="px-4 py-3 text-left font-medium">Godown</th>
-                                <th class="px-4 py-3 text-right font-medium">Qty</th>
-                                <th class="px-4 py-3 text-right font-medium">Rate</th>
-                                <th class="px-4 py-3 text-right font-medium">Total Amount</th>
-                                <th class="px-4 py-3 text-right font-medium">Description</th>
+                                <th class="border border-gray-400  text-left  font-medium w-5 ">Actions</th>
+                                <th class="border border-gray-400  text-left font-medium w-1">#</th>
+                                {% comment %} <th class="  text-left font-medium">Date</th> {% endcomment %}
+                                <th class="border border-gray-400  text-left font-medium">Godown</th>
+                                <th class="border border-gray-400  text-right font-medium">Description</th>
+                                <th class="border border-gray-400  text-left font-medium w-3">Customer</th>
+                                <th class="border border-gray-400  text-right font-medium w-1">Qty</th>
+                                <th class="border border-gray-400  text-right font-medium w-1">Rate</th>
+                                <th class="border border-gray-400  text-right font-medium w-2">Total Amount</th>
                             </tr>
                         </thead>
                         <tbody class="bg-gray-100" id="saleTableBody">
@@ -343,12 +343,11 @@
     });
     rateAvg = rateSum / count || 0;
     const lastRow = `
-      <tr class="bg-blue-200 font-bold" id="totalRow">
-        <td class="px-4 py-3 text-left" colspan="5">Totals:</td>
-        <td class="px-4 py-3 text-right">${parseFloat(totalQty).toFixed(2)}</td>
-        <td class="px-4 py-3 text-right">${parseFloat(rateAvg).toFixed(2)}</td>
-        <td class="px-4 py-3 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
-        <td class="px-4 py-3 text-right"></td>
+      <tr class="bg-blue-200 font-semibold text-sm" id="totalRow">
+        <td class="px-4 text-left" colspan="5">Totals:</td>
+        <td class="px-4 text-right">${parseFloat(totalQty).toFixed(2)}</td>
+        <td class="px-4 text-right">${parseFloat(rateAvg).toFixed(2)}</td>
+        <td class="px-4 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
       </tr>`;
     tableBody.insertAdjacentHTML('beforeend', lastRow);
 
@@ -447,42 +446,43 @@
     var tableBody = document.getElementById("saleTableBody");
     var newRow = `
       <tr>
-        <td class="px-3 py-3 text-left w-1 flex">
+        <td class="  text-center text-sm flex px-1">
           <button type='button' class="text-blue-500 text-xs hover:underline mr-2" onclick="updateSale(this)">Edit</button>
           <button type='button' class="text-red-500 text-xs hover:underline" onclick="deleteSale(this)">Delete</button>
         </td>
-        <td class="px-2 py-1 text-left text-sm w-1 sl">${i + 1}</td>
-  
-        <td class="px-2 py-1 text-left text-sm search-area">
-          ${sale.date.split('T')[0]}    
-          <input type="hidden" name="dates" value="${sale.date.split('T')[0]}">
+        <td class="border border-gray-400 text-left text-sm px-1 sl">${i + 1}</td>
+        
+         <td class="border border-gray-400 text-left text-sm px-1 search-area">
+          ${sale.godown}
+          <input type="hidden" name="godowns" value="${sale.godown_id}">
         </td>
-        <td class="px-2 py-1 text-left text-sm search-area">
+
+        <td class="border border-gray-400 text-left text-sm search-area">
+          ${sale.description}
+          <input type="hidden" name="descriptions" value="${sale.description}">
+        </td>
+
+        <td class="border border-gray-400 text-left text-sm px-1 search-area">
         ${sale.type == 'customers' ? sale.customer : sale.supplier}
         <input type="hidden" name="customers" value="${sale.type === 'customers' ? sale.customer_id : sale.supplier_id}">
         </td>
 
-
-        <td class="px-4 py-3 text-left text-sm search-area">
-          ${sale.godown}
-          <input type="hidden" name="godowns" value="${sale.godown_id}">
-        </td>
-        <td class="px-4 py-3 text-right search-area">
-          ${parseFloat(sale.amount).toFixed(2)}
-          <input type="hidden" name="amounts" value="${sale.amount}">   
-        </td>
-        <td class="px-4 py-3 text-right search-area">
+       
+        <td class="border border-gray-400 text-right text-sm px-1 search-area">
           ${sale.qty}
           <input type="hidden" name="qtys" value="${sale.qty}">
         </td>
-        <td class="px-4 py-3 text-right search-area">
+
+         <td class="border border-gray-400 text-right text-sm px-1 search-area">
+          ${parseFloat(sale.amount).toFixed(2)}
+          <input type="hidden" name="amounts" value="${sale.amount}">   
+        </td>
+
+        <td class="border border-gray-400 text-right text-sm px-1 search-area">
           ${parseFloat(sale.total_amount).toFixed(2)}
           <input type="hidden" name="total_amounts" value="${parseFloat(sale.total_amount).toFixed(2)}">
         </td>
-        <td class="px-4 py-3 text-right search-area">
-          ${sale.description}
-          <input type="hidden" name="descriptions" value="${sale.description}">
-        </td>
+        
         <input type="hidden" name="sale_ids" id="sale_id" value="${sale.id}"> 
         <input type="hidden" name="type" id="type" value="${sale.type}"> 
       </tr>`;
