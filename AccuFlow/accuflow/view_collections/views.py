@@ -20,11 +20,11 @@ class AddCollectionView(View):
         collector_id = request.GET.get('collector')
         date_str = request.GET.get('date')
         
-        # Check if editing specific ID
+
         if id:
             instance = get_object_or_404(Collection, id=id, client=client)
         
-        # If not specific ID, check if we have a pending/new collection for this criteria
+
         elif collector_id and date_str:
             try:
                 date_obj = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
@@ -37,7 +37,7 @@ class AddCollectionView(View):
             except ValueError:
                 pass
 
-        # If instance found (explicit or implicit), sync params
+
         if instance:
             collector_id = instance.collector.id
             date_str = instance.date.strftime('%Y-%m-%d')
@@ -47,7 +47,7 @@ class AddCollectionView(View):
         if collector_id:
             selected_collector = get_object_or_404(Collectors, id=collector_id)
             
-            # Fetch Customers with positive balance
+
             customers = Customers.objects.filter(client=client, is_active=True, balance__gt=0)
             for c in customers:
                 receivables.append({
@@ -61,7 +61,7 @@ class AddCollectionView(View):
                     'is_selected': False
                 })
 
-            # Fetch Suppliers with positive balance
+
             suppliers = Suppliers.objects.filter(client=client, is_active=True, balance__gt=0)
             for s in suppliers:
                  receivables.append({
@@ -78,7 +78,7 @@ class AddCollectionView(View):
             if instance:
                 existing_items = {f"{item.transaction_type}_{item.transaction_id}": item.amount for item in instance.items.all()}
                 
-                # Update receivables list with existing values
+
                 for r in receivables:
                     key = f"{r['type']}_{r['obj_id']}"
                     if key in existing_items:
@@ -86,7 +86,7 @@ class AddCollectionView(View):
                         r['is_selected'] = True
                         del existing_items[key]
                 
-                # Fetch missing partners (those who might have 0 balance now but are in collection)
+
                 for key, amount in existing_items.items():
                     type_str, id_str = key.split('_')
                     if type_str == 'Customer':
@@ -146,7 +146,7 @@ class AddCollectionView(View):
             if id:
                 collection = get_object_or_404(Collection, id=id, client=client)
             else:
-                 # Check if exists to merge
+
                  collection = Collection.objects.filter(
                      client=client, 
                      collector=collector, 
@@ -157,7 +157,7 @@ class AddCollectionView(View):
             if collection:
                 collection.collector = collector
                 collection.date = date_obj
-                collection.status = 'New' # Reset status to New so collector can see/edit
+                collection.status = 'New'
                 collection.save()
                 collection.items.all().delete()
                 action_msg = "updated"
@@ -260,7 +260,7 @@ class CollectionDetailView(View):
                     item.partner_name = s.name
                     item.partner_phone = s.phone
             
-            # Keep backward compatibility if old Sale items exist?
+
             elif item.transaction_type == 'Sale':
                 sale = Sales.objects.filter(sale_no=item.transaction_id, client=client).first()
                 if sale and sale.customer:

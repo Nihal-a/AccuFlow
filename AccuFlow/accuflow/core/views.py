@@ -12,7 +12,7 @@ def user_login(request):
         password = request.POST.get('password')
         user = authenticate(username=username,password=password)
         if user:
-            # Check Subscription Status for Client and Collector 
+ 
             client_obj = None
             if user.is_client:
                  try:
@@ -29,12 +29,12 @@ def user_login(request):
             if client_obj:
                  from django.utils import timezone
                  
-                 # Check if expired
+
                  if not client_obj.is_subscription_active:
-                     login(request, user) # Login to establish session
+                     login(request, user)
                      return redirect('subscription_expired')
                  
-                 # Check if expiring within 7 days
+
                  if client_obj.subscription_end:
                      days_left = (client_obj.subscription_end - timezone.now().date()).days
                      if 0 <= days_left <= 7:
@@ -84,7 +84,7 @@ def update_ledger(where=None, to=None, old_purchase=0, new_purchase=0, old_sale=
     if where:
         where.refresh_from_db()
         
-        # Handle Purchase (Credit)
+
         if float(old_purchase) > 0:
             where.credit -= float(old_purchase)
             if where.credit < 0:
@@ -94,7 +94,7 @@ def update_ledger(where=None, to=None, old_purchase=0, new_purchase=0, old_sale=
         if float(new_purchase) > 0:
             where.credit += float(new_purchase)
 
-        # Handle Sale (Debit)
+
         if float(old_sale) > 0:
             where.debit -= float(old_sale)
             if where.debit < 0:

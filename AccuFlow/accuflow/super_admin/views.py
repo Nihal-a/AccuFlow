@@ -51,7 +51,7 @@ class ClientAddView(View):
             clientId = last_client_id()
         )
         
-        # Handle subscription
+
         plan_id = request.POST.get('subscription_plan')
         if plan_id:
             try:
@@ -59,7 +59,7 @@ class ClientAddView(View):
                 client.subscription_plan = plan
                 client.subscription_start = timezone.now().date()
                 
-                # Check for custom duration override
+
                 custom_duration = request.POST.get('custom_duration')
                 if custom_duration and custom_duration.isdigit():
                      duration = int(custom_duration)
@@ -112,19 +112,19 @@ class ClientUpdateView(View):
         client.phone = phone
         client.country_code = country_code
 
-        # Handle subscription update
+
         plan_id = request.POST.get('subscription_plan')
         if plan_id:
             try:
                 new_plan = SubscriptionPlan.objects.get(id=plan_id)
                 
-                # Check for custom duration override
+
                 custom_duration = request.POST.get('custom_duration')
                 duration = None
                 if custom_duration and custom_duration.isdigit():
                     duration = int(custom_duration)
 
-                # Update if plan changes OR if a specific custom duration is requested (even for same plan)
+
                 if (not client.subscription_plan or client.subscription_plan.id != new_plan.id) or duration:
                     client.subscription_plan = new_plan
                     client.subscription_start = timezone.now().date()
@@ -184,7 +184,7 @@ def check_username_availability(request):
             return JsonResponse({'error': str(e)}, status=400)
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
-# Subscription Views
+
 class SubscriptionListView(View):
     def get(self, request):
         plans = SubscriptionPlan.objects.all()
