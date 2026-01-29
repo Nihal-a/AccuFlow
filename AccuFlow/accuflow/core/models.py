@@ -82,6 +82,18 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = "User Accounts"
     
 
+class SubscriptionPlan(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True, null=True)
+    price = models.FloatField(default=0)
+    duration_days = models.IntegerField(default=30, help_text="Duration in days (e.g., 30 for monthly, 365 for yearly)")
+    is_trial = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
+
 class Clients(models.Model):
     name = models.TextField(blank=True,null=True)
     user = models.ForeignKey(UserAccount,on_delete=models.CASCADE,blank=True,null=True)
@@ -91,6 +103,19 @@ class Clients(models.Model):
     wa = models.TextField(blank=True,null=True)
     country_code = models.TextField(blank=True,null=True)
     clientId = models.TextField(blank=True,null=True)
+    
+    # Subscription Fields
+    subscription_plan = models.ForeignKey(SubscriptionPlan, on_delete=models.SET_NULL, null=True, blank=True)
+    subscription_start = models.DateField(null=True, blank=True)
+    subscription_end = models.DateField(null=True, blank=True)
+    is_trial_active = models.BooleanField(default=False)
+    
+    @property
+    def is_subscription_active(self):
+        if not self.subscription_end:
+            return False
+        from django.utils import timezone
+        return self.subscription_end >= timezone.now().date()
     
 
 

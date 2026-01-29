@@ -118,7 +118,7 @@ class PendingApprovalDetailView(LoginRequiredMixin, View):
                             amount=amount,
                             party_balance=party.balance, # Updated balance
                             transaction='Received',
-                            description=party.name,
+                            description=f"{item.remark}" if item.remark else "",
                             hold=False,
                             is_active=True
                         )

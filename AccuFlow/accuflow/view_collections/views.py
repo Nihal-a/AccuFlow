@@ -1,4 +1,5 @@
 import datetime
+from django.db.models import Sum
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from core.models import Collectors, Sales, Purchases, NSDs, Collection, CollectionItem, Customers, Suppliers
@@ -182,13 +183,15 @@ class AddCollectionView(View):
                     amt = 0
                 
                 if amt > 0:
+                    remark_val = request.POST.get(f'remark_{item_key}', '')
                     CollectionItem.objects.create(
                         collection=collection,
                         transaction_id=id_str,
                         transaction_type=type_str,
                         amount=amt,
                         collected_amount=amt,
-                        is_credit=False
+                        is_credit=False,
+                        remark=remark_val
                     )
                     total_amt += amt
             
@@ -221,11 +224,18 @@ class CollectionListView(View):
             date_obj = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
             collections = collections.filter(date=date_obj)
             
+        collections = collections.annotate(collected_total=Sum('items__collected_amount'))
+            
+        total_assigned = collections.aggregate(sum=Sum('total_amount'))['sum'] or 0
+        total_collected = CollectionItem.objects.filter(collection__in=collections).aggregate(sum=Sum('collected_amount'))['sum'] or 0
+
         context = {
             'collectors': collectors,
             'collections': collections,
             'selected_collector': selected_collector,
             'selected_date': date_str,
+            'total_assigned': total_assigned,
+            'total_collected': total_collected,
         }
         return render(request, 'view_collections/collection_list.html', context)
 
@@ -257,9 +267,12 @@ class CollectionDetailView(View):
                     item.partner_name = sale.customer.name
                     item.partner_phone = sale.customer.phone
         
+        total_collected = sum(item.collected_amount for item in items)
+        
         context = {
             'collection': collection,
             'items': items,
+            'total_collected': total_collected,
         }
         return render(request, 'view_collections/collection_detail.html', context)
 

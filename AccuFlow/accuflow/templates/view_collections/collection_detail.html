@@ -10,29 +10,34 @@
                 Collection #{{ collection.id }}
             </h1>
             <p class="text-sm text-gray-500 mt-1">
-                Collector: <span class="font-semibold text-gray-800">{{ collection.collector.name }}</span> | 
+                Collector: <span class="font-semibold text-gray-800">{{ collection.collector.name }}</span> |
                 Date: <span class="font-semibold text-gray-800">{{ collection.date|date:"Y-m-d" }}</span>
             </p>
         </div>
         <div class="flex gap-2 mt-3 md:mt-0">
-    
-            <a href="{% url 'collection_list' %}" class="bg-gray-100 text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-lg transition-colors font-medium text-sm flex items-center gap-2">
+
+            <a href="{% url 'collection_list' %}"
+                class="bg-gray-100 text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-lg transition-colors font-medium text-sm flex items-center gap-2">
                 <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to List
             </a>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
-            <p class="text-xs text-gray-500 uppercase font-medium mb-1">Total Amount</p>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+            <p class="text-xs text-blue-600 uppercase font-medium mb-1">Total Assigned Amount</p>
             <p class="text-2xl font-bold text-gray-800">{{ collection.total_amount }}</p>
         </div>
+        <div class="bg-green-50 p-4 rounded-xl border border-green-100">
+            <p class="text-xs text-green-600 uppercase font-medium mb-1">Total Collected Amount</p>
+            <p class="text-2xl font-bold text-gray-800">{{ total_collected }}</p>
+        </div>
         <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
-             <p class="text-xs text-gray-500 uppercase font-medium mb-1">Items Count</p>
+            <p class="text-xs text-gray-500 uppercase font-medium mb-1">Items Count</p>
             <p class="text-2xl font-bold text-gray-800">{{ items.count }}</p>
         </div>
-         <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
-             <p class="text-xs text-gray-500 uppercase font-medium mb-1">Created At</p>
+        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+            <p class="text-xs text-gray-500 uppercase font-medium mb-1">Created At</p>
             <p class="text-lg font-medium text-gray-800">{{ collection.created_at|date:"M d, Y H:i" }}</p>
         </div>
     </div>
@@ -46,7 +51,8 @@
                     <th class="px-4 py-3 text-left font-medium">Partner</th>
                     <th class="px-4 py-3 text-left font-medium">Contact</th>
                     <th class="px-4 py-3 text-left font-medium">Type</th>
-                    <th class="px-4 py-3 text-right font-medium">Amount</th>
+                    <th class="px-4 py-3 text-right font-medium">Assigned Amount</th>
+                    <th class="px-4 py-3 text-right font-medium">Collected Amount</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200 text-sm">
@@ -57,7 +63,9 @@
                     <td class="px-4 py-3">
                         <div class="flex items-center gap-3">
                             {% if item.partner_phone and item.partner_phone != '-' %}
-                            <a href="tel:{{ item.partner_phone }}" class="text-gray-500 hover:text-blue-600 transition-colors" title="Call {{ item.partner_phone }}">
+                            <a href="tel:{{ item.partner_phone }}"
+                                class="text-gray-500 hover:text-blue-600 transition-colors"
+                                title="Call {{ item.partner_phone }}">
                                 <i data-lucide="phone" class="w-4 h-4"></i>
                                 {{ item.partner_phone }}
                             </a>
@@ -68,6 +76,7 @@
                     </td>
                     <td class="px-4 py-3 text-gray-600">{{ item.transaction_type }}</td>
                     <td class="px-4 py-3 text-right font-medium text-gray-800">{{ item.amount }}</td>
+                    <td class="px-4 py-3 text-right font-medium text-green-600">{{ item.collected_amount }}</td>
                 </tr>
                 {% empty %}
                 <tr>

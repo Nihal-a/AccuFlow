@@ -1,6 +1,8 @@
 import json
 from django.shortcuts import render,redirect, get_object_or_404
-from core.models import Clients,UserAccount 
+from core.models import Clients, UserAccount, SubscriptionPlan
+from django.utils import timezone
+from datetime import timedelta 
 from django.views import View
 from django.contrib import messages
 from django.http import JsonResponse
@@ -15,7 +17,8 @@ class ClientsView(View):
 
 class ClientAddView(View):
     def get(self, request):
-        return render(request, 'admin/clients/create.html')
+        plans = SubscriptionPlan.objects.filter(is_active=True)
+        return render(request, 'admin/clients/create.html', {'plans': plans})
 
     def post(self, request):
         name = request.POST.get('name')
@@ -47,6 +50,27 @@ class ClientAddView(View):
             is_active=True,
             clientId = last_client_id()
         )
+        
+        # Handle subscription
+        plan_id = request.POST.get('subscription_plan')
+        if plan_id:
+            try:
+                plan = SubscriptionPlan.objects.get(id=plan_id)
+                client.subscription_plan = plan
+                client.subscription_start = timezone.now().date()
+                
+                # Check for custom duration override
+                custom_duration = request.POST.get('custom_duration')
+                if custom_duration and custom_duration.isdigit():
+                     duration = int(custom_duration)
+                else:
+                     duration = plan.duration_days
+                
+                client.subscription_end = timezone.now().date() + timedelta(days=duration)
+                client.is_trial_active = plan.is_trial
+                client.save()
+            except SubscriptionPlan.DoesNotExist:
+                pass
 
         messages.success(request, f"Client '{name}' created successfully!")
         return redirect('clients')
@@ -56,9 +80,11 @@ class ClientUpdateView(View):
     def get(self,request,id):
         client = get_object_or_404(Clients, id=id, is_active=True)
         user = client.user
+        subscription_plans = SubscriptionPlan.objects.filter(is_active=True)
         context = {
             'client': client,
             'user': user,
+            'subscription_plans': subscription_plans,
         }
         return render(request, 'admin/clients/update.html', context)    
     def post(self,request,id):
@@ -85,6 +111,32 @@ class ClientUpdateView(View):
         client.email = email
         client.phone = phone
         client.country_code = country_code
+
+        # Handle subscription update
+        plan_id = request.POST.get('subscription_plan')
+        if plan_id:
+            try:
+                new_plan = SubscriptionPlan.objects.get(id=plan_id)
+                
+                # Check for custom duration override
+                custom_duration = request.POST.get('custom_duration')
+                duration = None
+                if custom_duration and custom_duration.isdigit():
+                    duration = int(custom_duration)
+
+                # Update if plan changes OR if a specific custom duration is requested (even for same plan)
+                if (not client.subscription_plan or client.subscription_plan.id != new_plan.id) or duration:
+                    client.subscription_plan = new_plan
+                    client.subscription_start = timezone.now().date()
+                    
+                    if duration is None:
+                        duration = new_plan.duration_days
+                        
+                    client.subscription_end = timezone.now().date() + timedelta(days=duration)
+                    client.is_trial_active = new_plan.is_trial
+            except SubscriptionPlan.DoesNotExist:
+                pass
+        
         client.save()
 
         user.username = username
@@ -131,3 +183,50 @@ def check_username_availability(request):
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+# Subscription Views
+class SubscriptionListView(View):
+    def get(self, request):
+        plans = SubscriptionPlan.objects.all()
+        return render(request, 'admin/subscriptions/list.html', {'plans': plans})
+
+class SubscriptionCreateView(View):
+    def get(self, request):
+        return render(request, 'admin/subscriptions/form.html')
+
+    def post(self, request):
+        name = request.POST.get('name')
+        price = request.POST.get('price')
+        duration = request.POST.get('duration')
+        is_trial = request.POST.get('is_trial') == 'on'
+        description = request.POST.get('description')
+
+        SubscriptionPlan.objects.create(
+            name=name,
+            price=price,
+            duration_days=duration,
+            is_trial=is_trial,
+            description=description,
+            is_active=True
+        )
+        messages.success(request, "Subscription Plan created.")
+        return redirect('subscriptions')
+
+class SubscriptionUpdateView(View):
+    def get(self, request, id):
+        plan = get_object_or_404(SubscriptionPlan, id=id)
+        return render(request, 'admin/subscriptions/form.html', {'plan': plan})
+
+    def post(self, request, id):
+        plan = get_object_or_404(SubscriptionPlan, id=id)
+        
+        plan.name = request.POST.get('name')
+        plan.price = request.POST.get('price')
+        plan.duration_days = request.POST.get('duration')
+        plan.is_trial = request.POST.get('is_trial') == 'on'
+        plan.description = request.POST.get('description')
+        plan.is_active = request.POST.get('is_active') == 'on'
+        plan.save()
+
+        messages.success(request, "Subscription Plan updated.")
+        return redirect('subscriptions')

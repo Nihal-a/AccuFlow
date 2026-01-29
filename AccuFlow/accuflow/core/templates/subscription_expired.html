@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscription Expired</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 h-screen flex items-center justify-center px-4">
+    <div class="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden text-center p-8">
+        <div class="flex justify-center mb-6">
+            <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center">
+                <i class="fa-solid fa-ban text-4xl text-red-500"></i>
+            </div>
+        </div>
+
+        <h1 class="text-2xl font-bold text-gray-800 mb-2">Subscription Expired</h1>
+        <p class="text-gray-600 mb-8">
+            {% if request.user.is_authenticated %}
+            Hello <span class="font-semibold text-gray-800">{{ request.user.username }}</span>,
+            {% endif %}
+            your subscription plan has expired. To continue using AccuFlow, please renew your subscription or contact
+            the administrator.
+        </p>
+
+        <div class="space-y-3">
+            <a href="https://wa.me/" target="_blank"
+                class="block w-full py-3 px-4 bg-green-500 hover:bg-green-600 text-white rounded-xl font-semibold transition duration-200 flex items-center justify-center gap-2">
+                <i class="fa-brands fa-whatsapp text-xl"></i> Contact Support
+            </a>
+
+            <a href="{% url 'logout' %}"
+                class="block w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition duration-200">
+                Log Out
+            </a>
+        </div>
+
+        <div class="mt-8 text-xs text-gray-400">
+            &copy; 2024 AccuFlow. All rights reserved.
+        </div>
+    </div>
+</body>
+
+</html>

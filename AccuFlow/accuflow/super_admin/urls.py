@@ -6,5 +6,10 @@ urlpatterns = [
     path('clients/', views.ClientsView.as_view(), name='clients'),
     path('clients/create/', views.ClientAddView.as_view(), name='create-client'),
     path('clients/update/<int:id>/', views.ClientUpdateView.as_view(), name='update-client'),
-    path('clients/delete/<int:client_id>/', views.DeleteClientView.as_view(), name='delete-client'), 
+    path('clients/delete/<int:client_id>/', views.DeleteClientView.as_view(), name='delete-client'),
+    
+    # Subscriptions
+    path('subscriptions/', views.SubscriptionListView.as_view(), name='subscriptions'),
+    path('subscriptions/create/', views.SubscriptionCreateView.as_view(), name='create-subscription'),
+    path('subscriptions/update/<int:id>/', views.SubscriptionUpdateView.as_view(), name='update-subscription'),
 ] 

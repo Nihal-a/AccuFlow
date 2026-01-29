@@ -15,6 +15,7 @@ class LoginRequiredMiddleware:
             '/logout/',
             '/django-admin/',
             '/landing/',
+            '/subscription-expired/',
         ]
 
         if getattr(settings, 'STATIC_URL', None):

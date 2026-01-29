@@ -5,24 +5,58 @@
 {% block content %}
 
 <div class="flex justify-end items-center mb-3">
-    <form method="GET" class="flex flex-col md:flex-row gap-2 w-full md:w-auto">
-        <select name="collector" class="bg-white rounded-xl px-4 py-2 border border-transparent focus:border-transparent ring-2 ring-blue-200 focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none">
-            <option value="">All Collectors</option>
-            {% for c in collectors %}
-            <option value="{{ c.id }}" {% if selected_collector and selected_collector.id == c.id %}selected{% endif %}>{{ c.name }}</option>
-            {% endfor %}
-        </select>
-        <input type="date" name="date" value="{{ selected_date|default:'' }}" class="bg-white rounded-xl px-4 py-2 border border-transparent focus:border-transparent ring-2 ring-blue-200 focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none">
-        
-        <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white rounded-xl px-4 py-2">
-            <i class="fa-solid fa-filter"></i>
-        </button>
-        {% if selected_collector or selected_date %}
-        <a href="{% url 'collection_list' %}" class="bg-gray-500 hover:bg-gray-600 text-white rounded-xl px-4 py-2 flex items-center">
-            <i class="fa-solid fa-times"></i>
-        </a>
-        {% endif %}
-    </form>
+  <form method="GET" class="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+    <select name="collector" id="filterCollector"
+      class="bg-white rounded-xl px-4 py-2 border border-transparent focus:border-transparent ring-2 ring-blue-200 focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none">
+      <option value="">All Collectors</option>
+      {% for c in collectors %}
+      <option value="{{ c.id }}">{{ c.name }}</option>
+      {% endfor %}
+    </select>
+    <input type="date" name="date" id="filterDate"
+      class="bg-white rounded-xl px-4 py-2 border border-transparent focus:border-transparent ring-2 ring-blue-200 focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none">
+
+    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white rounded-xl px-4 py-2">
+      <i class="fa-solid fa-filter"></i>
+    </button>
+    {% if selected_collector or selected_date %}
+    <a href="{% url 'collection_list' %}"
+      class="bg-gray-500 hover:bg-gray-600 text-white rounded-xl px-4 py-2 flex items-center">
+      <i class="fa-solid fa-times"></i>
+    </a>
+    {% endif %}
+  </form>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 mb-3">
+  <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm border-l-4 border-l-blue-500">
+    <div class="flex justify-between items-center">
+      <div>
+        <p class="text-xs text-gray-500 uppercase font-medium mb-1">Total Assigned</p>
+        <p class="text-2xl font-bold text-gray-800">{{ total_assigned|floatformat:2 }}</p>
+      </div>
+      <div class="p-2 bg-blue-50 rounded-lg text-blue-600">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm border-l-4 border-l-green-500">
+    <div class="flex justify-between items-center">
+      <div>
+        <p class="text-xs text-gray-500 uppercase font-medium mb-1">Total Collected</p>
+        <p class="text-2xl font-bold text-gray-800">{{ total_collected|floatformat:2 }}</p>
+      </div>
+      <div class="p-2 bg-green-50 rounded-lg text-green-600">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="bg-white rounded-xl p-6 mt-3">
@@ -46,7 +80,9 @@
           <th class="px-4 py-3 text-left font-medium">#</th>
           <th class="px-4 py-3 text-left font-medium">Date</th>
           <th class="px-4 py-3 text-left font-medium">Collector</th>
-          <th class="px-4 py-3 text-right font-medium">Total Amount</th>
+
+          <th class="px-4 py-3 text-right font-medium">Assigned Amt</th>
+          <th class="px-4 py-3 text-right font-medium">Collected Amt</th>
           <th class="px-4 py-3 text-right font-medium">Created At</th>
         </tr>
       </thead>
@@ -56,10 +92,11 @@
         <tr class="hover:bg-gray-50 divide-x divide-y divide-gray-300 odd:bg-white even:bg-gray-100">
           <td class="px-4 py-2 w-1">
             <div class="flex gap-2">
-                <a href="{% url 'collection_detail' id=c.id %}" class="bg-green-500 text-white px-2 py-1.5 rounded hover:bg-green-600 text-xs" title="View Details">
-                    <i class="fa-solid fa-eye"></i>
-                </a>
-        
+              <a href="{% url 'collection_detail' id=c.id %}"
+                class="bg-green-500 text-white px-2 py-1.5 rounded hover:bg-green-600 text-xs" title="View Details">
+                <i class="fa-solid fa-eye"></i>
+              </a>
+
             </div>
           </td>
           <td class="px-4 py-2 w-1">
@@ -68,6 +105,7 @@
           <td class="px-4 py-2 font-semibold text-gray-700">{{ c.date|date:"Y-m-d" }}</td>
           <td class="px-4 py-2 text-gray-700">{{ c.collector.name }}</td>
           <td class="px-4 py-2 text-gray-700 text-right font-bold">{{ c.total_amount }}</td>
+          <td class="px-4 py-2 text-green-600 text-right font-bold">{{ c.collected_total|default:0|floatformat:2 }}</td>
           <td class="px-4 py-2 text-gray-700 text-right">{{ c.created_at|date:"M d, Y H:i" }}</td>
         </tr>
         {% endfor %}
@@ -117,5 +155,16 @@
   function closeModal() {
     document.getElementById("confirmModal").classList.add("hidden");
   }
+
+  $(document).ready(function () {
+    // Set values for filters from server-side context
+    {% if selected_collector %}
+    $('#filterCollector').val('{{ selected_collector.id }}');
+    {% endif %}
+
+    {% if selected_date %}
+    $('#filterDate').val('{{ selected_date }}');
+    {% endif %}
+  });
 </script>
 {% endblock externalJS %}
