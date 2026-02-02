@@ -53,6 +53,7 @@ urlpatterns = [
     path('transactionreport/', include('transaction_report.urls')),
     path('collectionreport/', include('collection_report.urls')),
     path('outstanding/', include('outstanding_report.urls')),
+    path('', include('utilities.urls')),
 ]
 
 if settings.DEBUG:

@@ -18,15 +18,31 @@ class CollectorCollectionsView(LoginRequiredMixin, UserPassesTestMixin, View):
     def get(self, request):
         try:
             collector = Collectors.objects.get(user=request.user, is_active=True)
-            collections = Collection.objects.filter(collector=collector).order_by('-date')
+            
+            date_str = request.GET.get('date')
+            
+            if not date_str:
+                date_obj = datetime.date.today()
+                date_str = date_obj.strftime('%Y-%m-%d')
+            else:
+                 try:
+                    date_obj = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
+                 except ValueError:
+                    date_obj = datetime.date.today()
+                    date_str = date_obj.strftime('%Y-%m-%d')
+
+            collections = Collection.objects.filter(collector=collector, date=date_obj).order_by('-date')
+
         except Collectors.DoesNotExist:
             collector = None
             collections = []
+            date_str = None
 
         context = {
             'collections': collections,
             'collector': collector,
-            'is_collector_view': True 
+            'is_collector_view': True,
+            'selected_date': date_str 
         }
         return render(request, self.template_name, context)
 

@@ -112,7 +112,11 @@
         {% else %}
         <tr>
           <td colspan="6" class="text-center py-2 text-gray-500">
+            {% if not selected_date %}
+            Please select a date to view collections.
+            {% else %}
             No collections found.
+            {% endif %}
           </td>
         </tr>
         {% endif %}

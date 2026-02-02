@@ -213,21 +213,31 @@ class CollectionListView(View):
         collector_id = request.GET.get('collector')
         date_str = request.GET.get('date')
         
-        collections = Collection.objects.filter(client=client, status='Approved').order_by('-date')
-        
         selected_collector = None
         if collector_id:
-            collections = collections.filter(collector_id=collector_id)
             selected_collector = get_object_or_404(Collectors, id=collector_id)
             
+        collections = Collection.objects.none()
+        total_assigned = 0
+        total_collected = 0
+
         if date_str:
-            date_obj = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
-            collections = collections.filter(date=date_obj)
+            collections = Collection.objects.filter(client=client, status='Approved').order_by('-date')
             
-        collections = collections.annotate(collected_total=Sum('items__collected_amount'))
+            if collector_id:
+                collections = collections.filter(collector_id=collector_id)
             
-        total_assigned = collections.aggregate(sum=Sum('total_amount'))['sum'] or 0
-        total_collected = CollectionItem.objects.filter(collection__in=collections).aggregate(sum=Sum('collected_amount'))['sum'] or 0
+            try:
+                date_obj = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
+                collections = collections.filter(date=date_obj)
+                
+                collections = collections.annotate(collected_total=Sum('items__collected_amount'))
+                
+                total_assigned = collections.aggregate(sum=Sum('total_amount'))['sum'] or 0
+                total_collected = CollectionItem.objects.filter(collection__in=collections).aggregate(sum=Sum('collected_amount'))['sum'] or 0
+            except ValueError:
+                pass
+
 
         context = {
             'collectors': collectors,

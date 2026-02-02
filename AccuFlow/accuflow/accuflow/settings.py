@@ -32,7 +32,8 @@ INSTALLED_APPS = [
     'commission_entry',
     'general_ledger',
     'collector_view',
-    'view_collections'
+    'view_collections',
+    'utilities'
 ]
 
 MIDDLEWARE = [

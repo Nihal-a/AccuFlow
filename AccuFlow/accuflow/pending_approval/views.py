@@ -11,12 +11,31 @@ from django.db.models import Sum, Count
 class PendingApprovalView(LoginRequiredMixin, View):
     def get(self, request):
         client = getClient(request.user)
-        # Fetch collections pending approval with total amount
-        collections = Collection.objects.filter(client=client, status='Pending').annotate(
+        
+        date_str = request.GET.get('date')
+        if not date_str:
+            date_obj = timezone.localtime(timezone.now()).date()
+            date_str = date_obj.strftime('%Y-%m-%d')
+        else:
+            try:
+                date_obj = timezone.datetime.strptime(date_str, '%Y-%m-%d').date()
+            except ValueError:
+                date_obj = timezone.localtime(timezone.now()).date()
+                date_str = date_obj.strftime('%Y-%m-%d')
+
+        collections = Collection.objects.filter(
+            client=client, 
+            status='Pending',
+            date=date_obj
+        ).annotate(
             pending_total=Sum('items__collected_amount'),
             items_count=Count('items')
         ).order_by('-date')
-        return render(request, 'pending_approval/pending_approval.html', {'collections': collections})
+
+        return render(request, 'pending_approval/pending_approval.html', {
+            'collections': collections,
+            'selected_date': date_str
+        })
 
 class PendingApprovalDetailView(LoginRequiredMixin, View):
     def get(self, request, id):
@@ -24,7 +43,6 @@ class PendingApprovalDetailView(LoginRequiredMixin, View):
         collection = get_object_or_404(Collection, id=id, client=client)
         items = list(collection.items.all())
         
-        # Enrich items with customer info for display
         for item in items:
             item.partner_name = "Unknown"
             
@@ -71,14 +89,12 @@ class PendingApprovalDetailView(LoginRequiredMixin, View):
             approved_count = 0
             
             for item in items:
-                # Get updated amount from Admin input
                 amount_str = request.POST.get(f'amount_{item.id}')
                 try:
                     amount = float(amount_str)
                 except (ValueError, TypeError):
                     amount = 0
                 
-                # Update item amount if changed
                 if item.collected_amount != amount:
                     item.collected_amount = amount
                     item.save()
@@ -101,22 +117,17 @@ class PendingApprovalDetailView(LoginRequiredMixin, View):
                     party = customer or supplier
                     
                     if party:
-                        # 1. Update Ledger (Credit the Party)
-                        # 'Received' transaction reduces debt (Credit side for Customer)
-                        # update_ledger(where=party_to_credit, ..., new_purchase=amount) 
-                        # This adds to 'credit' field of the party model.
                         update_ledger(where=party, to=None, new_purchase=amount, old_purchase=0)
                         
-                        # 2. Create Cashs Entry
                         Cashs.objects.create(
                             client=client,
                             cash_no=getLastCashNo(client=client), 
-                            supplier=supplier, # Set only if supplier
-                            customer=customer, # Set only if customer
+                            supplier=supplier,
+                            customer=customer,
                             cash_bank=cash_bank,
                             date=timezone.now().date(),
                             amount=amount,
-                            party_balance=party.balance, # Updated balance
+                            party_balance=party.balance,
                             transaction='Received',
                             description=f"{item.remark}" if item.remark else "",
                             hold=False,

@@ -4,14 +4,23 @@
 
 {% block content %}
 <div class="bg-white rounded-xl p-6 mt-3 shadow-sm border border-gray-100">
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
         <div>
             <h1 class="text-2xl font-bold text-gray-800">Pending Approvals</h1>
             <p class="text-gray-500 mt-1">Review and approve collections submitted by collectors.</p>
         </div>
-        <div class="bg-blue-50 text-blue-700 px-4 py-2 rounded-xl font-medium text-sm flex items-center gap-2">
-            <i data-lucide="clock" class="w-4 h-4"></i>
-            {{ collections|length }} Pending
+
+        <div class="flex items-center gap-3">
+            <div class="bg-blue-50 text-blue-700 px-4 py-2 rounded-xl font-medium text-sm flex items-center gap-2">
+                <i data-lucide="clock" class="w-4 h-4"></i>
+                {{ collections|length }} Pending
+            </div>
+
+            <form method="GET" class="flex gap-2">
+                <input type="date" name="date" value="{{ selected_date }}"
+                    class="bg-white rounded-xl px-4 py-2 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                    onchange="this.form.submit()">
+            </form>
         </div>
     </div>
 
@@ -40,10 +49,11 @@
                         {{ collection.pending_total|default:"0"|floatformat:2 }}
                     </td>
                     <td class="py-4 px-2 text-right">
-                        <a href="{% url 'pending_approval_detail' collection.id %}" 
-                           class="inline-flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm">
+                        <a href="{% url 'pending_approval_detail' collection.id %}"
+                            class="inline-flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm">
                             Review
-                            <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+                            <i data-lucide="arrow-right"
+                                class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
                         </a>
                     </td>
                 </tr>
@@ -68,13 +78,13 @@
 
 {% block externalJS %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
         // Set Sidebar Active
         const navLink = document.getElementById('pendingapprovalLink');
-        if(navLink) {
+        if (navLink) {
             navLink.classList.add('active');
             navLink.classList.remove('text-gray-500');
             navLink.classList.add('text-blue-600', 'bg-blue-50');

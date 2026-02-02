@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}
-    Stock View
+Stock View
 {% endblock title %}
 
 {% block content %}
@@ -17,72 +17,95 @@
     <hr class="mt-5">
 
     <div id="createView" class="mt-5 w-full">
-        <div class=" w-full flex flex-col">
+        <div class="w-full flex flex-col">
             <form method="post" action="{% url 'stockview' %}" class="w-full">
                 {% csrf_token %}
-            <div class=" w-full flex items-end gap-3">
+                <div class="w-full flex items-end gap-3 flex-wrap">
 
-                <div class="w-[20%]">
-                    <label class="block text-gray-700 mb-1">Date*</label>
-                    <div class="flex items-center gap-4">
-                        <div class="flex-1">
-                            <input type="date"
-                                id="dateTo"
-                                name="dateTo"
-                                value="{{date_to}}"
-                                class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                        </div>
+                    <div class="w-[20%]">
+                        <label class="block text-gray-700 mb-1">Date*</label>
+                        <input type="date" id="dateTo" name="dateTo" value="{{date_to}}"
+                            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
-                </div>
+
+                    <div class="w-[25%]">
+                        <label class="block text-gray-700 mb-1">Party</label>
+                        <select name="party_id" id="partySelect"
+                            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Current Stock View</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center pb-3">
+                        <input type="checkbox" name="is_nsd" id="nsdCheck"
+                            class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500" {% if is_nsd %}checked{% endif %}>
+                        <label for="nsdCheck" class="ml-2 text-gray-700 font-medium">NSD</label>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button id="btnView" type="submit"
+                            class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
+                            View
+                        </button>
+                        <div class=" w-full flex items-end gap-3">
+
+                            <div class="w-[20%]">
+                                <label class="block text-gray-700 mb-1">Date*</label>
+                                <div class="flex items-center gap-4">
+                                    <div class="flex-1">
+                                        <input type="date" id="dateTo" name="dateTo" value="{{date_to}}"
+                                            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                </div>
+                            </div>
 
 
-                <div class="flex gap-2">
-                    <button id="btnView"
-                        type="submit"
-                        class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
-                        Current Stock View
-                </button>
-                </div>
-            </div>
+                            <div class="flex gap-2">
+                                <button id="btnView" type="submit"
+                                    class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
+                                    Current Stock View
+                                </button>
+                            </div>
+                        </div>
             </form>
 
             <div class="col-span-6 w-full flex items-center gap-3">
-                    <div class="w-[45%] border rounded-lg overflow-hidden shadow-sm">
-                       
-                        <div class="grid grid-cols-3 ">
-                            <div class="col-span-1 px-3 py-2.5 font-semibold text-sm border-b border-r bg-white">
-                                Total Qty
-                            </div>
-                            <div class="col-span-2 px-3 py-2.5 bg-yellow-300 text-right font-semibold text-sm" id="totalQty">
-                                {{total_qty_all}}
-                            </div>
-                        </div>
+                <div class="w-[45%] border rounded-lg overflow-hidden shadow-sm">
 
-                        <div class="grid grid-cols-3">
-                            <div class="col-span-1 px-3 py-2.5 font-semibold text-sm border-b border-r bg-white">
-                                Avg. Rate
-                            </div>
-                            <div class="col-span-2 px-3 py-2.5 bg-gray-400 text-right font-semibold text-sm" id="avgRate">
-                               {{total_avg_rate_all}}
-                            </div>
+                    <div class="grid grid-cols-3 ">
+                        <div class="col-span-1 px-3 py-2.5 font-semibold text-sm border-b border-r bg-white">
+                            Total Qty
                         </div>
-
-                        <div class="grid grid-cols-3">
-                            <div class="col-span-1 px-3 py-2.5 font-semibold text-sm border-r bg-white">
-                                Amount
-                            </div>
-                            <div class="col-span-2 px-3 py-2.5 bg-green-400 text-right font-semibold text-sm" id="totalAmount">
-                                {{total_amount_all}}
-                            </div>
+                        <div class="col-span-2 px-3 py-2.5 bg-yellow-300 text-right font-semibold text-sm"
+                            id="totalQty">
+                            {{total_qty_all}}
                         </div>
-
                     </div>
+
+                    <div class="grid grid-cols-3">
+                        <div class="col-span-1 px-3 py-2.5 font-semibold text-sm border-b border-r bg-white">
+                            Avg. Rate
+                        </div>
+                        <div class="col-span-2 px-3 py-2.5 bg-gray-400 text-right font-semibold text-sm" id="avgRate">
+                            {{total_avg_rate_all}}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3">
+                        <div class="col-span-1 px-3 py-2.5 font-semibold text-sm border-r bg-white">
+                            Amount
+                        </div>
+                        <div class="col-span-2 px-3 py-2.5 bg-green-400 text-right font-semibold text-sm"
+                            id="totalAmount">
+                            {{total_amount_all}}
+                        </div>
+                    </div>
+
+                </div>
             </div>
 
             <div class="overflow-x-auto mt-5 w-full col-span-8">
-                <table id="viewPurchaseTable"
-                    class="w-[50%] min-w-max rounded-t-lg overflow-hidden">
+                <table id="viewPurchaseTable" class="w-[50%] min-w-max rounded-t-lg overflow-hidden">
                     <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
                         <tr>
                             <th class="px-4 py-3 text-left font-medium w-1">#</th>
@@ -96,21 +119,22 @@
                         {% for stock in stocks %}
                         {% comment %} {% if ledger.type != 'OB' %} {% endcomment %}
                         <tr>
-                            <td  class="px-4 py-3 text-left font-medium">{{forloop.counter}}</td>
-                            {% comment %} <td  class="px-4 py-3 text-left font-medium">{{godown.name|date:"d-m-Y"}}</td> {% endcomment %}
-                            <td  class="px-4 py-3 text-left font-medium">{{stock.godown}}</td>
-                            <td  class="px-4 py-3 text-left font-medium">{{stock.total_qty}}</td>
-                            <td  class="px-4 py-3 text-left font-medium">{{stock.avg_rate}}</td>
-                            <td  class="px-4 py-3 text-right font-medium">{{stock.total_amount}}</td>
-                            <td  class="px-4 py-3 text-right font-medium">{{ledger.rate}}</td>
-                            <td  class="px-4 py-3 text-right font-medium">{{ledger.debit}}</td>
-                            <td  class="px-4 py-3 text-right font-medium">{{ledger.credit}}</td>
-                            <td  class="px-4 py-3 text-right font-medium">{{ledger.balance}}</td>
+                            <td class="px-4 py-3 text-left font-medium">{{forloop.counter}}</td>
+                            {% comment %} <td class="px-4 py-3 text-left font-medium">{{godown.name|date:"d-m-Y"}}</td>
+                            {% endcomment %}
+                            <td class="px-4 py-3 text-left font-medium">{{stock.godown}}</td>
+                            <td class="px-4 py-3 text-left font-medium">{{stock.total_qty}}</td>
+                            <td class="px-4 py-3 text-left font-medium">{{stock.avg_rate}}</td>
+                            <td class="px-4 py-3 text-right font-medium">{{stock.total_amount}}</td>
+                            <td class="px-4 py-3 text-right font-medium">{{ledger.rate}}</td>
+                            <td class="px-4 py-3 text-right font-medium">{{ledger.debit}}</td>
+                            <td class="px-4 py-3 text-right font-medium">{{ledger.credit}}</td>
+                            <td class="px-4 py-3 text-right font-medium">{{ledger.balance}}</td>
                         </tr>
                         {% comment %} {% endif %} {% endcomment %}
                         {% endfor %}
                         <tr class="bg-blue-200 text-gray-700 uppercase text-sm">
-                            <td colspan="6"></td> 
+                            <td colspan="6"></td>
                             <td class="px-4 py-3 text-right font-medium font-bold">Total :</td>
                             <td class="px-4 py-3 text-right font-medium font-bold">{{debit_total|default:'0.00'}}</td>
                             <td class="px-4 py-3 text-right font-medium font-bold">{{credit_total|default:'0.00'}}</td>
@@ -127,28 +151,25 @@
 
 {% block externalJS %}
 <script>
-    navActive("supplierMasterLink");
 
-    let deleteUrl = "";
+    partySelect.options[0].text = defaultText;
 
-    function openEditModal(supplierId) {
-        const url = "{% url 'edit-supplier' 0 %}".replace("0", supplierId);
-        document.getElementById("confirmEditBtn").setAttribute("href", url);
-        document.getElementById("editModal").classList.remove("hidden");
+    list.forEach(item => {
+        const option = new Option(item.name, item.id);
+        partySelect.add(option);
+        if (item.id === initialSelected) {
+            option.selected = true;
+        }
+    });
     }
 
-    function closeEditModal() {
-        document.getElementById("editModal").classList.add("hidden");
-    }
+    nsdCheck.addEventListener('change', populateParties);
 
-    function openModal(supplierId) {
-        deleteUrl = "{% url 'delete-supplier' 0 %}".replace("0", supplierId);
-        document.getElementById("confirmDeleteBtn").setAttribute("href", deleteUrl);
-        document.getElementById("confirmModal").classList.remove("hidden");
-    }
+    // Initialize
+    populateParties();
 
-    function closeModal() {
-        document.getElementById("confirmModal").classList.add("hidden");
-    }
+    // Re-select value if page reloaded (handled in loop but good to ensure)
+    if (initialSelected) partySelect.value = initialSelected;
+
 </script>
 {% endblock externalJS %}

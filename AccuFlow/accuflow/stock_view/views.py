@@ -3,7 +3,12 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from django.db.models import Sum, Q, Value, CharField, F
 from datetime import datetime
-from core.models import Godowns, Purchases, Sales
+
+from django.forms import FloatField
+from django.shortcuts import render, redirect, get_object_or_404
+from django.views import View
+from django.db.models import Sum, Q, Value, CharField, F
+from datetime import datetime
 from core.views import getClient
 
 class StockView(View):
@@ -110,3 +115,5 @@ class StockView(View):
         context['total_avg_rate_all'] = round(total_avg_rate_all, 2)
 
         return render(request, 'stock_view/stock_view.html', context)
+
+

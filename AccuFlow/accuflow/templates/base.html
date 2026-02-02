@@ -310,7 +310,9 @@
                     <i data-lucide="settings" class="w-3.5 h-3.5 "></i><span class="">Utilities</span>
                 </div>
                 <div class="pl-6 space-y-0 text-gray-500 ">
-                    <div class="nav-link">Address View</div>
+                    <a href="{% url 'address_view' %}" class="nav-link" id="addressViewLink">
+                        <span>Address View</span>
+                    </a>
                     <a href="{% url 'changepass' %}" class="nav-link" id="">
                         <span>Change Password</span>
                     </a>
