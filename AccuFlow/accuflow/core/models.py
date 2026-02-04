@@ -487,3 +487,31 @@ class CollectionItem(models.Model):
     
     def __str__(self):
         return f"{self.transaction_type} - {self.transaction_id}"
+
+class SubscriptionPayment(models.Model):
+    client = models.ForeignKey(Clients, on_delete=models.CASCADE)
+    plan = models.ForeignKey(SubscriptionPlan, on_delete=models.SET_NULL, null=True)
+    amount = models.FloatField(default=0)
+    date = models.DateField(auto_now_add=True)
+    transaction_id = models.TextField(blank=True, null=True)
+    payment_method = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.client} - {self.plan} - {self.amount}"
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.utils import timezone
+import datetime
+
+@receiver(post_save, sender=SubscriptionPayment)
+def update_client_subscription(sender, instance, created, **kwargs):
+    if created and instance.plan:
+        client = instance.client
+        plan = instance.plan
+        
+        # Update client subscription
+        client.subscription_plan = plan
+        client.subscription_start = timezone.now().date()
+        client.subscription_end = client.subscription_start + datetime.timedelta(days=plan.duration_days)
+        client.save()

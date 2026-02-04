@@ -136,3 +136,16 @@ def mark_notifications_read(request):
 
 def subscription_expired(request):
     return render(request, 'subscription_expired.html')
+
+from .models import SubscriptionPlan
+@login_required
+def get_plan_details(request, plan_id):
+    if not request.user.is_staff: # Ensure only staff/admin can access
+         return JsonResponse({'error': 'Unauthorized'}, status=403)
+         
+    try:
+        plan = SubscriptionPlan.objects.get(id=plan_id)
+        return JsonResponse({'price': plan.price})
+    except SubscriptionPlan.DoesNotExist:
+        return JsonResponse({'error': 'Plan not found'}, status=404)
+

@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Subscription Payments
+{% endblock title %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow-sm p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-bold text-gray-800">Subscription Payments</h2>
+        <a href="{% url 'payment-create' %}"
+            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+            <i class="fa-solid fa-plus mr-2"></i>New Payment
+        </a>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-50 text-gray-700 text-sm uppercase">
+                    <th class="p-3 border-b">ID</th>
+                    <th class="p-3 border-b">Client</th>
+                    <th class="p-3 border-b">Plan</th>
+                    <th class="p-3 border-b">Amount</th>
+                    <th class="p-3 border-b">Date</th>
+                    <th class="p-3 border-b">Transaction ID</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for payment in payments %}
+                <tr class="hover:bg-gray-50">
+                    <td class="p-3">{{ payment.id }}</td>
+                    <td class="p-3 font-medium text-gray-900">{{ payment.client.name }}</td>
+                    <td class="p-3">
+                        {% if payment.plan %}
+                        <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">{{ payment.plan.name
+                            }}</span>
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td class="p-3 font-semibold text-green-600">{{ payment.amount }}</td>
+                    <td class="p-3 text-gray-500">{{ payment.date }}</td>
+                    <td class="p-3 text-gray-500">{{ payment.transaction_id|default:"-" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="p-6 text-center text-gray-500">No payments found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock content %}

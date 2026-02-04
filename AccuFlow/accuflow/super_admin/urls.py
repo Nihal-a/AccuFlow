@@ -12,4 +12,8 @@ urlpatterns = [
     path('subscriptions/', views.SubscriptionListView.as_view(), name='subscriptions'),
     path('subscriptions/create/', views.SubscriptionCreateView.as_view(), name='create-subscription'),
     path('subscriptions/update/<int:id>/', views.SubscriptionUpdateView.as_view(), name='update-subscription'),
+    
+    # Subscription Payments
+    path('payments/', views.PaymentListView.as_view(), name='payments'),
+    path('payments/create/', views.PaymentCreateView.as_view(), name='payment-create'),
 ] 

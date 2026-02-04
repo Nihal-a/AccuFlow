@@ -230,3 +230,45 @@ class SubscriptionUpdateView(View):
 
         messages.success(request, "Subscription Plan updated.")
         return redirect('subscriptions')
+
+from core.models import SubscriptionPayment
+
+class PaymentListView(View):
+    def get(self, request):
+        payments = SubscriptionPayment.objects.select_related('client', 'plan').order_by('-date')
+        return render(request, 'admin/subscription_payments/list.html', {'payments': payments})
+
+class PaymentCreateView(View):
+    def get(self, request):
+        clients = Clients.objects.filter(is_active=True)
+        plans = SubscriptionPlan.objects.filter(is_active=True)
+        return render(request, 'admin/subscription_payments/create.html', {
+            'clients': clients,
+            'plans': plans
+        })
+
+    def post(self, request):
+        client_id = request.POST.get('client_id')
+        plan_id = request.POST.get('plan_id')
+        amount = request.POST.get('amount')
+        transaction_id = request.POST.get('transaction_id')
+        payment_method = request.POST.get('payment_method')
+
+        try:
+            client = Clients.objects.get(id=client_id)
+            plan = SubscriptionPlan.objects.get(id=plan_id)
+            
+            SubscriptionPayment.objects.create(
+                client=client,
+                plan=plan,
+                amount=amount,
+                transaction_id=transaction_id,
+                payment_method=payment_method
+            )
+            
+            messages.success(request, f"Payment recorded for {client.name}")
+            return redirect('payments')
+            
+        except (Clients.DoesNotExist, SubscriptionPlan.DoesNotExist):
+            messages.error(request, "Invalid Client or Plan selected.")
+            return redirect('payment-create')
