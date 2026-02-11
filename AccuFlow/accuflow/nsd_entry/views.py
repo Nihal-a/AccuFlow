@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 
 from core.views import getClient, update_ledger
+from core.authorization import get_object_for_user
 
 class NSDEntryView(View):
     def get(self,request):
@@ -87,20 +88,24 @@ class NSDAddView(View):
             sender = None
             receiver = None
             if receiver_types[count] == 'customers':
-                receiver_customer = get_object_or_404(Customers, id=customer_ids[count]) if customer_ids[count] else None
+                # Authorization: Ensure customer belongs to user's client
+                receiver_customer = get_object_for_user(Customers, request.user, id=customer_ids[count]) if customer_ids[count] else None
                 receiver_supplier = None
                 receiver = receiver_customer
             else:
                 receiver_customer = None
-                receiver_supplier = get_object_or_404(Suppliers, id=customer_ids[count]) if customer_ids[count] else None     
+                # Authorization: Ensure supplier belongs to user's client
+                receiver_supplier = get_object_for_user(Suppliers, request.user, id=customer_ids[count]) if customer_ids[count] else None     
                 receiver = receiver_supplier       
             if sender_types[count] == 'customers':
-                sender_customer = get_object_or_404(Customers, id=supplier_ids[count]) if supplier_ids[count] else None
+                # Authorization: Ensure customer belongs to user's client
+                sender_customer = get_object_for_user(Customers, request.user, id=supplier_ids[count]) if supplier_ids[count] else None
                 sender_supplier = None 
                 sender = sender_customer
             else:  
                 sender_customer = None
-                sender_supplier = get_object_or_404(Suppliers, id=supplier_ids[count]) if supplier_ids[count] else None
+                # Authorization: Ensure supplier belongs to user's client
+                sender_supplier = get_object_for_user(Suppliers, request.user, id=supplier_ids[count]) if supplier_ids[count] else None
                 sender = sender_supplier
             update_ledger(where=sender,to=receiver,new_purchase=purchase_amount[count],new_sale=sell_amount[count]) 
             nsd.sender_balance = sender.balance
@@ -146,23 +151,28 @@ class NSDHold(View):
             sender =None
             receiver = None
             if sender_type == 'customers':
-                sender_customer = get_object_or_404(Customers, id=supplier) if supplier else None
+                # Authorization: Ensure customer belongs to user's client
+                sender_customer = get_object_for_user(Customers, request.user, id=supplier) if supplier else None
                 sender_supplier = None 
                 sender = sender_customer
             else:  
                 sender_customer = None
-                sender_supplier = get_object_or_404(Suppliers, id=supplier) if supplier else None
+                # Authorization: Ensure supplier belongs to user's client
+                sender_supplier = get_object_for_user(Suppliers, request.user, id=supplier) if supplier else None
                 sender = sender_supplier
             if receiver_type == 'customers':
-                receiver_customer = get_object_or_404(Customers, id=customer) if customer else None
+                # Authorization: Ensure customer belongs to user's client
+                receiver_customer = get_object_for_user(Customers, request.user, id=customer) if customer else None
                 receiver_supplier = None
                 receiver = receiver_customer
             else:
                 receiver_customer = None
-                receiver_supplier = get_object_or_404(Suppliers, id=customer) if customer else None 
+                # Authorization: Ensure supplier belongs to user's client
+                receiver_supplier = get_object_for_user(Suppliers, request.user, id=customer) if customer else None 
                 receiver = receiver_supplier  
             if data.get('nsd_id'):
-                nsd = get_object_or_404(NSDs, id=data.get('nsd_id'))
+                # Authorization: Ensure nsd belongs to user's client
+                nsd = get_object_for_user(NSDs, request.user, id=data.get('nsd_id'))
                 if not nsd.hold:
                     update_ledger(
                         where=nsd.sender, 
@@ -305,7 +315,8 @@ def nsds_by_date(request):
 
 def delete_nsd(request):
     pk = request.GET.get('id') 
-    nsd = get_object_or_404(NSDs, id=pk)
+    # Authorization: Ensure nsd belongs to user's client
+    nsd = get_object_for_user(NSDs, request.user, id=pk)
     nsd.is_active = False
     if not nsd.hold:
         update_ledger(

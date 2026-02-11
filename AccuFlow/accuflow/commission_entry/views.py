@@ -1,5 +1,6 @@
 import datetime
 import json
+from decimal import Decimal
 from django.shortcuts import render,redirect, get_object_or_404
 from core.models import Commissions,Expenses,Godowns
 from django.views import View
@@ -59,7 +60,7 @@ class CommissionAddView(View):
         for id in commission_ids:
             expense = get_object_or_404(Expenses, id=expense_ids[count]) if expense_ids[count] else None
             godown = get_object_or_404(Godowns, id=godown_ids[count]) if godown_ids[count] else None
-            godown.qty -= float(qtys[count])
+            godown.qty -= Decimal(str(qtys[count] or 0))
             godown.save()
             commission = Commissions.objects.get(id=id)
             commission.godown_balance = godown.qty
@@ -95,11 +96,11 @@ class CommissionHold(View):
         godown = get_object_or_404(Godowns, id=godown) if godown else None
         if data.get('commission_id'):
             commission = get_object_or_404(Commissions, id=data.get('commission_id'))
-            godown.qty += float(commission.qty)
-            godown.qty -= float(qty)
+            godown.qty += commission.qty
+            godown.qty -= Decimal(str(qty or 0))
             godown.save()
             commission.godown_balance -= commission.qty
-            commission.godown_balance += float(qty)
+            commission.godown_balance += Decimal(str(qty or 0))
             commission.commission_no = commission_no
             commission.expense = expense
             commission.godown = godown
@@ -158,9 +159,9 @@ def commissions_by_date(request):
             client=getClient(request.user)
         )
     commissionData = []
-    total_qty = 0
-    total_amount = 0
-    rate_sum = 0
+    total_qty = Decimal('0.0000')
+    total_amount = Decimal('0.0000')
+    rate_sum = Decimal('0.0000')
     count = 0
     for commission in commissions:
         commissionData.append({ 
@@ -180,7 +181,7 @@ def commissions_by_date(request):
         total_amount += commission.total_amount
         rate_sum += commission.amount
         count += 1
-    rate_avg = rate_sum / count if count > 0 else 0
+    rate_avg = rate_sum / Decimal(str(count)) if count > 0 else Decimal('0.0000')
     return JsonResponse({'commissions': commissionData, 'total_qty': total_qty, 'total_amount': total_amount, 'rate_avg': rate_avg})
 
 
@@ -188,7 +189,7 @@ def delete_commission(request):
     pk = request.GET.get('id') 
     commission = get_object_or_404(Commissions, id=pk)
     commission.is_active = False
-    commission.godown.qty += float(commission.qty)
+    commission.godown.qty += commission.qty
     commission.godown.save() 
     commission.save()
     return JsonResponse({'status':'success','message':'commission deleted successfully'})

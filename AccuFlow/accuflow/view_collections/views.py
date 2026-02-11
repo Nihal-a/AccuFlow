@@ -1,9 +1,12 @@
 import datetime
 from django.db.models import Sum
+import decimal
+from decimal import Decimal
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from core.models import Collectors, Sales, Purchases, NSDs, Collection, CollectionItem, Customers, Suppliers
 from core.views import getClient
+from core.authorization import get_object_for_user
 from django.contrib import messages
 from django.urls import reverse
 
@@ -45,7 +48,8 @@ class AddCollectionView(View):
         selected_collector = None
         
         if collector_id:
-            selected_collector = get_object_or_404(Collectors, id=collector_id)
+            # Authorization: Ensure collector belongs to user's client
+            selected_collector = get_object_for_user(Collectors, request.user, id=collector_id)
             
 
             customers = Customers.objects.filter(client=client, is_active=True, balance__gt=0)
@@ -57,7 +61,7 @@ class AddCollectionView(View):
                     'name': c.name,
                     'phone': c.phone,
                     'balance': c.balance,
-                    'collected_amount': 0,
+                    'collected_amount': Decimal('0.0000'),
                     'is_selected': False
                 })
 
@@ -71,7 +75,7 @@ class AddCollectionView(View):
                     'name': s.name,
                     'phone': s.phone,
                     'balance': s.balance,
-                    'collected_amount': 0,
+                    'collected_amount': Decimal('0.0000'),
                     'is_selected': False
                 })
             
@@ -139,7 +143,8 @@ class AddCollectionView(View):
              return redirect('add_collection')
 
         try:
-            collector = get_object_or_404(Collectors, id=collector_id)
+            # Authorization: Ensure collector belongs to user's client
+            collector = get_object_for_user(Collectors, request.user, id=collector_id)
             date_obj = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
             
             collection = None
@@ -167,20 +172,20 @@ class AddCollectionView(View):
                     date=date_obj,
                     client=client,
                     status='New',
-                    total_amount=0
+                    total_amount=Decimal('0.0000')
                 )
                 action_msg = "saved"
             
-            total_amt = 0
+            total_amt = Decimal('0.0000')
             
             for item_key in selected_ids:
                 type_str, id_str = item_key.split('_')
                 
                 amount_val = request.POST.get(f'amount_{item_key}')
                 try:
-                    amt = float(amount_val)
-                except (ValueError, TypeError):
-                    amt = 0
+                    amt = Decimal(str(amount_val or 0))
+                except (ValueError, TypeError, decimal.InvalidOperation):
+                    amt = Decimal('0.0000')
                 
                 if amt > 0:
                     remark_val = request.POST.get(f'remark_{item_key}', '')
@@ -215,11 +220,12 @@ class CollectionListView(View):
         
         selected_collector = None
         if collector_id:
-            selected_collector = get_object_or_404(Collectors, id=collector_id)
+            # Authorization: Ensure collector belongs to user's client
+            selected_collector = get_object_for_user(Collectors, request.user, id=collector_id)
             
         collections = Collection.objects.none()
-        total_assigned = 0
-        total_collected = 0
+        total_assigned = Decimal('0.0000')
+        total_collected = Decimal('0.0000')
 
         if date_str:
             collections = Collection.objects.filter(client=client, status='Approved').order_by('-date')
@@ -233,8 +239,8 @@ class CollectionListView(View):
                 
                 collections = collections.annotate(collected_total=Sum('items__collected_amount'))
                 
-                total_assigned = collections.aggregate(sum=Sum('total_amount'))['sum'] or 0
-                total_collected = CollectionItem.objects.filter(collection__in=collections).aggregate(sum=Sum('collected_amount'))['sum'] or 0
+                total_assigned = collections.aggregate(sum=Sum('total_amount'))['sum'] or Decimal('0.0000')
+                total_collected = CollectionItem.objects.filter(collection__in=collections).aggregate(sum=Sum('collected_amount'))['sum'] or Decimal('0.0000')
             except ValueError:
                 pass
 
@@ -277,7 +283,7 @@ class CollectionDetailView(View):
                     item.partner_name = sale.customer.name
                     item.partner_phone = sale.customer.phone
         
-        total_collected = sum(item.collected_amount for item in items)
+        total_collected = sum((item.collected_amount for item in items), Decimal('0.0000'))
         
         context = {
             'collection': collection,

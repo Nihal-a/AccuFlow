@@ -2,9 +2,12 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from django.db.models import Sum, Q, Value, CharField, F
 from django.utils import timezone
+from decimal import Decimal
 from datetime import datetime
 from core.models import Customers, Godowns, Purchases, Sales, NSDs, Cashs
 from core.views import getClient
+from core.authorization import get_object_for_user
+from django.http import JsonResponse
 
 class GodownLedgerView(View):
     def get(self, request):
@@ -29,16 +32,17 @@ class GodownLedgerView(View):
             'godown': '',
             'opening': opening_flag if opening_flag == 'on' else '',
             'ledgers': [],
-            'credit_total': 0,
-            'debit_total': 0,
-            'total_balance': 0,
-            'open_balance': 0,
+            'credit_total': Decimal('0.0000'),
+            'debit_total': Decimal('0.0000'),
+            'total_balance': Decimal('0.0000'),
+            'open_balance': Decimal('0.0000'),
         }
 
         if not godown_id:
             return render(request, 'godown_ledger/godown_ledger.html', context)
 
-        godown = get_object_or_404(Godowns, id=godown_id)
+        # Authorization: Ensure godown belongs to user's client
+        godown = get_object_for_user(Godowns, request.user, id=godown_id)
         context['godown'] = godown
 
         date_from = self.parse_date(date_from_str)
@@ -164,14 +168,14 @@ class GodownLedgerView(View):
              ledger_items.sort(key=lambda x: x['transaction_no'])
 
         running_val = start_balance
-        credit_sum = 0
-        debit_sum = 0
+        credit_sum = Decimal('0.0000')
+        debit_sum = Decimal('0.0000')
         
         final_ledgers = []
         
         for item in ledger_items:
-            c_val = float(item.get('credit') or 0)
-            d_val = float(item.get('debit') or 0)
+            c_val = Decimal(str(item.get('credit') or 0))
+            d_val = Decimal(str(item.get('debit') or 0))
             
             if item.get('type') == 'OB':
                 item['balance'] = start_balance
@@ -206,18 +210,12 @@ class GodownLedgerView(View):
         base_filter = Q(is_active=True, hold=False, client=client, godown=godown, date__lt=date_limit)
         nsd_base = Q(is_active=True, hold=False, client=client, date__lt=date_limit)
         
-        purchases_sum = Purchases.objects.filter(base_filter).aggregate(s=Sum('qty'))['s'] or 0
-        sales_sum = Sales.objects.filter(base_filter).aggregate(s=Sum('qty'))['s'] or 0
-        # sender_sum = NSDs.objects.filter(nsd_base, sender_customer=customer).aggregate(s=Sum('sell_amount'))['s'] or 0
-        # receiver_sum = NSDs.objects.filter(nsd_base, receiver_customer=customer).aggregate(s=Sum('purchase_amount'))['s'] or 0
+        purchases_sum = Purchases.objects.filter(base_filter).aggregate(s=Sum('qty'))['s'] or Decimal('0.0000')
+        sales_sum = Sales.objects.filter(base_filter).aggregate(s=Sum('qty'))['s'] or Decimal('0.0000')
         
-        # cash_received = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or 0
-        # cash_paid = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or 0
-        
-        # transaction_balance = (sales_sum + receiver_sum + cash_paid) - (purchases_sum + sender_sum + cash_received)
         transaction_balance = (sales_sum ) - (purchases_sum )
         
-        static_ob = (godown.open_debit or 0) - (godown.open_credit or 0)
+        static_ob = (godown.open_debit or Decimal('0.0000')) - (godown.open_credit or Decimal('0.0000'))
         
         return static_ob + transaction_balance
     

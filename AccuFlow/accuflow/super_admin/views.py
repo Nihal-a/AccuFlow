@@ -7,6 +7,7 @@ from django.views import View
 from django.contrib import messages
 from django.http import JsonResponse
 from django.contrib.auth.hashers import make_password
+from django.core.exceptions import PermissionDenied
 
 class ClientsView(View):
     def get(self, request):
@@ -78,6 +79,10 @@ class ClientAddView(View):
     
 class ClientUpdateView(View):
     def get(self,request,id):
+        # Authorization: SUPERUSER ONLY - admin functionality
+        if not request.user.is_superuser:
+            raise PermissionDenied("Only superusers can manage clients")
+        
         client = get_object_or_404(Clients, id=id, is_active=True)
         user = client.user
         subscription_plans = SubscriptionPlan.objects.filter(is_active=True)
@@ -88,6 +93,10 @@ class ClientUpdateView(View):
         }
         return render(request, 'admin/clients/update.html', context)    
     def post(self,request,id):
+        # Authorization: SUPERUSER ONLY - admin functionality
+        if not request.user.is_superuser:
+            raise PermissionDenied("Only superusers can manage clients")
+        
         client = get_object_or_404(Clients, id=id, is_active=True)
         name = request.POST.get('name')
         email = request.POST.get('email')
@@ -151,6 +160,10 @@ class ClientUpdateView(View):
 
 class DeleteClientView(View):
     def get(self, request, client_id):
+        # Authorization: SUPERUSER ONLY - admin functionality
+        if not request.user.is_superuser:
+            raise PermissionDenied("Only superusers can delete clients")
+        
         client = get_object_or_404(Clients, id=client_id)
         client.is_active = False 
         client.user.is_active = False
@@ -214,10 +227,18 @@ class SubscriptionCreateView(View):
 
 class SubscriptionUpdateView(View):
     def get(self, request, id):
+        # Authorization: SUPERUSER ONLY - admin functionality
+        if not request.user.is_superuser:
+            raise PermissionDenied("Only superusers can manage subscription plans")
+        
         plan = get_object_or_404(SubscriptionPlan, id=id)
         return render(request, 'admin/subscriptions/form.html', {'plan': plan})
 
     def post(self, request, id):
+        # Authorization: SUPERUSER ONLY - admin functionality
+        if not request.user.is_superuser:
+            raise PermissionDenied("Only superusers can manage subscription plans")
+        
         plan = get_object_or_404(SubscriptionPlan, id=id)
         
         plan.name = request.POST.get('name')

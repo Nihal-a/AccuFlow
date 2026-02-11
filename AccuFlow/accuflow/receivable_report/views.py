@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from django.views import View
 from django.db.models import Sum, Q, F
 from datetime import datetime
+from decimal import Decimal
 from core.models import Customers, Suppliers, Purchases, Sales, NSDs, Cashs
 from core.views import getClient
 import openpyxl
@@ -37,7 +38,7 @@ class ReceivableReportView(View):
 
         if min_amount_str:
             try:
-                min_amount = float(min_amount_str)
+                min_amount = Decimal(str(min_amount_str or 0))
             except ValueError:
                 min_amount = None
         
@@ -45,7 +46,7 @@ class ReceivableReportView(View):
         if not date_from_str and not date_to_str:
              return render(request, 'receivable_report/receivable_report.html', {
                 'receivables': [],
-                'total_amount': 0,
+                'total_amount': Decimal('0.0000'),
                 'date_from': '',
                 'date_to': '',
             })
@@ -100,7 +101,7 @@ class ReceivableReportView(View):
 
         receivables.sort(key=lambda x: x['name'])
 
-        total_amount = sum(item['amount'] for item in receivables)
+        total_amount = sum((item['amount'] for item in receivables), Decimal('0.0000'))
 
         context = {
             'receivables': receivables,
@@ -158,19 +159,19 @@ class ReceivableReportView(View):
             nsd_sender_filter = Q(is_active=True, hold=False, client=client, sender_supplier=entity, date__lte=date_limit)
             nsd_receiver_filter = Q(is_active=True, hold=False, client=client, receiver_supplier=entity, date__lte=date_limit)
 
-        purchases = Purchases.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or 0
-        sales = Sales.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or 0
+        purchases = Purchases.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+        sales = Sales.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
         
-        nsd_sender_amt = NSDs.objects.filter(nsd_sender_filter).aggregate(s=Sum('sell_amount'))['s'] or 0
-        nsd_receiver_amt = NSDs.objects.filter(nsd_receiver_filter).aggregate(s=Sum('purchase_amount'))['s'] or 0
+        nsd_sender_amt = NSDs.objects.filter(nsd_sender_filter).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0.0000')
+        nsd_receiver_amt = NSDs.objects.filter(nsd_receiver_filter).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0.0000')
         
-        cash_received = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or 0
-        cash_paid = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or 0
+        cash_received = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
+        cash_paid = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
         
         # Balance = Debit - Credit
         debit_sum = sales + nsd_receiver_amt + cash_paid
         credit_sum = purchases + nsd_sender_amt + cash_received
         
-        static_ob = (entity.open_debit or 0) - (entity.open_credit or 0)
+        static_ob = Decimal(str(entity.open_debit or 0)) - Decimal(str(entity.open_credit or 0))
         
         return static_ob + (debit_sum - credit_sum)

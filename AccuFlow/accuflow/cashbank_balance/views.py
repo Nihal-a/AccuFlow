@@ -4,6 +4,7 @@ from django.views import View
 from core.views import getClient
 from django.db.models import Sum, Q 
 from datetime import datetime
+from decimal import Decimal
 
 class CashBankView(View):
     def get(self,request):
@@ -34,10 +35,10 @@ class CashBankLedgerView(View):
             'cashbank': '',
             'opening': opening_flag if opening_flag == 'on' else '',
             'ledgers': [],
-            'recep_total': 0,
-            'pay_total': 0,
-            'total_balance': 0,
-            'open_balance': 0,
+            'recep_total': Decimal('0.0000'),
+            'pay_total': Decimal('0.0000'),
+            'total_balance': Decimal('0.0000'),
+            'open_balance': Decimal('0.0000'),
         }
 
         if not cashbank_id:
@@ -52,7 +53,7 @@ class CashBankLedgerView(View):
         if date_from:
             opening_balance = self.calculate_opening_balance(cashbank, client, date_from)
         else:
-            opening_balance = 0 # No opening balance field
+            opening_balance = Decimal('0.0000') # No opening balance field
         
         context['open_balance'] = opening_balance
 
@@ -81,7 +82,7 @@ class CashBankLedgerView(View):
                 'original_obj': c
             })
 
-        start_balance = 0
+        start_balance = Decimal('0.0000')
         if opening_flag != 'on':
              start_balance = opening_balance
              ledger_items.append({
@@ -99,14 +100,14 @@ class CashBankLedgerView(View):
         ledger_items.sort(key=lambda x: (x['date'], x['created_at']))
 
         running_val = start_balance
-        recep_sum = 0
-        pay_sum = 0
+        recep_sum = Decimal('0.0000')
+        pay_sum = Decimal('0.0000')
         
         final_ledgers = []
         
         for item in ledger_items:
-            in_q = float(item.get('recep') or 0)
-            out_q = float(item.get('pay') or 0)
+            in_q = Decimal(str(item.get('recep') or 0))
+            out_q = Decimal(str(item.get('pay') or 0))
             
             if item.get('type') == 'OB':
                 item['balance'] = start_balance
@@ -140,8 +141,8 @@ class CashBankLedgerView(View):
     def calculate_opening_balance(self, cashbank, client, date_limit):
         base_filter = Q(is_active=True, hold=False, client=client, cash_bank=cashbank, date__lt=date_limit)
         
-        received_sum = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or 0
-        paid_sum = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or 0
+        received_sum = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
+        paid_sum = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
         
         # Balance = Received - Paid
         balance = received_sum - paid_sum

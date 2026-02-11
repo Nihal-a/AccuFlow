@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from django.views import View
 from django.db.models import Sum, Q
 from datetime import datetime
+from decimal import Decimal
 from core.models import Customers, Sales, Suppliers 
 from core.views import getClient
 import openpyxl
@@ -89,8 +90,8 @@ class SalesReportView(View):
              return render(request, 'sales_report/sales_report.html', {
                 'trade_partners': combined_partners,
                 'sales': [],
-                'total_qty': 0,
-                'total_amount': 0,
+                'total_qty': Decimal('0.0000'),
+                'total_amount': Decimal('0.0000'),
                 'date_from': '',
                 'date_to': '',
                 'selected_filter_value': '',
@@ -99,7 +100,7 @@ class SalesReportView(View):
             
         if min_amount_str:
             try:
-                min_amount = float(min_amount_str)
+                min_amount = Decimal(str(min_amount_str or 0))
                 if min_amount > 0:
                     filter_kwargs['total_amount__gte'] = min_amount
             except ValueError:
@@ -118,8 +119,8 @@ class SalesReportView(View):
             sales = sales.order_by('date', 'created_at')
 
         # Calculate totals
-        total_qty = sales.aggregate(Sum('qty'))['qty__sum'] or 0
-        total_amount = sales.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+        total_qty = sales.aggregate(Sum('qty'))['qty__sum'] or Decimal('0.0000')
+        total_amount = sales.aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0.0000')
 
         # Prepare list for display 
         report_data = []

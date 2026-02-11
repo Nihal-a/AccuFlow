@@ -4,6 +4,7 @@ from django.views import View
 from django.views.generic.edit import DeleteView
 from django.db.models import Sum, Q 
 from datetime import datetime
+from decimal import Decimal
 
 from core.views import getClient
 
@@ -22,24 +23,24 @@ class AddGodownView(View):
         name = request.POST.get('name')
         phone = request.POST.get('phone')
         address = request.POST.get('address')
-        open_credit = request.POST.get('open_credit',0)
-        open_debit = request.POST.get('open_debit',0)
-        otc_credit = request.POST.get('otc_credit',0)
-        otc_debit = request.POST.get('otc_debit',0)
-        open_balance = float(open_debit)-float(open_credit)
-        otc_balance = float(otc_debit) - float(otc_credit)
+        open_credit = Decimal(str(request.POST.get('open_credit', 0)))
+        open_debit = Decimal(str(request.POST.get('open_debit', 0)))
+        otc_credit = Decimal(str(request.POST.get('otc_credit', 0)))
+        otc_debit = Decimal(str(request.POST.get('otc_debit', 0)))
+        open_balance = open_debit - open_credit
+        otc_balance = otc_debit - otc_credit
         balance = otc_balance + open_balance
         country_code = request.POST.get('country_code')
         wa = request.POST.get('whatsapp_number')
         
-        credit = 0
-        debit = 0
-        if balance> 0:
+        credit = Decimal('0.0000')
+        debit = Decimal('0.0000')
+        if balance > 0:
             debit = balance
-            credit = 0 
-        elif balance< 0:
+            credit = Decimal('0.0000') 
+        elif balance < 0:
             credit = -balance 
-            debit = 0
+            debit = Decimal('0.0000')
         godown = Godowns.objects.create(
             name=name,
             phone=phone,
@@ -80,27 +81,28 @@ class UpdateGodownView(View):
         godown.name = request.POST.get('name')
         godown.phone = request.POST.get('phone')
         godown.address = request.POST.get('address')
-        godown.open_credit = request.POST.get('open_credit', 0)
-        godown.open_debit = request.POST.get('open_debit', 0)
-        godown.otc_credit = request.POST.get('otc_credit', 0)
-        godown.otc_debit = request.POST.get('otc_debit', 0)
+        godown.open_credit = Decimal(str(request.POST.get('open_credit', 0)))
+        godown.open_debit = Decimal(str(request.POST.get('open_debit', 0)))
+        godown.otc_credit = Decimal(str(request.POST.get('otc_credit', 0)))
+        godown.otc_debit = Decimal(str(request.POST.get('otc_debit', 0)))
         country_code = request.POST.get('country_code')
         wa = request.POST.get('whatsapp_number')
         godown.client = getClient(request.user)
         godown.balance -= (godown.otc_balance + godown.open_balance)
-        godown.credit -= godown.credit
-        godown.debit -= godown.debit
-        open_balance = float(request.POST.get('open_debit', 0))-float(request.POST.get('open_credit', 0))
-        otc_balance = float(request.POST.get('otc_debit', 0))-float(request.POST.get('otc_credit', 0))
+        godown.credit = Decimal('0.0000')
+        godown.debit = Decimal('0.0000')
+        open_balance = Decimal(str(request.POST.get('open_debit', 0))) - Decimal(str(request.POST.get('open_credit', 0)))
+        otc_balance = Decimal(str(request.POST.get('otc_debit', 0))) - Decimal(str(request.POST.get('otc_credit', 0)))
         godown.open_balance = open_balance
         godown.otc_balance = otc_balance
         godown.balance += (otc_balance + open_balance)
-        if (otc_balance + open_balance)> 0:
-            godown.debit = (otc_balance + open_balance)
-            godown.credit = 0
-        elif (otc_balance + open_balance)< 0:
-            godown.credit = -(otc_balance + open_balance)
-            godown.debit = 0
+        total_bal = otc_balance + open_balance
+        if total_bal > 0:
+            godown.debit = total_bal
+            godown.credit = Decimal('0.0000')
+        elif total_bal < 0:
+            godown.credit = -total_bal
+            godown.debit = Decimal('0.0000')
         if wa:
             godown.country_code = country_code
             godown.wa = wa
@@ -142,10 +144,10 @@ class GodownLedgerView(View):
             'godown': '',
             'opening': opening_flag if opening_flag == 'on' else '',
             'ledgers': [],
-            'in_total': 0,
-            'out_total': 0,
-            'total_balance': 0,
-            'open_balance': 0,
+            'in_total': Decimal('0.0000'),
+            'out_total': Decimal('0.0000'),
+            'total_balance': Decimal('0.0000'),
+            'open_balance': Decimal('0.0000'),
         }
 
         if not godown_id:
@@ -160,7 +162,7 @@ class GodownLedgerView(View):
         if date_from:
             opening_balance = self.calculate_opening_stock(godown, client, date_from)
         else:
-            opening_balance = 0 # No field for opening Qty
+            opening_balance = Decimal('0.0000') # No field for opening Qty
         
         context['open_balance'] = opening_balance
 
@@ -252,7 +254,7 @@ class GodownLedgerView(View):
             })
 
 
-        start_balance = 0
+        start_balance = Decimal('0.0000')
         if opening_flag != 'on':
              start_balance = opening_balance
              ledger_items.append({
@@ -270,14 +272,14 @@ class GodownLedgerView(View):
         ledger_items.sort(key=lambda x: (x['date'], x['created_at']))
 
         running_val = start_balance
-        in_sum = 0
-        out_sum = 0
+        in_sum = Decimal('0.0000')
+        out_sum = Decimal('0.0000')
         
         final_ledgers = []
         
         for item in ledger_items:
-            in_q = float(item.get('in_qty') or 0)
-            out_q = float(item.get('out_qty') or 0)
+            in_q = Decimal(str(item.get('in_qty') or 0))
+            out_q = Decimal(str(item.get('out_qty') or 0))
             
             if item.get('type') == 'OB':
                 item['balance'] = start_balance
@@ -313,12 +315,12 @@ class GodownLedgerView(View):
         transfer_filter_from = Q(is_active=True, hold=False, client=client, transfer_from=godown, date__lt=date_limit)
         transfer_filter_to = Q(is_active=True, hold=False, client=client, transfer_to=godown, date__lt=date_limit)
         
-        purchases_sum = Purchases.objects.filter(base_filter).aggregate(s=Sum('qty'))['s'] or 0
-        sales_sum = Sales.objects.filter(base_filter).aggregate(s=Sum('qty'))['s'] or 0
-        commission_sum = Commissions.objects.filter(base_filter).aggregate(s=Sum('qty'))['s'] or 0
+        purchases_sum = Purchases.objects.filter(base_filter).aggregate(s=Sum('qty'))['s'] or Decimal('0.0000')
+        sales_sum = Sales.objects.filter(base_filter).aggregate(s=Sum('qty'))['s'] or Decimal('0.0000')
+        commission_sum = Commissions.objects.filter(base_filter).aggregate(s=Sum('qty'))['s'] or Decimal('0.0000')
 
-        transfers_in_sum = StockTransfers.objects.filter(transfer_filter_to).aggregate(s=Sum('qty'))['s'] or 0
-        transfers_out_sum = StockTransfers.objects.filter(transfer_filter_from).aggregate(s=Sum('qty'))['s'] or 0
+        transfers_in_sum = StockTransfers.objects.filter(transfer_filter_to).aggregate(s=Sum('qty'))['s'] or Decimal('0.0000')
+        transfers_out_sum = StockTransfers.objects.filter(transfer_filter_from).aggregate(s=Sum('qty'))['s'] or Decimal('0.0000')
         
         # Stock = In - Out
         stock_balance = (purchases_sum + transfers_in_sum) - (sales_sum + commission_sum + transfers_out_sum)

@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from django.views import View
 from django.db.models import Q
 from datetime import datetime
+from decimal import Decimal
 from core.models import Sales, Purchases, NSDs, Cashs, Commissions, StockTransfers
 from core.views import getClient
 import openpyxl
@@ -55,7 +56,7 @@ class TransactionReportView(View):
                 'description': s.description,
                 'type': 'Sale',
                 'debit': s.total_amount,
-                'credit': 0,
+                'credit': Decimal('0.0000'),
                 'created_at': s.created_at
             })
 
@@ -70,7 +71,7 @@ class TransactionReportView(View):
                 'tran_no': p.purchase_no,
                 'description': p.description,
                 'type': 'Purchase',
-                'debit': 0,
+                'debit': Decimal('0.0000'),
                 'credit': p.total_amount,
                 'created_at': p.created_at
             })
@@ -103,12 +104,12 @@ class TransactionReportView(View):
             
             if c.transaction == 'Received':
                 # We received cash. Party is Credited.
-                debit = 0
+                debit = Decimal('0.0000')
                 credit = c.amount
             else: # Paid
                 # We paid cash. Party is Debited.
                 debit = c.amount
-                credit = 0
+                credit = Decimal('0.0000')
                 
             transactions.append({
                 'account_name': acc,
@@ -131,7 +132,7 @@ class TransactionReportView(View):
                 'description': com.description,
                 'type': 'Commission',
                 'debit': com.total_amount, # Expense is Debit
-                'credit': 0,
+                'credit': Decimal('0.0000'),
                 'created_at': com.created_at
             })
 
@@ -147,8 +148,8 @@ class TransactionReportView(View):
                 'tran_no': st.transfer_no,
                 'description': st.description,
                 'type': 'Stock Transfer',
-                'debit': 0, # st.qty, # User asked for column, but mixing qty with amount is bad. Leaving 0.
-                'credit': 0,
+                'debit': Decimal('0.0000'), # st.qty, # User asked for column, but mixing qty with amount is bad. Leaving 0.
+                'credit': Decimal('0.0000'),
                 'created_at': st.created_at
             })
 

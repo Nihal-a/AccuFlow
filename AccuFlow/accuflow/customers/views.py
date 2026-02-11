@@ -4,8 +4,10 @@ from django.views import View
 from django.views.generic.edit import DeleteView
 from django.db.models import Sum, Q
 from datetime import datetime
+from decimal import Decimal
 
 from core.views import getClient
+from core.authorization import get_object_for_user
 
 class CustomerView(View):
     def get(self,request):
@@ -21,21 +23,21 @@ class AddCustomerView(View):
         name = request.POST.get('name')
         phone = request.POST.get('phone')
         address = request.POST.get('address')
-        open_credit = request.POST.get('open_credit',0)
-        open_debit = request.POST.get('open_debit',0)
-        otc_credit = request.POST.get('otc_credit',0)
-        otc_debit = request.POST.get('otc_debit',0)
+        open_credit = Decimal(str(request.POST.get('open_credit', 0)))
+        open_debit = Decimal(str(request.POST.get('open_debit', 0)))
+        otc_credit = Decimal(str(request.POST.get('otc_credit', 0)))
+        otc_debit = Decimal(str(request.POST.get('otc_debit', 0)))
         country_code = request.POST.get('country_code')
         wa = request.POST.get('whatsapp_number')
-        open_balance = float(open_debit)-float(open_credit)
-        otc_balance = float(otc_debit) - float(otc_credit)
+        open_balance = open_debit - open_credit
+        otc_balance = otc_debit - otc_credit
         balance = otc_balance + open_balance
-        credit = 0
-        debit = 0
-        if balance> 0:
+        credit = Decimal('0.0000')
+        debit = Decimal('0.0000')
+        if balance > 0:
             debit = balance
-            credit = 0 
-        elif balance< 0:
+            credit = Decimal('0.0000') 
+        elif balance < 0:
             credit = -balance 
             debit = 0
         customer = Customers.objects.create(
@@ -62,7 +64,8 @@ class AddCustomerView(View):
 
 class DeleteCustomerView(View):
     def get(self, request, customer_id):
-        customer = get_object_or_404(Customers, id=customer_id)
+        # Authorization: Ensure customer belongs to user's client (or user is superuser)
+        customer = get_object_for_user(Customers, request.user, id=customer_id)
         customer.is_active = False 
         customer.save()
         return redirect('customers')
@@ -70,34 +73,41 @@ class DeleteCustomerView(View):
 
 class UpdateCustomerView(View): 
     def get(self, request, customer_id):
-        customer = get_object_or_404(Customers, id=customer_id)
+        # Authorization: Ensure customer belongs to user's client (or user is superuser)
+        customer = get_object_for_user(Customers, request.user, id=customer_id)
         return render(request, 'customer/update.html', {'customer': customer})
 
     def post(self, request, customer_id):
-        customer = get_object_or_404(Customers, id=customer_id)
+        # Authorization: Ensure customer belongs to user's client (or user is superuser)
+        customer = get_object_for_user(Customers, request.user, id=customer_id)
         customer.name = request.POST.get('name')
         customer.phone = request.POST.get('phone')
         customer.address = request.POST.get('address')
-        customer.open_credit = request.POST.get('open_credit', 0)
-        customer.open_debit = request.POST.get('open_debit', 0)
-        customer.otc_credit = request.POST.get('otc_credit', 0)
-        customer.otc_debit = request.POST.get('otc_debit', 0)
+        customer.open_credit = Decimal(str(request.POST.get('open_credit', 0)))
+        customer.open_debit = Decimal(str(request.POST.get('open_debit', 0)))
+        customer.otc_credit = Decimal(str(request.POST.get('otc_credit', 0)))
+        customer.otc_debit = Decimal(str(request.POST.get('otc_debit', 0)))
         country_code = request.POST.get('country_code')
         wa = request.POST.get('whatsapp_number')
+        
         customer.balance -= (customer.otc_balance + customer.open_balance)
-        customer.credit -= customer.credit
-        customer.debit -= customer.debit
-        open_balance = float(request.POST.get('open_debit', 0))-float(request.POST.get('open_credit', 0))
-        otc_balance = float(request.POST.get('otc_debit', 0))-float(request.POST.get('otc_credit', 0))
+        customer.credit = Decimal('0.0000')
+        customer.debit = Decimal('0.0000')
+        
+        open_balance = customer.open_debit - customer.open_credit
+        otc_balance = customer.otc_debit - customer.otc_credit
+        
         customer.open_balance = open_balance
         customer.otc_balance = otc_balance
         customer.balance += (otc_balance + open_balance)
-        if (otc_balance + open_balance)> 0:
-            customer.debit = (otc_balance + open_balance)
-            customer.credit = 0
-        elif (otc_balance + open_balance)< 0:
-            customer.credit = -(otc_balance + open_balance)
-            customer.debit = 0
+        
+        total_bal = otc_balance + open_balance
+        if total_bal > 0:
+            customer.debit = total_bal
+            customer.credit = Decimal('0.0000')
+        elif total_bal < 0:
+            customer.credit = -total_bal
+            customer.debit = Decimal('0.0000')
         if wa:
             customer.country_code = country_code
             customer.wa = wa
@@ -140,10 +150,10 @@ class CustomerLedgerView(View):
             'customer': '',
             'opening': opening_flag if opening_flag == 'on' else '',
             'ledgers': [],
-            'credit_total': 0,
-            'debit_total': 0,
-            'total_balance': 0,
-            'open_balance': 0,
+            'credit_total': Decimal('0.0000'),
+            'debit_total': Decimal('0.0000'),
+            'total_balance': Decimal('0.0000'),
+            'open_balance': Decimal('0.0000'),
         }
 
         if not customer_id:
@@ -158,7 +168,7 @@ class CustomerLedgerView(View):
         if date_from:
             opening_balance = self.calculate_opening_balance(customer, client, date_from)
         else:
-            opening_balance = (customer.open_debit or 0) - (customer.open_credit or 0)
+            opening_balance = customer.open_debit - customer.open_credit
         
         context['open_balance'] = opening_balance
 
@@ -254,8 +264,8 @@ class CustomerLedgerView(View):
                 'description': desc,
                 'qty': '',
                 'rate': c.amount,
-                'credit': c.amount if is_received else 0, # Received reduces balance (Credit)
-                'debit': c.amount if not is_received else 0, # Paid increases balance (Debit)
+                'credit': c.amount if is_received else Decimal('0.0000'), # Received reduces balance (Credit)
+                'debit': c.amount if not is_received else Decimal('0.0000'), # Paid increases balance (Debit)
                 'created_at': c.created_at,
                 'original_obj': c
             })
@@ -283,14 +293,14 @@ class CustomerLedgerView(View):
              ledger_items.sort(key=lambda x: x['transaction_no'])
 
         running_val = start_balance
-        credit_sum = 0
-        debit_sum = 0
+        credit_sum = Decimal('0.0000')
+        debit_sum = Decimal('0.0000')
         
         final_ledgers = []
         
         for item in ledger_items:
-            c_val = float(item.get('credit') or 0)
-            d_val = float(item.get('debit') or 0)
+            c_val = Decimal(str(item.get('credit') or 0))
+            d_val = Decimal(str(item.get('debit') or 0))
             
             if item.get('type') == 'OB':
                 item['balance'] = start_balance
@@ -325,13 +335,13 @@ class CustomerLedgerView(View):
         base_filter = Q(is_active=True, hold=False, client=client, customer=customer, date__lt=date_limit)
         nsd_base = Q(is_active=True, hold=False, client=client, date__lt=date_limit)
         
-        purchases_sum = Purchases.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or 0
-        sales_sum = Sales.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or 0
-        sender_sum = NSDs.objects.filter(nsd_base, sender_customer=customer).aggregate(s=Sum('sell_amount'))['s'] or 0
-        receiver_sum = NSDs.objects.filter(nsd_base, receiver_customer=customer).aggregate(s=Sum('purchase_amount'))['s'] or 0
+        purchases_sum = Purchases.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+        sales_sum = Sales.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+        sender_sum = NSDs.objects.filter(nsd_base, sender_customer=customer).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0.0000')
+        receiver_sum = NSDs.objects.filter(nsd_base, receiver_customer=customer).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0.0000')
         
-        cash_received = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or 0
-        cash_paid = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or 0
+        cash_received = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
+        cash_paid = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
         
         # Balance = Debit - Credit
         # Debit: Sales, NSD Receiver, Cash Paid
@@ -339,6 +349,6 @@ class CustomerLedgerView(View):
         
         transaction_balance = (sales_sum + receiver_sum + cash_paid) - (purchases_sum + sender_sum + cash_received)
         
-        static_ob = (customer.open_debit or 0) - (customer.open_credit or 0)
+        static_ob = customer.open_debit - customer.open_credit
         
         return static_ob + transaction_balance

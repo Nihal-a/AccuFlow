@@ -5,6 +5,7 @@ from django.views.generic.edit import DeleteView
 from django.contrib import messages
 
 from core.views import getClient
+from core.authorization import get_object_for_user
 
 class CollectorView(View):
     def get(self,request):
@@ -63,7 +64,8 @@ class AddCollectorView(View):
 
 class DeleteCollectorView(View):
     def get(self, request, collector_id):
-        collector = get_object_or_404(Collectors, id=collector_id)
+        # Authorization: Ensure collector belongs to user's client (or user is superuser)
+        collector = get_object_for_user(Collectors, request.user, id=collector_id)
         collector.is_active = False 
         collector.save()
         return redirect('collectors')
@@ -71,11 +73,13 @@ class DeleteCollectorView(View):
 
 class UpdateCollectorView(View):
     def get(self, request, collector_id):
-        collector = get_object_or_404(Collectors, id=collector_id)
+        # Authorization: Ensure collector belongs to user's client (or user is superuser)
+        collector = get_object_for_user(Collectors, request.user, id=collector_id)
         return render(request, 'collector/update.html', {'collector': collector})
 
     def post(self, request, collector_id):
-        collector = get_object_or_404(Collectors, id=collector_id)
+        # Authorization: Ensure collector belongs to user's client (or user is superuser)
+        collector = get_object_for_user(Collectors, request.user, id=collector_id)
         name = request.POST.get('name')
         phone = request.POST.get('phone')
         address = request.POST.get('address')

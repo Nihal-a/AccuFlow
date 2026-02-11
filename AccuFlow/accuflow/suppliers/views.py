@@ -1,8 +1,10 @@
 from django.shortcuts import render,redirect, get_object_or_404
 from core.models import Suppliers
 from django.views import View
+from decimal import Decimal
 from django.views.generic.edit import DeleteView
 from core.views import getClient
+from core.authorization import get_object_for_user
 
 class SupplierView(View):
     def get(self,request):
@@ -18,23 +20,23 @@ class AddSupplierView(View):
         name = request.POST.get('name')
         phone = request.POST.get('phone')
         address = request.POST.get('address')
-        open_credit = request.POST.get('open_credit',0)
-        open_debit = request.POST.get('open_debit',0)
-        otc_credit = request.POST.get('otc_credit',0)
-        otc_debit = request.POST.get('otc_debit',0)
+        open_credit = Decimal(str(request.POST.get('open_credit', 0)))
+        open_debit = Decimal(str(request.POST.get('open_debit', 0)))
+        otc_credit = Decimal(str(request.POST.get('otc_credit', 0)))
+        otc_debit = Decimal(str(request.POST.get('otc_debit', 0)))
         country_code = request.POST.get('country_code')
         wa = request.POST.get('whatsapp_number')
-        open_balance = float(open_debit)-float(open_credit)
-        otc_balance = float(otc_debit) - float(otc_credit)
+        open_balance = open_debit - open_credit
+        otc_balance = otc_debit - otc_credit
         balance = otc_balance + open_balance
-        credit = 0
-        debit = 0
-        if balance> 0:
+        credit = Decimal('0.0000')
+        debit = Decimal('0.0000')
+        if balance > 0:
             debit = balance
-            credit = 0 
-        elif balance< 0:
+            credit = Decimal('0.0000') 
+        elif balance < 0:
             credit = -balance 
-            debit = 0
+            debit = Decimal('0.0000')
         supplier = Suppliers.objects.create(
             name=name,
             phone=phone,
@@ -59,7 +61,8 @@ class AddSupplierView(View):
 
 class DeleteSupplierView(View):
     def get(self, request, supplier_id):
-        supplier = get_object_or_404(Suppliers, id=supplier_id)
+        # Authorization: Ensure supplier belongs to user's client (or user is superuser)
+        supplier = get_object_for_user(Suppliers, request.user, id=supplier_id)
         supplier.is_active = False 
         supplier.save()
         return redirect('suppliers')
@@ -67,34 +70,42 @@ class DeleteSupplierView(View):
 
 class UpdateSupplierView(View):
     def get(self, request, supplier_id):
-        supplier = get_object_or_404(Suppliers, id=supplier_id)
+        # Authorization: Ensure supplier belongs to user's client (or user is superuser)
+        supplier = get_object_for_user(Suppliers, request.user, id=supplier_id)
         return render(request, 'supplier/update.html', {'supplier': supplier})
 
     def post(self, request, supplier_id):
-        supplier = get_object_or_404(Suppliers, id=supplier_id)
+        # Authorization: Ensure supplier belongs to user's client (or user is superuser)
+        supplier = get_object_for_user(Suppliers, request.user, id=supplier_id)
         supplier.name = request.POST.get('name')
         supplier.phone = request.POST.get('phone')
         supplier.address = request.POST.get('address')
-        supplier.open_credit = request.POST.get('open_credit', 0)
-        supplier.open_debit = request.POST.get('open_debit', 0)
-        supplier.otc_credit = request.POST.get('otc_credit', 0)
-        supplier.otc_debit = request.POST.get('otc_debit', 0)
+        supplier.open_credit = Decimal(str(request.POST.get('open_credit', 0)))
+        supplier.open_debit = Decimal(str(request.POST.get('open_debit', 0)))
+        customer_otc_credit = Decimal(str(request.POST.get('otc_credit', 0))) # Variable name fix if needed, but the field is otc_credit
+        supplier.otc_credit = Decimal(str(request.POST.get('otc_credit', 0)))
+        supplier.otc_debit = Decimal(str(request.POST.get('otc_debit', 0)))
         country_code = request.POST.get('country_code')
         wa = request.POST.get('whatsapp_number')
+        
         supplier.balance -= (supplier.otc_balance + supplier.open_balance)
-        supplier.credit -= supplier.credit
-        supplier.debit -= supplier.debit
-        open_balance = float(request.POST.get('open_debit', 0))-float(request.POST.get('open_credit', 0))
-        otc_balance = float(request.POST.get('otc_debit', 0))-float(request.POST.get('otc_credit', 0))
+        supplier.credit = Decimal('0.0000')
+        supplier.debit = Decimal('0.0000')
+        
+        open_balance = supplier.open_debit - supplier.open_credit
+        otc_balance = supplier.otc_debit - supplier.otc_credit
+        
         supplier.open_balance = open_balance
         supplier.otc_balance = otc_balance
         supplier.balance += (otc_balance + open_balance)
-        if (otc_balance + open_balance)> 0:
-            supplier.debit = (otc_balance + open_balance)
-            supplier.credit = 0
-        elif (otc_balance + open_balance)< 0:
-            supplier.credit = -(otc_balance + open_balance)
-            supplier.debit = 0
+        
+        total_bal = otc_balance + open_balance
+        if total_bal > 0:
+            supplier.debit = total_bal
+            supplier.credit = Decimal('0.0000')
+        elif total_bal < 0:
+            supplier.credit = -total_bal
+            supplier.debit = Decimal('0.0000')
         if wa:
             supplier.country_code = country_code
             supplier.wa = wa

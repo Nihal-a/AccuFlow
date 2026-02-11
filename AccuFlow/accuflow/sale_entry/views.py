@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 
 from core.views import getClient, update_ledger
+from core.authorization import get_object_for_user
 
 class SaleEntryView(View):
     def get(self,request):
@@ -80,13 +81,16 @@ class SaleAddView(View):
             print(customer_ids[count])
             if types[count] == 'customers':
                 supplier = None
-                customer = get_object_or_404(Customers, id=customer_ids[count]) if customer_ids[count] else None
+                # Authorization: Ensure customer belongs to user's client
+                customer = get_object_for_user(Customers, request.user, id=customer_ids[count]) if customer_ids[count] else None
                 seller = customer
             else:
                 customer = None
-                supplier = get_object_or_404(Suppliers, id=customer_ids[count]) if customer_ids[count] else None
+                # Authorization: Ensure supplier belongs to user's client
+                supplier = get_object_for_user(Suppliers, request.user, id=customer_ids[count]) if customer_ids[count] else None
                 seller = supplier
-            godown = get_object_or_404(Godowns, id=godown_ids[count]) if godown_ids[count] else None
+            # Authorization: Ensure godown belongs to user's client
+            godown = get_object_for_user(Godowns, request.user, id=godown_ids[count]) if godown_ids[count] else None
             sale = Sales.objects.get(id=id)
             godown.qty -= float(qtys[count])    
             godown.save()
@@ -125,17 +129,20 @@ class SaleHold(View):
         customer = None
         seller = None
         if type_value == 'customers':
-            customer = get_object_or_404(Customers, id=supplier) if supplier else None
+            # Authorization: Ensure customer belongs to user's client
+            customer = get_object_for_user(Customers, request.user, id=supplier) if supplier else None
             supplier = None 
             seller = customer
         else:  
             customer = None
-            
-            supplier = get_object_or_404(Suppliers, id=supplier) if supplier else None
+            # Authorization: Ensure supplier belongs to user's client
+            supplier = get_object_for_user(Suppliers, request.user, id=supplier) if supplier else None
             seller = supplier
-        godown = get_object_or_404(Godowns, id=godown) if godown else None
+        # Authorization: Ensure godown belongs to user's client
+        godown = get_object_for_user(Godowns, request.user, id=godown) if godown else None
         if data.get('sale_id'):
-            sale = get_object_or_404(Sales, id=data.get('sale_id'))
+            # Authorization: Ensure sale belongs to user's client
+            sale = get_object_for_user(Sales, request.user, id=data.get('sale_id'))
             if not sale.hold:
                 update_ledger(
                     where=None,  

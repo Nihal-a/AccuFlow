@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from django.db.models import Sum, Q
 from datetime import datetime
+from decimal import Decimal
 from core.models import Suppliers, Customers, Godowns, Purchases, Sales, NSDs, Cashs, StockTransfers
 from core.views import getClient
 
@@ -45,10 +46,10 @@ class GeneralLedgerView(View):
             'party_selection': party_selection,
             'opening': opening_flag if opening_flag == 'on' else '',
             'ledgers': [],
-            'credit_total': 0,
-            'debit_total': 0,
-            'total_balance': 0,
-            'open_balance': 0,
+            'credit_total': Decimal('0.0000'),
+            'debit_total': Decimal('0.0000'),
+            'total_balance': Decimal('0.0000'),
+            'open_balance': Decimal('0.0000'),
         }
 
         if not party_selection:
@@ -78,13 +79,13 @@ class GeneralLedgerView(View):
         else:
             if party_type == 'godown':
                 # For Godown, balance is quantity based (Dr - Cr) usually, but logic in godown_ledger was (OpenDr - OpenCr)
-                opening_balance = (party.open_debit or 0) - (party.open_credit or 0)
+                opening_balance = party.open_debit - party.open_credit
             else:
                  # Standard Financial: (Dr - Cr) for Asset/Exp, (Cr - Dr) for Liab/Inc? 
                  # Existing SupplierLedger uses: (open_debit - open_credit).
                  # Supplier is usually Credit balance. Let's stick to the formula used in supplier_ledger.py:
                  # opening_balance = (supplier.open_debit or 0) - (supplier.open_credit or 0)
-                opening_balance = (party.open_debit or 0) - (party.open_credit or 0)
+                opening_balance = party.open_debit - party.open_credit
         
         context['open_balance'] = opening_balance
 
@@ -105,7 +106,7 @@ class GeneralLedgerView(View):
              self.get_godown_transactions(party, base_filter, date_filter, sort, ledger_items)
 
         # Opening Balance Item
-        start_balance = 0
+        start_balance = Decimal('0.0000')
         if opening_flag != 'on':
              start_balance = opening_balance
              ledger_items.append({
@@ -117,7 +118,7 @@ class GeneralLedgerView(View):
                 'rate': party.open_balance, # Note: godown uses 'open_balance' field too?
                 'credit': party.open_credit,
                 'debit': party.open_debit,
-                'balance': party.open_balance if hasattr(party, 'open_balance') else 0, 
+                'balance': party.open_balance if hasattr(party, 'open_balance') else Decimal('0.0000'), 
                 'created_at': party.created_at,
                 'is_ob': True
              })
@@ -128,14 +129,14 @@ class GeneralLedgerView(View):
              ledger_items.sort(key=lambda x: x['transaction_no'])
 
         running_val = start_balance
-        credit_sum = 0
-        debit_sum = 0
+        credit_sum = Decimal('0.0000')
+        debit_sum = Decimal('0.0000')
         
         final_ledgers = []
         
         for item in ledger_items:
-            c_val = float(item.get('credit') or 0)
-            d_val = float(item.get('debit') or 0)
+            c_val = Decimal(str(item.get('credit') or 0))
+            d_val = Decimal(str(item.get('debit') or 0))
             
             if item.get('type') == 'OB':
                 item['balance'] = start_balance
@@ -178,16 +179,16 @@ class GeneralLedgerView(View):
              s_filter = base_filter & Q(supplier=party)
              nsd_base = Q(is_active=True, hold=False, client=client, date__lt=date_limit)
              
-             purchases_sum = Purchases.objects.filter(s_filter).aggregate(s=Sum('total_amount'))['s'] or 0
-             sales_sum = Sales.objects.filter(s_filter).aggregate(s=Sum('total_amount'))['s'] or 0
-             sender_sum = NSDs.objects.filter(nsd_base, sender_supplier=party).aggregate(s=Sum('sell_amount'))['s'] or 0
-             receiver_sum = NSDs.objects.filter(nsd_base, receiver_supplier=party).aggregate(s=Sum('purchase_amount'))['s'] or 0
+             purchases_sum = Purchases.objects.filter(s_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+             sales_sum = Sales.objects.filter(s_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+             sender_sum = NSDs.objects.filter(nsd_base, sender_supplier=party).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0.0000')
+             receiver_sum = NSDs.objects.filter(nsd_base, receiver_supplier=party).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0.0000')
              
-             cash_received = Cashs.objects.filter(s_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or 0
-             cash_paid = Cashs.objects.filter(s_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or 0
+             cash_received = Cashs.objects.filter(s_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
+             cash_paid = Cashs.objects.filter(s_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
              
              transaction_balance = (sales_sum + receiver_sum + cash_paid) - (purchases_sum + sender_sum + cash_received)
-             static_ob = (party.open_debit or 0) - (party.open_credit or 0)
+             static_ob = party.open_debit - party.open_credit
              return static_ob + transaction_balance
 
         elif party_type == 'customer':
@@ -195,16 +196,16 @@ class GeneralLedgerView(View):
              c_filter = base_filter & Q(customer=party)
              nsd_base = Q(is_active=True, hold=False, client=client, date__lt=date_limit)
 
-             purchases_sum = Purchases.objects.filter(c_filter).aggregate(s=Sum('total_amount'))['s'] or 0
-             sales_sum = Sales.objects.filter(c_filter).aggregate(s=Sum('total_amount'))['s'] or 0
-             sender_sum = NSDs.objects.filter(nsd_base, sender_customer=party).aggregate(s=Sum('sell_amount'))['s'] or 0
-             receiver_sum = NSDs.objects.filter(nsd_base, receiver_customer=party).aggregate(s=Sum('purchase_amount'))['s'] or 0
+             purchases_sum = Purchases.objects.filter(c_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+             sales_sum = Sales.objects.filter(c_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+             sender_sum = NSDs.objects.filter(nsd_base, sender_customer=party).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0.0000')
+             receiver_sum = NSDs.objects.filter(nsd_base, receiver_customer=party).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0.0000')
              
-             cash_received = Cashs.objects.filter(c_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or 0
-             cash_paid = Cashs.objects.filter(c_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or 0
+             cash_received = Cashs.objects.filter(c_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
+             cash_paid = Cashs.objects.filter(c_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
              
              transaction_balance = (sales_sum + receiver_sum + cash_paid) - (purchases_sum + sender_sum + cash_received)
-             static_ob = (party.open_debit or 0) - (party.open_credit or 0)
+             static_ob = party.open_debit - party.open_credit
              return static_ob + transaction_balance
 
         elif party_type == 'godown':
@@ -216,18 +217,18 @@ class GeneralLedgerView(View):
             
             g_filter = base_filter & Q(godown=party)
             
-            purchases_qty = Purchases.objects.filter(g_filter).aggregate(s=Sum('qty'))['s'] or 0
-            sales_qty = Sales.objects.filter(g_filter).aggregate(s=Sum('qty'))['s'] or 0
+            purchases_qty = Purchases.objects.filter(g_filter).aggregate(s=Sum('qty'))['s'] or Decimal('0.0000')
+            sales_qty = Sales.objects.filter(g_filter).aggregate(s=Sum('qty'))['s'] or Decimal('0.0000')
             
-            transfers_out = StockTransfers.objects.filter(base_filter, transfer_from=party).aggregate(s=Sum('qty'))['s'] or 0
-            transfers_in = StockTransfers.objects.filter(base_filter, transfer_to=party).aggregate(s=Sum('qty'))['s'] or 0
+            transfers_out = StockTransfers.objects.filter(base_filter, transfer_from=party).aggregate(s=Sum('qty'))['s'] or Decimal('0.0000')
+            transfers_in = StockTransfers.objects.filter(base_filter, transfer_to=party).aggregate(s=Sum('qty'))['s'] or Decimal('0.0000')
             
             # Debit (In) - Credit (Out)
             transaction_balance = (purchases_qty + transfers_in) - (sales_qty + transfers_out)
-            static_ob = (party.open_debit or 0) - (party.open_credit or 0)
+            static_ob = party.open_debit - party.open_credit
             return static_ob + transaction_balance
             
-        return 0
+        return Decimal('0.0000')
 
     def get_supplier_transactions(self, supplier, base_filter, date_filter, sort, ledger_items):
         # ... logic from supplier_ledger ...

@@ -2,9 +2,12 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from django.db.models import Sum, Q, Value, CharField, F
 from django.utils import timezone
+from decimal import Decimal
 from datetime import datetime
 from core.models import Customers, Suppliers, Purchases, Sales, NSDs, Cashs
 from core.views import getClient
+from core.authorization import get_object_for_user
+from django.http import JsonResponse
 
 class CustomerLedgerView(View):
     def get(self, request):
@@ -29,16 +32,17 @@ class CustomerLedgerView(View):
             'customer': '',
             'opening': opening_flag if opening_flag == 'on' else '',
             'ledgers': [],
-            'credit_total': 0,
-            'debit_total': 0,
-            'total_balance': 0,
-            'open_balance': 0,
+            'credit_total': Decimal('0.0000'),
+            'debit_total': Decimal('0.0000'),
+            'total_balance': Decimal('0.0000'),
+            'open_balance': Decimal('0.0000'),
         }
 
         if not customer_id:
             return render(request, 'customer_ledger/customer_ledger.html', context)
 
-        customer = get_object_or_404(Customers, id=customer_id)
+        # Authorization: Ensure customer belongs to user's client
+        customer = get_object_for_user(Customers, request.user, id=customer_id)
         context['customer'] = customer
 
         date_from = self.parse_date(date_from_str)
@@ -47,7 +51,7 @@ class CustomerLedgerView(View):
         if date_from:
             opening_balance = self.calculate_opening_balance(customer, client, date_from)
         else:
-            opening_balance = (customer.open_debit or 0) - (customer.open_credit or 0)
+            opening_balance = customer.open_debit - customer.open_credit
         
         context['open_balance'] = opening_balance
 
@@ -164,14 +168,14 @@ class CustomerLedgerView(View):
              ledger_items.sort(key=lambda x: x['transaction_no'])
 
         running_val = start_balance
-        credit_sum = 0
-        debit_sum = 0
+        credit_sum = Decimal('0.0000')
+        debit_sum = Decimal('0.0000')
         
         final_ledgers = []
         
         for item in ledger_items:
-            c_val = float(item.get('credit') or 0)
-            d_val = float(item.get('debit') or 0)
+            c_val = Decimal(str(item.get('credit') or 0))
+            d_val = Decimal(str(item.get('debit') or 0))
             
             if item.get('type') == 'OB':
                 item['balance'] = start_balance
@@ -206,16 +210,16 @@ class CustomerLedgerView(View):
         base_filter = Q(is_active=True, hold=False, client=client, customer=customer, date__lt=date_limit)
         nsd_base = Q(is_active=True, hold=False, client=client, date__lt=date_limit)
         
-        purchases_sum = Purchases.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or 0
-        sales_sum = Sales.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or 0
-        sender_sum = NSDs.objects.filter(nsd_base, sender_customer=customer).aggregate(s=Sum('sell_amount'))['s'] or 0
-        receiver_sum = NSDs.objects.filter(nsd_base, receiver_customer=customer).aggregate(s=Sum('purchase_amount'))['s'] or 0
+        purchases_sum = Purchases.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+        sales_sum = Sales.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+        sender_sum = NSDs.objects.filter(nsd_base, sender_customer=customer).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0.0000')
+        receiver_sum = NSDs.objects.filter(nsd_base, receiver_customer=customer).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0.0000')
         
-        cash_received = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or 0
-        cash_paid = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or 0
+        cash_received = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
+        cash_paid = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
         
         transaction_balance = (sales_sum + receiver_sum + cash_paid) - (purchases_sum + sender_sum + cash_received)
         
-        static_ob = (customer.open_debit or 0) - (customer.open_credit or 0)
+        static_ob = customer.open_debit - customer.open_credit
         
         return static_ob + transaction_balance

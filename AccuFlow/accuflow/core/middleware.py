@@ -53,11 +53,15 @@ class SubscriptionMiddleware:
             # Check subscription status
             if client_obj:
                 if not client_obj.is_subscription_active:
-                    # Redirect to subscription expired page WITHOUT logging out
+                    # CRITICAL: Log out the user to prevent session hijacking/persistence
+                    # if their subscription is revoked or forged.
+                    logout(request)
+                    
                     try:
                         expired_url = reverse('subscription_expired')
                     except:
                         expired_url = '/subscription-expired/'
+                    messages.warning(request, "Your subscription has expired. Please contact support.")
                     return redirect(expired_url)
 
         return self.get_response(request)

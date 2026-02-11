@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.views import View
 from django.db.models import Q, Sum
 from datetime import datetime
+from decimal import Decimal
 from core.models import Collection, Collectors
 from core.views import getClient
 
@@ -40,7 +41,7 @@ class CollectionReportView(View):
         
         collections = Collection.objects.filter(base_filter).order_by('-date')
         
-        total_amount = collections.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+        total_amount = collections.aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0.0000')
         
         context = {
             'collections': collections,

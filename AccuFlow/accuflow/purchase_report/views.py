@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from django.views import View
 from django.db.models import Sum, Q
 from datetime import datetime
+from decimal import Decimal
 from core.models import Suppliers, Purchases, Customers
 from core.views import getClient
 import openpyxl
@@ -99,8 +100,8 @@ class PurchaseReportView(View):
              return render(request, 'purchase_report/purchase_report.html', {
                 'trade_partners': combined_partners,
                 'purchases': [],
-                'total_qty': 0,
-                'total_amount': 0,
+                'total_qty': Decimal('0.0000'),
+                'total_amount': Decimal('0.0000'),
                 'date_from': '',
                 'date_to': '',
                 'selected_filter_value': '',
@@ -109,7 +110,7 @@ class PurchaseReportView(View):
             
         if min_amount_str:
             try:
-                min_amount = float(min_amount_str)
+                min_amount = Decimal(str(min_amount_str or 0))
                 if min_amount > 0:
                     filter_kwargs['total_amount__gte'] = min_amount
             except ValueError:
@@ -128,8 +129,8 @@ class PurchaseReportView(View):
             purchases = purchases.order_by('date', 'created_at')
 
         # Calculate totals
-        total_qty = purchases.aggregate(Sum('qty'))['qty__sum'] or 0
-        total_amount = purchases.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+        total_qty = purchases.aggregate(Sum('qty'))['qty__sum'] or Decimal('0.0000')
+        total_amount = purchases.aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0.0000')
 
         # Prepare list for display to handle "Trade Partner" and description logic easily if needed
         # Although we can do it in template, doing it here keeps it clean

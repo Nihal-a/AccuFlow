@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 
 from core.views import getClient, update_ledger
+from core.authorization import get_object_for_user
 
 class CashEntryView(View):
     def get(self,request):
@@ -73,11 +74,13 @@ class CashAddView(View):
             seller = None 
             if types[count] == 'customers':
                 supplier = None
-                customer = get_object_or_404(Customers, id=supplier_ids[count]) if supplier_ids[count] else None
+                # Authorization: Ensure customer belongs to user's client
+                customer = get_object_for_user(Customers, request.user, id=supplier_ids[count]) if supplier_ids[count] else None
                 seller = customer
             else:
                 customer = None
-                supplier = get_object_or_404(Suppliers, id=supplier_ids[count]) if supplier_ids[count] else None
+                # Authorization: Ensure supplier belongs to user's client
+                supplier = get_object_for_user(Suppliers, request.user, id=supplier_ids[count]) if supplier_ids[count] else None
                 seller = supplier
             
             # Updating Ledger (Assuming Active)
@@ -86,8 +89,10 @@ class CashAddView(View):
             else: 
                 update_ledger(where=seller,to=None,new_purchase=amounts[count],old_purchase=0)
             
-            cash_bank = get_object_or_404(CashBanks, id=cashbanks_ids[count]) if cashbanks_ids[count] else None
-            cash = get_object_or_404(Cashs, id=id)
+            # Authorization: Ensure cash_bank belongs to user's client
+            cash_bank = get_object_for_user(CashBanks, request.user, id=cashbanks_ids[count]) if cashbanks_ids[count] else None
+            # Authorization: Ensure cash belongs to user's client
+            cash = get_object_for_user(Cashs, request.user, id=id)
             cash.party_balance = seller.balance
             cash.cash_no = cash.cash_no
             cash.supplier = supplier
@@ -121,15 +126,18 @@ class CashHold(View):
         supplier = None
         
         if type_value == 'customers':
-            customer = get_object_or_404(Customers, id=supplier_id) if supplier_id else None
+            # Authorization: Ensure customer belongs to user's client
+            customer = get_object_for_user(Customers, request.user, id=supplier_id) if supplier_id else None
             seller = customer
         else:
-            supplier = get_object_or_404(Suppliers, id=supplier_id) if supplier_id else None
+            # Authorization: Ensure supplier belongs to user's client
+            supplier = get_object_for_user(Suppliers, request.user, id=supplier_id) if supplier_id else None
             seller = supplier
             
         cash = None
         if cash_id:
-            cash = get_object_or_404(Cashs, id=cash_id)
+            # Authorization: Ensure cash belongs to user's client
+            cash = get_object_for_user(Cashs, request.user, id=cash_id)
             
             # 1. Reverse Old if Active
             if not cash.hold:
@@ -152,7 +160,8 @@ class CashHold(View):
             cash.cash_no = cash_no
             cash.supplier = supplier
             cash.customer = customer
-            cash.cash_bank = get_object_or_404(CashBanks, id=cash_bank_id) if cash_bank_id else None
+            # Authorization: Ensure cash_bank belongs to user's client
+            cash.cash_bank = get_object_for_user(CashBanks, request.user, id=cash_bank_id) if cash_bank_id else None
             cash.date = date
             cash.amount = amount
             cash.description = description
@@ -173,7 +182,8 @@ class CashHold(View):
             cash_no = cash_no,
             supplier = supplier,
             customer = customer, 
-            cash_bank = get_object_or_404(CashBanks, id=cash_bank_id) if cash_bank_id else None,
+            # Authorization: Ensure cash_bank belongs to user's client
+            cash_bank = get_object_for_user(CashBanks, request.user, id=cash_bank_id) if cash_bank_id else None,
             date = date,
             amount = amount,
             description = description,
@@ -234,7 +244,8 @@ def cashs_by_date(request):
 
 def delete_cash(request):
     pk = request.GET.get('id') 
-    cash = get_object_or_404(Cashs, id=pk)
+    # Authorization: Ensure cash belongs to user's client
+    cash = get_object_for_user(Cashs, request.user, id=pk)
     cash.is_active = False
     
     # Fix: Only reverse ledger if the cash entry was active (not hold)

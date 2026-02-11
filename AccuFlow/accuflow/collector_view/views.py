@@ -5,6 +5,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from core.models import Collectors, Collection, Sales, CollectionItem, Purchases, NSDs, Customers, Suppliers
 from django.utils.decorators import method_decorator
 import datetime
+from decimal import Decimal, InvalidOperation
 from django.contrib.auth.decorators import login_required
 
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -114,12 +115,12 @@ class CollectorCollectionDetailView(LoginRequiredMixin, UserPassesTestMixin, Vie
         
         for item in items:
             amount_str = request.POST.get(f'collected_amount_{item.id}')
-            amount = 0
+            amount = Decimal('0.0000')
             if amount_str:
                 try:
-                    amount = float(amount_str)
-                except ValueError:
-                    amount = 0
+                    amount = Decimal(str(amount_str))
+                except (ValueError, InvalidOperation):
+                    amount = Decimal('0.0000')
             
             item.collected_amount = amount
             item.remark = request.POST.get(f'remark_{item.id}', '')
@@ -231,7 +232,7 @@ class CollectorAddItemsView(LoginRequiredMixin, UserPassesTestMixin, View):
                     client=collection.client,
                     date=collection.date,
                     status='New',
-                    total_amount=0
+                    total_amount=Decimal('0.0000')
                 )
             # If it was Pending, reset to New so it can be edited
             elif collection.status == 'Pending':
@@ -243,7 +244,7 @@ class CollectorAddItemsView(LoginRequiredMixin, UserPassesTestMixin, View):
                 # Check uniqueness again to be safe
                 if not CollectionItem.objects.filter(collection=collection, transaction_type=type_str, transaction_id=id_str).exists():
                      # Determine amount (current balance)
-                    amount = 0
+                    amount = Decimal('0.0000')
                     if type_str == 'Customer':
                         c = Customers.objects.filter(id=id_str).first()
                         if c: amount = c.balance
@@ -257,7 +258,7 @@ class CollectorAddItemsView(LoginRequiredMixin, UserPassesTestMixin, View):
                             transaction_id=id_str,
                             transaction_type=type_str,
                             amount=amount,
-                            collected_amount=0, # Initially 0, collector enters it
+                            collected_amount=Decimal('0.0000'), # Initially 0, collector enters it
                             is_credit=False
                         )
             
