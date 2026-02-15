@@ -80,48 +80,87 @@ def update_party(party):
 
 
 
-def update_ledger(where=None, to=None, old_purchase=0, new_purchase=0, old_sale=0, new_sale=0):
-    if where:
-        where.refresh_from_db()
-        
+from django.db import transaction
+from decimal import Decimal, InvalidOperation
 
-        if float(old_purchase) > 0:
-            where.credit -= float(old_purchase)
+@transaction.atomic
+def update_ledger(where=None, to=None, old_purchase=0, new_purchase=0, old_sale=0, new_sale=0):
+    # Ensure all numerical inputs are Decimals for consistent arithmetic
+    def to_decimal(val):
+        try:
+            return Decimal(str(val or 0))
+        except (ValueError, TypeError, InvalidOperation):
+            return Decimal('0.0000')
+
+    old_p = to_decimal(old_purchase)
+    new_p = to_decimal(new_purchase)
+    old_s = to_decimal(old_sale)
+    new_s = to_decimal(new_sale)
+
+    # Handle 'where' argument (Suppliers/Customers)
+    if where:
+        # Lock the row for update
+        obj_class = where.__class__
+        where = obj_class.objects.select_for_update().get(pk=where.pk)
+        
+        # Ensure model fields are also Decimals to avoid float + Decimal issues
+        where.credit = to_decimal(where.credit)
+        where.debit = to_decimal(where.debit)
+        
+        if old_p > 0:
+            where.credit -= old_p
             if where.credit < 0:
                 where.debit += abs(where.credit)
-                where.credit = 0
+                where.credit = Decimal('0.0000')
         
-        if float(new_purchase) > 0:
-            where.credit += float(new_purchase)
+        if new_p > 0:
+            where.credit += new_p
 
-
-        if float(old_sale) > 0:
-            where.debit -= float(old_sale)
+        if old_s > 0:
+            where.debit -= old_s
             if where.debit < 0:
                 where.credit += abs(where.debit)
-                where.debit = 0
+                where.debit = Decimal('0.0000')
         
-        if float(new_sale) > 0:
-            where.debit += float(new_sale)
+        if new_s > 0:
+            where.debit += new_s
             
         update_party(where)
         where.save()
 
-def update_customer_balance(to,old_sale,new_sale):
     if to:
-        to.refresh_from_db()
+        obj_class = to.__class__
+        to = obj_class.objects.select_for_update().get(pk=to.pk)
 
-        if float(old_sale) > 0:
-            to.debit -= float(old_sale)
+        # Ensure model fields are also Decimals
+        to.credit = to_decimal(to.credit)
+        to.debit = to_decimal(to.debit)
+
+        if old_s > 0:
+            to.debit -= old_s
             if to.debit < 0:
                 to.credit += abs(to.debit)
-                to.debit = 0
+                to.debit = Decimal('0.0000')
 
-        if float(new_sale) > 0:
-            to.debit += float(new_sale)
+        if new_s > 0:
+            to.debit += new_s
+            
+        if old_p > 0:
+             to.credit -= old_p
+             if to.credit < 0:
+                 to.debit += abs(to.credit)
+                 to.credit = Decimal('0.0000')
+        
+        if new_p > 0:
+            to.credit += new_p
 
         update_party(to)
         to.save()
+
+def update_customer_balance(to,old_sale,new_sale):
+    if to:
+        update_ledger(to=to, old_sale=old_sale, new_sale=new_sale)
+
 
 @login_required
 @require_POST
