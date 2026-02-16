@@ -505,10 +505,8 @@
     </script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // Notification Logic
             const btn = document.getElementById("notificationBtn");
             const popup = document.getElementById("notificationPopup");
-            // The badge on the bell icon
             const bellBadge = btn.querySelector("span.absolute");
 
             function getCookie(name) {
@@ -517,7 +515,6 @@
                     const cookies = document.cookie.split(';');
                     for (let i = 0; i < cookies.length; i++) {
                         const cookie = cookies[i].trim();
-                        // Does this cookie string begin with the name we want?
                         if (cookie.substring(0, name.length + 1) === (name + '=')) {
                             cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                             break;
@@ -536,7 +533,6 @@
                     btn.classList.toggle('border-white');
                     btn.classList.toggle('text-white');
 
-                    // If we just opened the popup and there is a badge, mark as read
                     if (wasHidden && bellBadge) {
                         fetch("{% url 'mark_notifications_read' %}", {
                             method: "POST",
@@ -546,10 +542,8 @@
                             },
                         }).then(response => {
                             if (response.ok) {
-                                // Remove badges visually
                                 bellBadge.remove();
 
-                                // Also remove the 'New' count inside the popup
                                 const headerBadge = popup.querySelector(".bg-blue-100");
                                 if (headerBadge) headerBadge.remove();
                             }
