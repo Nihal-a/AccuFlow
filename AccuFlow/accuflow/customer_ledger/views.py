@@ -145,9 +145,9 @@ class CustomerLedgerView(View):
                 'original_obj': c
             })
 
-        start_balance = 0
+        start_balance = Decimal('0.0000')
         if opening_flag != 'on':
-             start_balance = opening_balance
+             start_balance = Decimal(str(opening_balance))
              ledger_items.append({
                 'transaction_no': 'Opening Balance',
                 'date': customer.created_at.date() if customer.created_at else (date_from or datetime.min.date()),

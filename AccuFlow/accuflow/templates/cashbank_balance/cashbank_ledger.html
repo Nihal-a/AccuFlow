@@ -14,7 +14,8 @@ Cash/Bank Ledger
 
     <div id="createView" class="mt-5 w-full">
         <div class="grid">
-            <form method="post" action="{% url 'cashbankledger' %}" class="grid  grid-cols-8 gap-4">
+            <form method="post" action="{% url 'cashbankledger' %}"
+                class="grid  grid-cols-8 gap-4 ignore-unsaved-changes">
                 {% csrf_token %}
                 <div class="col-span-6 w-full flex items-center gap-3">
                     <div class="w-[45%]">

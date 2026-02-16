@@ -14,7 +14,7 @@ Sales Report
 
     <div id="createView" class="mt-5 w-full">
         <div class="grid w-full">
-            <form method="post" action="{% url 'salesreport' %}" class="grid grid-cols-12 gap-4">
+            <form method="post" action="{% url 'salesreport' %}" class="grid grid-cols-12 gap-4 ignore-unsaved-changes">
                 {% csrf_token %}
                 <div class="col-span-12 w-full flex items-center gap-3">
                     <div class="w-[25%]">
@@ -82,7 +82,7 @@ Sales Report
                     </div>
                 </div>
             </form>
- 
+
             <div class="overflow-x-auto mt-5 w-full col-span-12" id="printableArea">
                 <table class="w-full min-w-max rounded-t-lg overflow-hidden" id="reportTable">
                     <thead class="bg-blue-200 text-gray-700 uppercase text-sm">

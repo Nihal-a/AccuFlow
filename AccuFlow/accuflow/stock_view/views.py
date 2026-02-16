@@ -10,6 +10,7 @@ from django.views import View
 from django.db.models import Sum, Q, Value, CharField, F
 from datetime import datetime
 from core.views import getClient
+from core.models import Godowns, Purchases, Sales
 
 class StockView(View):
     def get(self, request):

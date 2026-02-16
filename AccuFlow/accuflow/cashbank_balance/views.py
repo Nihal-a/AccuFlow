@@ -7,9 +7,48 @@ from datetime import datetime
 from decimal import Decimal
 
 class CashBankView(View):
-    def get(self,request):
-        cashbank_balances = CashBanks.objects.all()
-        return render(request,'cashbank_balance/cashbank_balance.html',{'cashbank_balances':cashbank_balances})
+    def get(self, request):
+        client = getClient(request.user)
+        cashbanks = CashBanks.objects.filter(is_active=True, client=client)
+        
+        data = []
+        total_balance_all = Decimal('0.0000')
+
+        for cb in cashbanks:
+            # Calculate total received
+            received = Cashs.objects.filter(
+                cash_bank=cb, 
+                transaction='Received', 
+                is_active=True, 
+                hold=False,
+                client=client
+            ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.0000')
+
+            # Calculate total paid
+            paid = Cashs.objects.filter(
+                cash_bank=cb, 
+                transaction='Paid', 
+                is_active=True, 
+                hold=False,
+                client=client
+            ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.0000')
+
+            balance = received - paid
+            
+            data.append({
+                'obj': cb,
+                'received': received,
+                'paid': paid,
+                'balance': balance
+            })
+            
+            total_balance_all += balance
+
+        context = {
+            'cashbank_data': data,
+            'total_balance_all': total_balance_all
+        }
+        return render(request, 'cashbank_balance/cashbank_balance.html', context)
 
 
 class CashBankLedgerView(View):
