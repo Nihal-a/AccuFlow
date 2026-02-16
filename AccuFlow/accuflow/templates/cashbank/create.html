@@ -10,6 +10,7 @@
         -webkit-appearance: none;
         margin: 0;
     }
+
     input.no-spinners {
         -moz-appearance: textfield;
     }
@@ -24,23 +25,29 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label class="block text-gray-700">Name*</label>
-                <input type="text" placeholder="Enter cash/bank name..." name="name" class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                <input type="text" placeholder="Enter cash/bank name..." name="name"
+                    class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 input-text-only"
+                    required>
             </div>
-               <div>
+            <div>
                 <label class="block text-gray-700">Description</label>
-                <input type="text" placeholder="Enter cash/Bank description..." name="description" class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="text" placeholder="Enter cash/Bank description..." name="description"
+                    class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
         </div>
-       <div class="mt-6 flex gap-2 justify-end">
-            <a href="{% url 'cashbank'%}" type="submit" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 font-semibold">Cancel</a>
-            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 font-semibold">Create Cash/Bank</button>
+        <div class="mt-6 flex gap-2 justify-end">
+            <a href="{% url 'cashbank'%}" type="submit"
+                class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 font-semibold">Cancel</a>
+            <button type="submit"
+                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 font-semibold">Create
+                Cash/Bank</button>
         </div>
     </form>
-</div>  
+</div>
 {% endblock %}
 
- {% block externalJS %}
+{% block externalJS %}
 <script>
-  navActive("cashbankMasterLink");
+    navActive("cashbankMasterLink");
 </script>
 {% endblock %}

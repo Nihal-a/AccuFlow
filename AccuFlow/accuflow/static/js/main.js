@@ -194,4 +194,17 @@ function countryCode() {
 
 if ($('#date').length) {
   $('#date').val(new Date().toISOString().split('T')[0]);
-} 
+}
+
+// Global Input Validation
+$(document).ready(function () {
+  // allow only text (letters and spaces)
+  $(document).on('input', '.input-text-only', function () {
+    this.value = this.value.replace(/[^a-zA-Z\s]/g, '');
+  });
+
+  // allow only numbers (digits)
+  $(document).on('input', '.input-number-only', function () {
+    this.value = this.value.replace(/[^0-9]/g, '');
+  });
+}); 

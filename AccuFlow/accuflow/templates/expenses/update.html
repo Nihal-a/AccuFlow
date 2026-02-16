@@ -10,6 +10,7 @@
         -webkit-appearance: none;
         margin: 0;
     }
+
     input.no-spinners {
         -moz-appearance: textfield;
     }
@@ -19,24 +20,30 @@
 {% block content %}
 <h1 class="text-3xl font-bold mb-4 text-gray-700">Update Expense</h1>
 <div class="bg-white shadow rounded-xl p-6 ">
-    <form method="post" action="{% url 'edit-expense' expense.id %}"> 
+    <form method="post" action="{% url 'edit-expense' expense.id %}">
         {% csrf_token %}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
                 <label class="block text-gray-700">Name*</label>
-                <input type="text" name="name" value="{{ expense.category }}" class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                <input type="text" name="name" value="{{ expense.category }}"
+                    class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 input-text-only"
+                    required>
             </div>
-              <div>
+            <div>
                 <label class="block text-gray-700">Descriprion</label>
-                <input type="text" name="description" value="{{ expense.description }}" class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" >
+                <input type="text" name="description" value="{{ expense.description }}"
+                    class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <div>
                 <label class="block text-gray-700">Amount</label>
-                <input type="number" step="0.01" name="amount" value="{{ expense.amount }}" class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 no-spinners" required>
+                <input type="number" step="0.01" name="amount" value="{{ expense.amount }}"
+                    class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 no-spinners"
+                    required>
             </div>
         </div>
         <div class="mt-6">
-            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Update Expense</button>
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Update
+                Expense</button>
         </div>
     </form>
 </div>
@@ -44,6 +51,6 @@
 {% endblock %}
 {% block externalJS %}
 <script>
-  navActive("expenseMasterLink");
+    navActive("expenseMasterLink");
 </script>
 {% endblock %}

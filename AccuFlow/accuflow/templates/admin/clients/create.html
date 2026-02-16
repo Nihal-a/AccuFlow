@@ -22,7 +22,7 @@
       <div>
         <label class="block text-gray-700">Name*</label>
         <input type="text" placeholder="Enter customer name..." name="name"
-          class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 input-text-only"
           required />
       </div>
       <div>
@@ -33,8 +33,7 @@
       <div>
         <label class="block text-gray-700">Phone</label>
         <input type="number" placeholder="Enter phone number..." name="phone"
-          class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 no-spinners"
-          oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+          class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 no-spinners input-number-only" />
       </div>
       <div>
         <label class="block text-gray-700">Whatsapp No.</label>
@@ -44,8 +43,8 @@
             id="countryCode"></select>
 
           <input type="tel" name="wa" placeholder="Enter whatsapp number..."
-            class="w-full px-3 py-2 border-t border-b border-r rounded-r-xl focus:outline-none focus:ring-2 focus:ring-blue-500 no-spinners"
-            inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+            class="w-full px-3 py-2 border-t border-b border-r rounded-r-xl focus:outline-none focus:ring-2 focus:ring-blue-500 no-spinners input-number-only"
+            inputmode="numeric" pattern="[0-9]*" />
         </div>
       </div>
       <div>
@@ -59,7 +58,7 @@
           {% endfor %}
         </select>
         <input type="number" name="custom_duration" placeholder="Custom Days (Optional)"
-          class="w-full mt-2 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          class="w-full mt-2 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm input-number-only"
           title="Override plan duration">
       </div>
       <div>
