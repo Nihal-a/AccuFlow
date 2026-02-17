@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.views import View
+from django.core.paginator import Paginator
 from django.db.models import Sum
 from decimal import Decimal
 from core.models import Customers, Suppliers, Sales, Purchases, NSDs
@@ -8,9 +9,13 @@ from core.views import getClient
 class OutstandingCustomerView(View):
     def get(self, request):
         client = getClient(request.user)
-        customers = Customers.objects.filter(is_active=True, client=client)
+        customers = Customers.objects.filter(is_active=True, client=client).only('id', 'customerId', 'name', 'phone', 'balance').order_by('name')
+        paginator = Paginator(customers, 50)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
         data = []
-        for c in customers:
+        for c in page_obj.object_list:
             total_sales = Sales.objects.filter(is_active=True, client=client, customer=c).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
             
             total_nsd_sender = NSDs.objects.filter(is_active=True, client=client, sender_customer=c).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0.0000')
@@ -28,15 +33,23 @@ class OutstandingCustomerView(View):
         
         data.sort(key=lambda x: x['total_trade'], reverse=True)
         
-        return render(request, 'outstanding_report/outstanding_customer.html', {'customers': data})
+        context = {
+            'customers': data,
+            'page_obj': page_obj
+        }
+        return render(request, 'outstanding_report/outstanding_customer.html', context)
 
 
 class OutstandingSupplierView(View):
     def get(self, request):
         client = getClient(request.user)
-        suppliers = Suppliers.objects.filter(is_active=True, client=client)
+        suppliers = Suppliers.objects.filter(is_active=True, client=client).only('id', 'supplierId', 'name', 'phone', 'balance').order_by('name')
+        paginator = Paginator(suppliers, 50)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
         data = []
-        for s in suppliers:
+        for s in page_obj.object_list:
             total_purchase = Purchases.objects.filter(is_active=True, client=client, supplier=s).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
             
             total_nsd_sender = NSDs.objects.filter(is_active=True, client=client, sender_supplier=s).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0.0000')
@@ -54,4 +67,4 @@ class OutstandingSupplierView(View):
         
         data.sort(key=lambda x: x['total_trade'], reverse=True)
         
-        return render(request, 'outstanding_report/outstanding_supplier.html', {'suppliers': data})
+        return render(request, 'outstanding_report/outstanding_supplier.html', {'suppliers': data, 'page_obj': page_obj})

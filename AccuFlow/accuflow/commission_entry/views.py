@@ -9,6 +9,8 @@ from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 
 from core.views import getClient
+from core.authorization import get_object_for_user
+from core.utils import validate_positive_decimal
 
 class CommissionEntryView(View):
     def get(self,request):
@@ -60,16 +62,22 @@ class CommissionAddView(View):
         for id in commission_ids:
             expense = get_object_or_404(Expenses, id=expense_ids[count]) if expense_ids[count] else None
             godown = get_object_or_404(Godowns, id=godown_ids[count]) if godown_ids[count] else None
-            godown.qty -= Decimal(str(qtys[count] or 0))
+            
+            # Validation
+            qty_val = validate_positive_decimal(qtys[count], "Quantity")
+            amount_val = validate_positive_decimal(amounts[count], "Amount")
+            total_amount_val = validate_positive_decimal(total_amounts[count], "Total Amount")
+
+            godown.qty -= qty_val
             godown.save()
             commission = Commissions.objects.get(id=id)
             commission.godown_balance = godown.qty
             commission.expense = expense
             commission.godown = godown
             commission.date = dates[count]
-            commission.qty = qtys[count]
-            commission.amount = amounts[count]
-            commission.total_amount = total_amounts[count]    
+            commission.qty = qty_val
+            commission.amount = amount_val
+            commission.total_amount = total_amount_val    
             commission.hold = False
             commission.client=getClient(request.user)
             commission.save()  
@@ -87,9 +95,9 @@ class CommissionHold(View):
         expense = data.get('expense')
         godown = data.get('godown')
         date = data.get('date')
-        qty = data.get('qty')
-        amount = data.get('amount')
-        total_amount = data.get('total_amount')
+        qty = validate_positive_decimal(data.get('qty'), "Quantity")
+        amount = validate_positive_decimal(data.get('amount'), "Amount")
+        total_amount = validate_positive_decimal(data.get('total_amount'), "Total Amount")
         description = data.get('description')
 
         expense = get_object_or_404(Expenses, id=expense) if expense else None
@@ -97,10 +105,10 @@ class CommissionHold(View):
         if data.get('commission_id'):
             commission = get_object_or_404(Commissions, id=data.get('commission_id'))
             godown.qty += commission.qty
-            godown.qty -= Decimal(str(qty or 0))
+            godown.qty -= qty
             godown.save()
             commission.godown_balance -= commission.qty
-            commission.godown_balance += Decimal(str(qty or 0))
+            commission.godown_balance += qty
             commission.commission_no = commission_no
             commission.expense = expense
             commission.godown = godown
@@ -187,7 +195,8 @@ def commissions_by_date(request):
 
 def delete_commission(request):
     pk = request.GET.get('id') 
-    commission = get_object_or_404(Commissions, id=pk)
+    # Authorization: Ensure commission belongs to user's client
+    commission = get_object_for_user(Commissions, request.user, id=pk)
     commission.is_active = False
     commission.godown.qty += commission.qty
     commission.godown.save() 

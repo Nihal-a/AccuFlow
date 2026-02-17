@@ -5,9 +5,12 @@ from django.views import View
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 from django.db.models import Q
+from django.db import transaction
+from django.db.models import F
 
 from core.views import getClient, update_ledger
 from core.authorization import get_object_for_user
+from core.utils import validate_positive_decimal
 
 class PurchaseEntryView(View):
     def get(self,request):
@@ -59,153 +62,153 @@ class PurchaseEntryView(View):
         return render(request,'purchase_entry/purchase_entry.html',context)
     
     
-
 class PurchaseAddView(View):
     def post(self,request):
-        dates = request.POST.getlist('dates')
-        total_amounts = request.POST.getlist('total_amounts')
-        qtys = request.POST.getlist('qtys')
-        amounts = request.POST.getlist('amounts')
-        supplier_ids = request.POST.getlist('suppliers')
-        customer_ids = request.POST.getlist('customers')
-        godown_ids = request.POST.getlist('godowns')
-        purchase_ids = request.POST.getlist('purchase_ids') 
-        types = request.POST.getlist('type')
-        count = 0
-        seller = None
-        for id in purchase_ids:
-            customer = None 
-            if types[count] == 'customers':
-                supplier = None
-                # Authorization: Ensure customer belongs to user's client
-                customer = get_object_for_user(Customers, request.user, id=supplier_ids[count]) if supplier_ids[count] else None
-                seller = customer
-            else:
-                customer = None
-                # Authorization: Ensure supplier belongs to user's client
-                supplier = get_object_for_user(Suppliers, request.user, id=supplier_ids[count]) if supplier_ids[count] else None
-                seller = supplier
-            # Authorization: Ensure godown belongs to user's client
-            godown = get_object_for_user(Godowns, request.user, id=godown_ids[count]) if godown_ids[count] else None
-            purchase = Purchases.objects.get(id=id)
-            godown.qty += float(qtys[count])  
-            godown.save()
-            update_ledger(where=seller,to=None,new_purchase=total_amounts[count],new_sale=0) 
-            purchase.seller_balance = seller.balance
-            purchase.purchaser_balance = godown.get_balance
-            purchase.supplier = supplier
-            purchase.godown = godown
-            purchase.date = dates[count]
-            purchase.qty = qtys[count]
-            purchase.amount = amounts[count]
-            purchase.total_amount = total_amounts[count]    
-            purchase.hold = False
-            purchase.customer = customer
-            purchase.client=getClient(request.user)
-            
-            purchase.save()  
-            count += 1
+        with transaction.atomic():
+            dates = request.POST.getlist('dates')
+            total_amounts = request.POST.getlist('total_amounts')
+            qtys = request.POST.getlist('qtys')
+            amounts = request.POST.getlist('amounts')
+            supplier_ids = request.POST.getlist('suppliers')
+            customer_ids = request.POST.getlist('customers')
+            godown_ids = request.POST.getlist('godowns')
+            purchase_ids = request.POST.getlist('purchase_ids') 
+            types = request.POST.getlist('type')
+            count = 0
+            seller = None
+            for id in purchase_ids:
+                customer = None 
+                if types[count] == 'customers':
+                    supplier = None
+                    customer = get_object_for_user(Customers, request.user, id=supplier_ids[count]) if supplier_ids[count] else None
+                    seller = customer
+                else:
+                    customer = None
+                    supplier = get_object_for_user(Suppliers, request.user, id=supplier_ids[count]) if supplier_ids[count] else None
+                    seller = supplier
+                godown = get_object_for_user(Godowns, request.user, id=godown_ids[count]) if godown_ids[count] else None
+                purchase = Purchases.objects.get(id=id)
+                
+                # Validation
+                qty_val = validate_positive_decimal(qtys[count], "Quantity")
+                total_amount_val = validate_positive_decimal(total_amounts[count], "Total Amount")
+                amount_val = validate_positive_decimal(amounts[count], "Amount")
+
+                godown.qty = F('qty') + qty_val  
+                godown.save()
+                update_ledger(where=seller,to=None,new_purchase=total_amount_val,new_sale=0) 
+                
+                # Refresh instances to get updated values from DB
+                seller.refresh_from_db()
+                godown.refresh_from_db()
+                
+                purchase.seller_balance = seller.balance
+                purchase.purchaser_balance = godown.get_balance
+                purchase.supplier = supplier
+                purchase.godown = godown
+                purchase.date = dates[count]
+                purchase.qty = qty_val
+                purchase.amount = amount_val
+                purchase.total_amount = total_amount_val    
+                purchase.hold = False
+                purchase.customer = customer
+                purchase.client=getClient(request.user)
+                
+                purchase.save()  
+                count += 1
         return redirect('purchase')
-
-
-    
 
 
 class PurchaseHold(View):
     def post(self,request):
-        data = json.loads(request.body)
-        purchase_no = data.get('purchase_no')
-        supplier = data.get('supplier')
-        godown = data.get('godown')
-        date = data.get('date')
-        qty = data.get('qty')
-        amount = data.get('amount')
-        total_amount = data.get('total_amount')
-        description = data.get('description')
-        type_value = data.get('type')
-        customer = None
-        seller = None
-        if type_value == 'customers':
-            # Authorization: Ensure customer belongs to user's client
-            customer = get_object_for_user(Customers, request.user, id=supplier) if supplier else None
-            supplier = None 
-            seller = customer
-        else:  
+        with transaction.atomic():
+            data = json.loads(request.body)
+            purchase_no = data.get('purchase_no')
+            supplier = data.get('supplier')
+            godown = data.get('godown')
+            date = data.get('date')
+            qty = validate_positive_decimal(data.get('qty'), "Quantity")
+            amount = validate_positive_decimal(data.get('amount'), "Amount")
+            total_amount = validate_positive_decimal(data.get('total_amount'), "Total Amount")
+            description = data.get('description')
+            type_value = data.get('type')
             customer = None
-            # Authorization: Ensure supplier belongs to user's client
-            supplier = get_object_for_user(Suppliers, request.user, id=supplier) if supplier else None
-            seller = supplier
-        # Authorization: Ensure godown belongs to user's client
-        godown = get_object_for_user(Godowns, request.user, id=godown) if godown else None
-        if data.get('purchase_id'):
-            # Authorization: Ensure purchase belongs to user's client
-            purchase = get_object_for_user(Purchases, request.user, id=data.get('purchase_id'))
+            seller = None
+            if type_value == 'customers':
+                customer = get_object_for_user(Customers, request.user, id=supplier) if supplier else None
+                supplier = None 
+                seller = customer
+            else:  
+                customer = None
+                supplier = get_object_for_user(Suppliers, request.user, id=supplier) if supplier else None
+                seller = supplier
+            godown = get_object_for_user(Godowns, request.user, id=godown) if godown else None
+            if data.get('purchase_id'):
+                purchase = get_object_for_user(Purchases, request.user, id=data.get('purchase_id'))
 
-            old_seller = purchase.customer or purchase.supplier
-            if not purchase.hold:
-                print('updating ledger for old seller')
-                update_ledger(
-                    where=purchase.party,  
-                    to=None,
-                    old_purchase=purchase.total_amount,
-                    old_sale=0,
-                    new_purchase=0,
-                    new_sale=0
-                )
-                purchase.party.save()
-                godown.qty -= purchase.qty
-                godown.save()
-                purchase.purchaser_balance = purchase.purchaser_balance - purchase.qty
-                purchase.seller_balance = purchase.seller_balance - purchase.amount
-            purchase.purchase_no = purchase_no 
-            purchase.supplier = supplier
-            purchase.customer = customer
-            purchase.godown = godown
-            purchase.date = date
-            purchase.qty = qty
-            purchase.amount = amount
-            purchase.total_amount = total_amount
-            purchase.description = description
-            purchase.type = type_value
-            purchase.client = getClient(request.user)
-            purchase.save()
-            new_seller = customer or supplier
-            if not purchase.hold:
-                update_ledger(
-                    where=new_seller, 
-                    to=None,
-                    old_purchase=0, 
-                    old_sale=0,
-                    new_purchase=total_amount,
-                    new_sale=0,
-                )
-                godown.qty += float(qty)
-                godown.save()
-                purchase.purchaser_balance += float(qty)
-                purchase.seller_balance += float(amount)
+                old_seller = purchase.customer or purchase.supplier
+                if not purchase.hold:
+                    print('updating ledger for old seller')
+                    update_ledger(
+                        where=purchase.party,  
+                        to=None,
+                        old_purchase=purchase.total_amount,
+                        old_sale=0,
+                        new_purchase=0,
+                        new_sale=0
+                    )
+                    purchase.party.save()
+                    godown.qty = F('qty') - purchase.qty
+                    godown.save()
+                    purchase.purchaser_balance = purchase.purchaser_balance - purchase.qty
+                    purchase.seller_balance = purchase.seller_balance - purchase.amount
+                purchase.purchase_no = purchase_no 
+                purchase.supplier = supplier
+                purchase.customer = customer
+                purchase.godown = godown
+                purchase.date = date
+                purchase.qty = qty
+                purchase.amount = amount
+                purchase.total_amount = total_amount
+                purchase.description = description
+                purchase.type = type_value
+                purchase.client = getClient(request.user)
                 purchase.save()
-                
-
-            return JsonResponse({'status':'success','purchase_id':purchase.id,'hold':purchase.hold})
-        purchase = Purchases.objects.create(
-            purchase_no=purchase_no,
-            supplier=supplier,
-            godown=godown,
-            date=date,
-            qty=qty,
-            amount=amount,
-            total_amount=total_amount,
-            description=description,
-            type=type_value,
-            customer=customer,
-            hold=True,
-            client=getClient(request.user)
-        )
+                new_seller = customer or supplier
+                if not purchase.hold:
+                    update_ledger(
+                        where=new_seller, 
+                        to=None,
+                        old_purchase=0, 
+                        old_sale=0,
+                        new_purchase=total_amount,
+                        new_sale=0,
+                    )
+                    godown.qty = F('qty') + qty
+                    godown.save()
+                    
+                    purchase.purchaser_balance += qty
+                    purchase.seller_balance += amount
+                    purchase.save()
+                    
+    
+                return JsonResponse({'status':'success','purchase_id':purchase.id,'hold':purchase.hold})
+            purchase = Purchases.objects.create(
+                purchase_no=purchase_no,
+                supplier=supplier,
+                godown=godown,
+                date=date,
+                qty=qty,
+                amount=amount,
+                total_amount=total_amount,
+                description=description,
+                type=type_value,
+                customer=customer,
+                hold=True,
+                client=getClient(request.user)
+            )
         return JsonResponse({'status':'success','purchase_id':purchase.id,'hold':purchase.hold}) 
-    
-    
         
-
 
 def getLastPurchaseNo(client):
     last_purchase_no = Purchases.objects.filter(is_active=True,client=client).order_by('-purchase_no').first()
@@ -217,7 +220,6 @@ def getLastPurchaseNo(client):
         return int(last_purchase_no.purchase_no) + 1
 
     return 1
-
 
 
 def purchase_no(request):
@@ -268,19 +270,21 @@ def purchases_by_date(request):
 
 def delete_purchase(request):
     pk = request.GET.get('id') 
-    # Authorization: Ensure purchase belongs to user's client
-    purchase = get_object_for_user(Purchases, request.user, id=pk)
-    purchase.is_active = False
-    if not purchase.hold:
-        update_ledger(
-        where=purchase.party, 
-        to=None,
-        old_purchase=purchase.total_amount,
-        old_sale=purchase.total_amount,
-        new_purchase=0,
-        new_sale=0
-    )
-        purchase.godown.qty -= purchase.qty
-        purchase.godown.save() 
-    purchase.save()
+    
+    with transaction.atomic():
+        # Authorization: Ensure purchase belongs to user's client
+        purchase = get_object_for_user(Purchases, request.user, id=pk)
+        purchase.is_active = False
+        if not purchase.hold:
+            update_ledger(
+            where=purchase.party, 
+            to=None,
+            old_purchase=purchase.total_amount,
+            old_sale=purchase.total_amount,
+            new_purchase=0,
+            new_sale=0
+        )
+            purchase.godown.qty = F('qty') - purchase.qty
+            purchase.godown.save() 
+        purchase.save()
     return JsonResponse({'status':'success','message':'Purchase deleted successfully'})

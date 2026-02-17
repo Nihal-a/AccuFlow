@@ -11,6 +11,7 @@
 
   input.no-spinners {
     -moz-appearance: textfield;
+    appearance: textfield;
   }
 </style>
 {% endblock %} {% block content %}
@@ -53,8 +54,10 @@
           class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
           <option value="">Select a Plan...</option>
           {% for plan in plans %}
-          <option value="{{ plan.id }}">{{ plan.name }} - {{ plan.price }} ({{ plan.duration_days }} days){% if
-            plan.is_trial %} [TRIAL]{% endif %}</option>
+          <option value="{{ plan.id }}">
+            {{ plan.name }} - {{ plan.price }} ({{ plan.duration_days }} days)
+            {% if plan.is_trial %} [TRIAL]{% endif %}
+          </option>
           {% endfor %}
         </select>
         <input type="number" name="custom_duration" placeholder="Custom Days (Optional)"

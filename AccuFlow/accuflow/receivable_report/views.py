@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.http import HttpResponse
 from django.views import View
+from django.core.paginator import Paginator
 from django.db.models import Sum, Q, F
 from datetime import datetime
 from decimal import Decimal
@@ -103,8 +104,13 @@ class ReceivableReportView(View):
 
         total_amount = sum((item['amount'] for item in receivables), Decimal('0.0000'))
 
+        paginator = Paginator(receivables, 50)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
         context = {
-            'receivables': receivables,
+            'receivables': page_obj.object_list,
+            'page_obj': page_obj,
             'total_amount': total_amount,
             'date_from': date_from_str,
             'date_to': date_to_str,

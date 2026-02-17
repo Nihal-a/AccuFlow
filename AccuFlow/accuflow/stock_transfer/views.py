@@ -59,7 +59,8 @@ class StockTransferAddView(View):
                 godown_from = get_object_or_404(Godowns, id=godown_from_ids[i], client=client)
                 godown_to = get_object_or_404(Godowns, id=godown_to_ids[i], client=client)
                 
-                qty = float(qtys[i])
+                from decimal import Decimal
+                qty = Decimal(str(qtys[i]))
                 
                 # Update balances
                 godown_from.qty -= qty

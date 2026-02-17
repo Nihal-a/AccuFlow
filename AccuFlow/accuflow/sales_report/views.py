@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
 from django.http import HttpResponse
 from django.views import View
+from django.core.paginator import Paginator
 from django.db.models import Sum, Q
 from datetime import datetime
 from decimal import Decimal
@@ -122,9 +123,14 @@ class SalesReportView(View):
         total_qty = sales.aggregate(Sum('qty'))['qty__sum'] or Decimal('0.0000')
         total_amount = sales.aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0.0000')
 
+        # Pagination
+        paginator = Paginator(sales, 50)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
         # Prepare list for display 
         report_data = []
-        for s in sales:
+        for s in page_obj.object_list:
             # Determine Trade Partner Name
             if s.supplier:
                 partner_name = s.supplier.name
@@ -148,6 +154,7 @@ class SalesReportView(View):
         context = {
             'trade_partners': combined_partners,
             'sales': report_data,
+            'page_obj': page_obj,
             'total_qty': total_qty,
             'total_amount': total_amount,
             'date_from': date_from,

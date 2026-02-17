@@ -6,8 +6,13 @@ from core.models import Collectors, Collection, Sales, CollectionItem, Purchases
 from django.http import JsonResponse
 import datetime
 import json
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
+import logging
+from decimal import Decimal, InvalidOperation
+
+
+
+logger = logging.getLogger(__name__)
+
 
 class CollectorUpdateItemView(LoginRequiredMixin, UserPassesTestMixin, View):
     def test_func(self):
@@ -30,11 +35,11 @@ class CollectorUpdateItemView(LoginRequiredMixin, UserPassesTestMixin, View):
             # Handle empty amount string as 0
             if amount is not None:
                 if amount == '':
-                    item.collected_amount = 0
+                    item.collected_amount = Decimal('0.0000')
                 else:
                     try:
-                        item.collected_amount = float(amount)
-                    except ValueError:
+                        item.collected_amount = Decimal(str(amount))
+                    except (ValueError, TypeError, InvalidOperation):
                          pass # Keep valid value or 0
             
             if remark is not None:
@@ -49,4 +54,5 @@ class CollectorUpdateItemView(LoginRequiredMixin, UserPassesTestMixin, View):
             
             return JsonResponse({'status': 'success'})
         except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+            logger.error(f"Error updating collection item: {e}", exc_info=True)
+            return JsonResponse({'status': 'error', 'message': 'An unexpected error occurred'}, status=500)

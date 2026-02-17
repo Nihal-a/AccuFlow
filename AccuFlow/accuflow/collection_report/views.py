@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.views import View
+from django.core.paginator import Paginator
 from django.db.models import Q, Sum
 from datetime import datetime
 from decimal import Decimal
@@ -43,8 +44,13 @@ class CollectionReportView(View):
         
         total_amount = collections.aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0.0000')
         
+        paginator = Paginator(collections, 50)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
         context = {
-            'collections': collections,
+            'collections': page_obj.object_list,
+            'page_obj': page_obj,
             'collectors': collectors,
             'date_from': date_from_str,
             'date_to': date_to_str,
