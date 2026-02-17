@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="font-sans">
+    <div class="w-full">
+
+        <!-- Header -->
+        <h2 class="text-2xl font-bold text-black border-b-2 border-black inline-block pb-1 mb-6">
+            Balance Sheet View
+        </h2>
+
+        <!-- Date Selection Box -->
+        <div>
+            <form method="POST" class="inline-block">
+                {% csrf_token %}
+                <div class="border border-black p-2.5 inline-flex items-center gap-3 bg-white mb-6">
+                    <div>
+                        <div class="text-xs text-gray-500 mb-1 leading-none">Date As ON</div>
+                        <div class="flex gap-2">
+                            <input type="date" name="dateTo" value="{{ date_to }}"
+                                class="border border-gray-300 p-1 bg-gray-50 text-sm w-36 focus:outline-none focus:border-blue-500">
+                            <button type="submit"
+                                class="bg-gray-200 border border-gray-400 px-4 py-1 text-black font-medium hover:bg-gray-300 transition-colors text-sm">
+                                Date From
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="w-full overflow-x-auto" id="printableArea">
+            <table class="w-full border-collapse text-sm bg-white">
+                <thead>
+                    <tr>
+                        <th
+                            class="w-[10%] bg-[#4a6fa5] text-white text-left px-3 py-2 font-semibold border border-[#6c8db5]">
+                            Code
+                        </th>
+                        <th
+                            class="w-[40%] bg-[#4a6fa5] text-white text-left px-3 py-2 font-semibold border border-[#6c8db5]">
+                            Name
+                        </th>
+                        <th
+                            class="w-[25%] bg-[#4a6fa5] text-white text-right px-3 py-2 font-semibold border border-[#6c8db5]">
+                            Debit
+                        </th>
+                        <th
+                            class="w-[25%] bg-[#4a6fa5] text-white text-right px-3 py-2 font-semibold border border-[#6c8db5]">
+                            Credit
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="border-l border-r border-gray-300">
+
+                    {% for account in accounts %}
+                    <tr class="
+                        {% if account.highlight == 'orange' %}bg-[#f39c12] text-black border-[#e67e22]
+                        {% elif account.highlight == 'green' %}bg-[#adff2f] text-black border-[#9acd32]
+                        {% else %}border-gray-300{% endif %}
+                        border-b
+                    ">
+
+                        <td class="px-3 py-2 
+                            {% if account.highlight %}border-r border-transparent{% else %}border-r border-gray-300 text-gray-600{% endif %}
+                        ">
+                            {{ account.code }}
+                        </td>
+
+                        <td class="px-3 py-2 
+                            {% if account.highlight %}border-r border-transparent uppercase font-normal{% else %}border-r border-gray-300 text-gray-800 uppercase{% endif %}
+                        ">
+                            {{ account.name }}
+                        </td>
+
+                        <td class="px-3 py-2 text-right font-mono 
+                            {% if account.highlight %}border-r border-transparent{% else %}border-r border-gray-300 text-gray-800{% endif %}
+                        ">
+                            {% if account.debit > 0 %}{{ account.debit|floatformat:2 }}{% endif %}
+                        </td>
+
+                        <td class="px-3 py-2 text-right font-mono 
+                            {% if account.highlight %}{% else %}text-gray-800{% endif %}
+                        ">
+                            {% if account.credit > 0 %}{{ account.credit|floatformat:2 }}{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- Footer Total Row -->
+                    <tr class="bg-[#4a6fa5] text-white font-bold">
+                        <td class="px-3 py-2 border-r border-[#6c8db5]"></td>
+                        <td class="px-3 py-2 text-right border-r border-[#6c8db5]">Total</td>
+                        <td class="px-3 py-2 text-right font-mono border-r border-[#6c8db5]">{{
+                            total_debit|floatformat:2 }}</td>
+                        <td class="px-3 py-2 text-right font-mono">{{ total_credit|floatformat:2 }}</td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    @media print {
+        @page {
+            size: A4;
+            margin: 10mm;
+        }
+
+        body {
+            background: white;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        form,
+        .no-print {
+            display: none !important;
+        }
+
+        #printableArea {
+            width: 100%;
+            overflow: visible;
+        }
+    }
+</style>
+
+{% endblock %}

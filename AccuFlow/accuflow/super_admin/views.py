@@ -1,4 +1,5 @@
 import json
+import logging
 from django.shortcuts import render,redirect, get_object_or_404
 from core.models import Clients, UserAccount, SubscriptionPlan
 from django.utils import timezone
@@ -8,7 +9,13 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import PermissionDenied
+from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
+from django.utils.decorators import method_decorator
 
+logger = logging.getLogger(__name__)
+
+@method_decorator([login_required, staff_member_required], name='dispatch')
 class ClientsView(View):
     def get(self, request):
         clients = Clients.objects.filter(is_active=True).select_related('user')
@@ -16,6 +23,7 @@ class ClientsView(View):
     
 
 
+@method_decorator([login_required, staff_member_required], name='dispatch')
 class ClientAddView(View):
     def get(self, request):
         plans = SubscriptionPlan.objects.filter(is_active=True)
@@ -174,18 +182,22 @@ class DeleteClientView(View):
 
 
 def last_client_id():
-    last_client = Clients.objects.filter(is_active=True).order_by('clientId').last() 
-    if last_client and last_client.clientId != None:
-        prefix, num = last_client.clientId.split('-')
-        new_client_id = f"{prefix}-{int(num) + 1}"
-    else: 
-        
-        new_client_id = 'AF-1'
-    return new_client_id
+    last_client = Clients.objects.filter(is_active=True, clientId__regex=r'^AF-\d+$').order_by('clientId').last() 
+    if last_client and last_client.clientId:
+        try:
+            prefix, num = last_client.clientId.split('-')
+            if not num.isdigit():
+                return 'AF-1'
+            return f"{prefix}-{int(num) + 1}"
+        except ValueError:
+            return 'AF-1'
+    return 'AF-1'
 
 
 
 
+@login_required
+@staff_member_required
 def check_username_availability(request):
     if request.method == 'POST':
         try:
@@ -194,15 +206,18 @@ def check_username_availability(request):
             exists = UserAccount.objects.filter(username=username).exists()
             return JsonResponse({'available': not exists})
         except Exception as e:
-            return JsonResponse({'error': str(e)}, status=400)
+            logger.error(f"Error checking username availability: {e}", exc_info=True)
+            return JsonResponse({'error': 'An unexpected error occurred'}, status=500)
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
+@method_decorator([login_required, staff_member_required], name='dispatch')
 class SubscriptionListView(View):
     def get(self, request):
         plans = SubscriptionPlan.objects.all()
         return render(request, 'admin/subscriptions/list.html', {'plans': plans})
 
+@method_decorator([login_required, staff_member_required], name='dispatch')
 class SubscriptionCreateView(View):
     def get(self, request):
         return render(request, 'admin/subscriptions/form.html')
@@ -254,11 +269,13 @@ class SubscriptionUpdateView(View):
 
 from core.models import SubscriptionPayment
 
+@method_decorator([login_required, staff_member_required], name='dispatch')
 class PaymentListView(View):
     def get(self, request):
         payments = SubscriptionPayment.objects.select_related('client', 'plan').order_by('-date')
         return render(request, 'admin/subscription_payments/list.html', {'payments': payments})
 
+@method_decorator([login_required, staff_member_required], name='dispatch')
 class PaymentCreateView(View):
     def get(self, request):
         clients = Clients.objects.filter(is_active=True)

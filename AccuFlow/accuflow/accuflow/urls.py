@@ -53,6 +53,9 @@ urlpatterns = [
     path('transactionreport/', include('transaction_report.urls')),
     path('collectionreport/', include('collection_report.urls')),
     path('outstanding/', include('outstanding_report.urls')),
+    path('trialbalance/', include('trial_balance.urls')),
+    path('profitloss/', include('profit_loss.urls')),
+    path('balancesheet/', include('balance_sheet.urls')),
     path('', include('utilities.urls')),
 ]
 

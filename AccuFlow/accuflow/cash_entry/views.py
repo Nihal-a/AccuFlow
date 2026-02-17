@@ -9,6 +9,7 @@ from django.utils.dateparse import parse_date
 
 from core.views import getClient, update_ledger
 from core.authorization import get_object_for_user
+from core.utils import validate_positive_decimal
 
 class CashEntryView(View):
     def get(self,request):
@@ -83,11 +84,14 @@ class CashAddView(View):
                 supplier = get_object_for_user(Suppliers, request.user, id=supplier_ids[count]) if supplier_ids[count] else None
                 seller = supplier
             
+            # Validation
+            amount_val = validate_positive_decimal(amounts[count], "Amount")
+
             # Updating Ledger (Assuming Active)
             if transactions[count] == 'Paid':
-                update_ledger(where=None,to=seller,new_sale=amounts[count],old_sale=0)
+                update_ledger(where=None,to=seller,new_sale=amount_val,old_sale=0)
             else: 
-                update_ledger(where=seller,to=None,new_purchase=amounts[count],old_purchase=0)
+                update_ledger(where=seller,to=None,new_purchase=amount_val,old_purchase=0)
             
             # Authorization: Ensure cash_bank belongs to user's client
             cash_bank = get_object_for_user(CashBanks, request.user, id=cashbanks_ids[count]) if cashbanks_ids[count] else None
@@ -99,7 +103,7 @@ class CashAddView(View):
             cash.customer = customer
             cash.cash_bank = cash_bank
             cash.date = dates[count]
-            cash.amount = amounts[count]
+            cash.amount = amount_val
             cash.hold = False 
             cash.transaction = transactions[count]
             cash.client=getClient(request.user)
@@ -115,7 +119,7 @@ class CashHold(View):
         supplier_id = data.get('supplier')
         cash_bank_id = data.get('cashbank')
         date = data.get('date')
-        amount = data.get('amount')
+        amount = validate_positive_decimal(data.get('amount'), "Amount")
         description = data.get('description')
         type_value = data.get('type')
         cash_id = data.get('cash_id')
@@ -154,7 +158,7 @@ class CashHold(View):
             # If we are changing party, party_balance logic is tricky. 
             # But update_ledger handles the REAL balance on the Party model.
             
-            cash.party_balance += float(amount) # This simple math is risky if party changed.
+            cash.party_balance += amount # This simple math is risky if party changed.
             # But sticking to previous logic style for now, focusing on ledger correctness.
             
             cash.cash_no = cash_no

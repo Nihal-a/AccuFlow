@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
 from django.http import HttpResponse
 from django.views import View
+from django.core.paginator import Paginator
 from django.db.models import Sum, Q
 from datetime import datetime
 from decimal import Decimal
@@ -132,10 +133,15 @@ class PurchaseReportView(View):
         total_qty = purchases.aggregate(Sum('qty'))['qty__sum'] or Decimal('0.0000')
         total_amount = purchases.aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0.0000')
 
-        # Prepare list for display to handle "Trade Partner" and description logic easily if needed
-        # Although we can do it in template, doing it here keeps it clean
+        # Pagination
+        # Pagination
+        paginator = Paginator(purchases, 50)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
+        # Prepare list for display 
         report_data = []
-        for p in purchases:
+        for p in page_obj.object_list:
             # Determine Trade Partner Name
             if p.supplier:
                 partner_name = p.supplier.name
@@ -163,6 +169,7 @@ class PurchaseReportView(View):
         context = {
             'trade_partners': combined_partners,
             'purchases': report_data,
+            'page_obj': page_obj,
             'total_qty': total_qty,
             'total_amount': total_amount,
             'date_from': date_from,

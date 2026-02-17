@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="font-sans">
+    <div class="w-full">
+
+        <!-- Header -->
+        <h2 class="text-2xl font-bold text-black border-b-2 border-black inline-block pb-1 mb-6">
+            Profit / Loss Analysis View
+        </h2>
+
+        <!-- Date Selection Box -->
+        <div>
+            <form method="POST" class="inline-block">
+                {% csrf_token %}
+                <div class="border border-black p-2.5 inline-flex items-center gap-3 bg-white mb-6">
+                    <div>
+                        <div class="text-xs text-gray-500 mb-1 leading-none">Date As ON</div>
+                        <div class="flex gap-2">
+                            <!-- Using name="dateTo" to leverage existing logic that defaults dateFrom to year start -->
+                            <input type="date" name="dateTo" value="{{ date_to }}"
+                                class="border border-gray-300 p-1 bg-gray-50 text-sm w-36 focus:outline-none focus:border-blue-500">
+                            <button type="submit"
+                                class="bg-gray-200 border border-gray-400 px-4 py-1 text-black font-medium hover:bg-gray-300 transition-colors text-sm">
+                                Select Date
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="w-full overflow-x-auto">
+            <table class="w-full border-collapse text-sm bg-white">
+                <thead>
+                    <tr>
+                        <th
+                            class="w-[10%] bg-[#4a6fa5] text-white text-left px-3 py-2 font-semibold border border-[#6c8db5]">
+                            Code
+                        </th>
+                        <th
+                            class="w-[40%] bg-[#4a6fa5] text-white text-left px-3 py-2 font-semibold border border-[#6c8db5]">
+                            Name
+                        </th>
+                        <th
+                            class="w-[25%] bg-[#4a6fa5] text-white text-right px-3 py-2 font-semibold border border-[#6c8db5]">
+                            Debit
+                        </th>
+                        <th
+                            class="w-[25%] bg-[#4a6fa5] text-white text-right px-3 py-2 font-semibold border border-[#6c8db5]">
+                            Credit
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- TRADING ACCOUNT -->
+                    <tr>
+                        <td class="px-3 py-2 border border-gray-300 text-gray-600">52000001</td>
+                        <td class="px-3 py-2 border border-gray-300 text-gray-800">STOCK OPEN.BALANCE (P&L)</td>
+                        <td class="px-3 py-2 border border-gray-300 text-gray-800 text-right font-mono">
+                            {{ data.opening_stock }}</td>
+                        <td class="px-3 py-2 border border-gray-300 text-gray-800"></td>
+                    </tr>
+                    <tr>
+                        <td class="px-3 py-2 border border-gray-300 text-gray-600">51000001</td>
+                        <td class="px-3 py-2 border border-gray-300 text-gray-800">PURCHASE A/C</td>
+                        <td class="px-3 py-2 border border-gray-300 text-gray-800 text-right font-mono">
+                            {{ data.purchases }}</td>
+                        <td class="px-3 py-2 border border-gray-300 text-gray-800"></td>
+                    </tr>
+                    <tr>
+                        <td class="px-3 py-2 border border-gray-300 text-gray-600">41000001</td>
+                        <td class="px-3 py-2 border border-gray-300 text-gray-800">SALES A/C</td>
+                        <td class="px-3 py-2 border border-gray-300 text-gray-800"></td>
+                        <td class="px-3 py-2 border border-gray-300 text-gray-800 text-right font-mono" id="val-sales">
+                            {{ data.sales }}</td>
+                    </tr>
+                    <tr>
+                        <td class="px-3 py-2 border border-gray-300 text-gray-600">42000001</td>
+                        <td class="px-3 py-2 border border-gray-300 text-gray-800">STOCK CLOSING BALANCE (P&L)</td>
+                        <td class="px-3 py-2 border border-gray-300 text-gray-800"></td>
+                        <td class="px-3 py-2 border border-gray-300 text-gray-800 text-right font-mono"
+                            id="val-closing">{{ data.closing_stock }}</td>
+                    </tr>
+
+                    <!-- GROSS PROFIT ROW (Debit side strictly per image) -->
+                    <tr class="bg-[#f39c12] text-black font-bold">
+                        <td class="px-3 py-2 border border-[#e67e22]">60000001</td>
+                        <td class="px-3 py-2 border border-[#e67e22]">GROSS INCOME</td>
+                        <td class="px-3 py-2 border border-[#e67e22] text-right font-mono">{{ data.gross_income }}</td>
+                        <td class="px-3 py-2 border border-[#e67e22]"></td>
+                    </tr>
+
+                    <!-- TOTAL ROW -->
+                    <tr class="bg-[#bfff2e] text-black font-bold">
+                        <td class="px-3 py-2 border border-[#aadd22]">60000002</td>
+                        <td class="px-3 py-2 border border-[#aadd22]">TOTAL</td>
+                        <td class="px-3 py-2 border border-[#aadd22] text-right font-mono" id="total-debit">0.00</td>
+                        <td class="px-3 py-2 border border-[#aadd22] text-right font-mono" id="total-credit">0.00</td>
+                    </tr>
+
+                    <!-- P&L EXPENSES -->
+                    {% for exp in data.expenses %}
+                    <tr>
+                        <td class="px-3 py-2 border border-gray-300 text-gray-600">6100000{{ forloop.counter }}</td>
+                        <!-- Simulated Code Generation -->
+                        <td class="px-3 py-2 border border-gray-300 text-gray-800">{{ exp.name }}</td>
+                        <td class="px-3 py-2 border border-gray-300 text-gray-800 text-right font-mono">{{ exp.amount }}
+                        </td>
+                        <td class="px-3 py-2 border border-gray-300 text-gray-800"></td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- NET PROFIT ROW -->
+                    <tr class="bg-[#adff2f] text-black font-bold">
+                        <td class="px-3 py-2 border border-[#9acd32]">99000001</td>
+                        <td class="px-3 py-2 border border-[#9acd32]">NET INCOME/LOSS</td>
+                        <td class="px-3 py-2 border border-[#9acd32] text-right font-mono">{{ data.net_income }}</td>
+                        <td class="px-3 py-2 border border-[#9acd32]"></td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Simple client-side calculation for Total row to match the visual requirement
+        // Total = Sales + Closing Stock (Credit side sum)
+        // In a balanced Account, Debit side sum should match.
+
+        function parseCurrency(str) {
+            if (!str) return 0;
+            // Remove commas and spaces
+            let clean = str.replace(/,/g, '').replace(/\s/g, '');
+            let val = parseFloat(clean);
+            return isNaN(val) ? 0 : val;
+        }
+
+        function formatCurrency(num) {
+            return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        const sales = parseCurrency(document.getElementById('val-sales')?.innerText);
+        const closing = parseCurrency(document.getElementById('val-closing')?.innerText);
+
+        const total = sales + closing;
+        const totalFormatted = formatCurrency(total);
+
+        // Update Total Row
+        const totalDebitEl = document.getElementById('total-debit');
+        const totalCreditEl = document.getElementById('total-credit');
+
+        if (totalDebitEl) totalDebitEl.innerText = totalFormatted;
+        if (totalCreditEl) totalCreditEl.innerText = totalFormatted;
+    });
+</script>
+
+{% endblock %}

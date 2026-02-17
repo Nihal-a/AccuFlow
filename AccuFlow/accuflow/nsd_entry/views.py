@@ -9,6 +9,7 @@ from django.utils.dateparse import parse_date
 
 from core.views import getClient, update_ledger
 from core.authorization import get_object_for_user
+from core.utils import validate_positive_decimal
 
 class NSDEntryView(View):
     def get(self,request):
@@ -107,7 +108,14 @@ class NSDAddView(View):
                 # Authorization: Ensure supplier belongs to user's client
                 sender_supplier = get_object_for_user(Suppliers, request.user, id=supplier_ids[count]) if supplier_ids[count] else None
                 sender = sender_supplier
-            update_ledger(where=sender,to=receiver,new_purchase=purchase_amount[count],new_sale=sell_amount[count]) 
+            # Validation
+            qty_val = validate_positive_decimal(qtys[count], "Quantity")
+            sell_amount_val = validate_positive_decimal(sell_amount[count], "Sell Amount")
+            purchase_amount_val = validate_positive_decimal(purchase_amount[count], "Purchase Amount")
+            sell_rate_val = validate_positive_decimal(sell_rate[count], "Sell Rate")
+            purchase_rate_val = validate_positive_decimal(purchase_rate[count], "Purchase Rate")
+
+            update_ledger(where=sender,to=receiver,new_purchase=purchase_amount_val,new_sale=sell_amount_val) 
             nsd.sender_balance = sender.balance
             nsd.receiver_balance = receiver.balance
             nsd.sender_customer = sender_customer
@@ -115,11 +123,11 @@ class NSDAddView(View):
             nsd.receiver_customer = receiver_customer
             nsd.receiver_supplier = receiver_supplier
             nsd.date = dates[count]
-            nsd.qty = qtys[count]
-            nsd.sell_rate = sell_rate[count]
-            nsd.sell_amount = sell_amount[count]
-            nsd.purchase_rate = purchase_rate[count]    
-            nsd.purchase_amount = purchase_amount[count]    
+            nsd.qty = qty_val
+            nsd.sell_rate = sell_rate_val
+            nsd.sell_amount = sell_amount_val
+            nsd.purchase_rate = purchase_rate_val    
+            nsd.purchase_amount = purchase_amount_val    
             nsd.hold = False
             nsd.client=getClient(request.user)
             nsd.save()  
@@ -135,11 +143,11 @@ class NSDHold(View):
             nsd_no = data.get('nsd_no')
             supplier = data.get('supplier')
             date = data.get('date')
-            qty = data.get('qty')
-            sell_rate = data.get('sell_rate')
-            sell_amount = data.get('sell_amount')
-            purchase_rate = data.get('purchase_rate')
-            purchase_amount = data.get('purchase_amount')
+            qty = validate_positive_decimal(data.get('qty'), "Quantity")
+            sell_rate = validate_positive_decimal(data.get('sell_rate'), "Sell Rate")
+            sell_amount = validate_positive_decimal(data.get('sell_amount'), "Sell Amount")
+            purchase_rate = validate_positive_decimal(data.get('purchase_rate'), "Purchase Rate")
+            purchase_amount = validate_positive_decimal(data.get('purchase_amount'), "Purchase Amount")
             description = data.get('description')
             sender_type = data.get('sender_type')
             receiver_type = data.get('receiver_type')
@@ -209,8 +217,8 @@ class NSDHold(View):
                         old_purchase=0,
                         old_sale=0
                     )
-                    nsd.sender_balance += float(sell_amount)
-                    nsd.receiver_balance += float(purchase_amount)
+                    nsd.sender_balance += sell_amount
+                    nsd.receiver_balance += purchase_amount
                     nsd.save()
                 return JsonResponse({'status':'success','nsd_id':nsd.id,'hold':nsd.hold})
             nsd = NSDs.objects.create(

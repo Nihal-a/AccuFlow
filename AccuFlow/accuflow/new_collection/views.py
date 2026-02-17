@@ -169,9 +169,10 @@ class NewCollectionView(View):
         
         final_ledgers = []
         
+        from decimal import Decimal
         for item in ledger_items:
-            c_val = float(item.get('credit') or 0)
-            d_val = float(item.get('debit') or 0)
+            c_val = Decimal(str(item.get('credit') or 0))
+            d_val = Decimal(str(item.get('debit') or 0))
             
             if item.get('type') == 'OB':
                 item['balance'] = start_balance

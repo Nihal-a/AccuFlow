@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.http import HttpResponse
 from django.views import View
+from django.core.paginator import Paginator
 from django.db.models import Q
 from datetime import datetime
 from decimal import Decimal
@@ -156,8 +157,13 @@ class TransactionReportView(View):
         # Sort by Date, then Created At
         transactions.sort(key=lambda x: (x['date'] or datetime.min.date(), x['created_at']))
 
+        paginator = Paginator(transactions, 50)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
         context = {
-            'transactions': transactions,
+            'transactions': page_obj.object_list,
+            'page_obj': page_obj,
             'date_from': date_from_str,
             'date_to': date_to_str,
         }

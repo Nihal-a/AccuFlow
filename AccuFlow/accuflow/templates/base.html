@@ -286,13 +286,15 @@
                     <i data-lucide="clipboard-list" class="w-3.5 h-3.5 "></i><span class="">MIS Reports</span>
                 </div>
                 <div class="pl-6 space-y-0 text-gray-500 ">
-                    <div class="nav-link">Trial Balance</div>
-                    <div class="nav-link">
+                    <a href="{% url 'trial_balance' %}" class="nav-link" id="trialBalanceLink">
+                        <span>Trial Balance</span>
+                    </a>
+                    <a href="{% url 'pl_index' %}" class="nav-link" id="plLink">
                         <span>Profit & Loss</span>
-                    </div>
-                    <div class="nav-link">
+                    </a>
+                    <a href="{% url 'balance_sheet' %}" class="nav-link" id="balanceSheetLink">
                         <span>Balance Sheet</span>
-                    </div>
+                    </a>
                 </div>
             </div>
             {% endif %}

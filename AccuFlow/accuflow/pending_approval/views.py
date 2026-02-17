@@ -91,9 +91,9 @@ class PendingApprovalDetailView(LoginRequiredMixin, View):
             for item in items:
                 amount_str = request.POST.get(f'amount_{item.id}')
                 try:
-                    amount = float(amount_str)
-                except (ValueError, TypeError):
-                    amount = 0
+                    amount = Decimal(str(amount_str or 0))
+                except (ValueError, TypeError, InvalidOperation):
+                    amount = Decimal('0.0000')
                 
                 if item.collected_amount != amount:
                     item.collected_amount = amount

@@ -33,7 +33,10 @@ INSTALLED_APPS = [
     'general_ledger',
     'collector_view',
     'view_collections',
-    'utilities'
+    'utilities',
+    'trial_balance',
+    'profit_loss',
+    'balance_sheet',
 ]
 
 MIDDLEWARE = [
