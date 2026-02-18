@@ -6,12 +6,9 @@ from django.views import View
 from django.views.generic.edit import DeleteView
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
-from django.db import transaction
-from django.db.models import F
 
 from core.views import getClient, update_ledger
 from core.authorization import get_object_for_user
-from core.utils import validate_positive_decimal
 
 class SaleEntryView(View):
     def get(self,request):
@@ -67,159 +64,146 @@ class SaleEntryView(View):
 
 class SaleAddView(View):
     def post(self,request):
-        with transaction.atomic():
-            dates = request.POST.getlist('dates')
-            total_amounts = request.POST.getlist('total_amounts')
-            qtys = request.POST.getlist('qtys')
-            amounts = request.POST.getlist('amounts')
-            supplier_ids = request.POST.getlist('suppliers')
-            customer_ids = request.POST.getlist('customers')
-            godown_ids = request.POST.getlist('godowns')
-            sale_ids = request.POST.getlist('sale_ids') 
-            types = request.POST.getlist('type')
-            count = 0
-            for id in sale_ids:
-                customer = None 
-                seller = None
-                print(types[count])
-                print(customer_ids[count])
-                if types[count] == 'customers':
-                    supplier = None
-                    customer = get_object_for_user(Customers, request.user, id=customer_ids[count]) if customer_ids[count] else None
-                    seller = customer
-                else:
-                    customer = None
-                    supplier = get_object_for_user(Suppliers, request.user, id=customer_ids[count]) if customer_ids[count] else None
-                    seller = supplier
-                godown = get_object_for_user(Godowns, request.user, id=godown_ids[count]) if godown_ids[count] else None
-                sale = Sales.objects.get(id=id)
-                
-                # Validation
-                qty_val = validate_positive_decimal(qtys[count], "Quantity")
-                total_amount_val = validate_positive_decimal(total_amounts[count], "Total Amount")
-                amount_val = validate_positive_decimal(amounts[count], "Amount")
-
-                godown.qty = F('qty') - qty_val    
-                godown.save()
-                update_ledger(where=None,to=seller,new_purchase=total_amount_val,new_sale=total_amount_val) 
-                
-                # Note: seller.balance is NOT refreshed here automatically unless we reload seller.
-                # Since update_ledger uses select_for_update inside, it updates the DB row.
-                # However, sale.seller_balance assignment below uses the OLD 'seller' object's balance.
-                # We should refresh seller to get accurate balance for the snapshot.
-                seller.refresh_from_db()
-
-                sale.seller_balance = seller.balance
-                # godown was updated via F(), so in memory it's an expression. Need refresh to get value.
-                godown.refresh_from_db()
-                sale.purchaser_balance = godown.get_balance # godown.qty
-
-                sale.supplier = supplier
-                sale.godown = godown
-                sale.date = dates[count]
-                sale.qty = qty_val
-                sale.amount = amount_val
-                sale.total_amount = total_amount_val    
-                sale.hold = False
-                sale.customer = customer
-                sale.client=getClient(request.user)
-                sale.save()  
-                count += 1
+        dates = request.POST.getlist('dates')
+        total_amounts = request.POST.getlist('total_amounts')
+        qtys = request.POST.getlist('qtys')
+        amounts = request.POST.getlist('amounts')
+        supplier_ids = request.POST.getlist('suppliers')
+        customer_ids = request.POST.getlist('customers')
+        godown_ids = request.POST.getlist('godowns')
+        sale_ids = request.POST.getlist('sale_ids') 
+        types = request.POST.getlist('type')
+        count = 0
+        for id in sale_ids:
+            customer = None 
+            seller = None
+            print(types[count])
+            print(customer_ids[count])
+            if types[count] == 'customers':
+                supplier = None
+                # Authorization: Ensure customer belongs to user's client
+                customer = get_object_for_user(Customers, request.user, id=customer_ids[count]) if customer_ids[count] else None
+                seller = customer
+            else:
+                customer = None
+                # Authorization: Ensure supplier belongs to user's client
+                supplier = get_object_for_user(Suppliers, request.user, id=customer_ids[count]) if customer_ids[count] else None
+                seller = supplier
+            # Authorization: Ensure godown belongs to user's client
+            godown = get_object_for_user(Godowns, request.user, id=godown_ids[count]) if godown_ids[count] else None
+            sale = Sales.objects.get(id=id)
+            godown.qty -= float(qtys[count])    
+            godown.save()
+            update_ledger(where=None,to=seller,new_purchase=total_amounts[count],new_sale=total_amounts[count]) 
+            sale.seller_balance = seller.balance
+            sale.purchaser_balance = godown.get_balance
+            sale.supplier = supplier
+            sale.godown = godown
+            sale.date = dates[count]
+            sale.qty = qtys[count]
+            sale.amount = amounts[count]
+            sale.total_amount = total_amounts[count]    
+            sale.hold = False
+            sale.customer = customer
+            sale.client=getClient(request.user)
+            sale.save()  
+            count += 1
         return redirect('sale')
 
 
     
 
+
 class SaleHold(View):
     def post(self,request):
-        with transaction.atomic():
-            data = json.loads(request.body)
-            sale_no = data.get('sale_no')
-            supplier = data.get('customer')
-            godown = data.get('godown')
-            date = data.get('date')
-            qty = validate_positive_decimal(data.get('qty'), "Quantity")
-            amount = validate_positive_decimal(data.get('amount'), "Amount")
-            total_amount = validate_positive_decimal(data.get('total_amount'), "Total Amount")
-            description = data.get('description')
-            type_value = data.get('type')
+        data = json.loads(request.body)
+        sale_no = data.get('sale_no')
+        supplier = data.get('customer')
+        godown = data.get('godown')
+        date = data.get('date')
+        qty = data.get('qty')
+        amount = data.get('amount')
+        total_amount = data.get('total_amount')
+        description = data.get('description')
+        type_value = data.get('type')
+        customer = None
+        seller = None
+        if type_value == 'customers':
+            # Authorization: Ensure customer belongs to user's client
+            customer = get_object_for_user(Customers, request.user, id=supplier) if supplier else None
+            supplier = None 
+            seller = customer
+        else:  
             customer = None
-            seller = None
-            if type_value == 'customers':
-                customer = get_object_for_user(Customers, request.user, id=supplier) if supplier else None
-                supplier = None 
-                seller = customer
-            else:  
-                customer = None
-                supplier = get_object_for_user(Suppliers, request.user, id=supplier) if supplier else None
-                seller = supplier
-            godown = get_object_for_user(Godowns, request.user, id=godown) if godown else None
-            
-            if data.get('sale_id'):
-                sale = get_object_for_user(Sales, request.user, id=data.get('sale_id'))
-                if not sale.hold:
-                    # Reverting old transaction
-                    update_ledger(
-                        where=None,  
-                        to=sale.party,
-                        old_purchase=sale.total_amount,
-                        old_sale=sale.total_amount,
-                        new_purchase=0,
-                        new_sale=0
-                    )
-                    godown.qty = F('qty') + sale.qty
-                    godown.save()
-                    sale.purchaser_balance = sale.purchaser_balance - sale.qty
-                    sale.seller_balance = sale.seller_balance - sale.amount
-                sale.sale_no = sale_no
-                sale.supplier = supplier
-                sale.godown = godown
-                sale.date = date
-                sale.qty = qty
-                sale.amount = amount
-                sale.total_amount = total_amount
-                sale.description = description
-                sale.type = type_value
-                sale.customer = customer
-                sale.client=getClient(request.user)
-                if not sale.hold:
-                    sale.hold = False 
+            # Authorization: Ensure supplier belongs to user's client
+            supplier = get_object_for_user(Suppliers, request.user, id=supplier) if supplier else None
+            seller = supplier
+        # Authorization: Ensure godown belongs to user's client
+        godown = get_object_for_user(Godowns, request.user, id=godown) if godown else None
+        if data.get('sale_id'):
+            # Authorization: Ensure sale belongs to user's client
+            sale = get_object_for_user(Sales, request.user, id=data.get('sale_id'))
+            if not sale.hold:
+                update_ledger(
+                    where=None,  
+                    to=sale.party,
+                    old_purchase=sale.total_amount,
+                    old_sale=sale.total_amount,
+                    new_purchase=0,
+                    new_sale=0
+                )
+                godown.qty += sale.qty
+                godown.save()
+                sale.purchaser_balance = sale.purchaser_balance - sale.qty
+                sale.seller_balance = sale.seller_balance - sale.amount
+            sale.sale_no = sale_no
+            sale.supplier = supplier
+            sale.godown = godown
+            sale.date = date
+            sale.qty = qty
+            sale.amount = amount
+            sale.total_amount = total_amount
+            sale.description = description
+            sale.type = type_value
+            sale.customer = customer
+            sale.client=getClient(request.user)
+            if not sale.hold:
+                sale.hold = False 
+            sale.save()
+            if not sale.hold:
+                update_ledger(
+                    to=seller, 
+                    where=None,
+                    old_purchase=0, 
+                    old_sale=0,
+                    new_purchase=total_amount,
+                    new_sale=total_amount,
+                )
+                godown.qty -= sale.qty
+                godown.save()
+                sale.purchaser_balance += float(qty)
+                sale.seller_balance += float(amount)
                 sale.save()
-                if not sale.hold:
-                    update_ledger(
-                        to=seller, 
-                        where=None,
-                        old_purchase=0, 
-                        old_sale=0,
-                        new_purchase=total_amount,
-                        new_sale=total_amount,
-                    )
-                    godown.qty = F('qty') - qty 
-                    godown.save()
-                    
-                    sale.purchaser_balance += qty
-                    sale.seller_balance += amount
-                    sale.save()
-                return JsonResponse({'status':'success','sale_id':sale.id,'hold':sale.hold})
-            
-            sale = Sales.objects.create(
-                sale_no=sale_no,
-                supplier=supplier,
-                godown=godown,
-                date=date,
-                qty=qty,
-                amount=amount,
-                total_amount=total_amount,
-                description=description,
-                type=type_value,
-                customer=customer,
-                hold=True,
-                client=getClient(request.user)
-            )
+            return JsonResponse({'status':'success','sale_id':sale.id,'hold':sale.hold})
+        sale = Sales.objects.create(
+            sale_no=sale_no,
+            supplier=supplier,
+            godown=godown,
+            date=date,
+            qty=qty,
+            amount=amount,
+            total_amount=total_amount,
+            description=description,
+            type=type_value,
+            customer=customer,
+            hold=True,
+            client=getClient(request.user)
+        )
         return JsonResponse({'status':'success','sale_id':sale.id,'hold':sale.hold}) 
     
     
         
+
 
 def getLastSaleNo(client):
     last_sale_no = Sales.objects.filter(is_active=True,client=client).order_by('-sale_no').first() 
@@ -279,21 +263,18 @@ def sales_by_date(request):
 
 def delete_sale(request):
     pk = request.GET.get('id') 
-    
-    with transaction.atomic():
-        # Authorization: Ensure sale belongs to user's client
-        sale = get_object_for_user(Sales, request.user, id=pk)
-        sale.is_active = False
-        if not sale.hold:
-            update_ledger(
-                to=sale.party,  
-            where=None,
-                old_purchase=sale.total_amount,
-                old_sale=sale.total_amount,
-                new_purchase=0,
-                new_sale=0
-            )
-            sale.godown.qty = F('qty') + sale.qty
-            sale.godown.save()
-        sale.save()
+    sale = get_object_or_404(Sales, id=pk)
+    sale.is_active = False
+    if not sale.hold:
+        update_ledger(
+            to=sale.party,  
+        where=None,
+            old_purchase=sale.total_amount,
+            old_sale=sale.total_amount,
+            new_purchase=0,
+            new_sale=0
+        )
+        sale.godown.qty += sale.qty
+        sale.godown.save()
+    sale.save()
     return JsonResponse({'status':'success','message':'sale deleted successfully'})
