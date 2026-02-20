@@ -4,6 +4,7 @@ from django.views import View
 from django.views.generic.edit import DeleteView
 
 from core.views import getClient
+from core.authorization import get_object_for_user
 
 class CashBankView(View):
     def get(self,request):
@@ -28,8 +29,8 @@ class AddCashBankView(View):
         return redirect('cashbank')
 
 class DeleteCashBankView(View):
-    def get(self, request, cashbank_id):
-        cashbank = get_object_or_404(CashBanks, id=cashbank_id)
+    def post(self, request, cashbank_id):
+        cashbank = get_object_for_user(CashBanks, request.user, id=cashbank_id)
         cashbank.is_active = False 
         cashbank.save()
         return redirect('cashbank')
@@ -37,11 +38,11 @@ class DeleteCashBankView(View):
 
 class UpdateCashBankView(View):
     def get(self, request, cashbank_id):
-        cashbank = get_object_or_404(CashBanks, id=cashbank_id)
+        cashbank = get_object_for_user(CashBanks, request.user, id=cashbank_id)
         return render(request, 'cashbank/update.html', {'cashbank': cashbank})
 
     def post(self, request, cashbank_id):
-        cashbank = get_object_or_404(CashBanks, id=cashbank_id)
+        cashbank = get_object_for_user(CashBanks, request.user, id=cashbank_id)
         cashbank.name = request.POST.get('name')
         cashbank.description = request.POST.get('description')
         if not cashbank.cashbankId:

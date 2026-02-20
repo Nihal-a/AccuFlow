@@ -263,7 +263,7 @@ def sales_by_date(request):
 
 def delete_sale(request):
     pk = request.GET.get('id') 
-    sale = get_object_or_404(Sales, id=pk)
+    sale = get_object_for_user(Sales, request.user, id=pk)
     sale.is_active = False
     if not sale.hold:
         update_ledger(

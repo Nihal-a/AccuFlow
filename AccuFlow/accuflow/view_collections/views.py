@@ -1,4 +1,5 @@
 import datetime
+import logging
 from django.db.models import Sum
 import decimal
 from decimal import Decimal
@@ -9,6 +10,8 @@ from core.views import getClient
 from core.authorization import get_object_for_user
 from django.contrib import messages
 from django.urls import reverse
+
+logger = logging.getLogger(__name__)
 
 class AddCollectionView(View):
     template_name = 'view_collections/add_collection.html'
@@ -207,7 +210,8 @@ class AddCollectionView(View):
             return redirect('add_collection')
             
         except Exception as e:
-            messages.error(request, f"Error saving collection: {str(e)}")
+            logger.exception("Error saving collection")
+            messages.error(request, "An error occurred while saving the collection.")
             return redirect('add_collection')
 
 class CollectionListView(View):
@@ -293,6 +297,8 @@ class CollectionDetailView(View):
         return render(request, 'view_collections/collection_detail.html', context)
 
 def delete_collection(request, id):
+    if request.method != 'POST':
+        return redirect('collection_list')
     client = getClient(request.user)
     collection = get_object_or_404(Collection, id=id, client=client)
     collection.delete()

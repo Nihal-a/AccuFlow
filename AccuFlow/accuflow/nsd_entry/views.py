@@ -1,5 +1,6 @@
 import datetime
 import json
+import logging
 from django.shortcuts import render,redirect, get_object_or_404
 from core.models import Purchases,Suppliers,Customers,Godowns,NSDs
 from django.views import View
@@ -10,6 +11,8 @@ from django.utils.dateparse import parse_date
 from core.views import getClient, update_ledger
 from core.authorization import get_object_for_user
 from core.utils import validate_positive_decimal
+
+logger = logging.getLogger(__name__)
 
 class NSDEntryView(View):
     def get(self,request):
@@ -85,27 +88,23 @@ class NSDAddView(View):
             sender_customer = None
             receiver_customer = None
             receiver_supplier = None
-            nsd = NSDs.objects.get(id=id)
+            nsd = get_object_for_user(NSDs, request.user, id=id)
             sender = None
             receiver = None
             if receiver_types[count] == 'customers':
-                # Authorization: Ensure customer belongs to user's client
                 receiver_customer = get_object_for_user(Customers, request.user, id=customer_ids[count]) if customer_ids[count] else None
                 receiver_supplier = None
                 receiver = receiver_customer
             else:
                 receiver_customer = None
-                # Authorization: Ensure supplier belongs to user's client
                 receiver_supplier = get_object_for_user(Suppliers, request.user, id=customer_ids[count]) if customer_ids[count] else None     
                 receiver = receiver_supplier       
             if sender_types[count] == 'customers':
-                # Authorization: Ensure customer belongs to user's client
                 sender_customer = get_object_for_user(Customers, request.user, id=supplier_ids[count]) if supplier_ids[count] else None
                 sender_supplier = None 
                 sender = sender_customer
             else:  
                 sender_customer = None
-                # Authorization: Ensure supplier belongs to user's client
                 sender_supplier = get_object_for_user(Suppliers, request.user, id=supplier_ids[count]) if supplier_ids[count] else None
                 sender = sender_supplier
             # Validation
@@ -240,8 +239,8 @@ class NSDHold(View):
             return JsonResponse({'status':'success','nsd_id':nsd.id,'hold':nsd.hold}) 
         
         except Exception as e:
-            print(e) 
-            return JsonResponse({'status':'error','message':str(e)})
+            logger.exception("NSD hold failed")
+            return JsonResponse({'status':'error','message':'An error occurred while processing the NSD.'})
         
     
     
