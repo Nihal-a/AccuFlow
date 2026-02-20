@@ -7,6 +7,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from core.views import getClient
+from core.authorization import get_object_for_user
 
 
 class GodownView(View):
@@ -64,8 +65,8 @@ class AddGodownView(View):
         return redirect('godown')
 
 class DeleteGodownView(View):
-    def get(self, request, godown_id):
-        godown = get_object_or_404(Godowns, id=godown_id)
+    def post(self, request, godown_id):
+        godown = get_object_for_user(Godowns, request.user, id=godown_id)
         godown.is_active = False 
         godown.save()
         return redirect('godown')
@@ -73,11 +74,11 @@ class DeleteGodownView(View):
 
 class UpdateGodownView(View):
     def get(self, request, godown_id): 
-        godown = get_object_or_404(Godowns, id=godown_id)
+        godown = get_object_for_user(Godowns, request.user, id=godown_id)
         return render(request, 'godown/update.html', {'godown': godown})
 
     def post(self, request, godown_id):
-        godown = get_object_or_404(Godowns, id=godown_id)
+        godown = get_object_for_user(Godowns, request.user, id=godown_id)
         godown.name = request.POST.get('name')
         godown.phone = request.POST.get('phone')
         godown.address = request.POST.get('address')
@@ -153,7 +154,7 @@ class GodownLedgerView(View):
         if not godown_id:
             return render(request, 'godown/godown_ledger.html', context)
 
-        godown = get_object_or_404(Godowns, id=godown_id)
+        godown = get_object_for_user(Godowns, request.user, id=godown_id)
         context['godown'] = godown
 
         date_from = self.parse_date(date_from_str)

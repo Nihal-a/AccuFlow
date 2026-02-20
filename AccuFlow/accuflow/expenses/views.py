@@ -4,6 +4,7 @@ from django.views import View
 from django.views.generic.edit import DeleteView
 
 from core.views import getClient
+from core.authorization import get_object_for_user
 
 class ExpenseView(View):
     def get(self,request):
@@ -26,8 +27,8 @@ class AddExpenseView(View):
         return redirect('expenses')
 
 class DeleteExpenseView(View):
-    def get(self, request, expense_id):
-        expense = get_object_or_404(Expenses, id=expense_id)
+    def post(self, request, expense_id):
+        expense = get_object_for_user(Expenses, request.user, id=expense_id)
         expense.is_active = False 
         expense.save()
         return redirect('expenses')
@@ -35,11 +36,11 @@ class DeleteExpenseView(View):
 
 class UpdateExpenseView(View):
     def get(self, request, expense_id):
-        expense = get_object_or_404(Expenses, id=expense_id)
+        expense = get_object_for_user(Expenses, request.user, id=expense_id)
         return render(request, 'expenses/update.html', {'expense': expense})
 
     def post(self, request, expense_id):
-        expense = get_object_or_404(Expenses, id=expense_id)
+        expense = get_object_for_user(Expenses, request.user, id=expense_id)
         expense.category = request.POST.get('name')
         expense.description = request.POST.get('description')
         expense.save()

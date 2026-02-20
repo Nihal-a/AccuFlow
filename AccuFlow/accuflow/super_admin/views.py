@@ -8,7 +8,8 @@ from django.views import View
 from django.contrib import messages
 from django.http import JsonResponse
 from django.contrib.auth.hashers import make_password
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.decorators import method_decorator
@@ -44,6 +45,12 @@ class ClientAddView(View):
 
         if UserAccount.objects.filter(username=username).exists():
             messages.error(request, "Username already exists.")
+            return redirect('create-clients')
+
+        try:
+            validate_password(password)
+        except ValidationError as e:
+            messages.error(request, ' '.join(e.messages))
             return redirect('create-clients')
 
         user = UserAccount.objects.create_client(
@@ -85,6 +92,7 @@ class ClientAddView(View):
         return redirect('clients')
     
     
+@method_decorator([login_required, staff_member_required], name='dispatch')
 class ClientUpdateView(View):
     def get(self,request,id):
         # Authorization: SUPERUSER ONLY - admin functionality
@@ -123,6 +131,13 @@ class ClientUpdateView(View):
         if UserAccount.objects.exclude(id=user.id).filter(username=username).exists():
             messages.error(request, "Username already taken.")
             return redirect('update-client', client_id=client.id)
+
+        if password:
+            try:
+                validate_password(password)
+            except ValidationError as e:
+                messages.error(request, ' '.join(e.messages))
+                return redirect('update-client', client_id=client.id)
 
         client.name = name
         client.email = email
@@ -166,8 +181,9 @@ class ClientUpdateView(View):
 
         
 
+@method_decorator([login_required, staff_member_required], name='dispatch')
 class DeleteClientView(View):
-    def get(self, request, client_id):
+    def post(self, request, client_id):
         # Authorization: SUPERUSER ONLY - admin functionality
         if not request.user.is_superuser:
             raise PermissionDenied("Only superusers can delete clients")
@@ -240,6 +256,7 @@ class SubscriptionCreateView(View):
         messages.success(request, "Subscription Plan created.")
         return redirect('subscriptions')
 
+@method_decorator([login_required, staff_member_required], name='dispatch')
 class SubscriptionUpdateView(View):
     def get(self, request, id):
         # Authorization: SUPERUSER ONLY - admin functionality

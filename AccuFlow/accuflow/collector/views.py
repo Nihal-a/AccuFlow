@@ -1,11 +1,16 @@
+import logging
 from django.shortcuts import render,redirect, get_object_or_404
 from core.models import Collectors, UserAccount
 from django.views import View
 from django.views.generic.edit import DeleteView
 from django.contrib import messages
+from django.core.exceptions import ValidationError
+from django.contrib.auth.password_validation import validate_password
 
 from core.views import getClient
 from core.authorization import get_object_for_user
+
+logger = logging.getLogger(__name__)
 
 class CollectorView(View):
     def get(self,request):
@@ -36,6 +41,12 @@ class AddCollectorView(View):
              return redirect('create-collector')
 
         try:
+            validate_password(password)
+        except ValidationError as e:
+            messages.error(request, ' '.join(e.messages))
+            return redirect('create-collector')
+
+        try:
             user = UserAccount.objects.create_collector(
                 username=username,
                 password=password
@@ -59,11 +70,12 @@ class AddCollectorView(View):
             messages.success(request, f"Collector '{name}' created successfully.")
             return redirect('collectors')
         except Exception as e:
-            messages.error(request, f"Error creating collector: {str(e)}")
+            logger.exception("Error creating collector")
+            messages.error(request, "An error occurred while creating the collector.")
             return redirect('create-collector')
 
 class DeleteCollectorView(View):
-    def get(self, request, collector_id):
+    def post(self, request, collector_id):
         # Authorization: Ensure collector belongs to user's client (or user is superuser)
         collector = get_object_for_user(Collectors, request.user, id=collector_id)
         collector.is_active = False 
@@ -102,10 +114,17 @@ class UpdateCollectorView(View):
                  return redirect('edit-collector', collector_id=collector_id)
             
             try:
+                validate_password(password)
+            except ValidationError as e:
+                messages.error(request, ' '.join(e.messages))
+                return redirect('edit-collector', collector_id=collector_id)
+
+            try:
                 user = UserAccount.objects.create_collector(username=username, password=password)
                 collector.user = user
             except Exception as e:
-                messages.error(request, f"Error creating user: {e}")
+                logger.exception("Error creating collector user")
+                messages.error(request, "An error occurred while creating the user account.")
                 return redirect('edit-collector', collector_id=collector_id)
         
         elif user:
@@ -120,6 +139,12 @@ class UpdateCollectorView(View):
                  user.username = username
             
             if password:
+                try:
+                    validate_password(password)
+                except ValidationError as e:
+                    messages.error(request, ' '.join(e.messages))
+                    return redirect('edit-collector', collector_id=collector_id)
+
                 from django.contrib.auth.hashers import make_password
                 user.password = make_password(password)
                 

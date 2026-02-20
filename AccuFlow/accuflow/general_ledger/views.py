@@ -5,6 +5,7 @@ from datetime import datetime
 from decimal import Decimal
 from core.models import Suppliers, Customers, Godowns, Purchases, Sales, NSDs, Cashs, StockTransfers
 from core.views import getClient
+from core.authorization import get_object_for_user
 
 class GeneralLedgerView(View):
     def get(self, request):
@@ -62,11 +63,11 @@ class GeneralLedgerView(View):
 
         party = None
         if party_type == 'supplier':
-            party = get_object_or_404(Suppliers, id=party_id)
+            party = get_object_for_user(Suppliers, request.user, id=party_id)
         elif party_type == 'customer':
-            party = get_object_or_404(Customers, id=party_id)
+            party = get_object_for_user(Customers, request.user, id=party_id)
         elif party_type == 'godown':
-            party = get_object_or_404(Godowns, id=party_id)
+            party = get_object_for_user(Godowns, request.user, id=party_id)
             
         context['selected_party'] = party
         context['selected_party_type'] = party_type # Helper for template if needed
