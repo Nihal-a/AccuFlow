@@ -115,6 +115,12 @@ class UpdateCustomerView(View):
             customer.customerId = last_customer_id(client=getClient(request.user))
         customer.save()
         return redirect('customers')
+
+class CustomerDetailView(View):
+    def get(self, request, customer_id):
+        # Authorization: Ensure customer belongs to user's client (or user is superuser)
+        customer = get_object_for_user(Customers, request.user, id=customer_id)
+        return render(request, 'customer/view.html', {'customer': customer})
     
     
 def last_customer_id(client):

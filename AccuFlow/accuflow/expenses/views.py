@@ -31,8 +31,15 @@ class DeleteExpenseView(View):
         expense = get_object_for_user(Expenses, request.user, id=expense_id)
         expense.is_active = False 
         expense.save()
+        expense.save()
         return redirect('expenses')
  
+
+class ExpenseDetailView(View):
+    def get(self, request, expense_id):
+        expense = get_object_for_user(Expenses, request.user, id=expense_id)
+        return render(request, 'expenses/view.html', {'expense': expense})
+
 
 class UpdateExpenseView(View):
     def get(self, request, expense_id):

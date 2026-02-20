@@ -35,6 +35,10 @@ class DeleteCashBankView(View):
         cashbank.save()
         return redirect('cashbank')
  
+class CashBankDetailView(View):
+    def get(self, request, cashbank_id):
+        cashbank = get_object_for_user(CashBanks, request.user, id=cashbank_id)
+        return render(request, 'cashbank/view.html', {'cashbank': cashbank})
 
 class UpdateCashBankView(View):
     def get(self, request, cashbank_id):

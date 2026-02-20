@@ -114,6 +114,12 @@ class UpdateSupplierView(View):
         supplier.save()
         return redirect('suppliers') 
      
+class SupplierDetailView(View):
+    def get(self, request, supplier_id):
+        # Authorization: Ensure supplier belongs to user's client (or user is superuser)
+        supplier = get_object_for_user(Suppliers, request.user, id=supplier_id)
+        return render(request, 'supplier/view.html', {'supplier': supplier})
+     
     
 def new_supplier_id(client):
     last_supplier = Suppliers.objects.filter(is_active=True,client=client).order_by('supplierId').last() 

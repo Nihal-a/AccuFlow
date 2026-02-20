@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('', views.GodownView.as_view(), name='godown'),
+    path('view/<int:godown_id>/', views.GodownDetailView.as_view(), name='view-godown'),
     path('create/', views.AddGodownView.as_view(), name='create-godown'),
     path('delete/<int:godown_id>/', views.DeleteGodownView.as_view(), name='delete-godown'),
     path('edit/<int:godown_id>/', views.UpdateGodownView.as_view(), name='edit-godown'),  
