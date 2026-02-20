@@ -116,7 +116,6 @@ class UpdateSupplierView(View):
      
 class SupplierDetailView(View):
     def get(self, request, supplier_id):
-        # Authorization: Ensure supplier belongs to user's client (or user is superuser)
         supplier = get_object_for_user(Suppliers, request.user, id=supplier_id)
         return render(request, 'supplier/view.html', {'supplier': supplier})
      
