@@ -262,13 +262,24 @@ def sales_by_date(request):
 
 
 def delete_sale(request):
-    pk = request.GET.get('id') 
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            pk = data.get('id')
+        except json.JSONDecodeError:
+            pk = request.POST.get('id')
+    else:
+        pk = request.GET.get('id')
+        
+    if not pk:
+        return JsonResponse({'status': 'error', 'message': 'No ID provided'}, status=400)
+        
     sale = get_object_for_user(Sales, request.user, id=pk)
     sale.is_active = False
     if not sale.hold:
         update_ledger(
             to=sale.party,  
-        where=None,
+            where=None,
             old_purchase=sale.total_amount,
             old_sale=sale.total_amount,
             new_purchase=0,
