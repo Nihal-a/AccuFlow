@@ -82,6 +82,10 @@ class DeleteCollectorView(View):
         collector.save()
         return redirect('collectors')
  
+class CollectorDetailView(View):
+    def get(self, request, collector_id):
+        collector = get_object_for_user(Collectors, request.user, id=collector_id)
+        return render(request, 'collector/view.html', {'collector': collector})
 
 class UpdateCollectorView(View):
     def get(self, request, collector_id):

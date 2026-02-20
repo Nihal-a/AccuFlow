@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}View Cash/Bank{% endblock %}
+
+{% block externalCSS %}
+<style>
+    input.no-spinners::-webkit-outer-spin-button,
+    input.no-spinners::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    input.no-spinners {
+        -moz-appearance: textfield;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow-md rounded-2xl p-6 sm:p-8 border border-gray-100">
+    <div class="flex items-center justify-between mb-6 border-b-2 border-gray-200 pb-4">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 tracking-tight">View Cash/Bank</h1>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-gray-700 font-medium mb-1">Name</label>
+            <input type="text" value="{{ cashbank.name }}"
+                class="w-full mt-1 px-3 py-2 border rounded-xl bg-gray-50 text-gray-600 focus:outline-none cursor-not-allowed"
+                disabled readonly>
+        </div>
+        <div>
+            <label class="block text-gray-700 font-medium mb-1">Description</label>
+            <input type="text" value="{{ cashbank.description }}"
+                class="w-full mt-1 px-3 py-2 border rounded-xl bg-gray-50 text-gray-600 focus:outline-none cursor-not-allowed"
+                disabled readonly>
+        </div>
+    </div>
+    
+    <div class="mt-8 pt-6 border-t border-gray-100 flex justify-end">
+        <a href="{% url 'cashbank' %}"
+            class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 font-semibold transition-colors">
+            Back to Cash/Banks
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block externalJS %}
+<script>
+    navActive("cashbankMasterLink");
+</script>
+{% endblock %}

@@ -110,9 +110,15 @@ class UpdateGodownView(View):
         if godown.godownId is None:
             godown.godownId = new_godown_id(client=getClient(request.user)) 
         godown.save()
+        godown.save()
         return redirect('godown')
     
-    
+class GodownDetailView(View):
+    def get(self, request, godown_id):
+        godown = get_object_for_user(Godowns, request.user, id=godown_id)
+        return render(request, 'godown/view.html', {'godown': godown})
+
+
 def new_godown_id(client):
     last_godown = Godowns.objects.filter(is_active=True,client=client).order_by('godownId').last() 
     if last_godown and last_godown.godownId != None:
