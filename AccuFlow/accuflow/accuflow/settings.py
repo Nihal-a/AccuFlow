@@ -98,8 +98,8 @@ DATABASES = {
         'HOST': env('DATABASE_HOST'),
         'PORT': env('DATABASE_PORT'),
         'OPTIONS': {
-            'charset': 'utf8mb4',
-            'init_command': "SET NAMES 'utf8mb4'",
+            'charset': 'utf8',
+            'init_command': "SET NAMES 'utf8', innodb_strict_mode=OFF, sql_mode=''",
         },
     }
 }

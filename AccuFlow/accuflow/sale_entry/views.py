@@ -53,8 +53,10 @@ class SaleEntryView(View):
             })
         context = {
             'sales':saleData,
-            'suppliers':json.dumps(suppliersData),
-            'customers':json.dumps(customersData),
+            'suppliers_json':json.dumps(suppliersData),
+            'customers_json':json.dumps(customersData),
+            'suppliers': suppliers,
+            'customers': customers,
             'godowns':godowns,
             'last_sale_no':getLastSaleNo(client=getClient(request.user)),
         }

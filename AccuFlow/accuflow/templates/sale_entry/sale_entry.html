@@ -21,7 +21,7 @@ Sales Entry
   </div>
   <hr class="mt-5">
   <div class=" mt-5 w-100" id="createView">
-    <div class="grid grid-cols-[20%_5%_20%_15%_10%] gap-y-0.5 gap-x-1  text-xs">
+    <div class="grid grid-cols-[30%_2%_68%_0%_0%] lg:grid-cols-[20%_5%_20%_15%_10%] gap-y-2 lg:gap-y-0.5 gap-x-1 text-xs">
       <label class="text-gray-700 flex items-center">Sale No*</label>
       <div></div>
       <input type="text" id="sale_name" value="{{ last_sale_no }}" placeholder="Enter Sale No"
@@ -58,7 +58,7 @@ Sales Entry
       <label class="block text-gray-700 flex items-center gap-2">C.code*</label>
       <div></div>
       <input type="text" name="" id="customerID" placeholder="" disabled
-        class="w-[70%] px-2.5 py-1.5 border rounded-md focus:ring-1 focus:ring-blue-500" required />
+        class="w-full lg:w-[70%] px-2.5 py-1.5 border rounded-md focus:ring-1 focus:ring-blue-500" required />
       <div></div>
       <div></div>
       <!-- Godown -->
@@ -69,8 +69,7 @@ Sales Entry
         required>
         <option value="" selected>Select Godown</option>
         {% for godown in godowns %}
-        <option value="{{ godown.id }}" data-code="{{ godown.godownId }}" data-balance="{{ godown.get_balance }}">{{
-          godown.name }}</option>
+        <option value="{{ godown.id }}" data-code="{{ godown.godownId }}" data-balance="{{ godown.get_balance }}">{{ godown.name }}</option>
         {% endfor %}
       </select>
       <div id="godownCredit" class="flex items-center"></div>
@@ -79,7 +78,7 @@ Sales Entry
       <label class="block text-gray-700  flex items-center gap-2">G.code*</label>
       <div></div>
       <input type="text" name="" id="godownID" placeholder="" disabled
-        class="w-[70%] mt-1 px-3 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+        class="w-full lg:w-[70%] mt-1 px-3 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
         required />
       <div></div>
       <div></div>
@@ -87,21 +86,21 @@ Sales Entry
       <label class="block text-gray-700">Qty*</label>
       <div></div>
       <input type="number" name="" id="qty" placeholder="Enter Quantity"
-        class="w-[70%] mt-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+        class="w-full lg:w-[70%] mt-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required />
       <div></div>
       <div></div>
       <!-- Rate -->
       <label class="block text-gray-700">Rate*</label>
       <div></div>
       <input type="number" name="" id="amount" placeholder="Enter Amount"
-        class="w-[70%] mt-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+        class="w-full lg:w-[70%] mt-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required />
       <div></div>
       <div></div>
       <!-- Total amount -->
       <label class="block text-gray-700">Total Amount*</label>
       <div></div>
       <input type="number" name="" id="total_amount" placeholder="" disabled
-        class="w-[70%] mt-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+        class="w-full lg:w-[70%] mt-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required />
       <div></div>
       <div></div>
       <!-- Description -->
@@ -115,45 +114,45 @@ Sales Entry
     <hr class="mt-5 mb-5">
     <form action="{% url 'sale-create' %}" method="post">
       {% csrf_token %}
-      <div class="flex items-center justify-between">
-        <div class="flex gap-2 items-center">
+      <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 w-full">
+        <div class="flex gap-2 items-center w-full lg:w-auto">
           <button type="button" id="addGrid" onclick="addToSaleGrid()"
-            class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-3.5 py-2.5 rounded-md shadow-sm hover:bg-blue-600 transition-all duration-300">
+            class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-3.5 py-2.5 rounded-md shadow-sm hover:bg-blue-600 transition-all duration-300 whitespace-nowrap shrink-0">
             <span id="addToGridText">Add to Grid</span>
           </button>
           <button type="button" id="btnCancel" onclick="oncancelData()"
-            class="leading-none inline-flex items-center gap-1.5 bg-gray-500 text-white text-sm font-medium px-3.5 py-2.5 rounded-md shadow-sm hover:bg-gray-600 transition-all duration-300">
+            class="leading-none inline-flex items-center gap-1.5 bg-gray-500 text-white text-sm font-medium px-3.5 py-2.5 rounded-md shadow-sm hover:bg-gray-600 transition-all duration-300 whitespace-nowrap shrink-0">
             Cancel
           </button>
         </div>
-        <div class="flex items-center gap-2">
-          <div class="relative w-full md:w-3/4 text-sm">
+        <div class="flex items-center justify-end gap-2 w-full lg:w-auto mt-2 lg:mt-0">
+          <div class="relative w-full text-sm">
             <input type="text" id="searchInput" placeholder="Search...."
               class="w-full bg-white rounded-md px-2 py-1.5 pl-8 border border-transparent focus:border-transparent ring-2 ring-blue-200  focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none" />
             <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-2 top-2 pointer-events-none"></i>
           </div>
           <button id="btnSave" type="submit"
-            class="leading-none inline-flex items-center gap-1 bg-green-500 text-white text-sm font-medium px-3.5 py-2.5 rounded-md shadow-sm hover:bg-green-600 transition-all duration-300">
+            class="leading-none inline-flex items-center gap-1 bg-green-500 text-white text-sm font-medium px-3.5 py-2.5 rounded-md shadow-sm hover:bg-green-600 transition-all duration-300 whitespace-nowrap shrink-0">
             <i data-lucide="check" class="w-4 h-4"></i>Save
           </button>
         </div>
       </div>
-      <div class="w-full overflow-x-auto shadow-sm rounded-2xl border border-slate-200 mt-5 mb-5" id="saleCreateDiv">
-        <table class="w-full min-w-[1000px] table-auto divide-y divide-slate-200">
-          <thead class="sticky top-0 bg-slate-50/80 backdrop-blur-sm z-10">
+      <div class="w-full xl:max-w-6xl 2xl:max-w-7xl overflow-x-auto shadow-sm rounded-md border border-slate-200 mt-5 mb-5" id="saleCreateDiv">
+        <table class="table-auto min-w-[700px] w-full lg:min-w-0 md:table-auto divide-y divide-slate-200">
+          <thead class="sticky top-0 bg-blue-200 text-gray-700 z-10">
             <tr>
-              <th class="px-4 py-4 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-20">Actions
+              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">Actions
               </th>
-              <th class="px-4 py-4 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">S.No</th>
-              <th class="px-4 py-4 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Godown</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">S.No</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Godown</th>
               <th
-                class="px-4 py-4 text-left text-xs font-bold text-slate-900 uppercase tracking-wider flex-1 min-w-[200px]">
+                class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[350px]">
                 Description</th>
-              <th class="px-4 py-4 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-40">Customer
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-40">Customer
                 Name</th>
-              <th class="px-4 py-4 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Qty</th>
-              <th class="px-4 py-4 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-28">Rate</th>
-              <th class="px-4 py-4 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Amount
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Qty</th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-28">Rate</th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Amount
               </th>
             </tr>
           </thead>
@@ -267,8 +266,8 @@ Sales Entry
 {% endblock content %}
 {% block externalJS %}
 <script>
-  var all_customers_data = {{ customers| safe }};
-  var all_suppliers_data = {{ suppliers| safe }};
+  var all_customers_data = {{ customers_json| safe }};
+  var all_suppliers_data = {{ suppliers_json| safe }};
   isUpdate = false;
   function addLastRow() {
     const tableBody = document.getElementById("holdSaleTableBody");
@@ -288,11 +287,11 @@ Sales Entry
     });
     rateAvg = rateSum / count || 0;
     const lastRow = `
-      <tr class="bg-indigo-50/50 font-bold text-slate-900 border-t-2 border-slate-200" id="totalRow">
-        <td class="px-4 py-4 text-left" colspan="5">Totals:</td>
-        <td class="px-4 py-4 text-right">${parseFloat(totalQty).toFixed(2)}</td>
-        <td class="px-4 py-4 text-right">${parseFloat(rateAvg).toFixed(2)}</td>
-        <td class="px-4 py-4 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
+      <tr class="bg-blue-200 font-semibold text-gray-800 border-t-2 border-blue-300" id="totalRow">
+        <td class="px-2 py-2 text-left text-sm" colspan="5">Totals:</td>
+        <td class="px-2 py-2 text-right text-sm">${parseFloat(totalQty).toFixed(2)}</td>
+        <td class="px-2 py-2 text-right text-sm">${parseFloat(rateAvg).toFixed(2)}</td>
+        <td class="px-2 py-2 text-right text-sm">${parseFloat(totalAmount).toFixed(2)}</td>
       </tr>`;
     tableBody.insertAdjacentHTML('beforeend', lastRow);
 
@@ -343,6 +342,7 @@ Sales Entry
     if ($(this).is(':checked')) {
       const suppliers = all_suppliers_data;
       var customerSelect = $('#customer');
+      customerSelect.empty();
       $('#customerID').val('');
       $('#customerCredit').text('');
       suppliers.forEach(function (supplier) {
@@ -409,32 +409,32 @@ Sales Entry
     var tableBody = document.getElementById("holdSaleTableBody");
     var newRow = `
       <tr class="hover:bg-indigo-50/50 transition-all duration-200">
-        <td class="px-4 py-4 text-center w-20">
+        <td class="px-1.5 py-1.5 text-center w-20">
           <button type='button' class="text-blue-500 text-xs hover:underline mr-2" onclick="updateSale(this)">Edit</button>
           <button type='button' class="text-red-500 text-xs hover:underline" onclick="deleteSale(this)">Delete</button>
         </td>
-        <td class="px-4 py-4 text-center text-sm w-12 sl">${i + 1}</td>
-        <td class="px-4 py-4 text-left text-sm w-32 search-area">
+        <td class="px-1.5 py-1.5 text-center text-sm w-12 sl">${i + 1}</td>
+        <td class="px-1.5 py-1.5 text-left text-sm w-32 search-area">
           ${sale.godown}
           <input type="hidden" name="godowns" value="${sale.godown_id}">
         </td>
-        <td class="px-4 py-4 text-left text-sm search-area">
+        <td class="px-1.5 py-1.5 text-left text-sm search-area">
           ${sale.description}
           <input type="hidden" name="descriptions" value="${sale.description}">
         </td>
-        <td class="px-4 py-4 text-left text-sm w-40 search-area">
+        <td class="px-1.5 py-1.5 text-left text-sm w-40 search-area">
           ${sale.type == 'customers' ? sale.customer : sale.supplier}
           <input type="hidden" name="customers" value="${sale.type === 'customers' ? sale.customer_id : sale.supplier_id}">
         </td>
-        <td class="px-4 py-4 text-right text-sm w-24 search-area">
+        <td class="px-1.5 py-1.5 text-right text-sm w-24 search-area">
           ${sale.qty}
           <input type="hidden" name="qtys" value="${sale.qty}">
         </td>
-        <td class="px-4 py-4 text-right text-sm w-28 search-area">
+        <td class="px-1.5 py-1.5 text-right text-sm w-28 search-area">
           ${parseFloat(sale.amount).toFixed(2)}
           <input type="hidden" name="amounts" value="${sale.amount}">   
         </td>
-        <td class="px-4 py-4 text-right text-sm w-32 search-area">
+        <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
           ${parseFloat(sale.total_amount).toFixed(2)}
           <input type="hidden" name="total_amounts" value="${parseFloat(sale.total_amount).toFixed(2)}">
           <input type="hidden" name="sale_ids" class="sale-id" value="${sale.id}"> 
@@ -521,34 +521,34 @@ Sales Entry
             $(selectedTR).empty();
             $(selectedTR).removeClass('bg-blue-300');
             $(selectedTR).append(`
-        <td class="px-4 py-4 text-center w-20">
+        <td class="px-1.5 py-1.5 text-center w-20">
           <button type='button' class="text-blue-500 hover:underline text-xs mr-2" onclick="updateSale(this)">Edit</button>
           <button type='button' class="text-red-500 hover:underline text-xs" onclick="deleteSale(this)">Delete</button>
         </td>
-        <td class="px-4 py-4 text-center text-sm w-12 sl">
+        <td class="px-1.5 py-1.5 text-center text-sm w-12 sl">
           <input type="date" name="dates" class="hidden" value="${date}">
         </td>
-        <td class="px-4 py-4 text-left text-sm w-32 search-area">
+        <td class="px-1.5 py-1.5 text-left text-sm w-32 search-area">
           ${godown}
           <input type="hidden" name="godowns" value="${godownSelect}">
         </td>
-        <td class="px-4 py-4 text-left text-sm search-area">
+        <td class="px-1.5 py-1.5 text-left text-sm search-area">
           ${description}
           <input type="hidden" name="descriptions" value="${description}">
         </td>
-        <td class="px-4 py-4 text-left text-sm w-40 search-area">
+        <td class="px-1.5 py-1.5 text-left text-sm w-40 search-area">
           ${customer}
           <input type="hidden" name="customers" value="${customerSelect}">
         </td>
-        <td class="px-4 py-4 text-right text-sm w-24 search-area">
+        <td class="px-1.5 py-1.5 text-right text-sm w-24 search-area">
           ${qty}
           <input type="hidden" name="qtys" value="${qty}">
         </td>
-        <td class="px-4 py-4 text-right text-sm w-28 search-area">
+        <td class="px-1.5 py-1.5 text-right text-sm w-28 search-area">
           ${amount.toFixed(2)}
           <input type="hidden" name="amounts" value="${amount}">
         </td>
-        <td class="px-4 py-4 text-right text-sm w-32 search-area">
+        <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
           ${total_amount.toFixed(2)}
           <input type="hidden" name="total_amounts" value="${total_amount.toFixed(2)}">
           <input type="hidden" name="sale_ids" class="sale-id" value="${sale_id}"> 
@@ -561,34 +561,34 @@ Sales Entry
           else {
             const newRow = `
       <tr class="hover:bg-indigo-50/50 transition-all duration-200">
-        <td class="px-4 py-4 text-center w-20">
+        <td class="px-1.5 py-1.5 text-center w-20">
           <button type='button' class="text-blue-500 hover:underline text-xs mr-2" onclick="updateSale(this)">Edit</button>
           <button type='button' class="text-red-500 hover:underline text-xs" onclick="deleteSale(this)">Delete</button>
         </td>
-        <td class="px-4 py-4 text-center text-sm w-12 sl">
+        <td class="px-1.5 py-1.5 text-center text-sm w-12 sl">
           <input type="date" name="dates" class="hidden" value="${date}">
         </td>
-        <td class="px-4 py-4 text-left text-sm w-32 search-area">
+        <td class="px-1.5 py-1.5 text-left text-sm w-32 search-area">
           ${godown}
           <input type="hidden" name="godowns" value="${godownSelect}">
         </td>
-        <td class="px-4 py-4 text-left text-sm search-area">
+        <td class="px-1.5 py-1.5 text-left text-sm search-area">
           ${description}
           <input type="hidden" name="descriptions" value="${description}">
         </td>
-        <td class="px-4 py-4 text-left text-sm w-40 search-area">
+        <td class="px-1.5 py-1.5 text-left text-sm w-40 search-area">
           ${customer}
           <input type="hidden" name="customers" value="${customerSelect}">
         </td>
-        <td class="px-4 py-4 text-right text-sm w-24 search-area">
+        <td class="px-1.5 py-1.5 text-right text-sm w-24 search-area">
           ${qty}
           <input type="hidden" name="qtys" value="${qty}">
         </td>
-        <td class="px-4 py-4 text-right text-sm w-28 search-area">
+        <td class="px-1.5 py-1.5 text-right text-sm w-28 search-area">
           ${amount.toFixed(2)}
           <input type="hidden" name="amounts" value="${amount}">
         </td>
-        <td class="px-4 py-4 text-right text-sm w-32 search-area">
+        <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
           ${total_amount.toFixed(2)}
           <input type="hidden" name="total_amounts" value="${total_amount.toFixed(2)}">
           <input type="hidden" name="sale_ids" class="sale-id" value="${sale_id}"> 
