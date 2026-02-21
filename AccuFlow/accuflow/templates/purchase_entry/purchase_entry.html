@@ -1,416 +1,340 @@
 {% extends "base.html" %}
 {% block title %}
-    Purchase Entry
+Purchase Entry
 {% endblock title %}
 {% block externalCSS %}
 {% endblock externalCSS %}
 {% block content %}
-    <div class="bg-white rounded-xl p-6 mt-3">
-        <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">Purchase Management</h1>
-        <div class="mt-4 flex flex-wrap items-center gap-3">
-            <!-- 🟦 New -->
-            <a id="btnNew"
-               href="#"
-               class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
-                <svg xmlns="http://www.w3.org/2000/svg"
-                     class="h-4 w-4"
-                     fill="none"
-                     viewBox="0 0 24 24"
-                     stroke="currentColor"
-                     stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-                New
-            </a>
-            <a id="btnView"
-               href="#"
-               class="leading-none inline-flex items-center gap-1.5 bg-green-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-green-600 transition-all duration-300">
-                <svg xmlns="http://www.w3.org/2000/svg"
-                     class="h-4 w-4"
-                     fill="none"
-                     viewBox="0 0 24 24"
-                     stroke="currentColor"
-                     stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                View
-            </a>
+<div class="bg-white rounded-xl p-6 mt-3">
+  <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">Purchase Management</h1>
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <!-- 🟦 New -->
+    <a id="btnNew" href="#"
+      class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+        stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+      </svg>
+      New
+    </a>
+    <a id="btnView" href="#"
+      class="leading-none inline-flex items-center gap-1.5 bg-green-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-green-600 transition-all duration-300">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+        stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+      </svg>
+      View
+    </a>
+  </div>
+  <hr class="mt-5">
+  <div class=" mt-5 w-100" id="createView">
+    <div class="grid grid-cols-8 gap-4 ">
+      <div class="col-span-6 flex gap-2 ">
+        <div class="w-[50%]">
+          <label class="block text-gray-700">Purchase No*</label>
+          <input type="text" name="" value="{{ last_purchase_no }}" id="purchase_name" placeholder="Enter Purchase No"
+            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" disabled
+            required />
         </div>
-        <hr class="mt-5">
-        <div class=" mt-5 w-100" id="createView">
-            <div class="grid grid-cols-8 gap-4 ">
-                <div class="col-span-6 flex gap-2 ">
-                    <div class="w-[50%]">
-                        <label class="block text-gray-700">Purchase No*</label>
-                        <input type="text"
-                               name=""
-                               value="{{ last_purchase_no }}"
-                               id="purchase_name"
-                               placeholder="Enter Purchase No"
-                               class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               disabled
-                               required />
-                    </div>
-                    <input type="hidden" name="" id="purchaseId" placeholder="" />
-                    <div class="w-[50%]">
-                        <label class="block text-gray-700">Date*</label>
-                        <input type="date"
-                               name=""
-                               id="date"
-                               class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               required />
-                    </div>
-                </div>
-                <div class="col-span-6 w-full flex items-center gap-3">
-                    <div class=" w-[80%]">
-                        <!-- Label -->
-                        <label class="block text-gray-700 mb-1">Supplier*</label>
-                        <div class="flex items-center gap-4">
-                            <div class="flex items-center gap-4 w-full">
-                                <div class="flex items-center">
-                                    <input type="checkbox"
-                                           id="allSuppliers"
-                                           name=""
-                                           tabindex="-1"
-                                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
-                                    <label for="allSuppliers" class="ml-2 text-gray-700">All</label>
-                                </div>
-                                <!-- Dropdown -->
-                                <div class="flex-1">
-                                    <select name=""
-                                            id="supplier"
-                                            class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            required>
-                                        <option value="" selected>Select Supplier</option>
-                                        {% for supplier in suppliers %}
-                                            <option value="{{ supplier.id }}"
-                                                    data-code="{{ supplier.supplierId }}"
-                                                    data-balance="{{ supplier.balance }}"
-                                                    data-type="suppliers">{{ supplier.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class=" w-[20%]">
-                        <!-- Label -->
-                        <label class="block text-gray-700 mb-1">code*</label>
-                        <div class="flex items-center gap-4 ">
-                            <!-- Row: Checkbox + Dropdown -->
-                            <div class="flex items-center gap-4 w-full">
-                                <!-- Dropdown -->
-                                <div class="flex-1">
-                                    <input type="text"
-                                           name=""
-                                           id="supplierID"
-                                           placeholder=""
-                                           disabled
-                                           class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                           required />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="w[20%]">
-                        <div id="supplierCredit"></div>
-                    </div>
-                </div>
-                <div class="col-span-6 w-full flex items-center gap-3">
-                    <div class=" w-[80%]">
-                        <!-- Label -->
-                        <label class="block text-gray-700 mb-1">Godown*</label>
-                        <!-- Row: Checkbox + Dropdown -->
-                        <div class="flex items-center gap-4">
-                            <!-- Dropdown -->
-                            <div class="flex-1">
-                                <select name=""
-                                        id="godown"
-                                        class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        required>
-                                    <option value="" selected>Select Godown</option>
-                                    {% for godown in godowns %}
-                                        <option value="{{ godown.id }}"
-                                                data-code="{{ godown.godownId }}"
-                                                data-balance="{{ godown.get_balance }}">{{ godown.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class=" w-[30%]">
-                        <!-- Label -->
-                        <label class="block text-gray-700 mb-1">G.code*</label>
-                        <div class="flex items-center gap-4 ">
-                            <!-- Row: Checkbox + Dropdown -->
-                            <div class="flex items-center gap-4 w-full">
-                                <!-- Dropdown -->
-                                <div class="flex-1">
-                                    <input type="text"
-                                           name=""
-                                           id="godownID"
-                                           placeholder=""
-                                           disabled
-                                           class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                           required />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="w[20%]">
-                        <div id="godownCredit"></div>
-                    </div>
-                </div>
-                <div class="col-span-6 w-full flex gap-2">
-                    <div class="flex-1">
-                        <label class="block text-gray-700">Qty*</label>
-                        <input type="number"
-                               name=""
-                               id="qty"
-                               placeholder="Enter Quantity"
-                               class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               required />
-                    </div>
-                    <div class="flex-1">
-                        <label class="block text-gray-700">Rate*</label>
-                        <input type="number"
-                               name=""
-                               id="amount"
-                               placeholder="Enter Amount"
-                               class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               required />
-                    </div>
-                    <div class="flex-1">
-                        <label class="block text-gray-700">Total Amount*</label>
-                        <input type="number"
-                               name=""
-                               id="total_amount"
-                               placeholder=""
-                               disabled
-                               class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               required />
-                    </div>
-                </div>
-                <div class="description col-span-6">
-                    <div>
-                        <label class="block text-gray-700">Description</label>
-                        <textarea name=""
-                                  id="description"
-                                  class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-                    </div>
-                </div>
+        <input type="hidden" name="" id="purchaseId" placeholder="" />
+        <div class="w-[50%]">
+          <label class="block text-gray-700">Date*</label>
+          <input type="date" name="" id="date"
+            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required />
+        </div>
+      </div>
+      <div class="col-span-6 w-full flex items-center gap-3">
+        <div class=" w-[80%]">
+          <!-- Label -->
+          <label class="block text-gray-700 mb-1">Supplier*</label>
+          <div class="flex items-center gap-4">
+            <div class="flex items-center gap-4 w-full">
+              <div class="flex items-center">
+                <input type="checkbox" id="allSuppliers" name="" tabindex="-1"
+                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
+                <label for="allSuppliers" class="ml-2 text-gray-700">All</label>
+              </div>
+              <!-- Dropdown -->
+              <div class="flex-1">
+                <select name="" id="supplier"
+                  class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required>
+                  <option value="" selected>Select Supplier</option>
+                  {% for supplier in suppliers %}
+                  <option value="{{ supplier.id }}" data-code="{{ supplier.supplierId }}"
+                    data-balance="{{ supplier.balance }}" data-type="suppliers">{{ supplier.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
             </div>
-            <hr class="mt-5 mb-5">
-            <form action="{% url 'purchase-create' %}" method="post">
-                {% csrf_token %}
-                <div class="flex items-center justify-between">
-                    <div class="flex gap-2 items-center">
-                        <a id="addGrid"
-                           href="#"
-                           onclick="addToPurchaseGrid()"
-                           class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
-                            <!-- <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          </div>
+        </div>
+        <div class=" w-[20%]">
+          <!-- Label -->
+          <label class="block text-gray-700 mb-1">code*</label>
+          <div class="flex items-center gap-4 ">
+            <!-- Row: Checkbox + Dropdown -->
+            <div class="flex items-center gap-4 w-full">
+              <!-- Dropdown -->
+              <div class="flex-1">
+                <input type="text" name="" id="supplierID" placeholder="" disabled
+                  class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="w[20%]">
+          <div id="supplierCredit"></div>
+        </div>
+      </div>
+      <div class="col-span-6 w-full flex items-center gap-3">
+        <div class=" w-[80%]">
+          <!-- Label -->
+          <label class="block text-gray-700 mb-1">Godown*</label>
+          <!-- Row: Checkbox + Dropdown -->
+          <div class="flex items-center gap-4">
+            <!-- Dropdown -->
+            <div class="flex-1">
+              <select name="" id="godown"
+                class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required>
+                <option value="" selected>Select Godown</option>
+                {% for godown in godowns %}
+                <option value="{{ godown.id }}" data-code="{{ godown.godownId }}"
+                  data-balance="{{ godown.get_balance }}">{{ godown.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class=" w-[30%]">
+          <!-- Label -->
+          <label class="block text-gray-700 mb-1">G.code*</label>
+          <div class="flex items-center gap-4 ">
+            <!-- Row: Checkbox + Dropdown -->
+            <div class="flex items-center gap-4 w-full">
+              <!-- Dropdown -->
+              <div class="flex-1">
+                <input type="text" name="" id="godownID" placeholder="" disabled
+                  class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="w[20%]">
+          <div id="godownCredit"></div>
+        </div>
+      </div>
+      <div class="col-span-6 w-full flex gap-2">
+        <div class="flex-1">
+          <label class="block text-gray-700">Qty*</label>
+          <input type="number" name="" id="qty" placeholder="Enter Quantity"
+            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required />
+        </div>
+        <div class="flex-1">
+          <label class="block text-gray-700">Rate*</label>
+          <input type="number" name="" id="amount" placeholder="Enter Amount"
+            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required />
+        </div>
+        <div class="flex-1">
+          <label class="block text-gray-700">Total Amount*</label>
+          <input type="number" name="" id="total_amount" placeholder="" disabled
+            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required />
+        </div>
+      </div>
+      <div class="description col-span-6">
+        <div>
+          <label class="block text-gray-700">Description</label>
+          <textarea name="" id="description"
+            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+        </div>
+      </div>
+    </div>
+    <hr class="mt-5 mb-5">
+    <form action="{% url 'purchase-create' %}" method="post">
+      {% csrf_token %}
+      <div class="flex items-center justify-between">
+        <div class="flex gap-2 items-center">
+          <a id="addGrid" href="#" onclick="addToPurchaseGrid()"
+            class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
+            <!-- <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
       </svg> -->
-                            <span id="addToGridText">Add to Grid</span>
-                        </a>
-                        <a id="btnCancel"
-                           href="#"
-                           onclick="onCancelPurchase()"
-                           class="leading-none inline-flex items-center gap-1.5 bg-gray-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-gray-600 transition-all duration-300">
-                            <svg xmlns="http://www.w3.org/2000/svg"
-                                 class="h-4 w-4"
-                                 fill="none"
-                                 viewBox="0 0 24 24"
-                                 stroke="currentColor"
-                                 stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                            Cancel
-                        </a>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <div class="relative w-full md:w-3/4">
-                            <input type="text"
-                                   id="searchInput"
-                                   placeholder="Search purchase..."
-                                   class="w-full bg-white rounded-xl px-4 py-2 pl-10 border  focus:border-transparent ring-2 ring-blue-200  focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none" />
-                            <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5 pointer-events-none"
-                                 fill="none"
-                                 stroke="currentColor"
-                                 stroke-width="2"
-                                 viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 3a7.5 7.5 0 006.15 13.65z" />
-                            </svg>
-                        </div>
-                        <button id="btnSave"
-                                type="submit"
-                                class="leading-none inline-flex items-center gap-1.5 bg-green-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-green-600 transition-all duration-300">
-                            <svg xmlns="http://www.w3.org/2000/svg"
-                                 class="h-4 w-4"
-                                 fill="none"
-                                 viewBox="0 0 24 24"
-                                 stroke="currentColor"
-                                 stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                            </svg>
-                            Save
-                        </button>
-                    </div>
-                </div>
-                <div class="overflow-x-auto mt-5 w-full" id="purchaseCreateDiv">
-                    <table class="min-w-full rounded-t-lg overflow-hidden">
-                        <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
-                            <tr>
-                                <th class="px-4 py-3 text-left font-medium w-1">Actions</th>
-                                <th class="px-4 py-3 text-left font-medium w-1">#</th>
-                                <th class="px-4 py-3 text-left font-medium">Date</th>
-                                <th class="px-4 py-3 text-left font-medium">Supplier</th>
-                                <th class="px-4 py-3 text-left font-medium">Godown</th>
-                                <th class="px-4 py-3 text-right font-medium">Qty</th>
-                                <th class="px-4 py-3 text-right font-medium">Rate</th>
-                                <th class="px-4 py-3 text-right font-medium">Total Amount</th>
-                                <th class="px-4 py-3 text-right font-medium">Description</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-gray-100" id="purchaseTableBody">
-                        </tbody>
-                    </table>
-                </div>
-            </form>
+            <span id="addToGridText">Add to Grid</span>
+          </a>
+          <a id="btnCancel" href="#" onclick="onCancelPurchase()"
+            class="leading-none inline-flex items-center gap-1.5 bg-gray-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-gray-600 transition-all duration-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Cancel
+          </a>
         </div>
-        <div id="viewDiv" class="hidden">
-            <div class="dateDiv mt-3">
-                <div class="flex justify-center items-end gap-5 mt-4">
-                    <div>
-                        <label class="block text-gray-700">From Date*</label>
-                        <input type="date"
-                               id="from_date"
-                               class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               required />
-                    </div>
-                    <div>
-                        <label class="block text-gray-700">End Date*</label>
-                        <input type="date"
-                               id="end_date"
-                               class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                               required />
-                    </div>
-                    <div>
-                        <button id="dateFilter"
-                                class="bg-blue-600 text-white px-5 py-2 mt-6 rounded-xl hover:bg-blue-700 transition-all">
-                            Filter
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div id="viewPurchaseDiv" class="hidden">
-                <hr class="mt-5">
-                <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mt-3 mb-3">
-                    <div class="flex items-end gap-3 w-full md:w-auto">
-                        <div>
-                            <label for="from_price" class="block text-gray-700 text-sm font-medium">From</label>
-                            <input type="number"
-                                   id="from_price"
-                                   placeholder="0.00"
-                                   class="w-32 mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                        </div>
-                        <div>
-                            <label for="to_price" class="block text-gray-700 text-sm font-medium">To</label>
-                            <input type="number"
-                                   id="to_price"
-                                   placeholder="0.00"
-                                   class="w-32 mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                        </div>
-                        <button id="btnFilter"
-                                class="mt-5 bg-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
-                            Filter
-                        </button>
-                    </div>
-                    <h2 id="showDate" class="underline"></h2>
-                    <div class="relative w-full md:w-1/4">
-                        <input type="text"
-                               id="searchInput"
-                               placeholder="Search purchase..."
-                               class="w-full bg-white searchInput rounded-xl px-4 py-2 pl-10 border focus:border-transparent ring-2 ring-blue-200 focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none" />
-                        <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5 pointer-events-none"
-                             fill="none"
-                             stroke="currentColor"
-                             stroke-width="2"
-                             viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 3a7.5 7.5 0 006.15 13.65z" />
-                        </svg>
-                    </div>
-                </div>
-                <div class="overflow-x-auto mt-5 w-full">
-                    <table class="min-w-full rounded-t-lg overflow-hidden"
-                           id="viewPurchaseTable">
-                        <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
-                            <tr>
-                                <th class="px-4 py-3 text-left font-medium w-1">Actions</th>
-                                <th class="px-4 py-3 text-left font-medium w-1">#</th>
-                                <th class="px-4 py-3 text-left font-medium">Purchase No</th>
-                                <th class="px-4 py-3 text-left font-medium">Date</th>
-                                <th class="px-4 py-3 text-left font-medium">Supplier</th>
-                                <th class="px-4 py-3 text-left font-medium">Godown</th>
-                                <th class="px-4 py-3 text-right font-medium">Qty</th>
-                                <th class="px-4 py-3 text-right font-medium">Rate</th>
-                                <th class="px-4 py-3 text-right font-medium">Total Amount</th>
-                                <th class="px-4 py-3 text-right font-medium">Description</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-gray-100" id="purchaseTableBody">
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        <div class="flex items-center gap-2">
+          <div class="relative w-full md:w-3/4">
+            <input type="text" id="searchInput" placeholder="Search purchase..."
+              class="w-full bg-white rounded-xl px-4 py-2 pl-10 border  focus:border-transparent ring-2 ring-blue-200  focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none" />
+            <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5 pointer-events-none" fill="none"
+              stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 3a7.5 7.5 0 006.15 13.65z" />
+            </svg>
+          </div>
+          <button id="btnSave" type="submit"
+            class="leading-none inline-flex items-center gap-1.5 bg-green-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-green-600 transition-all duration-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            Save
+          </button>
         </div>
+      </div>
+      <div class="overflow-x-auto mt-5 w-full" id="purchaseCreateDiv">
+        <table class="min-w-full rounded-t-lg overflow-hidden">
+          <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
+            <tr>
+              <th class="px-4 py-3 text-left font-medium w-1">Actions</th>
+              <th class="px-4 py-3 text-left font-medium w-1">#</th>
+              <th class="px-4 py-3 text-left font-medium">Date</th>
+              <th class="px-4 py-3 text-left font-medium">Supplier</th>
+              <th class="px-4 py-3 text-left font-medium">Godown</th>
+              <th class="px-4 py-3 text-right font-medium">Qty</th>
+              <th class="px-4 py-3 text-right font-medium">Rate</th>
+              <th class="px-4 py-3 text-right font-medium">Total Amount</th>
+              <th class="px-4 py-3 text-right font-medium">Description</th>
+            </tr>
+          </thead>
+          <tbody class="bg-gray-100" id="purchaseTableBody">
+          </tbody>
+        </table>
+      </div>
+    </form>
+  </div>
+  <div id="viewDiv" class="hidden">
+    <div class="dateDiv mt-3">
+      <div class="flex justify-center items-end gap-5 mt-4">
+        <div>
+          <label class="block text-gray-700">From Date*</label>
+          <input type="date" id="from_date"
+            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required />
+        </div>
+        <div>
+          <label class="block text-gray-700">End Date*</label>
+          <input type="date" id="end_date"
+            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required />
+        </div>
+        <div>
+          <button id="dateFilter"
+            class="bg-blue-600 text-white px-5 py-2 mt-6 rounded-xl hover:bg-blue-700 transition-all">
+            Filter
+          </button>
+        </div>
+      </div>
     </div>
-    <!-- 🟦 Edit Confirmation Modal -->
-    <div id="editModal"
-         class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
-        <div class="bg-white rounded-xl shadow-lg p-6 w-80 text-center">
-            <h2 class="text-lg font-semibold mb-4 text-gray-800">Confirm Edit</h2>
-            <p class="mb-6 text-gray-600 ">Are you sure you want to edit this purchase's details?</p>
-            <div class="flex justify-center space-x-4">
-                <button onclick="closeEditModal()"
-                        class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
-                <a id="confirmEditBtn"
-                   href="#"
-                   class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Edit</a>
-            </div>
+    <div id="viewPurchaseDiv" class="hidden">
+      <hr class="mt-5">
+      <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mt-3 mb-3">
+        <div class="flex items-end gap-3 w-full md:w-auto">
+          <div>
+            <label for="from_price" class="block text-gray-700 text-sm font-medium">From</label>
+            <input type="number" id="from_price" placeholder="0.00"
+              class="w-32 mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div>
+            <label for="to_price" class="block text-gray-700 text-sm font-medium">To</label>
+            <input type="number" id="to_price" placeholder="0.00"
+              class="w-32 mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <button id="btnFilter"
+            class="mt-5 bg-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
+            Filter
+          </button>
         </div>
-    </div>
-    <div id="confirmModal"
-         class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
-        <div class="bg-white rounded-xl shadow-lg p-6 w-80 text-center">
-            <h2 class="text-lg font-semibold mb-4">Confirm Deletion</h2>
-            <p class="mb-6 text-gray-600">Are you sure you want to delete this purchase?</p>
-            <div class="flex justify-center space-x-4">
-                <button id="cancelBtn"
-                        class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
-                        onclick="closeModal()">Cancel</button>
-                <a id="confirmDeleteBtn"
-                   href="#"
-                   class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                   onclick="deleteItem()">Delete</a>
-            </div>
+        <h2 id="showDate" class="underline"></h2>
+        <div class="relative w-full md:w-1/4">
+          <input type="text" id="searchInput" placeholder="Search purchase..."
+            class="w-full bg-white searchInput rounded-xl px-4 py-2 pl-10 border focus:border-transparent ring-2 ring-blue-200 focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none" />
+          <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5 pointer-events-none" fill="none"
+            stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 3a7.5 7.5 0 006.15 13.65z" />
+          </svg>
         </div>
+      </div>
+      <div class="overflow-x-auto mt-5 w-full">
+        <table class="min-w-full rounded-t-lg overflow-hidden" id="viewPurchaseTable">
+          <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
+            <tr>
+              <th class="px-4 py-3 text-left font-medium w-1">Actions</th>
+              <th class="px-4 py-3 text-left font-medium w-1">#</th>
+              <th class="px-4 py-3 text-left font-medium">Purchase No</th>
+              <th class="px-4 py-3 text-left font-medium">Date</th>
+              <th class="px-4 py-3 text-left font-medium">Supplier</th>
+              <th class="px-4 py-3 text-left font-medium">Godown</th>
+              <th class="px-4 py-3 text-right font-medium">Qty</th>
+              <th class="px-4 py-3 text-right font-medium">Rate</th>
+              <th class="px-4 py-3 text-right font-medium">Total Amount</th>
+              <th class="px-4 py-3 text-right font-medium">Description</th>
+            </tr>
+          </thead>
+          <tbody class="bg-gray-100" id="purchaseTableBody">
+          </tbody>
+        </table>
+      </div>
     </div>
+  </div>
+</div>
+<!-- 🟦 Edit Confirmation Modal -->
+<div id="editModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
+  <div class="bg-white rounded-xl shadow-lg p-6 w-80 text-center">
+    <h2 class="text-lg font-semibold mb-4 text-gray-800">Confirm Edit</h2>
+    <p class="mb-6 text-gray-600 ">Are you sure you want to edit this purchase's details?</p>
+    <div class="flex justify-center space-x-4">
+      <button onclick="closeEditModal()"
+        class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
+      <a id="confirmEditBtn" href="#" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Edit</a>
+    </div>
+  </div>
+</div>
+<div id="confirmModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
+  <div class="bg-white rounded-xl shadow-lg p-6 w-80 text-center">
+    <h2 class="text-lg font-semibold mb-4">Confirm Deletion</h2>
+    <p class="mb-6 text-gray-600">Are you sure you want to delete this purchase?</p>
+    <div class="flex justify-center space-x-4">
+      <button id="cancelBtn" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
+        onclick="closeModal()">Cancel</button>
+      <a id="confirmDeleteBtn" href="#" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+        onclick="deleteItem()">Delete</a>
+    </div>
+  </div>
+</div>
 {% endblock content %}
 {% block externalJS %}
-    <script>
-    isUpdate = false;
+<script>
+  var all_customers_data = {{ customers| safe }};
+  var all_suppliers_data = {{ suppliers| safe }};
+  isUpdate = false;
 
-  function addLastRow(){
+  function addLastRow() {
     const tableBody = document.getElementById("purchaseTableBody");
     $('#totalRow').remove();
     var totalQty = 0;
     var totalAmount = 0;
     var rateSum = 0;
     count = 0;
-    tableBody.querySelectorAll("tr").forEach(function(row) {
+    tableBody.querySelectorAll("tr").forEach(function (row) {
       const qty = parseFloat(row.cells[5].innerText) || 0;
       const amount = parseFloat(row.cells[6].innerText) || 0;
       const total = parseFloat(row.cells[7].innerText) || 0;
@@ -434,8 +358,8 @@
 
 
   let selectedTR = '';
-    $('#btnNew').on('click', function(e) {
-      e.preventDefault();
+  $('#btnNew').on('click', function (e) {
+    e.preventDefault();
     $('#date').val(new Date().toISOString().split('T')[0]);
     $('#from_date').val('');
     $('#end_date').val('');
@@ -445,91 +369,91 @@
     $('#viewDiv').addClass('hidden');
     $('#purchase_name, #amount, #qty, #description, #total_amount').val('');
     $('#supplier, #godown').prop('selectedIndex', 0);
-      $('#supplierCredit').empty();
+    $('#supplierCredit').empty();
     $('#purchase_name').val(getLastPurchaseNo()).change();
 
-    });
-    $('#btnView').on('click', function(e) {
-      e.preventDefault();
+  });
+  $('#btnView').on('click', function (e) {
+    e.preventDefault();
     $('#createView').addClass('hidden');
     $('#viewDiv').removeClass('hidden');
 
     clearPurchaseForm();
     isUpdate = false;
     $('#addToGridText').text('Add to Grid');
-    $(selectedTR).removeClass('bg-blue-300'); 
+    $(selectedTR).removeClass('bg-blue-300');
     $(selectedTR).find('button').removeAttr('disabled');
     selectedTR = '';
-    });
+  });
 
-    $('#supplier').on('change', function() {
-      $('#supplierCredit').empty();
-      var selectedOption = $(this).find('option:selected');
-      var code = selectedOption.data('code') || '';
-      var balance = selectedOption.data('balance') || '0';
-      $('#supplierID').val(code);
-      $('#supplierCredit').empty();
-      $('#supplierCredit').append(`
-      <p class="font-semibold ${parseFloat(balance).toFixed(2)<= 0 ? `text-red`: ``}">Balance:${parseFloat(balance).toFixed(2)} </p> 
+  $('#supplier').on('change', function () {
+    $('#supplierCredit').empty();
+    var selectedOption = $(this).find('option:selected');
+    var code = selectedOption.data('code') || '';
+    var balance = selectedOption.data('balance') || '0';
+    $('#supplierID').val(code);
+    $('#supplierCredit').empty();
+    $('#supplierCredit').append(`
+      <p class="font-semibold ${parseFloat(balance).toFixed(2) <= 0 ? `text-red` : ``}">Balance:${parseFloat(balance).toFixed(2)} </p> 
       `);
-    });
-    $('#allSuppliers').on('change', function() {
-      if($(this).is(':checked')) {
-        const customers = {{ customers|safe }}
-        var supplierSelect = $('#supplier');
-        $('#supplierID').val('');
-        $('#supplierCredit').text('');
-        customers.forEach(function(customer) {
-          var option = $('<option></option>')
-            .attr('value', customer.id)
-            .attr('data-code', customer.customerId)
-            .attr('data-balance', customer.balance)
-            .attr('data-type', 'customers')
-            .text(customer.name);
-          supplierSelect.append(option);
-        });
-      } else {
-        const suppliers = {{ suppliers|safe }}
-        var supplierSelect = $('#supplier');
-        supplierSelect.empty();
-        $('#supplierID').val('');
-        $('#supplierCredit').text('');
-        supplierSelect.append('<option value="" selected>Select Supplier</option>');
-        suppliers.forEach(function(supplier) {
-          var option = $('<option></option>')
-            .attr('value', supplier.id)
-            .attr('data-code', supplier.supplierId)
-            .attr('data-balance', supplier.balance)
-            .attr('data-type', 'suppliers')
-            .text(supplier.name);
-          supplierSelect.append(option);
-        });
-      }
-    });
-    $('#godown').on('change', function() {
-      var selectedOption = $(this).find('option:selected');
-      var code = selectedOption.data('code') || '';
-      var balance = selectedOption.data('balance') || '0';
-      $('#godownCredit').empty();
-      $('#godownCredit').append(`
-      <p class="font-semibold ${parseFloat(balance).toFixed(2)<= 0 ? `text-red`: ``}">Balance:${parseFloat(balance).toFixed(2)} </p> 
+  });
+  $('#allSuppliers').on('change', function () {
+    if ($(this).is(':checked')) {
+      const customers = all_customers_data;
+      var supplierSelect = $('#supplier');
+      supplierSelect.empty();
+      $('#supplierCredit').text('');
+      customers.forEach(function (customer) {
+        var option = $('<option></option>')
+          .attr('value', customer.id)
+          .attr('data-code', customer.customerId)
+          .attr('data-balance', customer.balance)
+          .attr('data-type', 'customers')
+          .text(customer.name);
+        supplierSelect.append(option);
+      });
+    } else {
+      const suppliers = all_suppliers_data;
+      var supplierSelect = $('#supplier');
+      supplierSelect.empty();
+      $('#supplierID').val('');
+      $('#supplierCredit').text('');
+      supplierSelect.append('<option value="" selected>Select Supplier</option>');
+      suppliers.forEach(function (supplier) {
+        var option = $('<option></option>')
+          .attr('value', supplier.id)
+          .attr('data-code', supplier.supplierId)
+          .attr('data-balance', supplier.balance)
+          .attr('data-type', 'suppliers')
+          .text(supplier.name);
+        supplierSelect.append(option);
+      });
+    }
+  });
+  $('#godown').on('change', function () {
+    var selectedOption = $(this).find('option:selected');
+    var code = selectedOption.data('code') || '';
+    var balance = selectedOption.data('balance') || '0';
+    $('#godownCredit').empty();
+    $('#godownCredit').append(`
+      <p class="font-semibold ${parseFloat(balance).toFixed(2) <= 0 ? `text-red` : ``}">Balance:${parseFloat(balance).toFixed(2)} </p> 
       `);
-      $('#godownID').val(code); 
-    });
-    </script>
-    <script>
-    var purchases = {{ purchases|safe }};
+    $('#godownID').val(code);
+  });
+</script>
+<script>
+  var purchases = {{ purchases| safe }};
 
-    for (let i=0; i<purchases.length; i++) {
-      const purchase = purchases[i];
-      var tableBody = document.getElementById("purchaseTableBody");
-      var newRow = `
+  for (let i = 0; i < purchases.length; i++) {
+    const purchase = purchases[i];
+    var tableBody = document.getElementById("purchaseTableBody");
+    var newRow = `
       <tr>
         <td class="px-3 py-3 text-left w-1 flex">
           <button type='button' class="text-blue-500 hover:underline mr-2" onclick="updatePurchase(this)">Edit</button>
           <button type='button' class="text-red-500 hover:underline" onclick="deletePurchase(this)">Delete</button>
         </td>
-        <td class="px-4 py-3 text-left w-1 sl">${i+1}</td>
+        <td class="px-4 py-3 text-left w-1 sl">${i + 1}</td>
         <td class="px-4 py-3 text-left search-area">
           ${purchase.date.split('T')[0]}    
           <input type="hidden" name="dates" value="${purchase.date.split('T')[0]}">
@@ -562,30 +486,30 @@
         </td>
         <input type="hidden" name="purchase_ids" id="purchase_id" value="${purchase.id}"> 
         <input type="hidden" name="type" id="type" value="${purchase.type}"> 
-      </tr>`; 
-      tableBody.insertAdjacentHTML('beforeend', newRow);
-      $('#amount, #qty, #description, #total_amount').val('');
-      $('#supplier, #godown').prop('selectedIndex', 0);
+      </tr>`;
+    tableBody.insertAdjacentHTML('beforeend', newRow);
+    $('#amount, #qty, #description, #total_amount').val('');
+    $('#supplier, #godown').prop('selectedIndex', 0);
     addLastRow()
-    }
-    </script>
-    <script>
-      navActive("purchaseMasterLink");
-      let deleteUrl = "";
-    
-      function openModal(purchaseId) {
-      }
+  }
+</script>
+<script>
+  navActive("purchaseMasterLink");
+  let deleteUrl = "";
 
-      function closeModal() {
-        document.getElementById("confirmModal").classList.add("hidden");
-      }
+  function openModal(purchaseId) {
+  }
 
-    </script>
-    <script>
-  $('#amount, #qty').on('input', function() {
+  function closeModal() {
+    document.getElementById("confirmModal").classList.add("hidden");
+  }
+
+</script>
+<script>
+  $('#amount, #qty').on('input', function () {
     const amount = parseFloat($('#amount').val()) || 0;
     const qty = parseFloat($('#qty').val()) || 0;
-    const total = amount * qty; 
+    const total = amount * qty;
     $('#total_amount').val(total.toFixed(2));
   });
 
@@ -604,7 +528,7 @@
     const description = document.getElementById("description").value.trim();
     const total_amount = qty * amount;
     const type_value = $('#supplier').find('option:selected').data('type');
-    if ( !date || !supplierSelect || !godownSelect || !qty || !amount) {
+    if (!date || !supplierSelect || !godownSelect || !qty || !amount) {
       alert("⚠️ Please fill in all required fields before adding.");
       return;
     }
@@ -614,7 +538,7 @@
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-CSRFToken": "{{ csrf_token }}",
+        "X-CSRFToken": getCookie('csrftoken'),
       },
       body: JSON.stringify({
         purchase_no: purchase_no,
@@ -625,9 +549,9 @@
         amount: amount,
         total_amount: total_amount,
         description: description,
-        purchase_id:purchase_id,
-        type: type_value 
-      }), 
+        purchase_id: purchase_id,
+        type: type_value
+      }),
     })
       .then((response) => response.json())
       .then((data) => {
@@ -635,15 +559,15 @@
         purchase_id = data.purchase_id;
         hold = data.hold
         console.log(hold)
-        console.log(data.hold) 
+        console.log(data.hold)
 
-    isUpdate = false;
-    clearPurchaseForm();
-    $('#purchase_name').val(getLastPurchaseNo()).change();
-        if (hold){
-          if (selectedTR){
+        isUpdate = false;
+        clearPurchaseForm();
+        $('#purchase_name').val(getLastPurchaseNo()).change();
+        if (hold) {
+          if (selectedTR) {
             $(selectedTR).empty();
-             $(selectedTR).removeClass('bg-blue-300');
+            $(selectedTR).removeClass('bg-blue-300');
             $(selectedTR).append(`
              <td class="px-4 py-3 text-left w-1 flex">
           <button type='button' class="text-blue-500 hover:underline mr-2" onclick="updatePurchase(this)">Edit</button>
@@ -681,8 +605,8 @@
         <input type="hidden" name="type" id="type" value="${type_value}"> 
         `);
             selectedTR = '';
-          }else{
-    const newRow = `
+          } else {
+            const newRow = `
       <tr>
         <td class="px-4 py-3 text-left w-1 flex">
           <button type='button' class="text-blue-500 hover:underline mr-2" onclick="updatePurchase(this)">Edit</button>
@@ -720,24 +644,24 @@
         <input type="hidden" name="type" id="type" value="${type_value}"> 
       </tr>`;
 
-    tableBody.insertAdjacentHTML('beforeend', newRow);
+            tableBody.insertAdjacentHTML('beforeend', newRow);
 
           }
-              $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-green-500 text-white');
-      $('#addToGridText').text('Add to Grid');
-      isUpdate = false
+          $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-green-500 text-white');
+          $('#addToGridText').text('Add to Grid');
+          isUpdate = false
 
-    addLastRow()
-        }else{
+          addLastRow()
+        } else {
           $('#viewPurchaseDiv').removeClass('hidden');
-    $('#viewDiv').removeClass('hidden');
+          $('#viewDiv').removeClass('hidden');
           $('#createView').addClass('hidden');
           $('#dateFilter').click();
           $('#purchaseTableBody').removeClass('hidden')
-      $('#addToGridText').text('Add to Grid');
+          $('#addToGridText').text('Add to Grid');
           isUpdate = false
         }
-    resetSLNo()
+        resetSLNo()
       })
       .catch((error) => {
         console.error("Error holding purchase:", error);
@@ -746,7 +670,7 @@
 
 
   }
-function getLastPurchaseNo() {
+  function getLastPurchaseNo() {
     let lastPurchaseNo = '';
     fetch("{% url 'api-purchase-no' %}")
       .then(response => response.json())
@@ -758,8 +682,8 @@ function getLastPurchaseNo() {
       .catch(error => {
         console.error('Error fetching purchase no:', error);
       });
-    return lastPurchaseNo;  
-}
+    return lastPurchaseNo;
+  }
 
   function updatePurchase(link) {
     $('#viewPurchaseDiv').addClass('hidden');
@@ -767,44 +691,44 @@ function getLastPurchaseNo() {
     $('#createView').removeClass('hidden');
     $('#viewDiv').addClass('hidden');
     const selectedRow = link.closest('tr');
-    if (isUpdate){
+    if (isUpdate) {
 
-    document.getElementById("purchase_name").value = selectedRow.cells[2].innerText.trim();
-    document.getElementById("date").value = selectedRow.cells[3].innerText.trim();
-    document.getElementById("godown").value = selectedRow.cells[5].querySelector('input').value;
-    document.getElementById("amount").value = selectedRow.cells[7].innerText.trim();
-    document.getElementById("qty").value = selectedRow.cells[6].innerText.trim();
-    document.getElementById("total_amount").value = selectedRow.cells[8].innerText.trim();
-    document.getElementById("description").value = selectedRow.cells[9].innerText.trim();
-    document.getElementById("purchaseId").value = selectedRow.querySelector('#purchase_id').value;
-    var type = selectedRow.querySelector('#type') ? selectedRow.querySelector('#type').value : 'suppliers';
+      document.getElementById("purchase_name").value = selectedRow.cells[2].innerText.trim();
+      document.getElementById("date").value = selectedRow.cells[3].innerText.trim();
+      document.getElementById("godown").value = selectedRow.cells[5].querySelector('input').value;
+      document.getElementById("amount").value = selectedRow.cells[7].innerText.trim();
+      document.getElementById("qty").value = selectedRow.cells[6].innerText.trim();
+      document.getElementById("total_amount").value = selectedRow.cells[8].innerText.trim();
+      document.getElementById("description").value = selectedRow.cells[9].innerText.trim();
+      document.getElementById("purchaseId").value = selectedRow.querySelector('#purchase_id').value;
+      var type = selectedRow.querySelector('#type') ? selectedRow.querySelector('#type').value : 'suppliers';
 
-    if (type === 'customers') {
-      $('#allSuppliers').prop('checked', true).change();
+      if (type === 'customers') {
+        $('#allSuppliers').prop('checked', true).change();
+      } else {
+        $('#allSuppliers').prop('checked', false).change();
+      }
+      document.getElementById("supplier").value = selectedRow.cells[4].querySelector('input').value;
     } else {
-      $('#allSuppliers').prop('checked', false).change();
-    }
-    document.getElementById("supplier").value = selectedRow.cells[4].querySelector('input').value;
-    }else{
       selectedTR = selectedRow;
       makeRowHighlight(selectedRow);
-    document.getElementById("purchase_name").value = selectedRow.cells[1].innerText.trim();
-    document.getElementById("date").value = selectedRow.cells[2].innerText.trim();
-    document.getElementById("godown").value = selectedRow.cells[4].querySelector('input').value;
-    document.getElementById("amount").value = selectedRow.cells[6].innerText.trim();
-    document.getElementById("qty").value = selectedRow.cells[5].innerText.trim();
-    document.getElementById("total_amount").value = selectedRow.cells[7].innerText.trim();
-    document.getElementById("description").value = selectedRow.cells[8].innerText.trim();
-    document.getElementById("purchaseId").value = selectedRow.querySelector('#purchase_id').value;
-    var type = selectedRow.querySelector('#type') ? selectedRow.querySelector('#type').value : 'suppliers';
+      document.getElementById("purchase_name").value = selectedRow.cells[1].innerText.trim();
+      document.getElementById("date").value = selectedRow.cells[2].innerText.trim();
+      document.getElementById("godown").value = selectedRow.cells[4].querySelector('input').value;
+      document.getElementById("amount").value = selectedRow.cells[6].innerText.trim();
+      document.getElementById("qty").value = selectedRow.cells[5].innerText.trim();
+      document.getElementById("total_amount").value = selectedRow.cells[7].innerText.trim();
+      document.getElementById("description").value = selectedRow.cells[8].innerText.trim();
+      document.getElementById("purchaseId").value = selectedRow.querySelector('#purchase_id').value;
+      var type = selectedRow.querySelector('#type') ? selectedRow.querySelector('#type').value : 'suppliers';
 
-    if (type === 'customers') {
-      $('#allSuppliers').prop('checked', true).change();
-    } else {
-      $('#allSuppliers').prop('checked', false).change();
+      if (type === 'customers') {
+        $('#allSuppliers').prop('checked', true).change();
+      } else {
+        $('#allSuppliers').prop('checked', false).change();
+      }
+      document.getElementById("supplier").value = selectedRow.cells[3].querySelector('input').value;
     }
-    document.getElementById("supplier").value = selectedRow.cells[3].querySelector('input').value;
-  }
 
     // selectedRow.remove();
     $('#addToGridText').text('Update Grid');
@@ -814,77 +738,77 @@ function getLastPurchaseNo() {
     resetSLNo()
     addLastRow()
 
-    
+
   }
 
 
   function deletePurchase(link) {
-        const selectedRow = link.closest('tr');
-        selectedTR = selectedRow;
-        const purchaseId = selectedRow.querySelector('#purchase_id').value;
+    const selectedRow = link.closest('tr');
+    selectedTR = selectedRow;
+    const purchaseId = selectedRow.querySelector('#purchase_id').value;
 
-    
-        deleteUrl = "/purchase/api/delete_purchase/?id=0".replace("0", purchaseId);
-        document.getElementById("confirmModal").classList.remove("hidden");
+
+    deleteUrl = "/purchase/api/delete_purchase/?id=0".replace("0", purchaseId);
+    document.getElementById("confirmModal").classList.remove("hidden");
   }
   function deleteItem() {
 
-  fetch(deleteUrl, {
-    method: 'GET', 
-  })
-    .then(response => response.json())
-    .then(data => {
-      console.log('Purchase deleted successfully:', data);
-
-      if (data.status === 'success') {
-        selectedTR.remove();
-        deleteUrl = "";
-        resetSLNo();
-        addLastRow();
-        console.log(getLastPurchaseNo())
-    $('#purchase_name').val(getLastPurchaseNo()).change();
-        closeModal();
-      } else {
-        console.error('Delete failed:', data.message);
-      }
+    fetch(deleteUrl, {
+      method: 'GET',
     })
-    .catch(error => {
-      console.error('Error while deleting purchase:', error);
-    }).finally(() => {
-  selectedTR = '';
-});
-  } 
-function resetSLNo() {
-  $('#purchaseTableBody .sl').each(function (index) {
-    $(this).text(index + 1);
-    $(this).find('input').val(index + 1);
-  });
-}
+      .then(response => response.json())
+      .then(data => {
+        console.log('Purchase deleted successfully:', data);
+
+        if (data.status === 'success') {
+          selectedTR.remove();
+          deleteUrl = "";
+          resetSLNo();
+          addLastRow();
+          console.log(getLastPurchaseNo())
+          $('#purchase_name').val(getLastPurchaseNo()).change();
+          closeModal();
+        } else {
+          console.error('Delete failed:', data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error while deleting purchase:', error);
+      }).finally(() => {
+        selectedTR = '';
+      });
+  }
+  function resetSLNo() {
+    $('#purchaseTableBody .sl').each(function (index) {
+      $(this).text(index + 1);
+      $(this).find('input').val(index + 1);
+    });
+  }
 
   function clearPurchaseForm() {
     $('#amount, #qty, #description, #total_amount, #supplierID, #godownID').val('');
     $('#supplier, #godown').prop('selectedIndex', 0);
     $('#allSuppliers').prop('checked', false);
-      $('#supplierCredit').empty();
-      $('#godownCredit').empty()
+    $('#supplierCredit').empty();
+    $('#godownCredit').empty()
     $('#purchase_name').val(getLastPurchaseNo()).change();
     $('#purchaseId').val('');
   }
 
-  function makeRowHighlight(tr){
+  function makeRowHighlight(tr) {
     $('#purchaseTableBody tr').removeClass('bg-yellow-100');
     $(tr).addClass('bg-blue-300');
     $(tr).find('button').attr('disabled', true);
   }
 
-    </script>
-    <script>
-  $('#btnFilter').on('click', function(e) {
+</script>
+<script>
+  $('#btnFilter').on('click', function (e) {
     e.preventDefault();
     const fromPrice = parseFloat($('#from_price').val()) || 0;
     const toPrice = parseFloat($('#to_price').val()) || Infinity;
 
-    $('#viewPurchaseTable tbody tr').each(function() {
+    $('#viewPurchaseTable tbody tr').each(function () {
       const totalAmount = parseFloat($(this).find('td:nth-child(9)').text()) || 0;
 
       if (totalAmount >= fromPrice && totalAmount <= toPrice) {
@@ -894,7 +818,7 @@ function resetSLNo() {
       }
     });
   });
-  $('#dateFilter').on('click', function(){
+  $('#dateFilter').on('click', function () {
     const startDate = $('#from_date').val()
     const endDate = $('#end_date').val()
     if (!startDate || !endDate) {
@@ -906,7 +830,7 @@ function resetSLNo() {
       .then(response => response.json())
       .then(data => {
         const tableBody = $('#viewPurchaseTable tbody');
-        tableBody.empty(); 
+        tableBody.empty();
         totalQty = data.total_qty || 0;
         totalAmount = data.total_amount || 0;
         rateAvg = data.rate_avg || 0;
@@ -965,7 +889,7 @@ function resetSLNo() {
       });
   })
   const searchInputfilter = document.getElementsByClassName("searchInput");
-  searchInputfilter[0].addEventListener("keyup", function() {
+  searchInputfilter[0].addEventListener("keyup", function () {
     const filter = searchInputfilter[0].value.toLowerCase();
     const table = document.getElementById("viewPurchaseTable");
     const tr = table.getElementsByTagName("tr");
@@ -984,39 +908,39 @@ function resetSLNo() {
     }
   });
 
-document.addEventListener("focusin", (event) => {
-  const el = event.target;
-  if (el.tagName === "SELECT") {
-    el.click();
-  }
-});
+  document.addEventListener("focusin", (event) => {
+    const el = event.target;
+    if (el.tagName === "SELECT") {
+      el.click();
+    }
+  });
 
-function editViewData(button) {
-$('#purchaseTableBody').addClass('hidden'); 
-isUpdate = true;
-updatePurchase(button);
+  function editViewData(button) {
+    $('#purchaseTableBody').addClass('hidden');
+    isUpdate = true;
+    updatePurchase(button);
   }
 
-  function onCancelPurchase(){
+  function onCancelPurchase() {
     clearPurchaseForm();
-    if (isUpdate){
+    if (isUpdate) {
 
-    isUpdate = false;
-          $('#viewPurchaseDiv').removeClass('hidden');
-          $('#viewDiv').removeClass('hidden');
-          $('#createView').addClass('hidden');
-          $('#dateFilter').click();
-          $('#purchaseTableBody').removeClass('hidden')
+      isUpdate = false;
+      $('#viewPurchaseDiv').removeClass('hidden');
+      $('#viewDiv').removeClass('hidden');
+      $('#createView').addClass('hidden');
+      $('#dateFilter').click();
+      $('#purchaseTableBody').removeClass('hidden')
 
 
     }
     isUpdate = false;
     $('#addToGridText').text('Add to Grid');
-    $(selectedTR).removeClass('bg-blue-300'); 
+    $(selectedTR).removeClass('bg-blue-300');
     $(selectedTR).find('button').removeAttr('disabled');
     selectedTR = '';
 
   }
 
-    </script>
+</script>
 {% endblock externalJS %}

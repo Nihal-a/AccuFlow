@@ -214,7 +214,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
+                    'X-CSRFToken': getCookie('csrftoken')
                 },
                 body: JSON.stringify(data)
             }).then(res => {
@@ -229,7 +229,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
+                    'X-CSRFToken': getCookie('csrftoken')
                 },
                 body: JSON.stringify(data)
             }).catch(err => console.error(err));

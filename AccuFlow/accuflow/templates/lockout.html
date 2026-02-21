@@ -1,0 +1,48 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Locked | AccuFlow</title>
+    <link href="https://unpkg.com/tailwindcss@^2.0/dist/tailwind.min.css" rel="stylesheet" />
+</head>
+
+<body class="min-h-screen flex items-center justify-center bg-gray-100 font-sans">
+    <div
+        class="bg-white bg-opacity-95 backdrop-blur-md shadow-2xl rounded-3xl max-w-md w-full p-10 text-center border border-gray-100">
+        <div class="mb-6 flex justify-center">
+            <div class="bg-red-100 p-4 rounded-full">
+                <svg class="w-12 h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 15v2m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 118 0v0M7 10a5 5 0 0110 0v4a5 5 0 01-10 0V10zM5 21h14a2 2 0 002-2v-5a2 2 0 00-2-2H5a2 2 0 00-2 2v5a2 2 0 002 2z">
+                    </path>
+                </svg>
+            </div>
+        </div>
+
+        <h1 class="text-3xl font-extrabold text-gray-900 mb-3">Account Locked</h1>
+        <p class="text-gray-600 mb-8 leading-relaxed">
+            Too many failed login attempts. To protect your security, access has been temporarily restricted.
+        </p>
+
+        <div class="bg-blue-50 rounded-xl p-4 mb-8">
+            <p class="text-blue-800 text-sm font-medium">
+                Please wait <span class="font-bold">15 minutes</span> before trying again.
+            </p>
+        </div>
+
+        <a href="{% url 'login' %}"
+            class="inline-block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition duration-300 ease-in-out transform hover:-translate-y-1 shadow-lg">
+            Back to Login
+        </a>
+
+        <p class="mt-8 text-xs text-gray-400">
+            If you need immediate assistance, please contact your administrator.
+        </p>
+    </div>
+</body>
+
+</html>

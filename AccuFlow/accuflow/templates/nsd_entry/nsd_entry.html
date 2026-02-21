@@ -422,6 +422,8 @@
 {% endblock %} {% block externalJS %}
 <script>
 
+  var all_customers_data = {{ customers| safe }};
+  var all_suppliers_data = {{ suppliers| safe }};
   isUpdate = false;
 
   function addLastRow() {
@@ -501,71 +503,71 @@
   });
   $('#allSuppliers').on('change', function () {
     if ($(this).is(':checked')) {
-      const customers = {{ customers| safe }} 
-        var supplierSelect = $('#supplier');
-  $('#supplierID').val('');
-  $('#supplierCredit').text('');
-  customers.forEach(function (customer) {
-    var option = $('<option></option>')
-      .attr('value', customer.id)
-      .attr('data-code', customer.customerId)
-      .attr('data-balance', customer.balance)
-      .attr('data-type', 'customers')
-      .text(customer.name);
-    supplierSelect.append(option);
-  });
-      } else {
-    const suppliers = {{ suppliers| safe }}
+      const customers = all_customers_data;
+      var supplierSelect = $('#supplier');
+      $('#supplierID').val('');
+      $('#supplierCredit').text('');
+      customers.forEach(function (customer) {
+        var option = $('<option></option>')
+          .attr('value', customer.id)
+          .attr('data-code', customer.customerId)
+          .attr('data-balance', customer.balance)
+          .attr('data-type', 'customers')
+          .text(customer.name);
+        supplierSelect.append(option);
+      });
+    } else {
+      const suppliers = all_suppliers_data;
 
-  var supplierSelect = $('#supplier');
-  supplierSelect.empty();
-  $('#supplierID').val('');
-  $('#supplierCredit').text('');
-  supplierSelect.append('<option value="" selected>Select Supplier</option>');
-  suppliers.forEach(function (supplier) {
-    var option = $('<option></option>')
-      .attr('value', supplier.id)
-      .attr('data-code', supplier.supplierId)
-      .attr('data-balance', supplier.balance)
-      .attr('data-type', 'suppliers')
-      .text(supplier.name);
-    supplierSelect.append(option);
+      var supplierSelect = $('#supplier');
+      supplierSelect.empty();
+      $('#supplierID').val('');
+      $('#supplierCredit').text('');
+      supplierSelect.append('<option value="" selected>Select Supplier</option>');
+      suppliers.forEach(function (supplier) {
+        var option = $('<option></option>')
+          .attr('value', supplier.id)
+          .attr('data-code', supplier.supplierId)
+          .attr('data-balance', supplier.balance)
+          .attr('data-type', 'suppliers')
+          .text(supplier.name);
+        supplierSelect.append(option);
+      });
+    }
   });
-      }
-    });
   $('#allCustomer').on('change', function () {
     if ($(this).is(':checked')) {
-      const suppliers = {{ suppliers| safe}}
-        var customerSelect = $('#customer');
-  $('#customerID').val('');
-  $('#customerCredit').text('');
-  suppliers.forEach(function (supplier) {
-    var option = $('<option></option>')
-      .attr('value', supplier.id)
-      .attr('data-code', supplier.supplierId)
-      .attr('data-balance', supplier.balance)
-      .attr('data-type', 'suppliers')
-      .text(supplier.name);
-    customerSelect.append(option);
+      const suppliers = all_suppliers_data;
+      var customerSelect = $('#customer');
+      $('#customerID').val('');
+      $('#customerCredit').text('');
+      suppliers.forEach(function (supplier) {
+        var option = $('<option></option>')
+          .attr('value', supplier.id)
+          .attr('data-code', supplier.supplierId)
+          .attr('data-balance', supplier.balance)
+          .attr('data-type', 'suppliers')
+          .text(supplier.name);
+        customerSelect.append(option);
+      });
+    } else {
+      const customers = all_customers_data;
+      var customerSelect = $('#customer');
+      customerSelect.empty();
+      $('#customerID').val('');
+      $('#customerCredit').text('');
+      customerSelect.append('<option value="" selected>Select Customer</option>');
+      customers.forEach(function (customer) {
+        var option = $('<option></option>')
+          .attr('value', customer.id)
+          .attr('data-code', customer.customerId)
+          .attr('data-balance', customer.get_balance)
+          .attr('data-type', 'customers')
+          .text(customer.name);
+        customerSelect.append(option);
+      });
+    }
   });
-      } else {
-    const customers = {{ customers| safe}}
-  var customerSelect = $('#customer');
-  customerSelect.empty();
-  $('#customerID').val('');
-  $('#customerCredit').text('');
-  customerSelect.append('<option value="" selected>Select Customer</option>');
-  customers.forEach(function (customer) {
-    var option = $('<option></option>')
-      .attr('value', customer.id)
-      .attr('data-code', customer.customerId)
-      .attr('data-balance', customer.get_balance)
-      .attr('data-type', 'customers')
-      .text(customer.name);
-    customerSelect.append(option);
-  });
-      }
-    });
   $('#customer').on('change', function () {
     var selectedOption = $(this).find('option:selected');
     var code = selectedOption.data('code') || '';
@@ -703,7 +705,7 @@
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-CSRFToken": "{{ csrf_token }}",
+        "X-CSRFToken": getCookie('csrftoken'),
       },
       body: JSON.stringify({
         nsd_no: nsd_no,

@@ -41,7 +41,7 @@ class SaleEntryView(View):
                 'id':customer.id,
                 'name':customer.name,
                 'customerId':customer.customerId, 
-                'balance':customer.get_balance,
+                'balance':str(customer.get_balance),
             })
         suppliersData = []
         for supplier in suppliers:
@@ -49,12 +49,12 @@ class SaleEntryView(View):
                 'id':supplier.id,
                 'name':supplier.name,
                 'supplierId':supplier.supplierId,
-                'balance':supplier.get_balance,
+                'balance':str(supplier.get_balance),
             })
         context = {
             'sales':saleData,
-            'suppliers':suppliersData,
-            'customers':customersData,
+            'suppliers':json.dumps(suppliersData),
+            'customers':json.dumps(customersData),
             'godowns':godowns,
             'last_sale_no':getLastSaleNo(client=getClient(request.user)),
         }

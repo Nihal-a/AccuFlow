@@ -1,6 +1,7 @@
 from pathlib import Path
 import environ
 import os
+from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -37,6 +38,7 @@ INSTALLED_APPS = [
     'trial_balance',
     'profit_loss',
     'balance_sheet',
+    'axes',
 ]
 
 MIDDLEWARE = [
@@ -49,6 +51,7 @@ MIDDLEWARE = [
     'core.login_required_middleware.LoginRequiredMiddleware',
     'core.middleware.SubscriptionMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'axes.middleware.AxesMiddleware',
 ]
 
 ROOT_URLCONF = 'accuflow.urls'
@@ -74,6 +77,16 @@ WSGI_APPLICATION = 'accuflow.wsgi.application'
 
 AUTH_USER_MODEL = 'core.UserAccount'
 
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+AXES_LOCKOUT_TEMPLATE = 'lockout.html'
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = timedelta(minutes=15)
+AXES_LOCKOUT_PARAMETERS = ["username", "ip_address"]
+AXES_RESET_ON_SUCCESS = True
 
 
 DATABASES = {
