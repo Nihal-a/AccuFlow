@@ -1,7 +1,26 @@
 from django.db import models
 from decimal import Decimal
-
+from django.utils import timezone
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, PermissionsMixin, Group, Permission
+
+class SoftDeleteMixin(models.Model):
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        abstract = True
+
+    def soft_delete(self):
+        self.is_active = False
+        self.deleted_at = timezone.now()
+        self.save()
+
+    def save(self, *args, **kwargs):
+        if not self.is_active:
+            if self.deleted_at is None:
+                self.deleted_at = timezone.now()
+        else:
+            self.deleted_at = None
+        super().save(*args, **kwargs)
 
 class UserAccountManager(BaseUserManager):
     def create_user(self, username, password=None, **extra_fields):
@@ -120,7 +139,7 @@ class Clients(models.Model):
     
 
 
-class Customers(models.Model):
+class Customers(SoftDeleteMixin):
     name = models.TextField(blank=True,null=True)
     customerId = models.TextField(blank=True,null=True)
     phone = models.TextField(blank=True,null=True)
@@ -131,6 +150,7 @@ class Customers(models.Model):
     otc_debit = models.DecimalField(max_digits=19, decimal_places=4, default=Decimal('0.0000'))
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
     country_code = models.TextField(blank=True,null=True)
     wa = models.TextField(blank=True,null=True)
     balance = models.DecimalField(max_digits=19, decimal_places=4, default=Decimal('0.0000'))
@@ -147,7 +167,7 @@ class Customers(models.Model):
     def get_balance(self):
         return self.balance 
     
-class Suppliers(models.Model):
+class Suppliers(SoftDeleteMixin):
     name = models.TextField(blank=True,null=True)
     supplierId = models.TextField(blank=True,null=True)
     phone = models.TextField(blank=True,null=True)
@@ -158,6 +178,7 @@ class Suppliers(models.Model):
     otc_debit = models.DecimalField(max_digits=19, decimal_places=4, default=Decimal('0.0000'))
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
     country_code = models.TextField(blank=True,null=True)
     wa = models.TextField(blank=True,null=True)
     credit = models.DecimalField(max_digits=19, decimal_places=4, default=Decimal('0.0000'))
@@ -175,20 +196,21 @@ class Suppliers(models.Model):
     
     
     
-class Expenses(models.Model):
+class Expenses(SoftDeleteMixin):
     category  = models.TextField(blank=True,null=True)
     expenseId = models.TextField(blank=True,null=True)
     description = models.TextField(blank=True,null=True) 
     amount = models.DecimalField(max_digits=19, decimal_places=4, default=Decimal('0.0000'))
     created_at = models.DateTimeField(auto_now_add=True,blank=True,null=True)
     is_active = models.BooleanField(default=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
     client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
     
     def __str__(self):
         return self.category
     
 
-class Godowns(models.Model):
+class Godowns(SoftDeleteMixin):
     name = models.TextField(blank=True,null=True)
     godownId = models.TextField(blank=True,null=True)
     phone = models.TextField(blank=True,null=True)
@@ -199,6 +221,7 @@ class Godowns(models.Model):
     otc_debit = models.DecimalField(max_digits=19, decimal_places=4, default=Decimal('0.0000'))
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
     country_code = models.TextField(blank=True,null=True)
     wa = models.TextField(blank=True,null=True)
     balance = models.DecimalField(max_digits=19, decimal_places=4, default=Decimal('0.0000'))
@@ -217,18 +240,19 @@ class Godowns(models.Model):
     def get_balance(self):
         return self.qty 
     
-class CashBanks(models.Model):
+class CashBanks(SoftDeleteMixin):
     name  = models.TextField(blank=True,null=True)
     cashbankId = models.TextField(blank=True,null=True)
     description = models.TextField(blank=True,null=True) 
     created_at = models.DateTimeField(auto_now_add=True,blank=True,null=True)
     is_active = models.BooleanField(default=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
     client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
     
     def __str__(self):
         return self.name
     
-class Collectors(models.Model):
+class Collectors(SoftDeleteMixin):
     name = models.TextField(blank=True,null=True)
     user = models.ForeignKey(UserAccount,on_delete=models.CASCADE,blank=True,null=True)
     collectorId = models.TextField(blank=True,null=True)
@@ -236,13 +260,14 @@ class Collectors(models.Model):
     address = models.TextField(blank=True,null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
     country_code = models.TextField(blank=True,null=True)
     wa = models.TextField(blank=True,null=True)
     can_collect_directly = models.BooleanField(default=False)
     client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
     
     
-class Purchases(models.Model):
+class Purchases(SoftDeleteMixin):
     purchase_no = models.TextField(blank=True,null=True)
     supplier = models.ForeignKey(Suppliers, on_delete=models.CASCADE, blank=True, null=True)
     godown = models.ForeignKey(Godowns, on_delete=models.CASCADE, blank=True, null=True)
@@ -254,6 +279,7 @@ class Purchases(models.Model):
     total_amount = models.DecimalField(max_digits=19, decimal_places=4, default=Decimal('0.0000'))
     created_at = models.DateTimeField(auto_now_add=True,blank=True,null=True)
     is_active = models.BooleanField(default=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
     description = models.TextField(blank=True,null=True)
     hold = models.BooleanField(default=False)
     type = models.TextField(blank=True,null=True)
@@ -280,7 +306,7 @@ class Purchases(models.Model):
         elif self.which_type == 'suppliers':
             return self.supplier
     
-class Sales(models.Model):
+class Sales(SoftDeleteMixin):
     sale_no = models.TextField(blank=True,null=True)
     supplier = models.ForeignKey(Suppliers, on_delete=models.CASCADE, blank=True, null=True)
     godown = models.ForeignKey(Godowns, on_delete=models.CASCADE, blank=True, null=True)
@@ -292,6 +318,7 @@ class Sales(models.Model):
     total_amount = models.DecimalField(max_digits=19, decimal_places=4, default=Decimal('0.0000'))
     created_at = models.DateTimeField(auto_now_add=True,blank=True,null=True)
     is_active = models.BooleanField(default=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
     description = models.TextField(blank=True,null=True)
     hold = models.BooleanField(default=False)
     type = models.TextField(blank=True,null=True)
@@ -317,7 +344,7 @@ class Sales(models.Model):
         elif self.which_type == 'suppliers':
             return self.supplier
 
-class Commissions(models.Model):
+class Commissions(SoftDeleteMixin):
     commission_no = models.TextField(blank=True,null=True)
     expense = models.ForeignKey(Expenses, on_delete=models.CASCADE, blank=True, null=True)
     godown = models.ForeignKey(Godowns, on_delete=models.CASCADE, blank=True, null=True)
@@ -328,6 +355,7 @@ class Commissions(models.Model):
     total_amount = models.DecimalField(max_digits=19, decimal_places=4, default=Decimal('0.0000'))
     created_at = models.DateTimeField(auto_now_add=True,blank=True,null=True)
     is_active = models.BooleanField(default=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
     description = models.TextField(blank=True,null=True)
     hold = models.BooleanField(default=False)
     type = models.TextField(blank=True,null=True)
@@ -340,7 +368,7 @@ class Commissions(models.Model):
     
         
 
-class NSDs(models.Model):
+class NSDs(SoftDeleteMixin):
     nsd_no = models.TextField(blank=True,null=True)
     sender_supplier = models.ForeignKey(Suppliers, on_delete=models.CASCADE, blank=True, null=True,related_name='sender_supplier')
     sender_customer = models.ForeignKey(Customers, on_delete=models.CASCADE, blank=True, null=True,related_name='sender_customer')
@@ -355,6 +383,7 @@ class NSDs(models.Model):
     purchase_amount = models.DecimalField(max_digits=19, decimal_places=4, default=Decimal('0.0000'))
     created_at = models.DateTimeField(auto_now_add=True,blank=True,null=True)
     is_active = models.BooleanField(default=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
     description = models.TextField(blank=True,null=True)
     hold = models.BooleanField(default=False)
     type = models.TextField(blank=True,null=True)
@@ -400,7 +429,7 @@ class NSDs(models.Model):
         elif self.which_type == 'suppliers':
             return self.supplier
         
-class Cashs(models.Model):
+class Cashs(SoftDeleteMixin):
     cash_no = models.TextField(blank=True,null=True)
     cash_bank = models.ForeignKey(CashBanks, on_delete=models.CASCADE, blank=True, null=True)
     customer = models.ForeignKey(Customers, on_delete=models.CASCADE, blank=True, null=True)
@@ -409,6 +438,7 @@ class Cashs(models.Model):
     amount = models.DecimalField(max_digits=19, decimal_places=4, default=Decimal('0.0000'))
     created_at = models.DateTimeField(auto_now_add=True,blank=True,null=True)
     is_active = models.BooleanField(default=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
     description = models.TextField(blank=True,null=True)
     hold = models.BooleanField(default=False)
     transaction = models.TextField(blank=True,null=True)
@@ -436,7 +466,7 @@ class Cashs(models.Model):
             return self.supplier
         
 
-class StockTransfers(models.Model):
+class StockTransfers(SoftDeleteMixin):
     transfer_no = models.TextField(blank=True, null=True)
     transfer_from = models.ForeignKey(Godowns,on_delete=models.CASCADE,related_name='transfers_from',blank=True, null=True)
     transfer_to = models.ForeignKey(Godowns,on_delete=models.CASCADE,related_name='transfers_to',blank=True,null=True)
@@ -445,6 +475,7 @@ class StockTransfers(models.Model):
     qty = models.DecimalField(max_digits=19, decimal_places=4, default=Decimal('0.0000'))
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     is_active = models.BooleanField(default=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
     description = models.TextField(blank=True, null=True)
     hold = models.BooleanField(default=False)
     type = models.TextField(blank=True, null=True)
@@ -455,11 +486,13 @@ class StockTransfers(models.Model):
     def __str__(self):
         return self.transfer_no
 
-class Collection(models.Model):
+class Collection(SoftDeleteMixin):
     collector = models.ForeignKey(Collectors, on_delete=models.CASCADE, null=True, blank=True)
     date = models.DateField(null=True, blank=True)
     total_amount = models.DecimalField(max_digits=19, decimal_places=4, default=Decimal('0.0000'))
     created_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
     client = models.ForeignKey(Clients, on_delete=models.CASCADE, null=True, blank=True)
     
     STATUS_CHOICES = (
@@ -516,3 +549,29 @@ def update_client_subscription(sender, instance, created, **kwargs):
         client.subscription_start = timezone.now().date()
         client.subscription_end = client.subscription_start + datetime.timedelta(days=plan.duration_days)
         client.save()
+
+
+class CompanyDetail(models.Model):
+    name = models.CharField(max_length=255, default="AccuFlow")
+    description = models.TextField(blank=True, null=True)
+    logo = models.ImageField(upload_to='company/', blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
+    website = models.URLField(blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "Company Detail"
+        verbose_name_plural = "Company Details"
+
+class SupportContact(models.Model):
+    company = models.ForeignKey(CompanyDetail, on_delete=models.CASCADE, related_name='contacts')
+    title = models.CharField(max_length=100, help_text="e.g. Sales Support, Technical Support")
+    name = models.CharField(max_length=200, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.title}: {self.name}"

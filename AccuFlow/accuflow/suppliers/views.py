@@ -63,8 +63,7 @@ class DeleteSupplierView(View):
     def get(self, request, supplier_id):
         # Authorization: Ensure supplier belongs to user's client (or user is superuser)
         supplier = get_object_for_user(Suppliers, request.user, id=supplier_id)
-        supplier.is_active = False 
-        supplier.save()
+        supplier.soft_delete()
         return redirect('suppliers')
  
 

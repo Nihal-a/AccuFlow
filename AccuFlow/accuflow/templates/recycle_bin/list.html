@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% block title %}Recycle Bin - {{ label }} - AccuFlow{% endblock title %}
+
+{% block content %}
+<div class="mb-6">
+    <a href="{% url 'recycle_bin' %}"
+        class="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors mb-4">
+        <i data-lucide="arrow-left" class="w-4 h-4 mr-1"></i>
+        Back to Dashboard
+    </a>
+    <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100">
+        <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+            <div>
+                <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                    <i data-lucide="trash-2" class="w-6 h-6 text-red-500"></i>
+                    Recycle Bin: <span class="text-blue-600">{{ label }}</span>
+                </h2>
+                <p class="text-sm text-gray-500 mt-1">Viewing all deleted <span class="lowercase">{{ label }}</span>
+                    records.</p>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider">
+                        <th class="px-6 py-4 font-semibold">ID / No</th>
+                        <th class="px-6 py-4 font-semibold">Name / Description</th>
+                        <th class="px-6 py-4 font-semibold">Deleted At</th>
+                        <th class="px-6 py-4 font-semibold text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 text-sm">
+                    {% for item in items %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 font-medium text-gray-900">{{ item.display_id }}</td>
+                        <td class="px-6 py-4 text-gray-600">{{ item.name }}</td>
+                        <td class="px-6 py-4 text-gray-500">{{ item.deleted_at|date:"M d, Y h:i A" }}</td>
+                        <td class="px-6 py-4">
+                            <div class="flex justify-center gap-4">
+                                <button
+                                    onclick="confirmRestore('{{ model_name }}', '{{ item.id }}', '{{ item.display_id }}')"
+                                    class="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all text-xs font-semibold"
+                                    title="Restore">
+                                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 mr-1.5"></i>
+                                    Restore
+                                </button>
+                                <button
+                                    onclick="confirmDelete('{{ model_name }}', '{{ item.id }}', '{{ item.display_id }}')"
+                                    class="inline-flex items-center px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all text-xs font-semibold"
+                                    title="Delete Permanently">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5 mr-1.5"></i>
+                                    Purge
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-12 text-center text-gray-500">
+                            <div class="flex flex-col items-center">
+                                <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                                    <i data-lucide="check-circle" class="w-8 h-8 text-green-300"></i>
+                                </div>
+                                <p class="text-lg font-medium">No deleted items here</p>
+                                <p class="text-sm">This category is clean.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Restoration Modal -->
+<div id="restoreModal"
+    class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm shadow-2xl flex justify-center items-center z-50">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md transform transition-all">
+        <div class="flex items-center gap-4 mb-6">
+            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+                <i data-lucide="rotate-ccw" class="w-6 h-6"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800">Restore Item</h2>
+        </div>
+        <p class="text-gray-600 mb-8 leading-relaxed">
+            Are you sure you want to restore <span id="restoreItemName" class="font-bold text-gray-900"></span>?
+            If the ID is already taken, a new ID will be assigned automatically.
+        </p>
+        <div class="flex justify-end gap-4">
+            <button onclick="closeRestoreModal()"
+                class="px-6 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium transition-all">
+                Cancel
+            </button>
+            <button id="confirmRestoreBtn"
+                class="px-6 py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-semibold shadow-lg shadow-blue-200 transition-all">
+                Restore Now
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Permanent Delete Modal -->
+<div id="deleteModal"
+    class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm shadow-2xl flex justify-center items-center z-50">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md transform transition-all border-t-4 border-red-500">
+        <div class="flex items-center gap-4 mb-6">
+            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-red-600">
+                <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800">Permanent Delete</h2>
+        </div>
+        <p class="text-gray-600 mb-8 leading-relaxed">
+            Are you sure you want to permanently delete <span id="deleteItemName"
+                class="font-bold text-gray-900"></span>?
+            <br><span class="text-red-500 font-semibold mt-2 inline-block">This action cannot be undone!</span>
+        </p>
+        <div class="flex justify-end gap-4">
+            <button onclick="closeDeleteModal()"
+                class="px-6 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium transition-all">
+                Cancel
+            </button>
+            <button id="confirmDeleteBtn"
+                class="px-6 py-2.5 rounded-xl bg-red-600 text-white hover:bg-red-700 font-semibold shadow-lg shadow-red-200 transition-all">
+                Delete Forever
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentModel = '';
+    let currentPk = '';
+
+    function confirmRestore(model, pk, name) {
+        currentModel = model;
+        currentPk = pk;
+        document.getElementById('restoreItemName').textContent = name;
+        document.getElementById('restoreModal').classList.remove('hidden');
+    }
+
+    function closeRestoreModal() {
+        document.getElementById('restoreModal').classList.add('hidden');
+    }
+
+    function confirmDelete(model, pk, name) {
+        currentModel = model;
+        currentPk = pk;
+        document.getElementById('deleteItemName').textContent = name;
+        document.getElementById('deleteModal').classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.add('hidden');
+    }
+
+    document.getElementById('confirmRestoreBtn').addEventListener('click', function () {
+        fetch(`/recycle-bin/restore/${currentModel}/${currentPk}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            });
+    });
+
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
+        fetch(`/recycle-bin/delete/${currentModel}/${currentPk}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            });
+    });
+</script>
+{% endblock content %}
