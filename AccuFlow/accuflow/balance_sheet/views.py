@@ -3,6 +3,7 @@ from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from core.views import getClient
 from datetime import datetime
+from django.utils import timezone
 from .services import BalanceSheetService
 
 class BalanceSheetView(LoginRequiredMixin, View):
@@ -17,7 +18,7 @@ class BalanceSheetView(LoginRequiredMixin, View):
     def process_report(self, request):
         client = getClient(request.user)
         
-        today = datetime.now().date()
+        today = timezone.localtime(timezone.now()).date()
         date_to_str = request.POST.get("dateTo") or request.GET.get("dateTo") # Format YYYY-MM-DD
 
         if date_to_str:

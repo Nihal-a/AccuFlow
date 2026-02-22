@@ -1,12 +1,18 @@
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
-from datetime import datetime
-from core.models import Godowns, Sales, Suppliers, NSDs
+from datetime import datetime, timedelta
+from core.models import (
+    Godowns, Sales, Suppliers, NSDs, Customers, Expenses, CashBanks, 
+    Collectors, Purchases, Commissions, Cashs, StockTransfers, Collection
+)
 from core.views import getClient
-from django.http import HttpResponse
+from core.utils import get_next_id_generic
+from django.http import HttpResponse, JsonResponse
 import openpyxl
 from io import BytesIO
+from django.apps import apps
+from django.utils import timezone
 
 class AddressView(View):
     def get(self, request):
@@ -104,3 +110,135 @@ class AddressView(View):
             'selected_party': party_id,
             'is_nsd': is_nsd
         })
+
+class RecycleBinView(View):
+    def get(self, request):
+        client = getClient(request.user)
+        
+        models_to_check = [
+            (Customers, 'Customer', 'customerId'),
+            (Suppliers, 'Supplier', 'supplierId'),
+            (Expenses, 'Expense', 'expenseId'),
+            (Godowns, 'Godown', 'godownId'),
+            (CashBanks, 'Cash Bank', 'cashbankId'),
+            (Collectors, 'Collector', 'collectorId'),
+            (Purchases, 'Purchase', 'purchase_no'),
+            (Sales, 'Sale', 'sale_no'),
+            (Commissions, 'Commission', 'commission_no'),
+            (NSDs, 'NSD', 'nsd_no'),
+            (Cashs, 'Cash', 'cash_no'),
+            (StockTransfers, 'Stock Transfer', 'transfer_no'),
+            (Collection, 'Collection', 'id'),
+        ]
+        
+        categories = []
+        for model, label, id_field in models_to_check:
+            count = model.objects.filter(is_active=False, client=client, deleted_at__isnull=False).count()
+            if count > 0:
+                categories.append({
+                    'label': label,
+                    'model_name': model.__name__,
+                    'count': count,
+                    'icon': self.get_icon(label)
+                })
+        
+        return render(request, 'recycle_bin/dashboard.html', {'categories': categories})
+
+    def get_icon(self, label):
+        icons = {
+            'Customer': 'users',
+            'Supplier': 'truck',
+            'Expense': 'file-text',
+            'Godown': 'home',
+            'Cash Bank': 'landmark',
+            'Collector': 'user-check',
+            'Purchase': 'shopping-cart',
+            'Sale': 'badge-dollar-sign',
+            'Commission': 'percent',
+            'NSD': 'arrow-right-left',
+            'Cash': 'banknote',
+            'Stock Transfer': 'package-2',
+            'Collection': 'layers'
+        }
+        return icons.get(label, 'trash-2')
+
+class RecycleBinListView(View):
+    def get(self, request, model_name):
+        client = getClient(request.user)
+        model = apps.get_model('core', model_name)
+        
+        id_field_map = {
+            'Customers': ('Customer', 'customerId'),
+            'Suppliers': ('Supplier', 'supplierId'),
+            'Expenses': ('Expense', 'expenseId'),
+            'Godowns': ('Godown', 'godownId'),
+            'CashBanks': ('Cash Bank', 'cashbankId'),
+            'Collectors': ('Collector', 'collectorId'),
+            'Purchases': ('Purchase', 'purchase_no'),
+            'Sales': ('Sale', 'sale_no'),
+            'Commissions': ('Commission', 'commission_no'),
+            'NSDs': ('NSD', 'nsd_no'),
+            'Cashs': ('Cash', 'cash_no'),
+            'StockTransfers': ('Stock Transfer', 'transfer_no'),
+            'Collection': ('Collection', 'id'),
+        }
+        
+        label, id_field = id_field_map.get(model_name, (model_name, 'id'))
+        items_query = model.objects.filter(is_active=False, client=client, deleted_at__isnull=False).order_by('-deleted_at')
+        
+        deleted_items = []
+        for item in items_query:
+            deleted_items.append({
+                'id': item.id,
+                'display_id': getattr(item, id_field) if id_field != 'id' else f"COL-{item.id}",
+                'name': item.name if hasattr(item, 'name') else (item.category if hasattr(item, 'category') else label),
+                'deleted_at': item.deleted_at,
+            })
+            
+        return render(request, 'recycle_bin/list.html', {
+            'items': deleted_items,
+            'label': label,
+            'model_name': model_name
+        })
+
+class RestoreView(View):
+    def post(self, request, model_name, pk):
+        client = getClient(request.user)
+        model = apps.get_model('core', model_name)
+        item = get_object_or_404(model, id=pk, client=client)
+        
+        id_field_map = {
+            'Customers': 'customerId',
+            'Suppliers': 'supplierId',
+            'Expenses': 'expenseId',
+            'Godowns': 'godownId',
+            'CashBanks': 'cashbankId',
+            'Collectors': 'collectorId',
+            'Purchases': 'purchase_no',
+            'Sales': 'sale_no',
+            'Commissions': 'commission_no',
+            'NSDs': 'nsd_no',
+            'Cashs': 'cash_no',
+            'StockTransfers': 'transfer_no',
+        }
+        
+        id_field = id_field_map.get(model_name)
+        if id_field:
+            current_id = getattr(item, id_field)
+            if model.objects.filter(is_active=True, client=client, **{id_field: current_id}).exists():
+                new_id = get_next_id_generic(model_name, client)
+                if new_id:
+                    setattr(item, id_field, new_id)
+        
+        item.is_active = True
+        item.deleted_at = None
+        item.save()
+        return JsonResponse({'status': 'success', 'message': 'Item restored successfully'})
+
+class PermanentDeleteView(View):
+    def post(self, request, model_name, pk):
+        client = getClient(request.user)
+        model = apps.get_model('core', model_name)
+        item = get_object_or_404(model, id=pk, client=client)
+        item.delete()
+        return JsonResponse({'status': 'success', 'message': 'Item permanently deleted'})

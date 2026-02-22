@@ -77,8 +77,7 @@
         <label
           class="flex items-center gap-3 cursor-pointer bg-gray-50 p-4 rounded-xl border border-gray-200 hover:bg-white hover:border-blue-300 hover:shadow-sm transition-all">
           <input type="checkbox" name="can_collect_directly"
-            class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 cursor-pointer" {% if
-            collector.can_collect_directly %}checked{% endif %}>
+            class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 cursor-pointer" {% if       collector.can_collect_directly %}checked{% endif %}>
           <div class="flex flex-col">
             <span class="text-gray-800 font-medium select-none">Allow Direct Collection</span>
             <span class="text-xs text-gray-500 select-none mt-0.5">If enabled, this collector can create new collections
@@ -104,8 +103,7 @@
           <div class="relative">
             <input type="password" id="passwordInput" name="password"
               placeholder="{% if collector.user %}Leave blank to keep existing{% else %}Enter Password{% endif %}"
-              class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" {% if
-              not collector.user %}required{% endif %} />
+              class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" {% if        not collector.user %}required{% endif %} />
             <button type="button" id="togglePassword" class="absolute right-3 top-3 text-gray-500">
               👁️
             </button>
@@ -117,8 +115,7 @@
           <label class="block text-gray-700">Confirm Password</label>
           <div class="relative">
             <input type="password" id="confirmPasswordInput" name="confirm_password" placeholder="Confirm password"
-              class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" {% if
-              not collector.user %}required{% endif %} />
+              class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" {% if        not collector.user %}required{% endif %} />
             <button type="button" id="toggleConfirmPassword" class="absolute right-3 top-3 text-gray-500">
               👁️
             </button>

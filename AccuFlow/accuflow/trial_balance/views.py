@@ -3,6 +3,7 @@ from django.db.models import Sum, Q, F
 from django.views import View
 from decimal import Decimal
 from datetime import datetime
+from django.utils import timezone
 from core.models import Customers, Suppliers, Purchases, Sales, NSDs, Cashs, Expenses, Commissions, Godowns
 from core.views import getClient
 from django.template.loader import render_to_string
@@ -22,12 +23,13 @@ class TrialBalanceView(View):
 
     def process_report(self, request):
         client = getClient(request.user)
-        date_to_str = request.POST.get("dateTo") or datetime.now().strftime("%Y-%m-%d")
+        now = timezone.localtime(timezone.now())
+        date_to_str = request.POST.get("dateTo") or now.strftime("%Y-%m-%d")
         
         try:
             date_limit = datetime.strptime(date_to_str, "%Y-%m-%d").date()
         except ValueError:
-            date_limit = datetime.now().date()
+            date_limit = timezone.localtime(timezone.now()).date()
             
         accounts = []
         

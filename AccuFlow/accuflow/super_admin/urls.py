@@ -8,12 +8,16 @@ urlpatterns = [
     path('clients/update/<int:id>/', views.ClientUpdateView.as_view(), name='update-client'),
     path('clients/delete/<int:client_id>/', views.DeleteClientView.as_view(), name='delete-client'),
     
-    # Subscriptions
     path('subscriptions/', views.SubscriptionListView.as_view(), name='subscriptions'),
     path('subscriptions/create/', views.SubscriptionCreateView.as_view(), name='create-subscription'),
     path('subscriptions/update/<int:id>/', views.SubscriptionUpdateView.as_view(), name='update-subscription'),
     
-    # Subscription Payments
     path('payments/', views.PaymentListView.as_view(), name='payments'),
     path('payments/create/', views.PaymentCreateView.as_view(), name='payment-create'),
-] 
+
+    path('company/', views.CompanyUpdateView.as_view(), name='company_update'),
+    path('contacts/', views.SupportContactListView.as_view(), name='contact_list'),
+    path('contacts/create/', views.SupportContactCreateView.as_view(), name='contact_create'),
+    path('contacts/update/<int:id>/', views.SupportContactUpdateView.as_view(), name='contact_update'),
+    path('contacts/delete/<int:id>/', views.SupportContactDeleteView.as_view(), name='contact_delete'),
+]
