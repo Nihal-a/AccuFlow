@@ -21,6 +21,17 @@
             font-family: 'Inter', 'Roboto', 'Segoe UI', sans-serif !important;
         }
 
+        /* Responsive Zoom-out for Tablets & Laptops */
+        @media screen and (min-width: 768px) and (max-width: 1440px) {
+            html {
+                background-color: #f3f4f6; /* bg-gray-100 */
+            }
+            body {
+                zoom: 0.85;
+                height: 117.65vh !important; /* Computes to 100vh real screen height at 0.85 zoom */
+            }
+        }
+
         table,
         input,
         textarea {
@@ -403,15 +414,13 @@
 
                     {% if subscription_alert %}
                     <div
-                        class="mt-2 flex items-center gap-3 px-4 py-3 rounded-xl border {% if subscription_alert.is_expired %}bg-red-50 border-red-100 text-red-700{% else %}bg-orange-50 border-orange-100 text-orange-700{% endif %} animate-in fade-in slide-in-from-top-4 duration-500">
-                        <i data-lucide="alert-circle" class="w-5 h-5 flex-shrink-0"></i>
-                        <p class="text-sm font-medium">
+                        class="mt-2 flex items-start sm:items-center gap-2 sm:gap-3 px-3 flex-wrap sm:flex-nowrap sm:px-4 py-2 sm:py-3 rounded-xl border {% if subscription_alert.is_expired %}bg-red-50 border-red-100 text-red-700{% else %}bg-orange-50 border-orange-100 text-orange-700{% endif %} animate-in fade-in slide-in-from-top-4 duration-500 w-full max-w-full overflow-hidden">
+                        <i data-lucide="alert-circle" class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5 sm:mt-0"></i>
+                        <p class="text-xs sm:text-sm font-medium leading-snug break-words">
                             {% if subscription_alert.is_expired %}
-                            <strong>Action Required:</strong> Your subscription has expired. Please renew to continue
-                            using all features.
+                            <strong>Action Required:</strong> Your subscription has expired. Please renew to continue using all features.
                             {% else %}
-                            <strong>Alert:</strong> Your subscription expires in {{ subscription_alert.days }} days.
-                            Renew now to avoid interruption!
+                            <strong>Alert:</strong> Your subscription expires in {{ subscription_alert.days }} days. Renew now to avoid interruption!
                             {% endif %}
                         </p>
                     </div>

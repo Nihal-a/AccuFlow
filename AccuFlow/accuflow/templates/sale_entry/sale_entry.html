@@ -21,95 +21,125 @@ Sales Entry
   </div>
   <hr class="mt-5">
   <div class=" mt-5 w-100" id="createView">
-    <div class="grid grid-cols-[30%_2%_68%_0%_0%] lg:grid-cols-[20%_5%_20%_15%_10%] gap-y-2 lg:gap-y-0.5 gap-x-1 text-xs">
-      <label class="text-gray-700 flex items-center">Sale No*</label>
-      <div></div>
-      <input type="text" id="sale_name" value="{{ last_sale_no }}" placeholder="Enter Sale No"
-        class="w-full px-2.5 py-1.5 border rounded-md focus:ring-1 focus:ring-blue-500" disabled />
-      <div>
-        <input type="hidden" name="" id="saleId" placeholder="" />
+    <div class="flex flex-col gap-y-3 md:gap-y-1.5 text-xs w-full md:w-3/4 mr-auto">
+      
+      <!-- Sale No -->
+      <div class="flex flex-wrap md:flex-nowrap items-center w-full">
+        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
+          <label class="text-gray-700 font-medium">Sale No*</label>
+        </div>
+        <div class="w-[65%] sm:w-[68%] md:w-[45%] flex items-center pr-2 md:pr-0">
+          <input type="text" id="sale_name" value="{{ last_sale_no }}" placeholder="Enter Sale No" class="w-full px-2.5 py-1.5 border rounded-md focus:ring-1 focus:ring-blue-500 bg-gray-50 bg-opacity-50" disabled />
+          <input type="hidden" name="" id="saleId" placeholder="" />
+        </div>
       </div>
-      <div></div>
+
       <!-- Date -->
-      <label class="text-gray-700 flex items-center">Date*</label>
-      <div></div>
-      <input type="date" id="date" class="w-full px-2.5 py-1.5 border rounded-md focus:ring-1 focus:ring-blue-500"
-        required />
-      <div></div>
-      <div></div>
+      <div class="flex flex-wrap md:flex-nowrap items-center w-full">
+        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
+          <label class="text-gray-700 font-medium">Date*</label>
+        </div>
+        <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+          <input type="date" id="date" class="w-full px-2.5 py-1.5 border rounded-md focus:ring-1 focus:ring-blue-500" required />
+        </div>
+      </div>
+
       <!-- Customer -->
-      <label class="text-gray-700 flex items-center gap-2">Customer*</label>
-      <span class="flex items-center gap-1">
-        <input type="checkbox" id="allCustomers"
-          class="h-3 w-3 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-        <span class="text-gray-700 text-xs">All</span>
-      </span>
-      <select name="" id="customer" class="w-full px-2.5 py-1.5 border rounded-md focus:ring-1 focus:ring-blue-500"
-        required>
-        <option value="" selected>Select Customer</option>
-        {% for customer in customers %}
-        <option value="{{ customer.id }}" data-code="{{ customer.customerId }}" data-balance="{{ customer.balance }}"
-          data-type="customers">{{ customer.name }}</option>
-        {% endfor %}
-      </select>
-      <div id="customerCredit" class="flex items-center"></div>
-      <div></div>
+      <div class="flex flex-wrap md:flex-nowrap items-center w-full">
+        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center justify-between pr-3">
+          <label class="text-gray-700 font-medium whitespace-nowrap">Customer*</label>
+          <span class="flex items-center gap-1">
+            <input type="checkbox" id="allCustomers" class="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer" />
+            <span class="hidden sm:inline text-gray-700 text-[10px] sm:text-xs">All</span>
+          </span>
+        </div>
+        <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+          <select name="" id="customer" class="w-full px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required>
+            <option value="" selected>Select Customer</option>
+            {% for customer in customers %}
+            <option value="{{ customer.id }}" data-code="{{ customer.customerId }}" data-balance="{{ customer.balance }}" data-type="customers">{{ customer.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div id="customerCredit" class="hidden md:flex w-[15%] md:w-[20%] items-center pl-3 text-xs font-semibold text-gray-700"></div>
+      </div>
+
       <!-- Customer Code -->
-      <label class="block text-gray-700 flex items-center gap-2">C.code*</label>
-      <div></div>
-      <input type="text" name="" id="customerID" placeholder="" disabled
-        class="w-full lg:w-[70%] px-2.5 py-1.5 border rounded-md focus:ring-1 focus:ring-blue-500" required />
-      <div></div>
-      <div></div>
+      <div class="flex flex-wrap md:flex-nowrap items-center w-full">
+        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
+          <label class="text-gray-700 font-medium whitespace-nowrap">C.code*</label>
+        </div>
+        <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+          <input type="text" name="" id="customerID" placeholder="" disabled class="w-full md:w-[70%] px-2.5 py-1.5 border rounded-md bg-gray-50 bg-opacity-50 focus:ring-1 focus:ring-blue-500" required />
+        </div>
+      </div>
+
       <!-- Godown -->
-      <label class="text-gray-700 flex items-center gap-2">Godown*</label>
-      <div></div>
-      <select name="" id="godown"
-        class="w-full bg-white px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-        required>
-        <option value="" selected>Select Godown</option>
-        {% for godown in godowns %}
-        <option value="{{ godown.id }}" data-code="{{ godown.godownId }}" data-balance="{{ godown.get_balance }}">{{ godown.name }}</option>
-        {% endfor %}
-      </select>
-      <div id="godownCredit" class="flex items-center"></div>
-      <div></div>
+      <div class="flex flex-wrap md:flex-nowrap items-center w-full">
+        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
+          <label class="text-gray-700 font-medium whitespace-nowrap">Godown*</label>
+        </div>
+        <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+          <select name="" id="godown" class="w-full bg-white px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required>
+            <option value="" selected>Select Godown</option>
+            {% for godown in godowns %}
+            <option value="{{ godown.id }}" data-code="{{ godown.godownId }}" data-balance="{{ godown.get_balance }}">{{ godown.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div id="godownCredit" class="hidden md:flex w-[15%] md:w-[20%] items-center pl-3 text-xs font-semibold text-gray-700"></div>
+      </div>
+
       <!-- Godown Code -->
-      <label class="block text-gray-700  flex items-center gap-2">G.code*</label>
-      <div></div>
-      <input type="text" name="" id="godownID" placeholder="" disabled
-        class="w-full lg:w-[70%] mt-1 px-3 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-        required />
-      <div></div>
-      <div></div>
+      <div class="flex flex-wrap md:flex-nowrap items-center w-full">
+        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
+          <label class="text-gray-700 font-medium whitespace-nowrap">G.code*</label>
+        </div>
+        <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+          <input type="text" name="" id="godownID" placeholder="" disabled class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md bg-gray-50 bg-opacity-50 focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+        </div>
+      </div>
+
       <!-- Qty -->
-      <label class="block text-gray-700">Qty*</label>
-      <div></div>
-      <input type="number" name="" id="qty" placeholder="Enter Quantity"
-        class="w-full lg:w-[70%] mt-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required />
-      <div></div>
-      <div></div>
+      <div class="flex flex-wrap md:flex-nowrap items-center w-full">
+        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
+          <label class="text-gray-700 font-medium">Qty*</label>
+        </div>
+        <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+          <input type="number" name="" id="qty" placeholder="Enter Quantity" class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+        </div>
+      </div>
+
       <!-- Rate -->
-      <label class="block text-gray-700">Rate*</label>
-      <div></div>
-      <input type="number" name="" id="amount" placeholder="Enter Amount"
-        class="w-full lg:w-[70%] mt-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required />
-      <div></div>
-      <div></div>
-      <!-- Total amount -->
-      <label class="block text-gray-700">Total Amount*</label>
-      <div></div>
-      <input type="number" name="" id="total_amount" placeholder="" disabled
-        class="w-full lg:w-[70%] mt-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required />
-      <div></div>
-      <div></div>
+      <div class="flex flex-wrap md:flex-nowrap items-center w-full">
+        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
+          <label class="text-gray-700 font-medium">Rate*</label>
+        </div>
+        <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+          <input type="number" name="" id="amount" placeholder="Enter Amount" class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+        </div>
+      </div>
+
+      <!-- Total Amount -->
+      <div class="flex flex-wrap md:flex-nowrap items-center w-full">
+        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
+          <label class="text-gray-700 font-medium whitespace-nowrap">Total Amount*</label>
+        </div>
+        <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+          <input type="number" name="" id="total_amount" placeholder="" disabled class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md bg-gray-50 bg-opacity-50 focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+        </div>
+      </div>
+
       <!-- Description -->
-      <label class="block text-gray-700">Description*</label>
-      <div></div>
-      <textarea name="" id="description"
-        class="w-full  min-h-[80px] mt-1 px-2 py-1 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"></textarea>
-      <div></div>
-      <div></div>
+      <div class="flex flex-wrap md:flex-nowrap items-start w-full">
+        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-start pr-3 mt-1 md:mt-1.5">
+          <label class="text-gray-700 font-medium">Description*</label>
+        </div>
+        <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+          <textarea name="" id="description" class="w-full md:w-[130%] min-h-[60px] md:min-h-[80px] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"></textarea>
+        </div>
+      </div>
+
     </div>
     <hr class="mt-5 mb-5">
     <form action="{% url 'sale-create' %}" method="post">
@@ -137,8 +167,8 @@ Sales Entry
           </button>
         </div>
       </div>
-      <div class="w-full xl:max-w-6xl 2xl:max-w-7xl overflow-x-auto shadow-sm rounded-md border border-slate-200 mt-5 mb-5" id="saleCreateDiv">
-        <table class="table-auto min-w-[700px] w-full lg:min-w-0 md:table-auto divide-y divide-slate-200">
+      <div class="w-full lg:w-3/4 mr-auto xl:max-w-6xl 2xl:max-w-7xl overflow-x-auto shadow-sm rounded-md border border-slate-200 mt-5 mb-5" id="saleCreateDiv">
+        <table class="table-auto w-full divide-y divide-slate-200 text-sm">
           <thead class="sticky top-0 bg-blue-200 text-gray-700 z-10">
             <tr>
               <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">Actions
