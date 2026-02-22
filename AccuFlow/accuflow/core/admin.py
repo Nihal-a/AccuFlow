@@ -1,5 +1,14 @@
 from django.contrib import admin
-from .models import SubscriptionPayment, SubscriptionPlan, Clients
+from .models import SubscriptionPayment, SubscriptionPlan, Clients, CompanyDetail, SupportContact
+
+class SupportContactInline(admin.StackedInline):
+    model = SupportContact
+    extra = 1
+
+@admin.register(CompanyDetail)
+class CompanyDetailAdmin(admin.ModelAdmin):
+    list_display = ('name', 'website')
+    inlines = [SupportContactInline]
 
 @admin.register(SubscriptionPlan)
 class SubscriptionPlanAdmin(admin.ModelAdmin):

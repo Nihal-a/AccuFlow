@@ -106,7 +106,7 @@
           <td class="px-4 py-2 text-gray-700">{{ c.collector.name }}</td>
           <td class="px-4 py-2 text-gray-700 text-right font-bold">{{ c.total_amount }}</td>
           <td class="px-4 py-2 text-green-600 text-right font-bold">{{ c.collected_total|default:0|floatformat:2 }}</td>
-          <td class="px-4 py-2 text-gray-700 text-right">{{ c.created_at|date:"M d, Y H:i" }}</td>
+          <td class="px-4 py-2 text-gray-700 text-right">{{ c.created_at|date:"M d, Y h:i A" }}</td>
         </tr>
         {% endfor %}
         {% else %}

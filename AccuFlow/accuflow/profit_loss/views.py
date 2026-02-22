@@ -4,6 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from .services import PandLService, TrialBalanceService
 from core.views import getClient
 from datetime import datetime, date
+from django.utils import timezone
 
 class ProfitLossView(LoginRequiredMixin, View):
     template_name = 'profit_loss/pl_report.html'
@@ -18,7 +19,7 @@ class ProfitLossView(LoginRequiredMixin, View):
         client = getClient(request.user)
         
         # Date Handling
-        today = datetime.now().date()
+        today = timezone.localtime(timezone.now()).date()
         date_from_str = request.POST.get("dateFrom")
         date_to_str = request.POST.get("dateTo") or request.GET.get("dateTo")
 
@@ -65,7 +66,7 @@ class TrialBalanceView(LoginRequiredMixin, View):
     def process_report(self, request):
         client = getClient(request.user)
         
-        today = datetime.now().date()
+        today = timezone.localtime(timezone.now()).date()
         date_to_str = request.POST.get("dateTo") or request.GET.get("dateTo")
 
         if date_to_str:
