@@ -3,6 +3,19 @@
 Sales Entry
 {% endblock title %}
 {% block externalCSS %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+  .select2-container .select2-selection--single {
+    height: 38px !important;
+    border-color: #d1d5db !important;
+    border-radius: 0.375rem !important;
+    display: flex;
+    align-items: center;
+  }
+  .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 36px !important;
+  }
+</style>
 {% endblock externalCSS %}
 {% block content %}
 <div class="bg-white rounded-xl p-5 mt-3">
@@ -21,95 +34,116 @@ Sales Entry
   </div>
   <hr class="mt-5">
   <div class=" mt-5 w-100" id="createView">
-    <div class="grid grid-cols-[30%_2%_68%_0%_0%] lg:grid-cols-[20%_5%_20%_15%_10%] gap-y-2 lg:gap-y-0.5 gap-x-1 text-xs">
-      <label class="text-gray-700 flex items-center">Sale No*</label>
-      <div></div>
-      <input type="text" id="sale_name" value="{{ last_sale_no }}" placeholder="Enter Sale No"
-        class="w-full px-2.5 py-1.5 border rounded-md focus:ring-1 focus:ring-blue-500" disabled />
-      <div>
-        <input type="hidden" name="" id="saleId" placeholder="" />
+    <div class="flex flex-col gap-y-3 lg:gap-y-1.5 text-xs w-full">
+      
+      <!-- Sale No -->
+      <div class="flex flex-wrap lg:flex-nowrap items-center w-full">
+        <label class="w-[35%] lg:w-[20%] text-gray-700 font-medium">Sale No*</label>
+        <div class="hidden lg:block lg:w-[5%]"></div>
+        <div class="w-[65%] lg:w-[20%] flex items-center pr-2 lg:pr-0">
+          <input type="text" id="sale_name" value="{{ last_sale_no }}" placeholder="Enter Sale No" class="w-full px-2.5 py-1.5 border rounded-md focus:ring-1 focus:ring-blue-500 bg-gray-50 bg-opacity-50" disabled />
+          <input type="hidden" name="" id="saleId" placeholder="" />
+        </div>
       </div>
-      <div></div>
+
       <!-- Date -->
-      <label class="text-gray-700 flex items-center">Date*</label>
-      <div></div>
-      <input type="date" id="date" class="w-full px-2.5 py-1.5 border rounded-md focus:ring-1 focus:ring-blue-500"
-        required />
-      <div></div>
-      <div></div>
+      <div class="flex flex-wrap lg:flex-nowrap items-center w-full">
+        <label class="w-[35%] lg:w-[20%] text-gray-700 font-medium">Date*</label>
+        <div class="hidden lg:block lg:w-[5%]"></div>
+        <div class="w-[65%] lg:w-[20%] pr-2 lg:pr-0">
+          <input type="date" id="date" class="w-full px-2.5 py-1.5 border rounded-md focus:ring-1 focus:ring-blue-500" required />
+        </div>
+      </div>
+
       <!-- Customer -->
-      <label class="text-gray-700 flex items-center gap-2">Customer*</label>
-      <span class="flex items-center gap-1">
-        <input type="checkbox" id="allCustomers"
-          class="h-3 w-3 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-        <span class="text-gray-700 text-xs">All</span>
-      </span>
-      <select name="" id="customer" class="w-full px-2.5 py-1.5 border rounded-md focus:ring-1 focus:ring-blue-500"
-        required>
-        <option value="" selected>Select Customer</option>
-        {% for customer in customers %}
-        <option value="{{ customer.id }}" data-code="{{ customer.customerId }}" data-balance="{{ customer.balance }}"
-          data-type="customers">{{ customer.name }}</option>
-        {% endfor %}
-      </select>
-      <div id="customerCredit" class="flex items-center"></div>
-      <div></div>
+      <div class="flex flex-wrap lg:flex-nowrap items-center w-full">
+        <label class="w-[30%] sm:w-[35%] lg:w-[20%] text-gray-700 font-medium">Customer*</label>
+        <div class="w-[15%] sm:w-[15%] lg:w-[5%] flex items-center pr-1 lg:pr-2">
+          <label class="flex items-center gap-1 cursor-pointer">
+            <input type="checkbox" id="allCustomers" class="h-3.5 w-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+            <span class="text-xs text-gray-700">All</span>
+          </label>
+        </div>
+        <div class="w-[55%] sm:w-[50%] lg:w-[20%] pr-2 lg:pr-0">
+          <select name="" id="customer" class="w-full px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required>
+            <option value="" selected>Select Customer</option>
+            {% for customer in customers %}
+            <option value="{{ customer.id }}" data-code="{{ customer.customerId }}" data-balance="{{ customer.balance }}" data-type="customers">{{ customer.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div id="customerCredit" class="hidden lg:flex w-[15%] lg:w-auto items-center pl-3 text-xs font-semibold text-gray-700"></div>
+      </div>
+
       <!-- Customer Code -->
-      <label class="block text-gray-700 flex items-center gap-2">C.code*</label>
-      <div></div>
-      <input type="text" name="" id="customerID" placeholder="" disabled
-        class="w-full lg:w-[70%] px-2.5 py-1.5 border rounded-md focus:ring-1 focus:ring-blue-500" required />
-      <div></div>
-      <div></div>
+      <div class="flex flex-wrap lg:flex-nowrap items-center w-full">
+        <label class="w-[35%] lg:w-[20%] text-gray-700 font-medium">C.code*</label>
+        <div class="hidden lg:block lg:w-[5%]"></div>
+        <div class="w-[65%] lg:w-[20%] pr-2 lg:pr-0">
+          <input type="text" name="" id="customerID" placeholder="" disabled class="w-full lg:w-[70%] px-2.5 py-1.5 border rounded-md bg-gray-50 bg-opacity-50 focus:ring-1 focus:ring-blue-500" required />
+        </div>
+      </div>
+
       <!-- Godown -->
-      <label class="text-gray-700 flex items-center gap-2">Godown*</label>
-      <div></div>
-      <select name="" id="godown"
-        class="w-full bg-white px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-        required>
-        <option value="" selected>Select Godown</option>
-        {% for godown in godowns %}
-        <option value="{{ godown.id }}" data-code="{{ godown.godownId }}" data-balance="{{ godown.get_balance }}">{{ godown.name }}</option>
-        {% endfor %}
-      </select>
-      <div id="godownCredit" class="flex items-center"></div>
-      <div></div>
+      <div class="flex flex-wrap lg:flex-nowrap items-center w-full">
+        <label class="w-[35%] lg:w-[20%] text-gray-700 font-medium">Godown*</label>
+        <div class="hidden lg:block lg:w-[5%]"></div>
+        <div class="w-[65%] lg:w-[20%] pr-2 lg:pr-0">
+          <select name="" id="godown" class="w-full bg-white px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required>
+            <option value="" selected>Select Godown</option>
+            {% for godown in godowns %}
+            <option value="{{ godown.id }}" data-code="{{ godown.godownId }}" data-balance="{{ godown.get_balance }}">{{ godown.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div id="godownCredit" class="hidden lg:flex w-[15%] lg:w-auto items-center pl-3 text-xs font-semibold text-gray-700"></div>
+      </div>
+
       <!-- Godown Code -->
-      <label class="block text-gray-700  flex items-center gap-2">G.code*</label>
-      <div></div>
-      <input type="text" name="" id="godownID" placeholder="" disabled
-        class="w-full lg:w-[70%] mt-1 px-3 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-        required />
-      <div></div>
-      <div></div>
+      <div class="flex flex-wrap lg:flex-nowrap items-center w-full">
+        <label class="w-[35%] lg:w-[20%] text-gray-700 font-medium">G.code*</label>
+        <div class="hidden lg:block lg:w-[5%]"></div>
+        <div class="w-[65%] lg:w-[20%] pr-2 lg:pr-0">
+          <input type="text" name="" id="godownID" placeholder="" disabled class="w-full lg:w-[70%] mt-1 lg:mt-0 px-2.5 py-1.5 border rounded-md bg-gray-50 bg-opacity-50 focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+        </div>
+      </div>
+
       <!-- Qty -->
-      <label class="block text-gray-700">Qty*</label>
-      <div></div>
-      <input type="number" name="" id="qty" placeholder="Enter Quantity"
-        class="w-full lg:w-[70%] mt-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required />
-      <div></div>
-      <div></div>
+      <div class="flex flex-wrap lg:flex-nowrap items-center w-full">
+        <label class="w-[35%] lg:w-[20%] text-gray-700 font-medium">Qty*</label>
+        <div class="hidden lg:block lg:w-[5%]"></div>
+        <div class="w-[65%] lg:w-[20%] pr-2 lg:pr-0">
+          <input type="number" name="" id="qty" placeholder="Enter Quantity" class="w-full lg:w-[70%] mt-1 lg:mt-0 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+        </div>
+      </div>
+
       <!-- Rate -->
-      <label class="block text-gray-700">Rate*</label>
-      <div></div>
-      <input type="number" name="" id="amount" placeholder="Enter Amount"
-        class="w-full lg:w-[70%] mt-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required />
-      <div></div>
-      <div></div>
-      <!-- Total amount -->
-      <label class="block text-gray-700">Total Amount*</label>
-      <div></div>
-      <input type="number" name="" id="total_amount" placeholder="" disabled
-        class="w-full lg:w-[70%] mt-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required />
-      <div></div>
-      <div></div>
+      <div class="flex flex-wrap lg:flex-nowrap items-center w-full">
+        <label class="w-[35%] lg:w-[20%] text-gray-700 font-medium">Rate*</label>
+        <div class="hidden lg:block lg:w-[5%]"></div>
+        <div class="w-[65%] lg:w-[20%] pr-2 lg:pr-0">
+          <input type="number" name="" id="amount" placeholder="Enter Amount" class="w-full lg:w-[70%] mt-1 lg:mt-0 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+        </div>
+      </div>
+
+      <!-- Total Amount -->
+      <div class="flex flex-wrap lg:flex-nowrap items-center w-full">
+        <label class="w-[35%] lg:w-[20%] text-gray-700 font-medium">Total Amount*</label>
+        <div class="hidden lg:block lg:w-[5%]"></div>
+        <div class="w-[65%] lg:w-[20%] pr-2 lg:pr-0">
+          <input type="number" name="" id="total_amount" placeholder="" disabled class="w-full lg:w-[70%] mt-1 lg:mt-0 px-2.5 py-1.5 border bg-gray-50 bg-opacity-50 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+        </div>
+      </div>
+
       <!-- Description -->
-      <label class="block text-gray-700">Description*</label>
-      <div></div>
-      <textarea name="" id="description"
-        class="w-full  min-h-[80px] mt-1 px-2 py-1 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"></textarea>
-      <div></div>
-      <div></div>
+      <div class="flex flex-wrap lg:flex-nowrap items-start w-full">
+        <label class="w-[35%] lg:w-[20%] text-gray-700 font-medium mt-1 lg:mt-1.5">Description*</label>
+        <div class="hidden lg:block lg:w-[5%]"></div>
+        <div class="w-[65%] lg:w-[20%] pr-2 lg:pr-0">
+          <textarea name="" id="description" class="w-full lg:w-[130%] min-h-[60px] lg:min-h-[80px] mt-1 lg:mt-0 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"></textarea>
+        </div>
+      </div>
+
     </div>
     <hr class="mt-5 mb-5">
     <form action="{% url 'sale-create' %}" method="post">
@@ -275,17 +309,20 @@ Sales Entry
     var totalQty = 0;
     var totalAmount = 0;
     var rateSum = 0;
-    count = 0;
+    var count = 0;
     tableBody.querySelectorAll("tr").forEach(function (row) {
-      const qty = parseFloat(row.cells[5].innerText) || 0;
-      const amount = parseFloat(row.cells[6].innerText) || 0;
-      const total = parseFloat(row.cells[7].innerText) || 0;
+      const qtyInput = row.querySelector('input[name="qtys"]');
+      if (!qtyInput) return; // Skip rows that aren't data rows (like any stray header/total rows)
+
+      const qty = parseFloat(qtyInput.value) || 0;
+      const amount = parseFloat(row.querySelector('input[name="amounts"]').value) || 0;
+      const total = parseFloat(row.querySelector('input[name="total_amounts"]').value) || 0;
       totalQty += qty;
       rateSum += amount;
       totalAmount += total;
       count += 1;
     });
-    rateAvg = rateSum / count || 0;
+    var rateAvg = count > 0 ? rateSum / count : 0;
     const lastRow = `
       <tr class="bg-blue-200 font-semibold text-gray-800 border-t-2 border-blue-300" id="totalRow">
         <td class="px-2 py-2 text-left text-sm" colspan="5">Totals:</td>
@@ -728,8 +765,9 @@ Sales Entry
           selectedTR.remove();
           deleteUrl = "";
           resetSLNo();
-          getLastSaleNo()
+          getLastSaleNo();
           closeModal();
+          addLastRow();
         } else {
           console.error('Delete failed:', data.message);
         }
@@ -895,5 +933,29 @@ Sales Entry
     selectedTR = '';
   }
 
+  function initOrDestroySelect2() {
+    if (window.innerWidth < 1024) {
+      if (!$('#customer').hasClass("select2-hidden-accessible")) {
+        $('#customer').select2({ width: '100%' });
+      }
+      if (!$('#godown').hasClass("select2-hidden-accessible")) {
+        $('#godown').select2({ width: '100%' });
+      }
+    } else {
+      if ($('#customer').hasClass("select2-hidden-accessible")) {
+        $('#customer').select2('destroy');
+      }
+      if ($('#godown').hasClass("select2-hidden-accessible")) {
+        $('#godown').select2('destroy');
+      }
+    }
+  }
+
+  $(document).ready(function() {
+    initOrDestroySelect2();
+    $(window).resize(initOrDestroySelect2);
+  });
+
 </script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 {% endblock externalJS %}

@@ -9,8 +9,13 @@ if (searchInput) {
   searchInput.addEventListener("keyup", function () {
     const filter = searchInput.value.toLowerCase();
     const rows = document.querySelectorAll("tbody tr");
-    console.log(filter)
+    
+    let visibleCount = 0;
+    
     rows.forEach((row) => {
+      // Ignore the "no-data" row if it exists
+      if (row.classList.contains("no-search-data")) return;
+        
       const text = row.querySelector(".search-area")
         ? row.querySelectorAll(".search-area")
         : [];
@@ -20,8 +25,32 @@ if (searchInput) {
         rowText += cell.innerText.toLowerCase() + " ";
       });
 
-      row.style.display = rowText.includes(filter) ? "" : "none";
+      if (rowText.includes(filter)) {
+          row.style.display = "";
+          visibleCount++;
+      } else {
+          row.style.display = "none";
+      }
     });
+    
+    // Add or remove "No data found" row
+    const tbody = document.querySelector("tbody");
+    if (tbody) {
+        let noDataRow = tbody.querySelector(".no-search-data");
+        
+        if (visibleCount === 0 && rows.length > 0) {
+            if (!noDataRow) {
+                noDataRow = document.createElement("tr");
+                noDataRow.className = "no-search-data bg-white";
+                noDataRow.innerHTML = `<td colspan="20" class="text-left sm:text-center px-4 py-2 text-sm sm:text-base text-gray-500 bg-white">No data found</td>`;
+                tbody.appendChild(noDataRow);
+            } else {
+                noDataRow.style.display = "";
+            }
+        } else if (noDataRow) {
+            noDataRow.style.display = "none";
+        }
+    }
   });
 }
 
