@@ -42,7 +42,7 @@ class PurchaseEntryView(View):
                 'id':customer.id,
                 'name':customer.name,
                 'customerId':customer.customerId, 
-                'balance':customer.balance,
+                'balance':str(customer.get_balance),
             })
         suppliersData = []
         for supplier in suppliers:
@@ -50,12 +50,14 @@ class PurchaseEntryView(View):
                 'id':supplier.id,
                 'name':supplier.name,
                 'supplierId':supplier.supplierId,
-                'balance':supplier.balance,
+                'balance':str(supplier.get_balance),
             })
         context = {
             'purchases':purchaseData,
-            'suppliers':suppliersData,
-            'customers':customersData,
+            'suppliers_json':json.dumps(suppliersData),
+            'customers_json':json.dumps(customersData),
+            'suppliers': suppliers,
+            'customers': customers,
             'godowns':godowns,
             'last_purchase_no':getLastPurchaseNo(client=getClient(request.user)),
         }
