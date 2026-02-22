@@ -140,7 +140,7 @@ Customer Ledger
                         {% for ledger in ledgers %}
                         {% if ledger.type != 'OB' %}
                         <tr>
-                            <td class="px-4 py-3 text-left font-medium">{{forloop.counter}}</td>
+                            <td class="px-4 py-3 text-left font-medium">{% if opening == 'on' %}{{forloop.counter}}{% else %}{{forloop.counter0}}{% endif %}</td>
                             <td class="px-4 py-3 text-left font-medium">{{ledger.date|date:"d-m-Y"}}</td>
                             <td class="px-4 py-3 text-left font-medium">{{ledger.transaction_no}}</td>
                             <td class="px-4 py-3 text-left font-medium">{{ledger.type}}</td>

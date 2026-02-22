@@ -323,8 +323,8 @@ Purchase Entry
 {% endblock content %}
 {% block externalJS %}
 <script>
-  var all_customers_data = {{ customers| safe }};
-  var all_suppliers_data = {{ suppliers| safe }};
+  var all_customers_data = {{ customers_json| safe }};
+  var all_suppliers_data = {{ suppliers_json| safe }};
   isUpdate = false;
 
   function addLastRow() {
@@ -442,13 +442,31 @@ Purchase Entry
   });
 </script>
 <script>
-  var purchases = {{ purchases| safe }};
+  var purchases = [];
+  {% for p in purchases %}
+  purchases.push({
+    "id": "{{ p.id }}",
+    "purchase_no": "{{ p.purchase_no|escapejs }}",
+    "godown": "{{ p.godown|escapejs }}",
+    "godown_id": "{{ p.godown_id }}",
+    "description": "{{ p.description|escapejs }}",
+    "customer": "{{ p.customer|escapejs }}",
+    "customer_id": "{{ p.customer_id }}",
+    "supplier": "{{ p.supplier|escapejs }}",
+    "supplier_id": "{{ p.supplier_id }}",
+    "date": "{{ p.date|escapejs }}",
+    "qty": parseFloat("{{ p.qty|default:'0' }}"),
+    "amount": parseFloat("{{ p.amount|default:'0' }}"),
+    "total_amount": parseFloat("{{ p.total_amount|default:'0' }}"),
+    "type": "{{ p.type|escapejs }}"
+  });
+  {% endfor %}
 
   for (let i = 0; i < purchases.length; i++) {
     const purchase = purchases[i];
     var tableBody = document.getElementById("purchaseTableBody");
     var newRow = `
-      <tr>
+      <tr class="hover:bg-indigo-50/50 transition-all duration-200">
         <td class="px-3 py-3 text-left w-1 flex">
           <button type='button' class="text-blue-500 hover:underline mr-2" onclick="updatePurchase(this)">Edit</button>
           <button type='button' class="text-red-500 hover:underline" onclick="deletePurchase(this)">Delete</button>
@@ -483,9 +501,9 @@ Purchase Entry
         <td class="px-4 py-3 text-right search-area">
           ${purchase.description}
           <input type="hidden" name="descriptions" value="${purchase.description}">
+          <input type="hidden" name="purchase_ids" id="purchase_id" value="${purchase.id}"> 
+          <input type="hidden" name="type" id="type" value="${purchase.type}"> 
         </td>
-        <input type="hidden" name="purchase_ids" id="purchase_id" value="${purchase.id}"> 
-        <input type="hidden" name="type" id="type" value="${purchase.type}"> 
       </tr>`;
     tableBody.insertAdjacentHTML('beforeend', newRow);
     $('#amount, #qty, #description, #total_amount').val('');
@@ -600,9 +618,9 @@ Purchase Entry
          <td class="px-4 py-3 text-left search-area">
           ${description}
           <input type="hidden" name="descriptions" value="${description}">
+          <input type="hidden" name="purchase_ids" id="purchase_id" value="${purchase_id}"> 
+          <input type="hidden" name="type" id="type" value="${type_value}"> 
         </td>
-        <input type="hidden" name="purchase_ids" id="purchase_id" value="${purchase_id}"> 
-        <input type="hidden" name="type" id="type" value="${type_value}"> 
         `);
             selectedTR = '';
           } else {
@@ -639,9 +657,9 @@ Purchase Entry
          <td class="px-4 py-3 text-left search-area">
           ${description}
           <input type="hidden" name="descriptions" value="${description}">
+          <input type="hidden" name="purchase_ids" id="purchase_id" value="${purchase_id}"> 
+          <input type="hidden" name="type" id="type" value="${type_value}"> 
         </td>
-        <input type="hidden" name="purchase_ids" id="purchase_id" value="${purchase_id}"> 
-        <input type="hidden" name="type" id="type" value="${type_value}"> 
       </tr>`;
 
             tableBody.insertAdjacentHTML('beforeend', newRow);
