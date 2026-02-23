@@ -136,7 +136,7 @@ Sales Entry
           <label class="text-gray-700 font-medium">Description*</label>
         </div>
         <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
-          <textarea name="" id="description" class="w-full md:w-[130%] min-h-[60px] md:min-h-[80px] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"></textarea>
+          <textarea name="" id="description" class="w-full min-h-[60px] md:min-h-[80px] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"></textarea>
         </div>
       </div>
 
@@ -439,7 +439,7 @@ Sales Entry
     var tableBody = document.getElementById("holdSaleTableBody");
     var newRow = `
       <tr class="hover:bg-indigo-50/50 transition-all duration-200">
-        <td class="px-1.5 py-1.5 text-center w-20">
+        <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap">
           <button type='button' class="text-blue-500 text-xs hover:underline mr-2" onclick="updateSale(this)">Edit</button>
           <button type='button' class="text-red-500 text-xs hover:underline" onclick="deleteSale(this)">Delete</button>
         </td>
@@ -551,7 +551,7 @@ Sales Entry
             $(selectedTR).empty();
             $(selectedTR).removeClass('bg-blue-300');
             $(selectedTR).append(`
-        <td class="px-1.5 py-1.5 text-center w-20">
+        <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap">
           <button type='button' class="text-blue-500 hover:underline text-xs mr-2" onclick="updateSale(this)">Edit</button>
           <button type='button' class="text-red-500 hover:underline text-xs" onclick="deleteSale(this)">Delete</button>
         </td>
@@ -591,7 +591,7 @@ Sales Entry
           else {
             const newRow = `
       <tr class="hover:bg-indigo-50/50 transition-all duration-200">
-        <td class="px-1.5 py-1.5 text-center w-20">
+        <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap">
           <button type='button' class="text-blue-500 hover:underline text-xs mr-2" onclick="updateSale(this)">Edit</button>
           <button type='button' class="text-red-500 hover:underline text-xs" onclick="deleteSale(this)">Delete</button>
         </td>
