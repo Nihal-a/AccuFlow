@@ -8,21 +8,15 @@
   <div class="mt-4 flex flex-wrap items-center gap-3">
     <!-- 🟦 New -->
     <a id="btnNew" href="#"
-      class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-        stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-      </svg>
+      class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 hover:border-blue-300 transition-colors">
+      <i data-lucide="plus" class="w-4 h-4"></i>
       New
     </a>
+
+    <!-- 🟩 View -->
     <a id="btnView" href="#"
-      class="leading-none inline-flex items-center gap-1.5 bg-green-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-green-600 transition-all duration-300">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-        stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-      </svg>
+      class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-md hover:bg-emerald-100 hover:border-emerald-300 transition-colors">
+      <i data-lucide="eye" class="w-4 h-4"></i>
       View
     </a>
 
@@ -30,223 +24,170 @@
   </div>
   <hr class="mt-5">
   <div class=" mt-5 w-100" id="createView">
-    <div class="grid grid-cols-8 gap-4 ">
-      <div class="col-span-6 flex gap-2 ">
-        <div class="w-[50%]">
-          <label class="block text-gray-700">Cash No*</label>
+    <div class="flex flex-col gap-y-3 md:gap-y-1.5 text-xs w-full md:w-3/4 mr-auto">
+      
+      <!-- Cash No -->
+      <div class="flex flex-wrap md:flex-nowrap items-center w-full">
+        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
+          <label class="text-gray-700 font-medium whitespace-nowrap">Cash No*</label>
+        </div>
+        <div class="w-[65%] sm:w-[68%] md:w-[45%] flex items-center pr-2 md:pr-0">
           <input type="text" name="" value="{{ last_cash_no }}" id="cash_name" placeholder="Enter Cash No"
-            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" disabled
+            class="w-full px-2.5 py-1.5 border rounded-md focus:ring-1 focus:ring-blue-500 bg-gray-50 bg-opacity-50" disabled
             required />
+          <input type="hidden" name="" id="cashId" placeholder="" />
         </div>
+      </div>
 
-        <input type="hidden" name="" id="cashId" placeholder="" />
-        <div class="w-[50%]">
-          <label class="block text-gray-700">Date*</label>
+      <!-- Date -->
+      <div class="flex flex-wrap md:flex-nowrap items-center w-full">
+        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
+          <label class="text-gray-700 font-medium whitespace-nowrap">Date*</label>
+        </div>
+        <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
           <input type="date" name="" id="date"
-            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required />
+            class="w-full px-2.5 py-1.5 border rounded-md focus:ring-1 focus:ring-blue-500" required />
+        </div>
+      </div>
+      
+      <!-- Cash/Bank -->
+      <div class="flex flex-wrap md:flex-nowrap items-center w-full">
+        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center justify-between pr-3">
+          <label class="text-gray-700 font-medium whitespace-nowrap">Cash/Bank*</label>
+        </div>
+        <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+          <select name="" id="cash"
+            class="w-full bg-white px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required>
+            <option value="" selected>Select Cash/Bank</option>
+            {% for cashbank in cashbanks %}
+            <option value="{{ cashbank.id }}" data-code="{{cashbank.cashbankId}}">{{ cashbank.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div id="cashCredit" class="hidden md:flex w-[15%] md:w-[20%] items-center pl-3 text-xs font-semibold text-gray-700"></div>
+      </div>
+
+      <!-- C/B Code -->
+      <div class="flex flex-wrap md:flex-nowrap items-center w-full">
+        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
+          <label class="text-gray-700 font-medium whitespace-nowrap">C/B.code*</label>
+        </div>
+        <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+          <input type="text" name="" id="cashbankId" placeholder="" disabled
+            class="w-full md:w-[70%] px-2.5 py-1.5 border rounded-md bg-gray-50 bg-opacity-50 focus:ring-1 focus:ring-blue-500" required />
         </div>
       </div>
 
-
-
-      <div class="col-span-6 w-full flex items-center gap-3">
-        <div class=" w-[80%]">
-          <!-- Label -->
-          <label class="block text-gray-700 mb-1">Cash/Bank*</label>
-
-          <!-- Row: Checkbox + Dropdown -->
-          <div class="flex items-center gap-4">
-
-            <!-- Dropdown -->
-            <div class="flex-1">
-              <select name="" id="cash"
-                class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required>
-                <option value="" selected>Select Cash/Bank</option>
-                {% for cashbank in cashbanks %}
-                <option value="{{ cashbank.id }}" data-code="{{cashbank.cashbankId}}">{{ cashbank.name }}</option>
-                {% endfor %}
-              </select>
-            </div>
-          </div>
+      <!-- Party -->
+      <div class="flex flex-wrap md:flex-nowrap items-center w-full">
+        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center justify-between pr-3">
+          <label class="text-gray-700 font-medium whitespace-nowrap">Party*</label>
         </div>
-        <div class=" w-[30%]">
-          <!-- Label -->
-          <label class="block text-gray-700 mb-1">C/B.code*</label>
-          <div class="flex items-center gap-4 ">
-            <!-- Row: Checkbox + Dropdown -->
-            <div class="flex items-center gap-4 w-full">
-              <!-- Dropdown -->
-              <div class="flex-1">
-                <input type="text" name="" id="cashbankId" placeholder="" disabled
-                  class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required />
-              </div>
-            </div>
+        <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+          <select name="" id="supplier"
+            class="w-full bg-white px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required>
+            <option value="" selected>Select Party</option>
+            {% for supplier in suppliers %}
+            <option value="{{ supplier.id }}" data-code="{{supplier.supplierId}}"
+              data-balance="{{supplier.balance}}" data-type="suppliers">{{ supplier.name }} (supplier)</option>
+            {% endfor %}
+            {% for customer in customers %}
+            <option value="{{ customer.id }}" data-code="{{customer.customerId}}"
+              data-balance="{{customer.balance}}" data-type="customers">{{ customer.name }} (customer)</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div id="supplierCredit" class="hidden md:flex w-[15%] md:w-[20%] items-center pl-3 text-xs font-semibold text-gray-700"></div>
+      </div>
 
-          </div>
+      <!-- Party Code -->
+      <div class="flex flex-wrap md:flex-nowrap items-center w-full">
+        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
+          <label class="text-gray-700 font-medium whitespace-nowrap">P.code*</label>
+        </div>
+        <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+          <input type="text" name="" id="supplierID" placeholder="" disabled
+            class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md bg-gray-50 bg-opacity-50 focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+        </div>
+      </div>
+      
+      <!-- Transaction -->
+      <div class="flex flex-wrap md:flex-nowrap items-center w-full">
+        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
+          <label class="text-gray-700 font-medium whitespace-nowrap">Transaction*</label>
+        </div>
+        <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+          <select name="" id="transaction"
+            class="w-full bg-white px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required>
+            <option value="Paid" selected>Paid</option>
+            <option value="Received">Received</option>
+          </select>
         </div>
       </div>
 
-
-      <div class="col-span-6 w-full flex items-center gap-3">
-        <div class=" w-[80%]">
-          <!-- Label -->
-          <label class="block text-gray-700 mb-1">Party*</label>
-          <div class="flex items-center gap-4">
-            <div class="flex items-center gap-4 w-full">
-
-              <div class="flex-1">
-                <select name="" id="supplier"
-                  class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required>
-                  <option value="" selected>Select Party</option>
-                  {% for supplier in suppliers %}
-                  <option value="{{ supplier.id }}" data-code="{{supplier.supplierId}}"
-                    data-balance="{{supplier.balance}}" data-type="suppliers">{{ supplier.name }} (supplier)</option>
-                  {% endfor %}
-                  {% for customer in customers %}
-                  <option value="{{ customer.id }}" data-code="{{customer.customerId}}"
-                    data-balance="{{customer.balance}}" data-type="customers">{{ customer.name }} (customer)</option>
-                  {% endfor %}
-                </select>
-              </div>
-            </div>
-
-          </div>
+      <!-- Amount -->
+      <div class="flex flex-wrap md:flex-nowrap items-center w-full">
+        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
+          <label class="text-gray-700 font-medium whitespace-nowrap">Amount*</label>
         </div>
-        <div class=" w-[20%]">
-          <!-- Label -->
-          <label class="block text-gray-700 mb-1">code*</label>
-          <div class="flex items-center gap-4 ">
-            <!-- Row: Checkbox + Dropdown -->
-            <div class="flex items-center gap-4 w-full">
-              <!-- Dropdown -->
-              <div class="flex-1">
-                <input type="text" name="" id="supplierID" placeholder="" disabled
-                  class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required />
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        <div class="w[20%]">
-          <div id="supplierCredit" class="">
-
-          </div>
+        <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+          <input type="number" name="" id="amount" placeholder="Enter Amount"
+             class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required />
         </div>
       </div>
 
-      <div class=" col-span-4">
-        <!-- Label -->
-        <label class="block text-gray-700 mb-1">Transaction*</label>
-
-        <!-- Row: Checkbox + Dropdown -->
-        <div class="flex items-center gap-4">
-
-          <!-- Dropdown -->
-          <div class="flex-1">
-            <select name="" id="transaction"
-              class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required>
-              <option value="Paid" selected>Paid</option>
-              <option value="Received">Received</option>
-            </select>
-          </div>
+      <!-- Description -->
+      <div class="flex flex-wrap md:flex-nowrap items-start w-full">
+        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-start pr-3 mt-1 md:mt-1.5">
+          <label class="text-gray-700 font-medium whitespace-nowrap">Description</label>
         </div>
-      </div>
-      <div class="col-span-6 w-full flex gap-2">
-
-        <div class="flex-1">
-          <label class="block text-gray-700">Amount*</label>
-          <input type="number" name="" id="amount" placeholder=""
-            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required />
-        </div>
-      </div>
-
-      <div class="description col-span-6">
-        <div class="">
-          <label class="block text-gray-700">Description</label>
+        <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
           <textarea name="" id="description"
-            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-        </div>
+            class="w-full min-h-[60px] md:min-h-[80px] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"></textarea>
+         </div>
       </div>
     </div>
     <hr class="mt-5 mb-5">
     <form action="{% url 'cash-create' %}" method="post">
       {% csrf_token %}
-      <div class="flex items-center justify-between">
-        <div class="flex gap-2 items-center">
-          <a id="addGrid" href="#" onclick="addToCashGrid()"
-            class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
-            <!-- <svg
-        xmlns="http://www.w3.org/2000/svg"
-        class="h-4 w-4"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        stroke-width="2"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          d="M12 4v16m8-8H4"
-        />
-      </svg> -->
+      <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 w-full">
+        <div class="flex gap-2 items-center w-full lg:w-auto">
+          <button type="button" id="addGrid" onclick="addToCashGrid()"
+            class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-3.5 py-2.5 rounded-md shadow-sm hover:bg-blue-600 transition-all duration-300 whitespace-nowrap shrink-0">
             <span id="addToGridText">Add to Grid</span>
-          </a>
-
-          <a id="btnCancel" href="#" onclick="onCancelCash()"
-            class="leading-none inline-flex items-center gap-1.5 bg-gray-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-gray-600 transition-all duration-300">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+          </button>
+          <button type="button" id="btnCancel" onclick="onCancelCash()"
+            class="leading-none inline-flex items-center gap-1.5 bg-gray-500 text-white text-sm font-medium px-3.5 py-2.5 rounded-md shadow-sm hover:bg-gray-600 transition-all duration-300 whitespace-nowrap shrink-0">
             Cancel
-          </a>
+          </button>
         </div>
-
-        <div class="flex items-center gap-2">
-
-          <div class="relative w-full md:w-3/4">
-            <input type="text" id="searchInput" placeholder="Search cash..."
-              class="w-full bg-white rounded-xl px-4 py-2 pl-10 border  focus:border-transparent ring-2 ring-blue-200  focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none" />
-            <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5 pointer-events-none" fill="none"
-              stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 3a7.5 7.5 0 006.15 13.65z" />
-            </svg>
+        <div class="flex items-center justify-end gap-2 w-full lg:w-auto mt-2 lg:mt-0">
+          <div class="relative w-full text-sm">
+            <input type="text" id="searchInput" placeholder="Search...."
+              class="w-full bg-white rounded-md px-2 py-1.5 pl-8 border border-transparent focus:border-transparent ring-2 ring-blue-200 focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none" />
+            <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-2 top-2 pointer-events-none"></i>
           </div>
           <button id="btnSave" type="submit"
-            class="leading-none inline-flex items-center gap-1.5 bg-green-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-green-600 transition-all duration-300">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-            Save
-            </a>
+            class="leading-none inline-flex items-center gap-1 bg-green-500 text-white text-sm font-medium px-3.5 py-2.5 rounded-md shadow-sm hover:bg-green-600 transition-all duration-300 whitespace-nowrap shrink-0">
+            <i data-lucide="check" class="w-4 h-4"></i>Save
+          </button>
         </div>
       </div>
-
-      <div class="overflow-x-auto mt-5 w-full" id="cashCreateDiv">
-        <table class="min-w-full rounded-t-lg overflow-hidden">
-          <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
+      <div class="w-full lg:w-3/4 mr-auto xl:max-w-6xl 2xl:max-w-7xl overflow-x-auto shadow-sm rounded-md border border-slate-200 mt-5 mb-5" id="cashCreateDiv">
+        <table class="table-auto w-full divide-y divide-slate-200 text-sm">
+          <thead class="sticky top-0 bg-blue-200 text-gray-700 z-10">
             <tr>
-              <th class="px-4 py-3 text-left font-medium w-1">Actions</th>
-              <th class="px-4 py-3 text-left font-medium w-1">#</th>
-              <th class="px-4 py-3 text-left font-medium">Date</th>
-              <th class="px-4 py-3 text-left font-medium">Cash/Bank</th>
-              <th class="px-4 py-3 text-left font-medium">Party</th>
-              <th class="px-4 py-3 text-right font-medium">Amount</th>
-              <th class="px-4 py-3 text-right font-medium">Transaction</th>
-              <th class="px-4 py-3 text-right font-medium">Description</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">Actions</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">S.No</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Date</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[200px]">Cash/Bank</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[200px]">Party</th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Amount</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Transaction</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[250px]">Description</th>
             </tr>
           </thead>
-          <tbody class="bg-gray-100" id="cashTableBody">
+          <tbody class="divide-y divide-slate-100 bg-white" id="cashTableBody">
           </tbody>
         </table>
       </div>
@@ -255,24 +196,24 @@
 
   <div id="viewDiv" class="hidden">
     <div class="dateDiv mt-3">
-      <div class="flex justify-center items-end gap-5 mt-4">
+      <div class="flex justify-center items-end gap-5 mt-4 text-sm">
         <div>
-          <label class="block text-gray-700">From Date*</label>
+          <label class="block text-gray-700 font-medium whitespace-nowrap">From Date*</label>
           <input type="date" id="from_date"
-            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full mt-1 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
             required />
         </div>
 
         <div>
-          <label class="block text-gray-700">End Date*</label>
+          <label class="block text-gray-700 font-medium whitespace-nowrap">End Date*</label>
           <input type="date" id="end_date"
-            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full mt-1 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
             required />
         </div>
 
         <div>
           <button id="dateFilter"
-            class="bg-blue-600 text-white px-5 py-2 mt-6 rounded-xl hover:bg-blue-700 transition-all">
+            class="bg-blue-600 text-white px-5 py-2 mt-6 rounded-md hover:bg-blue-700 transition-all text-sm font-medium">
             Filter
           </button>
         </div>
@@ -282,57 +223,53 @@
     <div id="viewCashDiv" class="hidden">
 
       <hr class="mt-5">
-      <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mt-3 mb-3">
+      <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mt-3 mb-3 text-sm">
 
         <div class="flex items-end gap-3 w-full md:w-auto">
           <div>
-            <label for="from_price" class="block text-gray-700 text-sm font-medium">From</label>
+            <label for="from_price" class="block text-gray-700 font-medium">From</label>
             <input type="number" id="from_price" placeholder="0.00"
-              class="w-32 mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              class="w-32 mt-1 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" />
           </div>
 
           <div>
-            <label for="to_price" class="block text-gray-700 text-sm font-medium">To</label>
+            <label for="to_price" class="block text-gray-700 font-medium">To</label>
             <input type="number" id="to_price" placeholder="0.00"
-              class="w-32 mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              class="w-32 mt-1 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" />
           </div>
 
           <button id="btnFilter"
-            class="mt-5 bg-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
+            class="mt-5 bg-blue-500 text-white font-medium px-4 py-2 rounded-md shadow-sm hover:bg-blue-600 transition-all duration-300">
             Filter
           </button>
         </div>
 
-        <h2 id="showDate" class="underline"></h2>
+        <h2 id="showDate" class="underline font-medium text-gray-700"></h2>
 
         <div class="relative w-full md:w-1/4">
           <input type="text" id="searchInput" placeholder="Search cash..."
-            class="w-full bg-white searchInput rounded-xl px-4 py-2 pl-10 border focus:border-transparent ring-2 ring-blue-200 focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none" />
-          <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5 pointer-events-none" fill="none"
-            stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 3a7.5 7.5 0 006.15 13.65z" />
-          </svg>
+            class="w-full bg-white searchInput rounded-md px-3 py-1.5 pl-9 border focus:border-transparent ring-2 ring-blue-200 focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none" />
+            <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-2 pointer-events-none"></i>
         </div>
 
       </div>
 
-      <div class="overflow-x-auto mt-5 w-full">
-        <table class="min-w-full rounded-t-lg overflow-hidden" id="viewCashTable">
-          <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
+      <div class="overflow-x-auto mt-5 w-full shadow-sm rounded-md border border-slate-200">
+        <table class="table-auto w-full divide-y divide-slate-200 text-sm" id="viewCashTable">
+          <thead class="bg-blue-200 text-gray-700 uppercase text-xs">
             <tr>
-              <th class="px-4 py-3 text-left font-medium w-1">Actions</th>
-              <th class="px-4 py-3 text-left font-medium w-1">#</th>
-              <th class="px-4 py-3 text-left font-medium">Cash No</th>
-              <th class="px-4 py-3 text-left font-medium">Date</th>
-              <th class="px-4 py-3 text-left font-medium">Cash/Bank</th>
-              <th class="px-4 py-3 text-left font-medium">Party</th>
-              <th class="px-4 py-3 text-right font-medium">Amount</th>
-              <th class="px-4 py-3 text-right font-medium">Transaction</th>
-              <th class="px-4 py-3 text-right font-medium">Description</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">Actions</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">SNo</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Cash No</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Date</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[200px]">Cash/Bank</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[200px]">Party</th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Amount</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Transaction</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[250px]">Description</th>
             </tr>
           </thead>
-          <tbody class="bg-gray-100" id="cashTableBody">
+          <tbody class="divide-y divide-slate-100 bg-white" id="cashTableBody">
           </tbody>
         </table>
       </div>
