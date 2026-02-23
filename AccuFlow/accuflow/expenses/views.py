@@ -6,6 +6,18 @@ from django.views.generic.edit import DeleteView
 from core.views import getClient
 from core.authorization import get_object_for_user
 
+def last_expense_id(client):
+    last_expense = Expenses.objects.filter(is_active=True,client=client).exclude(expenseId__isnull=True).exclude(expenseId='').order_by('id').last() 
+    if last_expense and last_expense.expenseId != None:
+        try:
+            prefix, num = last_expense.expenseId.split('-')
+            new_expense_id = f"{prefix}-{int(num) + 1}"
+        except ValueError:
+            new_expense_id = 'E-1'
+    else: 
+        new_expense_id = 'E-1'
+    return new_expense_id
+
 class ExpenseView(View):
     def get(self,request):
         expenses = Expenses.objects.filter(is_active=True,client=getClient(request.user))
@@ -22,6 +34,7 @@ class AddExpenseView(View):
         Expenses.objects.create(
             category=name,
             description=description,
+            expenseId=last_expense_id(client=getClient(request.user)),
             client=getClient(request.user)
         )
         return redirect('expenses')
@@ -30,7 +43,6 @@ class DeleteExpenseView(View):
     def post(self, request, expense_id):
         expense = get_object_for_user(Expenses, request.user, id=expense_id)
         expense.is_active = False 
-        expense.save()
         expense.save()
         return redirect('expenses')
  
@@ -50,5 +62,7 @@ class UpdateExpenseView(View):
         expense = get_object_for_user(Expenses, request.user, id=expense_id)
         expense.category = request.POST.get('name')
         expense.description = request.POST.get('description')
+        if expense.expenseId is None:
+            expense.expenseId = last_expense_id(client=getClient(request.user))
         expense.save()
         return redirect('expenses')

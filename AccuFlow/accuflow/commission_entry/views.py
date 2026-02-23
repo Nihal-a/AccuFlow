@@ -176,7 +176,7 @@ def commissions_by_date(request):
             'id':commission.id,
             'commission_no':commission.commission_no,
             'expense':commission.expense.category if commission.expense else '',
-            'expense':commission.expense.id if commission.expense else '',
+            'expense_id':commission.expense.id if commission.expense else '',
             'godown':commission.godown.name if commission.godown else '',
             'godown_id':commission.godown.id if commission.godown else '',
             'date':str(commission.date),
