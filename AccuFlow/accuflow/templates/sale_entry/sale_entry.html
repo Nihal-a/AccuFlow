@@ -10,11 +10,14 @@ Sales Entry
   <div class="mt-4 flex flex-wrap items-center gap-3">
     <!-- 🟦 New -->
     <a id="btnNew" href="#"
-      class="leading-none inline-flex items-center gap-1 bg-blue-500 text-white text-sm font-medium px-3.5 py-2.5 rounded-md shadow-sm hover:bg-blue-600 transition-all duration-300">
-      <i data-lucide="plus" class="w-4 h-4"></i>New
+      class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 hover:border-blue-300 transition-colors">
+      <i data-lucide="plus" class="w-4 h-4"></i>
+      New
     </a>
+
+    <!-- 🟩 View -->
     <a id="btnView" href="#"
-      class="leading-none inline-flex items-center gap-1.5 bg-green-500 text-white text-sm font-medium px-3.5 py-2.5 rounded-md  shadow-sm hover:bg-green-600 transition-all duration-300">
+      class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-md hover:bg-emerald-100 hover:border-emerald-300 transition-colors">
       <i data-lucide="eye" class="w-4 h-4"></i>
       View
     </a>
@@ -375,6 +378,7 @@ Sales Entry
       customerSelect.empty();
       $('#customerID').val('');
       $('#customerCredit').text('');
+      customerSelect.append('<option value="" selected>Select Supplier</option>');
       suppliers.forEach(function (supplier) {
         var option = $('<option></option>')
           .attr('value', supplier.id)
