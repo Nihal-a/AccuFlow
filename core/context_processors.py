@@ -1,17 +1,6 @@
-from core.models import Collection, CompanyDetail
+from core.models import Collection
 
-def company_info(request):
-    try:
-        company = CompanyDetail.objects.prefetch_related('contacts').first()
-        if company:
-            active_contacts = company.contacts.filter(is_active=True)
-            return {
-                'company_details': company,
-                'support_contacts': active_contacts
-            }
-    except:
-        pass
-    return {'company_details': None, 'support_contacts': []}
+
 from core.views import getClient
 
 from django.utils import timezone

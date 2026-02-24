@@ -5,196 +5,205 @@ Purchase Entry
 {% block externalCSS %}
 {% endblock externalCSS %}
 {% block content %}
-<div class="bg-white rounded-xl p-5 mt-3">
-  <h1 class="text-xl font-medium mb-0 text-gray-700 uppercase">Purchase Management</h1>
-  <div class="mt-4 flex flex-wrap items-center gap-3">
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mt-4">
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 uppercase tracking-tight">Purchase Management</h1>
+    </div>
+  </div>
+
+  <div class="flex items-center gap-3 mb-8">
     <!-- 🟦 New -->
     <a id="btnNew" href="#"
-      class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 hover:border-blue-300 transition-colors">
+      class="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-blue-600 bg-blue-50 rounded-xl hover:bg-blue-100 transition-all duration-200">
       <i data-lucide="plus" class="w-4 h-4"></i>
       New
     </a>
 
     <!-- 🟩 View -->
     <a id="btnView" href="#"
-      class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-md hover:bg-emerald-100 hover:border-emerald-300 transition-colors">
+      class="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-emerald-600 bg-emerald-50 rounded-xl hover:bg-emerald-100 transition-all duration-200">
       <i data-lucide="eye" class="w-4 h-4"></i>
       View
     </a>
   </div>
-  <hr class="mt-5">
-  <div class=" mt-5 w-100" id="createView">
-    <div class="flex flex-col gap-y-3 md:gap-y-1.5 text-xs w-full md:w-3/4 mr-auto">
+
+  <div class="h-px bg-gray-100 w-full mb-8"></div>
+  <div class="w-full" id="createView">
+    <div class="space-y-6 max-w-4xl">
 
       <!-- Purchase No -->
-      <div class="flex flex-wrap md:flex-nowrap items-center w-full">
-        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
-          <label class="text-gray-700 font-medium whitespace-nowrap">Purchase No*</label>
-        </div>
-        <div class="w-[65%] sm:w-[68%] md:w-[45%] flex items-center pr-2 md:pr-0">
-          <input type="text" name="" value="{{ last_purchase_no }}" id="purchase_name" placeholder="Enter Purchase No"
-            class="w-full px-2.5 py-1.5 border rounded-md focus:ring-1 focus:ring-blue-500 bg-gray-50 bg-opacity-50" disabled
-            required />
+      <div class="grid grid-cols-1 md:grid-cols-[180px_1fr] items-center gap-4">
+        <label class="text-sm font-semibold text-gray-700">Purchase No*</label>
+        <div class="relative w-full md:w-2/3">
+          <input type="text" id="purchase_name" value="{{ last_purchase_no }}" placeholder="Enter Purchase No"
+            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-gray-600 font-medium"
+            disabled />
           <input type="hidden" name="" id="purchaseId" placeholder="" />
         </div>
       </div>
 
       <!-- Date -->
-      <div class="flex flex-wrap md:flex-nowrap items-center w-full">
-        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
-          <label class="text-gray-700 font-medium whitespace-nowrap">Date*</label>
-        </div>
-        <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
-          <input type="date" name="" id="date"
-            class="w-full px-2.5 py-1.5 border rounded-md focus:ring-1 focus:ring-blue-500" required />
+      <div class="grid grid-cols-1 md:grid-cols-[180px_1fr] items-center gap-4">
+        <label class="text-sm font-semibold text-gray-700">Date*</label>
+        <div class="relative w-full md:w-2/3">
+          <input type="date" id="date"
+            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+            required />
         </div>
       </div>
 
       <!-- Supplier -->
-      <div class="flex flex-wrap md:flex-nowrap items-center w-full">
-        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center justify-between pr-3">
-          <label class="text-gray-700 font-medium whitespace-nowrap">Supplier*</label>
-          <span class="flex items-center gap-1">
-            <input type="checkbox" id="allSuppliers" name="" tabindex="-1" class="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer" />
-            <span class="hidden sm:inline text-gray-700 text-[10px] sm:text-xs">All</span>
-          </span>
+      <div class="grid grid-cols-1 md:grid-cols-[180px_1fr] items-center gap-4">
+        <div class="flex items-center gap-3">
+          <label class="text-sm font-semibold text-gray-700">Supplier*</label>
+          <label class="flex items-center gap-2 cursor-pointer group">
+            <input type="checkbox" id="allSuppliers"
+              class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 transition-all cursor-pointer" />
+            <span class="text-xs font-medium text-gray-500 group-hover:text-gray-700 transition-colors">All</span>
+          </label>
         </div>
-        <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+        <div class="flex items-center gap-4 w-full md:w-2/3">
           <select name="" id="supplier"
-            class="w-full px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required>
+            class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none appearance-none cursor-pointer"
+            required>
             <option value="" selected>Select Supplier</option>
             {% for supplier in suppliers %}
             <option value="{{ supplier.id }}" data-code="{{ supplier.supplierId }}"
               data-balance="{{ supplier.balance }}" data-type="suppliers">{{ supplier.name }}</option>
             {% endfor %}
           </select>
+          <div id="supplierCredit"
+            class="shrink-0 text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hidden md:block"></div>
         </div>
-        <div id="supplierCredit" class="hidden md:flex w-[15%] md:w-[20%] items-center pl-3 text-xs font-semibold text-gray-700"></div>
       </div>
 
       <!-- Supplier Code -->
-      <div class="flex flex-wrap md:flex-nowrap items-center w-full">
-        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
-          <label class="text-gray-700 font-medium whitespace-nowrap">S.code*</label>
-        </div>
-        <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+      <div class="grid grid-cols-1 md:grid-cols-[180px_1fr] items-center gap-4">
+        <label class="text-sm font-semibold text-gray-700">S.code*</label>
+        <div class="relative w-full md:w-2/3">
           <input type="text" name="" id="supplierID" placeholder="" disabled
-            class="w-full md:w-[70%] px-2.5 py-1.5 border rounded-md bg-gray-50 bg-opacity-50 focus:ring-1 focus:ring-blue-500" required />
+            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-gray-600"
+            required />
         </div>
       </div>
 
       <!-- Godown -->
-      <div class="flex flex-wrap md:flex-nowrap items-center w-full">
-        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
-          <label class="text-gray-700 font-medium whitespace-nowrap">Godown*</label>
-        </div>
-        <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+      <div class="grid grid-cols-1 md:grid-cols-[180px_1fr] items-center gap-4">
+        <label class="text-sm font-semibold text-gray-700">Godown*</label>
+        <div class="flex items-center gap-4 w-full md:w-2/3">
           <select name="" id="godown"
-            class="w-full bg-white px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required>
+            class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none appearance-none cursor-pointer"
+            required>
             <option value="" selected>Select Godown</option>
             {% for godown in godowns %}
-            <option value="{{ godown.id }}" data-code="{{ godown.godownId }}"
-              data-balance="{{ godown.get_balance }}">{{ godown.name }}</option>
+            <option value="{{ godown.id }}" data-code="{{ godown.godownId }}" data-balance="{{ godown.get_balance }}">{{
+              godown.name }}</option>
             {% endfor %}
           </select>
+          <div id="godownCredit"
+            class="shrink-0 text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hidden md:block"></div>
         </div>
-        <div id="godownCredit" class="hidden md:flex w-[15%] md:w-[20%] items-center pl-3 text-xs font-semibold text-gray-700"></div>
       </div>
 
       <!-- Godown Code -->
-      <div class="flex flex-wrap md:flex-nowrap items-center w-full">
-        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
-          <label class="text-gray-700 font-medium whitespace-nowrap">G.code*</label>
-        </div>
-        <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+      <div class="grid grid-cols-1 md:grid-cols-[180px_1fr] items-center gap-4">
+        <label class="text-sm font-semibold text-gray-700">G.code*</label>
+        <div class="relative w-full md:w-2/3">
           <input type="text" name="" id="godownID" placeholder="" disabled
-            class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md bg-gray-50 bg-opacity-50 focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-gray-600"
+            required />
         </div>
       </div>
 
       <!-- Qty -->
-      <div class="flex flex-wrap md:flex-nowrap items-center w-full">
-        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
-          <label class="text-gray-700 font-medium whitespace-nowrap">Qty*</label>
-        </div>
-        <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+      <div class="grid grid-cols-1 md:grid-cols-[180px_1fr] items-center gap-4">
+        <label class="text-sm font-semibold text-gray-700">Qty*</label>
+        <div class="relative w-full md:w-2/3">
           <input type="number" name="" id="qty" placeholder="Enter Quantity"
-            class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+            required />
         </div>
       </div>
 
       <!-- Rate -->
-      <div class="flex flex-wrap md:flex-nowrap items-center w-full">
-        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
-          <label class="text-gray-700 font-medium whitespace-nowrap">Rate*</label>
-        </div>
-        <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+      <div class="grid grid-cols-1 md:grid-cols-[180px_1fr] items-center gap-4">
+        <label class="text-sm font-semibold text-gray-700">Rate*</label>
+        <div class="relative w-full md:w-2/3">
           <input type="number" name="" id="amount" placeholder="Enter Amount"
-            class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+            required />
         </div>
       </div>
 
       <!-- Total Amount -->
-      <div class="flex flex-wrap md:flex-nowrap items-center w-full">
-        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
-          <label class="text-gray-700 font-medium whitespace-nowrap">Total Amount*</label>
-        </div>
-        <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+      <div class="grid grid-cols-1 md:grid-cols-[180px_1fr] items-center gap-4">
+        <label class="text-sm font-semibold text-gray-700">Total Amount*</label>
+        <div class="relative w-full md:w-2/3">
           <input type="number" name="" id="total_amount" placeholder="" disabled
-            class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md bg-gray-50 bg-opacity-50 focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+            class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none font-bold text-gray-900"
+            required />
         </div>
       </div>
 
       <!-- Description -->
-      <div class="flex flex-wrap md:flex-nowrap items-start w-full">
-        <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-start pr-3 mt-1 md:mt-1.5">
-          <label class="text-gray-700 font-medium whitespace-nowrap">Description*</label>
-        </div>
-        <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
-          <textarea name="" id="description"
-            class="w-full min-h-[60px] md:min-h-[80px] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"></textarea>
+      <div class="grid grid-cols-1 md:grid-cols-[180px_1fr] items-start gap-4">
+        <label class="text-sm font-semibold text-gray-700 mt-3">Description*</label>
+        <div class="relative w-full md:w-2/3">
+          <textarea name="" id="description" placeholder="Enter Description"
+            class="w-full min-h-[100px] px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none resize-none"></textarea>
         </div>
       </div>
 
     </div>
-    <hr class="mt-5 mb-5">
+    <div class="h-px bg-gray-100 w-full my-8"></div>
+
     <form action="{% url 'purchase-create' %}" method="post">
       {% csrf_token %}
-      <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 w-full">
-        <div class="flex gap-2 items-center w-full lg:w-auto">
+      <div class="flex flex-col lg:flex-row items-center justify-between gap-4 mb-6">
+        <div class="flex items-center gap-3 w-full lg:w-auto">
           <button type="button" id="addGrid" onclick="addToPurchaseGrid()"
-            class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-3.5 py-2.5 rounded-md shadow-sm hover:bg-blue-600 transition-all duration-300 whitespace-nowrap shrink-0">
+            class="flex-1 lg:flex-none inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 shadow-sm transition-all">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i>
             <span id="addToGridText">Add to Grid</span>
           </button>
           <button type="button" id="btnCancel" onclick="onCancelPurchase()"
-            class="leading-none inline-flex items-center gap-1.5 bg-gray-500 text-white text-sm font-medium px-3.5 py-2.5 rounded-md shadow-sm hover:bg-gray-600 transition-all duration-300 whitespace-nowrap shrink-0">
+            class="flex-1 lg:flex-none inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-gray-100 text-gray-600 text-sm font-bold rounded-xl hover:bg-gray-200 transition-all">
             Cancel
           </button>
         </div>
-        <div class="flex items-center justify-end gap-2 w-full lg:w-auto mt-2 lg:mt-0">
-          <div class="relative w-full text-sm">
-            <input type="text" id="searchInput" placeholder="Search...."
-              class="w-full bg-white rounded-md px-2 py-1.5 pl-8 border border-transparent focus:border-transparent ring-2 ring-blue-200 focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none" />
-            <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-2 top-2 pointer-events-none"></i>
+
+        <div class="flex items-center gap-3 w-full lg:w-auto">
+          <div class="relative flex-1 lg:w-64">
+            <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2"></i>
+            <input type="text" id="searchInput" placeholder="Search entries..."
+              class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-sm" />
           </div>
           <button id="btnSave" type="submit"
-            class="leading-none inline-flex items-center gap-1 bg-green-500 text-white text-sm font-medium px-3.5 py-2.5 rounded-md shadow-sm hover:bg-green-600 transition-all duration-300 whitespace-nowrap shrink-0">
-            <i data-lucide="check" class="w-4 h-4"></i>Save
+            class="inline-flex items-center gap-2 px-8 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 shadow-sm transition-all shrink-0">
+            <i data-lucide="save" class="w-4 h-4"></i>
+            Save
           </button>
         </div>
       </div>
-      <div class="w-full lg:w-3/4 mr-auto xl:max-w-6xl 2xl:max-w-7xl overflow-x-auto shadow-sm rounded-md border border-slate-200 mt-5 mb-5" id="purchaseCreateDiv">
-        <table class="table-auto w-full divide-y divide-slate-200 text-sm">
-          <thead class="sticky top-0 bg-blue-200 text-gray-700 z-10">
+
+      <div class="overflow-hidden border border-gray-100 rounded-2xl shadow-sm mb-8" id="purchaseCreateDiv">
+        <table class="w-full text-sm text-left">
+          <thead class="bg-gray-50 border-b border-gray-100">
             <tr>
-              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">Actions</th>
-              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">S.No</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Godown</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[350px]">Description</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-40">Supplier Name</th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Qty</th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-28">Rate</th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Amount</th>
+              <th class="px-6 py-4 font-bold text-gray-700 uppercase tracking-wider text-[11px] text-center w-24">
+                Actions</th>
+              <th class="px-6 py-4 font-bold text-gray-700 uppercase tracking-wider text-[11px] text-center w-16">S.No
+              </th>
+              <th class="px-6 py-4 font-bold text-gray-700 uppercase tracking-wider text-[11px] w-40">Godown</th>
+              <th class="px-6 py-4 font-bold text-gray-700 uppercase tracking-wider text-[11px]">Description</th>
+              <th class="px-6 py-4 font-bold text-gray-700 uppercase tracking-wider text-[11px] w-48">Supplier Name</th>
+              <th class="px-6 py-4 font-bold text-gray-700 uppercase tracking-wider text-[11px] text-right w-24">Qty
+              </th>
+              <th class="px-6 py-4 font-bold text-gray-700 uppercase tracking-wider text-[11px] text-right w-32">Rate
+              </th>
+              <th class="px-6 py-4 font-bold text-gray-700 uppercase tracking-wider text-[11px] text-right w-36">Amount
+              </th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 bg-white" id="purchaseTableBody">
@@ -204,100 +213,113 @@ Purchase Entry
     </form>
   </div>
   <div id="viewDiv" class="hidden">
-    <div class="dateDiv mt-3">
-      <div class="flex justify-center items-end gap-5 mt-4">
-        <div>
-          <label class="block text-gray-700">From Date*</label>
+    <!-- Date Filter Section -->
+    <div class="bg-gray-50/50 rounded-2xl p-8 border border-gray-100 mb-8">
+      <div class="flex flex-wrap items-end justify-center gap-6">
+        <div class="space-y-2">
+          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">From Date</label>
           <input type="date" id="from_date"
-            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="block w-48 px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
             required />
         </div>
-        <div>
-          <label class="block text-gray-700">End Date*</label>
+        <div class="space-y-2">
+          <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">End Date</label>
           <input type="date" id="end_date"
-            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="block w-48 px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
             required />
         </div>
-        <div>
-          <button id="dateFilter"
-            class="bg-blue-600 text-white px-5 py-2 mt-6 rounded-xl hover:bg-blue-700 transition-all">
-            Filter
-          </button>
-        </div>
+        <button id="dateFilter"
+          class="px-8 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">
+          Filter Results
+        </button>
       </div>
     </div>
-    <div id="viewPurchaseDiv" class="hidden">
-      <hr class="mt-5">
-      <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mt-3 mb-3">
-        <div class="flex items-end gap-3 w-full md:w-auto">
-          <div>
-            <label for="from_price" class="block text-gray-700 text-sm font-medium">From</label>
-            <input type="number" id="from_price" placeholder="0.00"
-              class="w-32 mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+
+    <div id="viewPurchaseDiv" class="hidden space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div class="space-y-2">
+            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">Amount Range</label>
+            <div class="flex items-center gap-2">
+              <input type="number" id="from_price" placeholder="Min"
+                class="w-24 px-3 py-2 bg-white border border-gray-100 rounded-lg focus:ring-1 focus:ring-blue-500 transition-all outline-none text-sm" />
+              <span class="text-gray-300">/</span>
+              <input type="number" id="to_price" placeholder="Max"
+                class="w-24 px-3 py-2 bg-white border border-gray-100 rounded-lg focus:ring-1 focus:ring-blue-500 transition-all outline-none text-sm" />
+              <button id="btnFilter" class="p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-all">
+                <i data-lucide="filter" class="w-4 h-4"></i>
+              </button>
+            </div>
           </div>
-          <div>
-            <label for="to_price" class="block text-gray-700 text-sm font-medium">To</label>
-            <input type="number" id="to_price" placeholder="0.00"
-              class="w-32 mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          </div>
-          <button id="btnFilter"
-            class="mt-5 bg-blue-500 text-white text-sm font-medium px-4 py-2.5 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
-            Filter
-          </button>
         </div>
-        <h2 id="showDate" class="underline"></h2>
-        <div class="relative w-full md:w-1/4">
-          <input type="text" id="searchInput" placeholder="Search purchase..."
-            class="w-full bg-white searchInput rounded-xl px-4 py-2 pl-10 border focus:border-transparent ring-2 ring-blue-200 focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none" />
-          <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5 pointer-events-none" fill="none"
-            stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 3a7.5 7.5 0 006.15 13.65z" />
-          </svg>
+        <h2 id="showDate" class="text-sm font-semibold text-blue-600 bg-blue-50 px-4 py-2 rounded-full"></h2>
+        <div class="relative w-full md:w-64">
+          <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2"></i>
+          <input type="text" id="searchInput" placeholder="Search purchases..."
+            class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-sm searchInput" />
         </div>
       </div>
-      <div class="overflow-x-auto mt-5 w-full">
-        <table class="min-w-full rounded-t-lg overflow-hidden" id="viewPurchaseTable">
-          <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
+
+      <div class="overflow-hidden border border-gray-100 rounded-2xl shadow-sm">
+        <table class="w-full text-sm text-left" id="viewPurchaseTable">
+          <thead class="bg-gray-50 border-b border-gray-100">
             <tr>
-              <th class="px-4 py-3 text-left font-medium w-1">Actions</th>
-              <th class="px-4 py-3 text-left font-medium w-1">#</th>
-              <th class="px-4 py-3 text-left font-medium">Godown</th>
-              <th class="px-4 py-3 text-left font-medium">Description</th>
-              <th class="px-4 py-3 text-left font-medium">Supplier</th>
-              <th class="px-4 py-3 text-right font-medium">Qty</th>
-              <th class="px-4 py-3 text-right font-medium">Rate</th>
-              <th class="px-4 py-3 text-right font-medium">Amount</th>
+              <th class="px-6 py-4 font-bold text-gray-700 uppercase tracking-wider text-[11px] w-24">Actions</th>
+              <th class="px-6 py-4 font-bold text-gray-700 uppercase tracking-wider text-[11px] w-16">#</th>
+              <th class="px-6 py-4 font-bold text-gray-700 uppercase tracking-wider text-[11px]">Godown</th>
+              <th class="px-6 py-4 font-bold text-gray-700 uppercase tracking-wider text-[11px]">Description</th>
+              <th class="px-6 py-4 font-bold text-gray-700 uppercase tracking-wider text-[11px]">Supplier</th>
+              <th class="px-6 py-4 font-bold text-gray-700 uppercase tracking-wider text-[11px] text-right">Qty</th>
+              <th class="px-6 py-4 font-bold text-gray-700 uppercase tracking-wider text-[11px] text-right">Rate</th>
+              <th class="px-6 py-4 font-bold text-gray-700 uppercase tracking-wider text-[11px] text-right">Amount</th>
             </tr>
           </thead>
-          <tbody class="bg-gray-100" id="purchaseTableBody">
+          <tbody class="bg-white divide-y divide-gray-50 text-gray-600" id="purchaseTableBody">
           </tbody>
         </table>
       </div>
     </div>
   </div>
 </div>
+
 <!-- 🟦 Edit Confirmation Modal -->
-<div id="editModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
-  <div class="bg-white rounded-xl shadow-lg p-6 w-80 text-center">
-    <h2 class="text-lg font-semibold mb-4 text-gray-800">Confirm Edit</h2>
-    <p class="mb-6 text-gray-600 ">Are you sure you want to edit this purchase's details?</p>
-    <div class="flex justify-center space-x-4">
+<div id="editModal"
+  class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex justify-center items-center z-[100] p-4">
+  <div
+    class="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-sm transform transition-all border border-gray-100 text-center">
+    <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+      <i data-lucide="edit-3" class="w-8 h-8"></i>
+    </div>
+    <h2 class="text-xl font-bold text-gray-900 mb-2">Confirm Edit</h2>
+    <p class="text-gray-500 mb-8">Are you sure you want to modify this purchase entry? This will update the system
+      records.</p>
+    <div class="flex gap-3">
       <button onclick="closeEditModal()"
-        class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
-      <a id="confirmEditBtn" href="#" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Edit</a>
+        class="flex-1 px-6 py-3 bg-gray-100 text-gray-600 font-bold rounded-2xl hover:bg-gray-200 transition-all">Cancel</button>
+      <a id="confirmEditBtn" href="#"
+        class="flex-1 px-6 py-3 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">Confirm
+        Edit</a>
     </div>
   </div>
 </div>
-<div id="confirmModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
-  <div class="bg-white rounded-xl shadow-lg p-6 w-80 text-center">
-    <h2 class="text-lg font-semibold mb-4">Confirm Deletion</h2>
-    <p class="mb-6 text-gray-600">Are you sure you want to delete this purchase?</p>
-    <div class="flex justify-center space-x-4">
-      <button id="cancelBtn" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
-        onclick="closeModal()">Cancel</button>
-      <a id="confirmDeleteBtn" href="#" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-        onclick="deleteItem()">Delete</a>
+
+<!-- 🟦 Delete Confirmation Modal -->
+<div id="confirmModal"
+  class="hidden fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex justify-center items-center z-[100] p-4">
+  <div
+    class="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-sm transform transition-all border border-gray-100 text-center">
+    <div class="w-16 h-16 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+      <i data-lucide="trash-2" class="w-8 h-8"></i>
+    </div>
+    <h2 class="text-xl font-bold text-gray-900 mb-2">Confirm Deletion</h2>
+    <p class="text-gray-500 mb-8">This action cannot be undone. Are you sure you want to permanently delete this
+      purchase entry?</p>
+    <div class="flex gap-3">
+      <button id="cancelBtn" onclick="closeModal()"
+        class="flex-1 px-6 py-3 bg-gray-100 text-gray-600 font-bold rounded-2xl hover:bg-gray-200 transition-all">Cancel</button>
+      <a id="confirmDeleteBtn" href="#" onclick="deleteItem()"
+        class="flex-1 px-6 py-3 bg-red-600 text-white font-bold rounded-2xl hover:bg-red-700 shadow-lg shadow-red-200 transition-all">Delete
+        Purchase</a>
     </div>
   </div>
 </div>
@@ -326,11 +348,11 @@ Purchase Entry
     });
     rateAvg = rateSum / count || 0;
     const lastRow = `
-      <tr class="bg-blue-200 font-bold text-sm" id="totalRow">
-        <td class="px-1.5 py-1.5 text-left" colspan="5">Totals:</td>
-        <td class="px-1.5 py-1.5 text-right">${parseFloat(totalQty).toFixed(2)}</td>
-        <td class="px-1.5 py-1.5 text-right">${parseFloat(rateAvg).toFixed(2)}</td>
-        <td class="px-1.5 py-1.5 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
+      <tr class="bg-blue-50/30 font-bold text-gray-900 border-t-2 border-blue-100" id="totalRow">
+        <td class="px-6 py-4 text-left" colspan="5">Grand Total Summary</td>
+        <td class="px-6 py-4 text-right text-gray-900 font-black">${parseFloat(totalQty).toFixed(2)}</td>
+        <td class="px-6 py-4 text-right text-gray-400 font-medium italic">${parseFloat(rateAvg).toFixed(2)}</td>
+        <td class="px-6 py-4 text-right text-blue-600 font-black">${parseFloat(totalAmount).toFixed(2)}</td>
       </tr>`;
     tableBody.insertAdjacentHTML('beforeend', lastRow);
 
@@ -374,7 +396,7 @@ Purchase Entry
     $('#supplierID').val(code);
     $('#supplierCredit').empty();
     $('#supplierCredit').append(`
-      <p class="font-semibold ${parseFloat(balance).toFixed(2) <= 0 ? `text-red` : ``}">Balance:${parseFloat(balance).toFixed(2)} </p> 
+      <p class="font-semibold ${parseFloat(balance).toFixed(2) <= 0 ? `text-red-500` : `text-emerald-600`}">Balance: ${parseFloat(balance).toFixed(2)}</p> 
       `);
   });
   $('#allSuppliers').on('change', function () {
@@ -418,7 +440,7 @@ Purchase Entry
     var balance = selectedOption.data('balance') || '0';
     $('#godownCredit').empty();
     $('#godownCredit').append(`
-      <p class="font-semibold ${parseFloat(balance).toFixed(2) <= 0 ? `text-red` : ``}">Balance:${parseFloat(balance).toFixed(2)} </p> 
+      <p class="font-semibold ${parseFloat(balance).toFixed(2) <= 0 ? `text-red-500` : `text-emerald-600`}">Balance: ${parseFloat(balance).toFixed(2)}</p> 
       `);
     $('#godownID').val(code);
   });
@@ -448,36 +470,36 @@ Purchase Entry
     const purchase = purchases[i];
     var tableBody = document.getElementById("purchaseTableBody");
     var newRow = `
-      <tr class="hover:bg-indigo-50/50 transition-all duration-200">
-        <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap">
-          <button type='button' class="text-blue-500 text-xs hover:underline mr-2" onclick="updatePurchase(this)">Edit</button>
-          <button type='button' class="text-red-500 text-xs hover:underline" onclick="deletePurchase(this)">Delete</button>
+      <tr class="hover:bg-gray-50/50 transition-all border-b border-gray-50">
+        <td class="px-6 py-4 text-center whitespace-nowrap">
+          <button type='button' class="text-blue-600 font-bold hover:text-blue-800 mr-3" onclick="updatePurchase(this)">Edit</button>
+          <button type='button' class="text-red-500 font-bold hover:text-red-700" onclick="deletePurchase(this)">Delete</button>
         </td>
-        <td class="px-1.5 py-1.5 text-center text-sm w-12 sl">${i + 1}</td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-32 search-area">
+        <td class="px-6 py-4 text-center text-gray-500 font-medium sl">${i + 1}</td>
+        <td class="px-6 py-4 text-gray-700 font-medium search-area">
           ${purchase.godown}
           <input type="hidden" name="godowns" value="${purchase.godown_id}">
           <input type="hidden" name="dates" value="${purchase.date.split('T')[0]}">
         </td>
-        <td class="px-1.5 py-1.5 text-left text-sm search-area">
+        <td class="px-6 py-4 text-gray-600 search-area">
           ${purchase.description}
           <input type="hidden" name="descriptions" value="${purchase.description}">
           <input type="hidden" name="purchase_ids" id="purchase_id" value="${purchase.id}"> 
           <input type="hidden" name="type" id="type" value="${purchase.type}"> 
         </td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-40 search-area">
+        <td class="px-6 py-4 text-gray-700 font-medium search-area">
           ${purchase.type === 'suppliers' ? purchase.supplier : purchase.customer}
           <input type="hidden" name="suppliers" value="${purchase.type === 'suppliers' ? purchase.supplier_id : purchase.customer_id}">
         </td>
-        <td class="px-1.5 py-1.5 text-right text-sm w-24 search-area">
+        <td class="px-6 py-4 text-right text-gray-700 font-bold search-area">
           ${purchase.qty}
           <input type="hidden" name="qtys" value="${purchase.qty}">
         </td>
-        <td class="px-1.5 py-1.5 text-right text-sm w-28 search-area">
+        <td class="px-6 py-4 text-right text-gray-700 font-bold search-area">
           ${parseFloat(purchase.amount).toFixed(2)}
           <input type="hidden" name="amounts" value="${purchase.amount}">   
         </td>
-        <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area border-l border-gray-200">
+        <td class="px-6 py-4 text-right text-blue-600 font-bold search-area">
           ${parseFloat(purchase.total_amount).toFixed(2)}
           <input type="hidden" name="total_amounts" value="${parseFloat(purchase.total_amount).toFixed(2)}">
         </td>
@@ -564,35 +586,35 @@ Purchase Entry
             $(selectedTR).empty();
             $(selectedTR).removeClass('bg-blue-300');
             $(selectedTR).append(`
-             <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap">
-          <button type='button' class="text-blue-500 text-xs hover:underline mr-2" onclick="updatePurchase(this)">Edit</button>
-          <button type='button' class="text-red-500 text-xs hover:underline" onclick="deletePurchase(this)">Delete</button>
+             <td class="px-6 py-4 text-center whitespace-nowrap">
+          <button type='button' class="text-blue-600 font-bold hover:text-blue-800 mr-3" onclick="updatePurchase(this)">Edit</button>
+          <button type='button' class="text-red-500 font-bold hover:text-red-700" onclick="deletePurchase(this)">Delete</button>
         </td>
-        <td class="px-1.5 py-1.5 text-center text-sm w-12 sl"></td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-32 search-area">
+        <td class="px-6 py-4 text-center text-gray-500 font-medium sl"></td>
+        <td class="px-6 py-4 text-gray-700 font-medium search-area">
           ${godown}
           <input type="hidden" name="godowns" value="${godownSelect}">
           <input type="hidden" name="dates" value="${date}">
         </td>
-        <td class="px-1.5 py-1.5 text-left text-sm search-area">
+        <td class="px-6 py-4 text-gray-600 search-area">
           ${description}
           <input type="hidden" name="descriptions" value="${description}">
           <input type="hidden" name="purchase_ids" id="purchase_id" value="${purchase_id}"> 
           <input type="hidden" name="type" id="type" value="${type_value}"> 
         </td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-40 search-area">
+        <td class="px-6 py-4 text-gray-700 font-medium search-area">
           ${supplier}
           <input type="hidden" name="suppliers" value="${supplierSelect}">
         </td>
-        <td class="px-1.5 py-1.5 text-right text-sm w-24 search-area">
+        <td class="px-6 py-4 text-right text-gray-700 font-bold search-area">
           ${qty}
           <input type="hidden" name="qtys" value="${qty}">
         </td>
-        <td class="px-1.5 py-1.5 text-right text-sm w-28 search-area">
+        <td class="px-6 py-4 text-right text-gray-700 font-bold search-area">
           ${amount.toFixed(2)}
           <input type="hidden" name="amounts" value="${amount}">
         </td>
-        <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area border-l border-gray-200">
+        <td class="px-6 py-4 text-right text-blue-600 font-bold search-area">
           ${total_amount.toFixed(2)}
           <input type="hidden" name="total_amounts" value="${total_amount.toFixed(2)}">
         </td>
@@ -600,36 +622,36 @@ Purchase Entry
             selectedTR = '';
           } else {
             const newRow = `
-      <tr class="hover:bg-indigo-50/50 transition-all duration-200">
-        <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap">
-          <button type='button' class="text-blue-500 text-xs hover:underline mr-2" onclick="updatePurchase(this)">Edit</button>
-          <button type='button' class="text-red-500 text-xs hover:underline" onclick="deletePurchase(this)">Delete</button>
+      <tr class="hover:bg-gray-50/50 transition-all border-b border-gray-50">
+        <td class="px-6 py-4 text-center whitespace-nowrap">
+          <button type='button' class="text-blue-600 font-bold hover:text-blue-800 mr-3" onclick="updatePurchase(this)">Edit</button>
+          <button type='button' class="text-red-500 font-bold hover:text-red-700" onclick="deletePurchase(this)">Delete</button>
         </td>
-        <td class="px-1.5 py-1.5 text-center text-sm w-12 sl"></td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-32 search-area">
+        <td class="px-6 py-4 text-center text-gray-500 font-medium sl"></td>
+        <td class="px-6 py-4 text-gray-700 font-medium search-area">
           ${godown}
           <input type="hidden" name="godowns" value="${godownSelect}">
           <input type="hidden" name="dates" value="${date}">
         </td>
-        <td class="px-1.5 py-1.5 text-left text-sm search-area">
+        <td class="px-6 py-4 text-gray-600 search-area">
           ${description}
           <input type="hidden" name="descriptions" value="${description}">
           <input type="hidden" name="purchase_ids" id="purchase_id" value="${purchase_id}"> 
           <input type="hidden" name="type" id="type" value="${type_value}"> 
         </td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-40 search-area">
+        <td class="px-6 py-4 text-gray-700 font-medium search-area">
           ${supplier}
           <input type="hidden" name="suppliers" value="${supplierSelect}">
         </td>
-        <td class="px-1.5 py-1.5 text-right text-sm w-24 search-area">
+        <td class="px-6 py-4 text-right text-gray-700 font-bold search-area">
           ${qty}
           <input type="hidden" name="qtys" value="${qty}">
         </td>
-        <td class="px-1.5 py-1.5 text-right text-sm w-28 search-area">
+        <td class="px-6 py-4 text-right text-gray-700 font-bold search-area">
           ${amount.toFixed(2)} 
           <input type="hidden" name="amounts" value="${amount}">
         </td>
-        <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area border-l border-gray-200">
+        <td class="px-6 py-4 text-right text-blue-600 font-bold search-area">
           ${total_amount.toFixed(2)}
           <input type="hidden" name="total_amounts" value="${total_amount.toFixed(2)}">
         </td>
