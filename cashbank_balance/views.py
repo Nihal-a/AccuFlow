@@ -163,6 +163,7 @@ class CashBankLedgerView(View):
             context['open_balance'] = 0
 
         context['ledgers'] = final_ledgers
+        context['has_transactions'] = any(item.get('type') != 'OB' for item in final_ledgers)
         context['recep_total'] = recep_sum
         context['pay_total'] = pay_sum
         context['total_balance'] = running_val

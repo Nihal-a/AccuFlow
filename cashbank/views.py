@@ -50,19 +50,25 @@ class UpdateCashBankView(View):
         cashbank.name = request.POST.get('name')
         cashbank.description = request.POST.get('description')
         if not cashbank.cashbankId:
-            cashbank.cashbankId = getLastCashBankNo()
+            cashbank.cashbankId = getLastCashBankNo(getClient(request.user))
         cashbank.save()
         return redirect('cashbank')
     
     
 
 def getLastCashBankNo(client):
-    last_cashbank = CashBanks.objects.filter(is_active=True,client=client).order_by('cashbankId').last()  
-    if last_cashbank and last_cashbank.cashbankId != None:
-        prefix, num = last_cashbank.cashbankId.split('-')
-        new_cashbank_id = f"{prefix}-{int(num) + 1}"
-    else: 
-        
-        new_cashbank_id = 'CB-1'
-    return new_cashbank_id
+    cashbanks = CashBanks.objects.filter(is_active=True, client=client).exclude(cashbankId__isnull=True).exclude(cashbankId='')
+    max_num = 0
+    for cb in cashbanks:
+        try:
+            prefix, num_str = cb.cashbankId.split('-')
+            num = int(num_str)
+            if num > max_num:
+                max_num = num
+        except ValueError:
+            pass
+            
+    if max_num > 0:
+        return f"CB-{max_num + 1}"
+    return "CB-1"
      

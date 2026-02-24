@@ -192,6 +192,7 @@ class SupplierLedgerView(View):
             context['open_balance'] = 0
 
         context['ledgers'] = final_ledgers
+        context['has_transactions'] = any(item.get('type') != 'OB' for item in final_ledgers)
         context['credit_total'] = credit_sum
         context['debit_total'] = debit_sum
         context['total_balance'] = running_val

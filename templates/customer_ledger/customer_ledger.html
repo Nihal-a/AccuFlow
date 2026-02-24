@@ -5,164 +5,144 @@ Customer Ledger
 {% endblock title %}
 
 {% block content %}
-<div class="bg-white rounded-xl p-6 mt-3">
+<div class="bg-white sm:rounded-xl p-4 sm:p-6 mt-3 -mx-4 sm:mx-0 w-[calc(100%+2rem)] sm:w-full shadow-sm sm:shadow-none">
     <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">
         Customer Ledger
     </h1>
-
-    <p class="text-sm text-gray-500 mt-2">
-        {% comment %} (Fixed: table now stretches full width) {% endcomment %}
-    </p>
 
     <hr class="mt-5">
 
     <div id="createView" class="mt-5 w-full">
         <div class="grid w-full">
             <form method="post" action="{% url 'customerledger' %}"
-                class="grid  grid-cols-12 gap-4 ignore-unsaved-changes">
+                class="flex flex-col gap-3 sm:gap-4 ignore-unsaved-changes">
                 {% csrf_token %}
-                <div class="col-span-6 w-full flex items-center gap-3">
-                    <div class="w-[45%]">
-                        <div class="flex items-center gap-4 w-full">
-                            <div class="flex-1">
-                                <select id="customer" name="customer"
-                                    class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    required>
-                                    <option value="" selected>Select Customer*</option>
-                                    {% for customer in customers %}
-                                    <option value="{{ customer.id }}" data-code="{{ customer.customerId }}"
-                                        data-balance="{{ customer.balance }}" data-type="customers">
-                                        {{ customer.name }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
+                <div class="grid grid-cols-5 w-full lg:w-5/12 xl:w-1/3 gap-4 sm:gap-4 items-end">
+                    <div class="col-span-3 sm:col-span-3">
+                        <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">Select Customer*</label>
+                        <select id="customer" name="customer"
+                            class="w-full bg-white px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
+                            required>
+                            <option value="" selected>-- Select Customer --</option>
+                            {% for customer in customers %}
+                            <option value="{{ customer.id }}" data-code="{{ customer.customerId }}"
+                                data-balance="{{ customer.balance }}" data-type="customers">
+                                {{ customer.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
                     </div>
 
-                    <div class="w-[20%]">
-                        <div class="flex items-center gap-4 w-full">
-                            <div class="flex-1">
-                                <input type="text" id="customerID" disabled
-                                    class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                        </div>
+                    <div class="col-span-2 sm:col-span-2">
+                        <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">Customer ID</label>
+                        <input type="text" id="customerID" disabled
+                            class="w-full bg-gray-50 px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm">
                     </div>
                 </div>
 
-                <div class="col-span-12 w-full flex items-center gap-3">
-                    <div class="w-[20%]">
-                        <label class="block text-gray-700 mb-1">From*</label>
-                        <div class="flex items-center gap-4">
-                            <div class="flex-1">
-                                <input type="date" id="dateFrom" name="dateFrom" value="{{date_from}}"
-                                    class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
+                <div class="flex flex-col sm:flex-row w-full lg:w-8/12 xl:w-1/2 gap-4 sm:gap-4 sm:items-end">
+                    <div class="grid grid-cols-2 w-full sm:w-2/3 gap-6 sm:gap-4">
+                        <div class="col-span-1">
+                            <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">From*</label>
+                            <input type="date" id="dateFrom" name="dateFrom" value="{{date_from}}" required
+                                class="w-full bg-white px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm">
+                        </div>
+                        <div class="col-span-1">
+                            <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">To*</label>
+                            <input type="date" id="dateTo" name="dateTo" value="{{date_to}}" required
+                                class="w-full bg-white px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm">
                         </div>
                     </div>
 
-                    <div class="w-[20%]">
-                        <label class="block text-gray-700 mb-1">To*</label>
-                        <div class="flex items-center gap-4">
-                            <div class="flex-1">
-                                <input type="date" id="dateTo" name="dateTo" value="{{date_to}}"
-                                    class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="w-[25%]">
-                        <label class="block text-gray-700 mb-1">Sort Order*</label>
-                        <div class="flex items-center gap-4">
-                            <div class="flex-1">
-                                <select id="sortOrder" name="sort"
-                                    class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                    <option value="Serial" selected>SlNo</option>
-                                    <option value="Detailed">Detailed</option>
-                                    <option value="Remark">Remark</option>
-
-                                </select>
-                            </div>
-                        </div>
+                    <div class="w-1/2 sm:w-1/3">
+                        <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">Sort Order*</label>
+                        <select id="sortOrder" name="sort"
+                            class="w-full bg-white px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm">
+                            <option value="Serial" selected>SlNo</option>
+                            <option value="Detailed">Detailed</option>
+                            <option value="Remark">Remark</option>
+                        </select>
                     </div>
                 </div>
 
-                <div class="col-span-6 w-full flex items-center gap-3">
-                    <div class="w-full">
-                        <div class="flex items-center gap-4">
+                <div class="col-span-12 w-full flex items-center mt-2 lg:mt-0 pb-1 sm:pb-0">
+                    <div class="w-full flex flex-row items-center gap-4 sm:gap-5 flex-nowrap">
+                        <div class="flex items-center shrink-0">
+                            <input type="checkbox" id="noOpeningBalance" name="opening" checked class="h-4 w-4 text-blue-600 rounded shrink-0">
+                            <label for="noOpeningBalance" class="ml-1.5 text-[0.65rem] xs:text-xs sm:text-sm text-gray-700 font-medium cursor-pointer leading-tight">Without Opening Balance</label>
+                        </div>
 
-                            <div class="w-full flex items-center gap-5">
-                                <div>
-                                    <input type="checkbox" id="noOpeningBalance" name="opening" checked>
-                                    <label for="noOpeningBalance">Without Opening Balance</label>
-                                </div>
+                        <div class="flex gap-2 shrink-0">
+                            <a id="btnClear" href="{% url 'customerledger' %}"
+                                class="leading-none inline-flex items-center justify-center gap-1 bg-gray-500 text-white text-xs sm:text-sm font-medium px-3 py-1.5 sm:py-2 rounded-md shadow-sm hover:bg-gray-600 transition-all duration-300">
+                                <span></span>Clear<span class="hidden sm:inline"> Details</span></span>
+                            </a>
 
-                                <div class="flex gap-2">
-                                    <a id="btnClear" href="{% url 'customerledger' %}"
-                                        class="leading-none inline-flex items-center gap-1.5 bg-gray-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-gray-600 transition-all duration-300">
-                                        Clear Details
-                                    </a>
-
-                                    <button id="btnView" type="submit"
-                                        class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
-                                        View Results
-                                        </a>
-                                </div>
-                            </div>
+                            <button id="btnView" type="submit"
+                                class="leading-none inline-flex items-center justify-center gap-1 bg-blue-500 text-white text-xs sm:text-sm font-medium px-3 py-1.5 sm:py-2 rounded-md shadow-sm hover:bg-blue-600 transition-all duration-300">
+                                <span>View<span class="hidden sm:inline"> Results</span></span>
+                            </button>
                         </div>
                     </div>
                 </div>
             </form>
 
-            <div class="overflow-x-auto mt-5 w-full col-span-8">
-                <table id="viewPurchaseTable" class="w-full min-w-max rounded-t-lg overflow-hidden">
-                    <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
+            {% if customer %}
+            <div class="overflow-x-auto mt-5 w-full border border-gray-200 rounded-lg">
+                <table id="viewPurchaseTable" class="w-full min-w-[800px] md:min-w-full text-xs sm:text-sm rounded-t-sm overflow-hidden whitespace-nowrap">
+                    <thead class="bg-blue-200 text-gray-700 uppercase text-xs">
                         <tr>
                             <th colspan="7"></th>
-                            <th class="px-4 py-3 text-left font-bold w-1" colspan="2">Open Balance</th>
-                            <th class="px-4 py-3 text-left font-bold w-1">{{open_balance}}</th>
+                            <th class="px-2 py-1 text-left font-semibold tracking-wide w-1" colspan="2">Open Balance</th>
+                            <th class="px-2 py-1 text-left font-semibold tracking-wide w-1">{{open_balance}}</th>
                         </tr>
                         <tr>
-                            <!-- <th class="px-4 py-3 text-left font-medium w-1">Actions</th> -->
-                            <th class="px-4 py-3 text-left font-medium w-1">#</th>
-                            <th class="px-4 py-3 text-left font-medium">Tran.Date</th>
-                            <th class="px-4 py-3 text-left font-medium">T.No</th>
-                            <th class="px-4 py-3 text-left font-medium">Type</th>
-                            <th class="px-4 py-3 text-left font-medium">Description</th>
-                            <th class="px-4 py-3 text-right font-medium">Qty</th>
-                            <th class="px-4 py-3 text-right font-medium">Rate</th>
-                            <th class="px-4 py-3 text-right font-medium">Debit</th>
-                            <th class="px-4 py-3 text-right font-medium">Credit</th>
-                            <th class="px-4 py-3 text-right font-medium">Balance</th>
+                            <!-- <th class="px-2 py-1 text-left font-semibold tracking-wide w-1">Actions</th> -->
+                            <th class="px-2 py-1 text-left font-semibold tracking-wide w-1">#</th>
+                            <th class="px-2 py-1 text-left font-semibold tracking-wide">Tran.Date</th>
+                            <th class="px-2 py-1 text-left font-semibold tracking-wide">T.No</th>
+                            <th class="px-2 py-1 text-left font-semibold tracking-wide">Type</th>
+                            <th class="px-2 py-1 text-left font-semibold tracking-wide">Description</th>
+                            <th class="px-2 py-1 text-right font-semibold tracking-wide">Qty</th>
+                            <th class="px-2 py-1 text-right font-semibold tracking-wide">Rate</th>
+                            <th class="px-2 py-1 text-right font-semibold tracking-wide">Debit</th>
+                            <th class="px-2 py-1 text-right font-semibold tracking-wide">Credit</th>
+                            <th class="px-2 py-1 text-right font-semibold tracking-wide">Balance</th>
                         </tr>
                     </thead>
                     <tbody id="purchaseTableBody" class="bg-gray-100">
                         {% for ledger in ledgers %}
                         {% if ledger.type != 'OB' %}
-                        <tr>
-                            <td class="px-4 py-3 text-left font-medium">{% if opening == 'on' %}{{forloop.counter}}{% else %}{{forloop.counter0}}{% endif %}</td>
-                            <td class="px-4 py-3 text-left font-medium">{{ledger.date|date:"d-m-Y"}}</td>
-                            <td class="px-4 py-3 text-left font-medium">{{ledger.transaction_no}}</td>
-                            <td class="px-4 py-3 text-left font-medium">{{ledger.type}}</td>
-                            <td class="px-4 py-3 text-left font-medium">{{ledger.description}}</td>
-                            <td class="px-4 py-3 text-right font-medium">{{ledger.qty}}</td>
-                            <td class="px-4 py-3 text-right font-medium">{{ledger.rate}}</td>
-                            <td class="px-4 py-3 text-right font-medium">{{ledger.debit}}</td>
-                            <td class="px-4 py-3 text-right font-medium">{{ledger.credit}}</td>
-                            <td class="px-4 py-3 text-right font-medium">{{ledger.balance}}</td>
+                        <tr class="hover:bg-gray-50 divide-y divide-gray-300 odd:bg-white even:bg-gray-100">
+                            <td class="px-2 py-1 text-left font-medium">{% if opening == 'on' %}{{forloop.counter}}{% else %}{{forloop.counter0}}{% endif %}</td>
+                            <td class="px-2 py-1 text-left">{{ledger.date|date:"d-m-Y"}}</td>
+                            <td class="px-2 py-1 text-left">{{ledger.transaction_no}}</td>
+                            <td class="px-2 py-1 text-left">{{ledger.type}}</td>
+                            <td class="px-2 py-1 text-left">{{ledger.description}}</td>
+                            <td class="px-2 py-1 text-right">{{ledger.qty}}</td>
+                            <td class="px-2 py-1 text-right">{{ledger.rate}}</td>
+                            <td class="px-2 py-1 text-right">{{ledger.debit}}</td>
+                            <td class="px-2 py-1 text-right">{{ledger.credit}}</td>
+                            <td class="px-2 py-1 text-right font-medium">{{ledger.balance}}</td>
                         </tr>
                         {% endif %}
                         {% endfor %}
-                        <tr class="bg-blue-200 text-gray-700 uppercase text-sm">
+                        {% if not has_transactions %}
+                        <tr>
+                            <td colspan="10" class="px-2 py-4 text-center text-gray-500 font-medium">No data found</td>
+                        </tr>
+                        {% endif %}
+                        <tr class="bg-blue-200 text-gray-700 uppercase divide-y divide-blue-300 text-xs">
                             <td colspan="6"></td>
-                            <td class="px-4 py-3 text-right font-medium font-bold">Total :</td>
-                            <td class="px-4 py-3 text-right font-medium font-bold">{{debit_total|default:'0.00'}}</td>
-                            <td class="px-4 py-3 text-right font-medium font-bold">{{credit_total|default:'0.00'}}</td>
-                            <td class="px-4 py-3 text-right font-medium font-bold">{{total_balance|default:'0.00'}}</td>
+                            <td class="px-2 py-1 text-right font-bold tracking-wide">Total :</td>
+                            <td class="px-2 py-1 text-right font-bold">{{debit_total|default:'0.00'}}</td>
+                            <td class="px-2 py-1 text-right font-bold">{{credit_total|default:'0.00'}}</td>
+                            <td class="px-2 py-1 text-right font-bold">{{total_balance|default:'0.00'}}</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+            {% endif %}
 
         </div>
     </div>

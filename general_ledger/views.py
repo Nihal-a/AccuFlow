@@ -158,6 +158,7 @@ class GeneralLedgerView(View):
             context['open_balance'] = 0
 
         context['ledgers'] = final_ledgers
+        context['has_transactions'] = len([l for l in final_ledgers if l.get('type') != 'OB']) > 0
         context['credit_total'] = credit_sum
         context['debit_total'] = debit_sum
         context['total_balance'] = running_val
