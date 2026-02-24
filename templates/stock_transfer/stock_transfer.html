@@ -5,239 +5,296 @@ Stock Transfer
 {% block externalCSS %}
 {% endblock externalCSS %}
 {% block content %}
-<div class="bg-white rounded-xl p-6 mt-3">
-    <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">Stock Transfer</h1>
-    <div class="mt-4 flex flex-wrap items-center gap-3">
-        <a id="btnNew" href="#"
-            class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
-            New
-        </a>
-        <a id="btnView" href="#"
-            class="leading-none inline-flex items-center gap-1.5 bg-green-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-green-600 transition-all duration-300">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-            </svg>
-            View
-        </a>
-    </div>
-    <hr class="mt-5">
-    <div class=" mt-5 w-100" id="createView">
-        <form method="post" action="{% url 'stocktransfer_add' %}" id="stockTransferForm">
-            {% csrf_token %}
-            <div class="grid grid-cols-8 gap-4">
-                <div class="col-span-6 flex gap-2 ">
-                    <div class="w-[50%]">
-                        <label class="block text-gray-700">Transfer No*</label>
-                        <input type="text" name="transfer_no" value="{{ last_transfer_no }}" id="transfer_no"
-                            placeholder="Transfer No"
-                            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            readonly required />
-                    </div>
-                    <div class="w-[50%]">
-                        <label class="block text-gray-700">Date*</label>
-                        <input type="date" name="date" id="date"
-                            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            required />
-                    </div>
-                </div>
+<div class="bg-white rounded-xl p-5 mt-3">
+  <h1 class="text-xl font-medium mb-0 text-gray-700 uppercase">Stock Transfer</h1>
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <!-- 🟦 New -->
+    <a id="btnNew" href="#"
+      class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 hover:border-blue-300 transition-colors">
+      <i data-lucide="plus" class="w-4 h-4"></i>
+      New
+    </a>
 
-                <!-- Godown From Row -->
-                <div class="col-span-6 w-full flex items-center gap-3">
-                    <div class=" w-[80%]">
-                        <label class="block text-gray-700 mb-1">Godown From*</label>
-                        <div class="flex items-center gap-4">
-                            <div class="flex-1">
-                                <select id="godownFrom"
-                                    class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                    <option value="" selected>Select Godown</option>
-                                    {% for godown in godowns %}
-                                    <option value="{{ godown.id }}" data-code="{{ godown.godownId }}"
-                                        data-qty="{{ godown.qty }}">{{ godown.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class=" w-[20%]">
-                        <label class="block text-gray-700 mb-1">Code</label>
-                        <input type="text" id="godownFromCode" disabled
-                            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
-                    <div class="w-[20%]">
-                        <div id="godownFromBalance"></div>
-                    </div>
-                </div>
-
-                <!-- Godown To Row -->
-                <div class="col-span-6 w-full flex items-center gap-3">
-                    <div class=" w-[80%]">
-                        <label class="block text-gray-700 mb-1">Godown To*</label>
-                        <div class="flex items-center gap-4">
-                            <div class="flex-1">
-                                <select id="godownTo"
-                                    class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                    <option value="" selected>Select Godown</option>
-                                    {% for godown in godowns %}
-                                    <option value="{{ godown.id }}" data-code="{{ godown.godownId }}"
-                                        data-qty="{{ godown.qty }}">{{ godown.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class=" w-[20%]">
-                        <label class="block text-gray-700 mb-1">Code</label>
-                        <input type="text" id="godownToCode" disabled
-                            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
-                    <div class="w-[20%]">
-                        <div id="godownToBalance"></div>
-                    </div>
-                </div>
-
-                <!-- Qty Row -->
-                <div class="col-span-6 w-full flex items-center gap-3">
-                    <div class="w-full">
-                        <label class="block text-gray-700 mb-1">Qty*</label>
-                        <input type="number" id="qty" placeholder="Qty"
-                            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            step="0.01" />
-                    </div>
-                </div>
-
-                <!-- Description Row -->
-                <div class="description col-span-6">
-                    <div>
-                        <label class="block text-gray-700">Description</label>
-                        <textarea id="description"
-                            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-                    </div>
-                </div>
-            </div>
-
-            <hr class="mt-5 mb-5">
-
-            <div class="flex items-center justify-between">
-                <div class="flex gap-2 items-center">
-                    <a id="addToGrid" href="#" onclick="addToTransferGrid()"
-                        class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
-                        Add to Grid
-                    </a>
-                    <a id="btnCancel" href="#" onclick="clearForm();"
-                        class="leading-none inline-flex items-center gap-1.5 bg-gray-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-gray-600 transition-all duration-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                        Cancel
-                    </a>
-                </div>
-
-                <div class="flex items-center gap-2">
-                    <button id="btnSave" type="button" onclick="submitForm()"
-                        class="leading-none inline-flex items-center gap-1.5 bg-green-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-green-600 transition-all duration-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                        Save
-                    </button>
-                </div>
-            </div>
-
-            <div class="overflow-x-auto mt-5 w-full" id="transferCreateDiv">
-                <table class="min-w-full rounded-t-lg overflow-hidden">
-                    <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
-                        <tr>
-                            <th class="px-4 py-3 text-left font-medium w-1">Actions</th>
-                            <th class="px-4 py-3 text-left font-medium w-1">#</th>
-                            <th class="px-4 py-3 text-left font-medium">Date</th>
-                            <th class="px-4 py-3 text-left font-medium">Godown From</th>
-                            <th class="px-4 py-3 text-left font-medium">Godown To</th>
-                            <th class="px-4 py-3 text-right font-medium">Qty</th>
-                            <th class="px-4 py-3 text-right font-medium">Description</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-gray-100" id="stockTransferTableBody">
-                    </tbody>
-                </table>
-            </div>
-        </form>
-    </div>
-
-
-    <div id="viewDiv" class="hidden">
-        <!-- Filter Section -->
-        <div class="dateDiv mt-3">
-            <form method="get" action="{% url 'stocktransfer' %}">
-                <div class="flex justify-center items-end gap-5 mt-4">
-                    <div>
-                        <label class="block text-gray-700">From Date</label>
-                        <input type="date" name="from_date" value="{{ from_date }}"
-                            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
-                    <div>
-                        <label class="block text-gray-700">End Date</label>
-                        <input type="date" name="to_date" value="{{ to_date }}"
-                            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
-                    <div>
-                        <button type="submit"
-                            class="bg-blue-600 text-white px-5 py-2 mt-6 rounded-xl hover:bg-blue-700 transition-all">
-                            Filter
-                        </button>
-                    </div>
-                </div>
-            </form>
+    <!-- 🟩 View -->
+    <a id="btnView" href="#"
+      class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-md hover:bg-emerald-100 hover:border-emerald-300 transition-colors">
+      <i data-lucide="eye" class="w-4 h-4"></i>
+      View
+    </a>
+  </div>
+  <hr class="mt-5">
+  <div class=" mt-5 w-100" id="createView">
+    <form method="post" action="{% url 'stocktransfer_add' %}" id="stockTransferForm">
+      {% csrf_token %}
+      <div class="flex flex-col gap-y-3 md:gap-y-1.5 text-xs w-full md:w-3/4 mr-auto">
+        
+        <!-- Transfer No -->
+        <div class="flex flex-wrap md:flex-nowrap items-center w-full">
+          <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
+            <label class="text-gray-700 font-medium">Transfer No*</label>
+          </div>
+          <div class="w-[65%] sm:w-[68%] md:w-[45%] flex items-center pr-2 md:pr-0">
+            <input type="text" name="transfer_no" value="{{ last_transfer_no }}" id="transfer_no" placeholder="Enter Transfer No" class="w-full px-2.5 py-1.5 border rounded-md focus:ring-1 focus:ring-blue-500 bg-gray-50 bg-opacity-50" readonly required />
+          </div>
         </div>
 
-        <div id="viewStockTransferDiv">
-            <hr class="mt-5">
-            <div class="overflow-x-auto mt-5 w-full">
-                <table class="min-w-full rounded-t-lg overflow-hidden" id="viewStockTransferTable">
-                    <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
-                        <tr>
-                            <th class="px-4 py-3 text-left font-medium">Transfer No</th>
-                            <th class="px-4 py-3 text-left font-medium">Date</th>
-                            <th class="px-4 py-3 text-left font-medium">Godown From</th>
-                            <th class="px-4 py-3 text-left font-medium">Godown To</th>
-                            <th class="px-4 py-3 text-right font-medium">Qty</th>
-                            <th class="px-4 py-3 text-right font-medium">Description</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-gray-100">
-                        {% for transfer in transfers %}
-                        <tr>
-                            <td class="px-4 py-3 border-b">{{ transfer.transfer_no }}</td>
-                            <td class="px-4 py-3 border-b">{{ transfer.date }}</td>
-                            <td class="px-4 py-3 border-b">{{ transfer.godown_from }}</td>
-                            <td class="px-4 py-3 border-b">{{ transfer.godown_to }}</td>
-                            <td class="px-4 py-3 border-b text-right">{{ transfer.qty }}</td>
-                            <td class="px-4 py-3 border-b text-right">{{ transfer.description }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="6" class="px-4 py-3 text-center text-gray-500">No transfers found.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+        <!-- Date -->
+        <div class="flex flex-wrap md:flex-nowrap items-center w-full">
+          <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
+            <label class="text-gray-700 font-medium">Date*</label>
+          </div>
+          <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+            <input type="date" name="date" id="date" class="w-full px-2.5 py-1.5 border rounded-md focus:ring-1 focus:ring-blue-500" required />
+          </div>
         </div>
+
+        <!-- Godown From -->
+        <div class="flex flex-wrap md:flex-nowrap items-center w-full">
+          <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
+            <label class="text-gray-700 font-medium whitespace-nowrap">Godown From*</label>
+          </div>
+          <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+            <select id="godownFrom" class="w-full bg-white px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required>
+              <option value="" selected>Select Godown</option>
+              {% for godown in godowns %}
+              <option value="{{ godown.id }}" data-code="{{ godown.godownId }}" data-qty="{{ godown.qty }}">{{ godown.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div id="godownFromBalance" class="hidden md:flex w-[15%] md:w-[20%] items-center pl-3 text-xs font-semibold text-gray-700"></div>
+        </div>
+
+        <!-- Godown From Code -->
+        <div class="flex flex-wrap md:flex-nowrap items-center w-full">
+          <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
+            <label class="text-gray-700 font-medium whitespace-nowrap">From Code</label>
+          </div>
+          <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+            <input type="text" id="godownFromCode" disabled class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md bg-gray-50 bg-opacity-50 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+          </div>
+        </div>
+
+        <!-- Godown To -->
+        <div class="flex flex-wrap md:flex-nowrap items-center w-full">
+          <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
+            <label class="text-gray-700 font-medium whitespace-nowrap">Godown To*</label>
+          </div>
+          <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+            <select id="godownTo" class="w-full bg-white px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required>
+              <option value="" selected>Select Godown</option>
+              {% for godown in godowns %}
+              <option value="{{ godown.id }}" data-code="{{ godown.godownId }}" data-qty="{{ godown.qty }}">{{ godown.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div id="godownToBalance" class="hidden md:flex w-[15%] md:w-[20%] items-center pl-3 text-xs font-semibold text-gray-700"></div>
+        </div>
+
+        <!-- Godown To Code -->
+        <div class="flex flex-wrap md:flex-nowrap items-center w-full">
+          <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
+            <label class="text-gray-700 font-medium whitespace-nowrap">To Code</label>
+          </div>
+          <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+            <input type="text" id="godownToCode" disabled class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md bg-gray-50 bg-opacity-50 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+          </div>
+        </div>
+
+        <!-- Qty -->
+        <div class="flex flex-wrap md:flex-nowrap items-center w-full">
+          <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-center pr-3">
+            <label class="text-gray-700 font-medium">Qty*</label>
+          </div>
+          <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+            <input type="number" id="qty" placeholder="Enter Quantity" class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" step="0.01" required />
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="flex flex-wrap md:flex-nowrap items-start w-full">
+          <div class="w-[35%] sm:w-[32%] md:w-[32%] flex items-start pr-3 mt-1 md:mt-1.5">
+            <label class="text-gray-700 font-medium">Description*</label>
+          </div>
+          <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
+            <textarea id="description" class="w-full min-h-[60px] md:min-h-[80px] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"></textarea>
+          </div>
+        </div>
+
+      </div>
+
+      <hr class="mt-5 mb-5">
+      
+      <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 w-full">
+        <div class="flex gap-2 items-center w-full lg:w-auto">
+          <button type="button" id="addToGrid" onclick="addToTransferGrid()"
+            class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-3.5 py-2.5 rounded-md shadow-sm hover:bg-blue-600 transition-all duration-300 whitespace-nowrap shrink-0">
+            <span id="addToGridText">Add to Grid</span>
+          </button>
+          <button type="button" id="btnCancel" onclick="clearForm();"
+            class="leading-none inline-flex items-center gap-1.5 bg-gray-500 text-white text-sm font-medium px-3.5 py-2.5 rounded-md shadow-sm hover:bg-gray-600 transition-all duration-300 whitespace-nowrap shrink-0">
+            Cancel
+          </button>
+        </div>
+        <div class="flex items-center justify-end gap-2 w-full lg:w-auto mt-2 lg:mt-0">
+          <button id="btnSave" type="button" onclick="submitForm()"
+            class="leading-none inline-flex items-center gap-1 bg-green-500 text-white text-sm font-medium px-3.5 py-2.5 rounded-md shadow-sm hover:bg-green-600 transition-all duration-300 whitespace-nowrap shrink-0">
+            <i data-lucide="check" class="w-4 h-4"></i>Save
+          </button>
+        </div>
+      </div>
+
+      <div class="w-full lg:w-5/6 mr-auto xl:max-w-6xl 2xl:max-w-7xl overflow-x-auto shadow-sm rounded-md border border-slate-200 mt-5 mb-5" id="transferCreateDiv">
+        <table class="table-auto w-full divide-y divide-slate-200 text-sm">
+          <thead class="sticky top-0 bg-blue-200 text-gray-700 z-10">
+            <tr>
+              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">Actions</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">S.No</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Date</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-40">Godown From</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-40">Godown To</th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Qty</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[350px]">Description</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 bg-white" id="stockTransferTableBody">
+          </tbody>
+        </table>
+      </div>
+    </form>
+  </div>
+
+
+  <div id="viewDiv" class="hidden">
+    <!-- Filter Section -->
+    <div class="dateDiv mt-3">
+      <form method="get" action="{% url 'stocktransfer' %}">
+        <div class="flex justify-center items-end gap-5 mt-4">
+          <div>
+            <label class="block text-gray-700 text-sm">From Date*</label>
+            <input type="date" name="from_date" value="{{ from_date }}" class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+          </div>
+          <div>
+            <label class="block text-gray-700 text-sm">End Date*</label>
+            <input type="date" name="to_date" value="{{ to_date }}" class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+          </div>
+          <div>
+            <button type="submit" class="bg-blue-600 text-white px-5 py-2 mt-6 rounded-xl hover:bg-blue-700 transition-all">Filter</button>
+          </div>
+        </div>
+      </form>
     </div>
+
+    <div id="viewStockTransferDiv">
+      <hr class="mt-5">
+      <div class="overflow-x-auto mt-5 w-full shadow-sm rounded-md border border-slate-200">
+        <table class="table-auto w-full divide-y divide-slate-200 text-sm" id="viewStockTransferTable">
+          <thead class="bg-blue-200 text-gray-700 uppercase text-xs z-10 sticky top-0">
+            <tr>
+              <th class="px-4 py-3 text-left font-medium">Transfer No</th>
+              <th class="px-4 py-3 text-left font-medium">Date</th>
+              <th class="px-4 py-3 text-left font-medium">Godown From</th>
+              <th class="px-4 py-3 text-left font-medium">Godown To</th>
+              <th class="px-4 py-3 text-right font-medium">Qty</th>
+              <th class="px-4 py-3 text-left font-medium">Description</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-slate-100">
+            {% for transfer in transfers %}
+            <tr class="hover:bg-indigo-50/50 transition-all duration-200">
+              <td class="px-4 py-2 border-b">{{ transfer.transfer_no }}</td>
+              <td class="px-4 py-2 border-b">{{ transfer.date }}</td>
+              <td class="px-4 py-2 border-b">{{ transfer.godown_from }}</td>
+              <td class="px-4 py-2 border-b">{{ transfer.godown_to }}</td>
+              <td class="px-4 py-2 border-b text-right">{{ transfer.qty }}</td>
+              <td class="px-4 py-2 border-b text-left">{{ transfer.description }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6" class="px-4 py-3 text-center text-gray-500">No transfers found.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 
+<!-- Error Modal -->
+<div id="errorModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50">
+  <div class="bg-white rounded-xl shadow-lg p-6 w-80 text-center transform transition-all">
+    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+      <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+    </div>
+    <h2 class="text-lg font-semibold mb-2 text-gray-800">Validation Error</h2>
+    <p id="errorModalMessage" class="text-sm text-gray-500 mb-6"></p>
+    <div class="flex justify-center">
+      <button onclick="closeErrorModal()" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:w-auto sm:text-sm">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
 {% endblock content %}
 {% block externalJS %}
 <script>
+    var held_transfers = [];
+    {% for t in held_transfers %}
+    held_transfers.push({
+        "id": "{{ t.id }}",
+        "transfer_no": "{{ t.transfer_no|escapejs }}",
+        "godown_from": "{{ t.godown_from|escapejs }}",
+        "godown_from_id": "{{ t.godown_from_id }}",
+        "godown_to": "{{ t.godown_to|escapejs }}",
+        "godown_to_id": "{{ t.godown_to_id }}",
+        "date": "{{ t.date|escapejs }}",
+        "qty": parseFloat("{{ t.qty|default:'0' }}"),
+        "description": "{{ t.description|escapejs }}"
+    });
+    {% endfor %}
 
+    for (let i = 0; i < held_transfers.length; i++) {
+        const transfer = held_transfers[i];
+        var tableBody = document.getElementById("stockTransferTableBody");
+        var newRow = `
+            <tr class="hover:bg-indigo-50/50 transition-all duration-200" data-editing="false">
+                <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap">
+                    <button type="button" class="text-blue-500 text-xs hover:underline mr-2" onclick="editTransferRow(this)">
+                         Edit
+                    </button>
+                    <button type="button" class="text-red-500 text-xs hover:underline" onclick="deleteTransferRow(this, '${transfer.id}')">
+                         Delete
+                    </button>
+                    <input type="hidden" name="transfer_ids" value="${transfer.id}">
+                </td>
+                <td class="px-1.5 py-1.5 text-center text-sm w-12 sl">${i + 1}</td>
+                <td class="px-1.5 py-1.5 text-left text-sm w-32">
+                    ${transfer.date.split('T')[0]}
+                    <input type="hidden" name="dates" value="${transfer.date.split('T')[0]}">
+                </td>
+                <td class="px-1.5 py-1.5 text-left text-sm w-40">
+                    ${transfer.godown_from}
+                    <input type="hidden" name="godowns_from" value="${transfer.godown_from_id}">
+                </td>
+                <td class="px-1.5 py-1.5 text-left text-sm w-40">
+                    ${transfer.godown_to}
+                    <input type="hidden" name="godowns_to" value="${transfer.godown_to_id}">
+                </td>
+                <td class="px-1.5 py-1.5 text-right text-sm w-24">
+                    ${transfer.qty}
+                    <input type="hidden" name="qtys" value="${transfer.qty}">
+                </td>
+                <td class="px-1.5 py-1.5 text-left text-sm">
+                    ${transfer.description}
+                    <input type="hidden" name="descriptions" value="${transfer.description}">
+                </td>
+            </tr>`;
+        tableBody.insertAdjacentHTML('beforeend', newRow);
+    }
+</script>
+<script>
     $(document).ready(function () {
         $('#date').val(new Date().toISOString().split('T')[0]);
     });
@@ -264,18 +321,45 @@ Stock Transfer
         $('#viewDiv').removeClass('hidden');
     });
 
+    // Get cumulative qty already assigned to this godown in the grid
+    function getGridQtyForGodown(godownId, excludeRowId = null) {
+        let totalQty = 0;
+        $('#stockTransferTableBody tr').each(function() {
+            const rowTransferId = $(this).find('input[name="transfer_ids"]').val();
+            // Don't count the row we are currently editing
+            if (excludeRowId && rowTransferId === excludeRowId) {
+                return;
+            }
+            const rowGodownFromId = $(this).find('input[name="godowns_from"]').val();
+            if (rowGodownFromId === godownId) {
+                const rowQty = parseFloat($(this).find('input[name="qtys"]').val()) || 0;
+                totalQty += rowQty;
+            }
+        });
+        return totalQty;
+    }
+
     // Code and Balance Display Logic
     $('#godownFrom').on('change', function () {
         var selectedOption = $(this).find('option:selected');
         var code = selectedOption.data('code') || '';
-        var qty = selectedOption.data('qty') || 0;
+        var rawQty = parseFloat(selectedOption.data('qty')) || 0;
+        var godownId = $(this).val();
+
+        var qtyInGrid = godownId ? getGridQtyForGodown(godownId, activeEditingTransferId) : 0;
+        var availableQty = rawQty - qtyInGrid;
 
         $('#godownFromCode').val(code);
         $('#godownFromBalance').empty();
         $('#godownFromBalance').append(`
-            <p class="font-semibold ${qty <= 0 ? 'text-red-500' : 'text-gray-700'}">Balance: ${parseFloat(qty).toFixed(2)}</p>
+            <p class="font-semibold whitespace-nowrap ${availableQty <= 0 ? 'text-red-500' : 'text-gray-700'}">Balance: ${availableQty.toFixed(2)}</p>
         `);
         updateDescription();
+        
+        // Trigger qty validation if there's already a value
+        if ($('#qty').val()) {
+            $('#qty').trigger('input');
+        }
     });
 
     $('#godownTo').on('change', function () {
@@ -286,14 +370,36 @@ Stock Transfer
         $('#godownToCode').val(code);
         $('#godownToBalance').empty();
         $('#godownToBalance').append(`
-             <p class="font-semibold ${qty <= 0 ? 'text-red-500' : 'text-gray-700'}">Balance: ${parseFloat(qty).toFixed(2)}</p>
+             <p class="font-semibold whitespace-nowrap ${qty <= 0 ? 'text-red-500' : 'text-gray-700'}">Balance: ${parseFloat(qty).toFixed(2)}</p>
         `);
         updateDescription();
     });
 
     $('#qty').on('input', function () {
+        var qty = parseFloat($(this).val()) || 0;
+        var rawQty = parseFloat($('#godownFrom option:selected').data('qty')) || 0;
+        var godownId = $('#godownFrom').val();
+        
+        var qtyInGrid = godownId ? getGridQtyForGodown(godownId, activeEditingTransferId) : 0;
+        var availableQty = rawQty - qtyInGrid;
+        
+        if (qty > availableQty) {
+            $(this).removeClass('border-gray-200 focus:ring-blue-500').addClass('border-red-500 focus:ring-red-500 focus:border-red-500');
+        } else {
+            $(this).removeClass('border-red-500 focus:ring-red-500 focus:border-red-500').addClass('border-gray-200 focus:ring-blue-500');
+        }
+        
         updateDescription();
     });
+
+    function showErrorModal(message) {
+        $('#errorModalMessage').text(message);
+        $('#errorModal').removeClass('hidden');
+    }
+
+    function closeErrorModal() {
+        $('#errorModal').addClass('hidden');
+    }
 
     function updateDescription() {
         var from = $('#godownFrom option:selected').text();
@@ -309,71 +415,153 @@ Stock Transfer
     }
 
 
+    let activeEditingTransferId = null;
+
     function addToTransferGrid() {
+        const transfer_no = document.getElementById("transfer_no").value.trim();
         const date = $('#date').val();
         const godownFromId = $('#godownFrom').val();
         const godownFromText = $('#godownFrom option:selected').text();
+        const rawQty = parseFloat($('#godownFrom option:selected').data('qty')) || 0;
         const godownToId = $('#godownTo').val();
         const godownToText = $('#godownTo option:selected').text();
         const qty = parseFloat($('#qty').val());
         const description = $('#description').val();
 
+        var qtyInGrid = godownFromId ? getGridQtyForGodown(godownFromId, activeEditingTransferId) : 0;
+        var availableQty = rawQty - qtyInGrid;
+
         if (!date || !godownFromId || !godownToId || !qty || qty <= 0) {
-            alert("Please fill all required fields correctly.");
+            showErrorModal("Please fill all required fields correctly.");
             return;
         }
 
         if (godownFromId === godownToId) {
-            alert("From and To Godowns cannot be the same.");
+            showErrorModal("From and To Godowns cannot be the same.");
+            return;
+        }
+
+        if (qty > availableQty) {
+            showErrorModal(`Transfer quantity (${qty}) cannot exceed the remaining balance (${availableQty.toFixed(2)}) in ${godownFromText}.`);
             return;
         }
 
         const tableBody = $('#stockTransferTableBody');
         const rowCount = tableBody.find('tr').length + 1;
 
-        const row = `
-            <tr>
-                <td class="px-4 py-3 text-left w-1">
-                    <button type="button" class="text-red-500 hover:underline" onclick="$(this).closest('tr').remove(); updateSl();">
-                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                    </button>
-                </td>
-                <td class="px-4 py-3 text-left sl">${rowCount}</td>
-                <td class="px-4 py-3 text-left">
-                    ${date}
-                    <input type="hidden" name="dates" value="${date}">
-                </td>
-                <td class="px-4 py-3 text-left">
-                    ${godownFromText}
-                    <input type="hidden" name="godowns_from" value="${godownFromId}">
-                </td>
-                <td class="px-4 py-3 text-left">
-                    ${godownToText}
-                    <input type="hidden" name="godowns_to" value="${godownToId}">
-                </td>
-                <td class="px-4 py-3 text-right">
-                    ${qty}
-                    <input type="hidden" name="qtys" value="${qty}">
-                </td>
-                <td class="px-4 py-3 text-right">
-                    ${description}
-                    <input type="hidden" name="descriptions" value="${description}">
-                </td>
-            </tr>
-        `;
+        // Perform AJAX request to save this row incrementally via Hold logic
+        fetch("{% url 'api-hold-transfer' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken"),
+            },
+            body: JSON.stringify({
+                transfer_no: transfer_no,
+                date: date,
+                godown_from: godownFromId,
+                godown_to: godownToId,
+                qty: qty,
+                description: description,
+                transfer_id: activeEditingTransferId
+            }),
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.status === 'success') {
+                const transfer_id = data.transfer_id;
+                
+                const row = `
+                    <tr class="hover:bg-indigo-50/50 transition-all duration-200" data-editing="false">
+                        <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap">
+                            <button type="button" class="text-blue-500 text-xs hover:underline mr-2" onclick="editTransferRow(this)">
+                                 Edit
+                            </button>
+                            <button type="button" class="text-red-500 text-xs hover:underline" onclick="deleteTransferRow(this, '${transfer_id}')">
+                                 Delete
+                            </button>
+                            <input type="hidden" name="transfer_ids" value="${transfer_id}">
+                        </td>
+                        <td class="px-1.5 py-1.5 text-center text-sm w-12 sl">${rowCount}</td>
+                        <td class="px-1.5 py-1.5 text-left text-sm w-32">
+                            ${date}
+                            <input type="hidden" name="dates" value="${date}">
+                        </td>
+                        <td class="px-1.5 py-1.5 text-left text-sm w-40">
+                            ${godownFromText}
+                            <input type="hidden" name="godowns_from" value="${godownFromId}">
+                        </td>
+                        <td class="px-1.5 py-1.5 text-left text-sm w-40">
+                            ${godownToText}
+                            <input type="hidden" name="godowns_to" value="${godownToId}">
+                        </td>
+                        <td class="px-1.5 py-1.5 text-right text-sm w-24">
+                            ${qty}
+                            <input type="hidden" name="qtys" value="${qty}">
+                        </td>
+                        <td class="px-1.5 py-1.5 text-left text-sm">
+                            ${description}
+                            <input type="hidden" name="descriptions" value="${description}">
+                        </td>
+                    </tr>
+                `;
 
-        tableBody.append(row);
+                tableBody.append(row);
 
-        // Clear inputs except date
-        $('#qty').val('');
-        $('#description').val('');
-        // We don't clear Godowns by default as user might be doing multiple transfers between same godowns, 
-        // but to match 'sale' behavior we might want to reset? 
-        // Sale clears them: $('#customer, #godown').prop('selectedIndex', 0);
-        $('#godownFrom').prop('selectedIndex', 0).trigger('change');
-        $('#godownTo').prop('selectedIndex', 0).trigger('change');
+                // Clear inputs except date
+                $('#qty').val('');
+                $('#description').val('');
+                $('#godownFrom').prop('selectedIndex', 0).trigger('change');
+                $('#godownTo').prop('selectedIndex', 0).trigger('change');
+                
+                // Reset Add/Update Grid button
+                $('#addToGridText').text('Add to Grid');
+                $('#addToGrid').removeClass('bg-green-500').addClass('bg-blue-500');
+                activeEditingTransferId = null;
+                updateSl();
+                
+                // Trigger change to recalculate balances in case the godown is still selected
+                $('#godownFrom').trigger('change');
+            } else {
+                 showErrorModal("Error saving transfer: " + data.message);
+            }
+        })
+        .catch((error) => {
+            console.error("Error holding transfer:", error);
+            showErrorModal("An unexpected error occurred while adding to the grid.");
+        });
+    }
+
+    function editTransferRow(button) {
+        const row = $(button).closest('tr');
+        
+        // Extract values from the row's hidden inputs
+        const date = row.find('input[name="dates"]').val();
+        const godownFromId = row.find('input[name="godowns_from"]').val();
+        const godownToId = row.find('input[name="godowns_to"]').val();
+        const qty = row.find('input[name="qtys"]').val();
+        const description = row.find('input[name="descriptions"]').val();
+        activeEditingTransferId = row.find('input[name="transfer_ids"]').val();
+
+        // Populate the form fields with the extracted values
+        $('#date').val(date);
+        $('#godownFrom').val(godownFromId).trigger('change');
+        $('#godownTo').val(godownToId).trigger('change');
+        $('#qty').val(qty).trigger('input');
+        $('#description').val(description);
+
+        // Remove the row from the table
+        row.remove();
+        updateSl();
+
+        // Update the Add button to indicate updating
+        $('#addToGridText').text('Update Grid');
+        $('#addToGrid').removeClass('bg-blue-500').addClass('bg-green-500');
+        
+        // Recalculate balance for the selected godown (excluding the row we just pulled out)
+        if ($('#godownFrom').val()) {
+            $('#godownFrom').trigger('change');
+        }
     }
 
     function updateSl() {
@@ -382,21 +570,61 @@ Stock Transfer
         });
     }
 
+    function deleteTransferRow(button, transferId) {
+        if (!confirm("Are you sure you want to remove this transfer?")) return;
+
+        fetch("{% url 'api-delete-transfer' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken"),
+            },
+            body: JSON.stringify({ id: transferId }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                $(button).closest('tr').remove();
+                updateSl();
+                
+                // Recalculate balances after deleting
+                if ($('#godownFrom').val()) {
+                    $('#godownFrom').trigger('change');
+                }
+            } else {
+                showErrorModal("Delete failed: " + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error while deleting transfer:', error);
+            showErrorModal("An unexpected error occurred while deleting.");
+        });
+    }
+
     function clearForm() {
+        // If an edit was in progress but canceled, we need to refresh the page to bring the held row back,
+        // or re-fetch it. Since reloading is simplest to resync hold states if they aborted an edit:
+        if (activeEditingTransferId) {
+            window.location.reload();
+            return;
+        }
+
         $('#godownFrom').prop('selectedIndex', 0).trigger('change');
         $('#godownTo').prop('selectedIndex', 0).trigger('change');
+        $('#qty').removeClass('border-red-500 focus:ring-red-500 focus:border-red-500').addClass('border-gray-200 focus:ring-blue-500');
         $('#qty').val('');
         $('#description').val('');
-        $('#stockTransferTableBody').empty();
         $('#godownFromCode').val('');
         $('#godownToCode').val('');
         $('#godownFromBalance').empty();
         $('#godownToBalance').empty();
+        $('#addToGridText').text('Add to Grid');
+        $('#addToGrid').removeClass('bg-green-500').addClass('bg-blue-500');
     }
 
     function submitForm() {
         if ($('#stockTransferTableBody tr').length === 0) {
-            alert("Please add at least one transfer item.");
+            showErrorModal("Please add at least one transfer item before saving.");
             return;
         }
         document.getElementById('stockTransferForm').requestSubmit();
