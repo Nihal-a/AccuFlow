@@ -132,9 +132,17 @@ class Clients(models.Model):
     
     @property
     def is_subscription_active(self):
+        # First check if the client record itself is active
+        if not self.is_active:
+            return False
+            
+        # Check trial status - if trial is active and not expired (implied by date if set)
+        if self.is_trial_active and (not self.subscription_end or self.subscription_end >= timezone.now().date()):
+            return True
+
         if not self.subscription_end:
             return False
-        from django.utils import timezone
+            
         return self.subscription_end >= timezone.now().date()
     
 

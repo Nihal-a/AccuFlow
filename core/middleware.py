@@ -51,17 +51,28 @@ class SubscriptionMiddleware:
                     pass
 
             # Check subscription status
-            if client_obj:
-                if not client_obj.is_subscription_active:
-                    # CRITICAL: Log out the user to prevent session hijacking/persistence
-                    # if their subscription is revoked or forged.
-                    logout(request)
-                    
+            # If they are NOT an admin, they MUST have an active subscription if they are intended to be a client or collector.
+            if not request.user.is_admin:
+                is_active = True
+                if client_obj:
+                    if not client_obj.is_subscription_active:
+                        is_active = False
+                elif request.user.is_client or request.user.is_collector:
+                    # Authenticated as client/collector but no associated client object found
+                    is_active = False
+                
+                if not is_active:
                     try:
                         expired_url = reverse('subscription_expired')
                     except:
                         expired_url = '/subscription-expired/'
-                    messages.warning(request, "Your subscription has expired. Please renew soon.")
+                    
+                    # Handle AJAX requests separately to avoid returning HTML instead of expected JSON
+                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.path.startswith('/api/'):
+                        from django.http import HttpResponseForbidden
+                        return HttpResponseForbidden("Subscription Expired. Please renew your subscription.")
+                        
+                    # For regular requests, redirect to expired screen
                     return redirect(expired_url)
 
         return self.get_response(request)
