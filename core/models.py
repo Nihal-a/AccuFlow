@@ -89,6 +89,8 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
         help_text='Specific permissions for this user.',
     )
 
+    last_session_key = models.CharField(max_length=40, null=True, blank=True)
+
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []
 

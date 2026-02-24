@@ -76,3 +76,22 @@ class SubscriptionMiddleware:
                     return redirect(expired_url)
 
         return self.get_response(request)
+
+class SingleSessionMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if request.user.is_authenticated:
+            session_key = request.session.session_key
+            
+            # If the user has a session key and it doesn't match the current one, logout.
+            # We don't block if last_session_key is None (e.g. initial setup)
+            if request.user.last_session_key and request.user.last_session_key != session_key:
+                # To prevent redirect loop, check if we are already at login or logout
+                if not any(request.path.startswith(p) for p in [reverse('login'), reverse('logout'), '/static/', '/media/']):
+                    logout(request)
+                    messages.error(request, "Multiple logins detected. You have been logged out from this session because you logged in from another device.")
+                    return redirect('login')
+                    
+        return self.get_response(request)

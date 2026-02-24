@@ -32,6 +32,8 @@ def user_login(request):
 
                  if not client_obj.is_subscription_active:
                      login(request, user)
+                     user.last_session_key = request.session.session_key
+                     user.save(update_fields=['last_session_key'])
                      return redirect('subscription_expired')
                  
 
@@ -41,6 +43,11 @@ def user_login(request):
                          messages.warning(request, f"Your subscription expires in {days_left} days. Please renew soon.")
 
             login(request,user) 
+            
+            # Update last session key for single session enforcement
+            user.last_session_key = request.session.session_key
+            user.save(update_fields=['last_session_key'])
+
             if user.is_admin:
                 return redirect('clients')
             elif user.is_client:
