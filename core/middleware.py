@@ -61,7 +61,7 @@ class SubscriptionMiddleware:
                         expired_url = reverse('subscription_expired')
                     except:
                         expired_url = '/subscription-expired/'
-                    messages.warning(request, "Your subscription has expired. Please contact support.")
+                    messages.warning(request, "Your subscription has expired. Please renew soon.")
                     return redirect(expired_url)
 
         return self.get_response(request)

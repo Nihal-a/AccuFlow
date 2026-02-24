@@ -188,11 +188,4 @@ def get_plan_details(request, plan_id):
     except SubscriptionPlan.DoesNotExist:
         return JsonResponse({'error': 'Plan not found'}, status=404)
 
-@login_required
-def support_view(request):
-    from .models import CompanyDetail
-    company = CompanyDetail.objects.prefetch_related('contacts').first()
-    return render(request, 'core/support.html', {
-        'company': company,
-        'contacts': company.contacts.filter(is_active=True) if company else []
-    })
+

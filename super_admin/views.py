@@ -284,7 +284,7 @@ class SubscriptionUpdateView(View):
         messages.success(request, "Subscription Plan updated.")
         return redirect('subscriptions')
 
-from core.models import SubscriptionPayment, CompanyDetail, SupportContact
+from core.models import SubscriptionPayment
 
 @method_decorator([login_required, staff_member_required], name='dispatch')
 class PaymentListView(View):
@@ -327,84 +327,3 @@ class PaymentCreateView(View):
         except (Clients.DoesNotExist, SubscriptionPlan.DoesNotExist):
             messages.error(request, "Invalid Client or Plan selected.")
             return redirect('payment-create')
-
-@method_decorator([login_required, staff_member_required], name='dispatch')
-class CompanyUpdateView(View):
-    def get(self, request):
-        company = CompanyDetail.objects.first()
-        return render(request, 'admin/company/profile.html', {'company': company})
-
-    def post(self, request):
-        company = CompanyDetail.objects.first()
-        if not company:
-            company = CompanyDetail.objects.create()
-        
-        company.name = request.POST.get('name')
-        company.description = request.POST.get('description')
-        company.address = request.POST.get('address')
-        company.website = request.POST.get('website')
-        
-        if request.FILES.get('logo'):
-            company.logo = request.FILES.get('logo')
-            
-        company.save()
-        messages.success(request, "Company profile updated successfully.")
-        return redirect('company_update')
-
-@method_decorator([login_required, staff_member_required], name='dispatch')
-class SupportContactListView(View):
-    def get(self, request):
-        contacts = SupportContact.objects.all().select_related('company')
-        return render(request, 'admin/company/contact_list.html', {'contacts': contacts})
-
-@method_decorator([login_required, staff_member_required], name='dispatch')
-class SupportContactCreateView(View):
-    def get(self, request):
-        return render(request, 'admin/company/contact_form.html')
-
-    def post(self, request):
-        company = CompanyDetail.objects.first()
-        if not company:
-            company = CompanyDetail.objects.create()
-            
-        title = request.POST.get('title')
-        name = request.POST.get('name')
-        email = request.POST.get('email')
-        phone = request.POST.get('phone')
-        is_active = request.POST.get('is_active') == 'on'
-
-        SupportContact.objects.create(
-            company=company,
-            title=title,
-            name=name,
-            email=email,
-            phone=phone,
-            is_active=is_active
-        )
-        messages.success(request, "Support contact added.")
-        return redirect('contact_list')
-
-@method_decorator([login_required, staff_member_required], name='dispatch')
-class SupportContactUpdateView(View):
-    def get(self, request, id):
-        contact = get_object_or_404(SupportContact, id=id)
-        return render(request, 'admin/company/contact_form.html', {'contact': contact})
-
-    def post(self, request, id):
-        contact = get_object_or_404(SupportContact, id=id)
-        contact.title = request.POST.get('title')
-        contact.name = request.POST.get('name')
-        contact.email = request.POST.get('email')
-        contact.phone = request.POST.get('phone')
-        contact.is_active = request.POST.get('is_active') == 'on'
-        contact.save()
-        messages.success(request, "Support contact updated.")
-        return redirect('contact_list')
-
-@method_decorator([login_required, staff_member_required], name='dispatch')
-class SupportContactDeleteView(View):
-    def post(self, request, id):
-        contact = get_object_or_404(SupportContact, id=id)
-        contact.delete()
-        messages.success(request, "Support contact deleted.")
-        return redirect('contact_list')

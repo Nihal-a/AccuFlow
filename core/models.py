@@ -551,27 +551,4 @@ def update_client_subscription(sender, instance, created, **kwargs):
         client.save()
 
 
-class CompanyDetail(models.Model):
-    name = models.CharField(max_length=255, default="AccuFlow")
-    description = models.TextField(blank=True, null=True)
-    logo = models.ImageField(upload_to='company/', blank=True, null=True)
-    address = models.TextField(blank=True, null=True)
-    website = models.URLField(blank=True, null=True)
 
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        verbose_name = "Company Detail"
-        verbose_name_plural = "Company Details"
-
-class SupportContact(models.Model):
-    company = models.ForeignKey(CompanyDetail, on_delete=models.CASCADE, related_name='contacts')
-    title = models.CharField(max_length=100, help_text="e.g. Sales Support, Technical Support")
-    name = models.CharField(max_length=200, blank=True, null=True)
-    email = models.EmailField(blank=True, null=True)
-    phone = models.CharField(max_length=20, blank=True, null=True)
-    is_active = models.BooleanField(default=True)
-
-    def __str__(self):
-        return f"{self.title}: {self.name}"

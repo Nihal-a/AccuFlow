@@ -6,5 +6,4 @@ urlpatterns = [
     path('subscription-expired/', views.subscription_expired, name='subscription_expired'),
     path('mark-notifications-read/', views.mark_notifications_read, name='mark_notifications_read'),
     path('api/get-plan-details/<int:plan_id>/', views.get_plan_details, name='get_plan_details'),
-    path('support/', views.support_view, name='support_view'),
 ]
