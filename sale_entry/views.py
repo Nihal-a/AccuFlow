@@ -15,7 +15,6 @@ class SaleEntryView(View):
         sales = Sales.objects.filter(hold=True,is_active=True,client=getClient(request.user))
         saleData = []
         for sale in sales:
-            print(sale.which_type) 
             saleData.append({
                 'id':sale.id,
                 'sale_no':sale.sale_no,
@@ -79,8 +78,6 @@ class SaleAddView(View):
         for id in sale_ids:
             customer = None 
             seller = None
-            print(types[count])
-            print(customer_ids[count])
             if types[count] == 'customers':
                 supplier = None
                 # Authorization: Ensure customer belongs to user's client

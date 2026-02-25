@@ -126,5 +126,4 @@ def new_supplier_id(client):
         new_supplier_id = f"{prefix}-{int(num) + 1}"
     else: 
         new_supplier_id = 'S-1'
-    print("New Supplier ID:", new_supplier_id) 
     return new_supplier_id

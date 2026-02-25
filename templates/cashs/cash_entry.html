@@ -179,12 +179,11 @@
             <tr>
               <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">Actions</th>
               <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">S.No</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Date</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[200px]">Cash/Bank</th>
               <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[200px]">Party</th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Amount</th>
-              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Transaction</th>
               <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[250px]">Description</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[200px]">Cash/Bank</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Transaction</th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Amount</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 bg-white" id="cashTableBody">
@@ -260,13 +259,11 @@
             <tr>
               <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">Actions</th>
               <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">SNo</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Cash No</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Date</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[200px]">Cash/Bank</th>
               <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[200px]">Party</th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Amount</th>
-              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Transaction</th>
               <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[250px]">Description</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[200px]">Cash/Bank</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Transaction</th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Amount</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 bg-white" id="cashTableBody">
@@ -329,7 +326,7 @@
     var rateSum = 0;
     count = 0;
     tableBody.querySelectorAll("tr").forEach(function (row) {
-      const amount = parseFloat(row.cells[5].innerText) || 0;
+      const amount = parseFloat(row.cells[6].innerText) || 0;
       totalAmount += amount;
       count += 1;
     });
@@ -338,7 +335,6 @@
       <tr class="bg-blue-200 font-bold" id="totalRow">
         <td class="px-4 py-3 text-left" colspan="6">Totals:</td>
         <td class="px-4 py-3 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
-        <td class="px-4 py-3 text-right"></td>
       </tr>`;
     tableBody.insertAdjacentHTML('beforeend', lastRow);
 
@@ -400,50 +396,60 @@
   });
 </script>
 <script>
-  var cashs = {{ cashs| safe }};
+  var cashs = [];
+  {% for c in cashs %}
+  cashs.push({
+    "id": "{{ c.id }}",
+    "cash_no": "{{ c.cash_no|escapejs }}",
+    "cashbank": "{{ c.cashbank|escapejs }}",
+    "cashbank_id": "{{ c.cashbank_id }}",
+    "description": "{{ c.description|escapejs }}",
+    "customer": "{{ c.customer|escapejs }}",
+    "customer_id": "{{ c.customer_id }}",
+    "supplier": "{{ c.supplier|escapejs }}",
+    "supplier_id": "{{ c.supplier_id }}",
+    "date": "{{ c.date|escapejs }}",
+    "amount": parseFloat("{{ c.amount|default:'0' }}"),
+    "transaction": "{{ c.transaction|escapejs }}",
+    "type": "{{ c.type|escapejs }}"
+  });
+  {% endfor %}
 
   for (let i = 0; i < cashs.length; i++) {
     const cash = cashs[i];
     var tableBody = document.getElementById("cashTableBody");
     var newRow = `
-      <tr>
-        <td class="px-3 py-3 text-left w-1 flex">
-          <button type='button' class="text-blue-500 hover:underline mr-2" onclick="updateCash(this)">Edit</button>
-          <button type='button' class="text-red-500 hover:underline" onclick="deleteCash(this)">Delete</button>
+      <tr class="hover:bg-indigo-50/50 transition-all duration-200">
+        <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap">
+          <button type='button' class="text-blue-500 hover:underline text-xs mr-2" onclick="updateCash(this)">Edit</button>
+          <button type='button' class="text-red-500 hover:underline text-xs" onclick="deleteCash(this)">Delete</button>
         </td>
-        <td class="px-4 py-3 text-left w-1 sl">${i + 1}</td>
-        <td class="px-4 py-3 text-left search-area">
-          ${cash.date.split('T')[0]}    
+        <td class="px-1.5 py-1.5 text-center text-sm w-12 sl">${i + 1}</td>
+        
+        <td class="px-1.5 py-1.5 text-left text-sm w-[200px] search-area">
+          ${cash.type === 'suppliers' ? cash.supplier : cash.customer}
           <input type="hidden" name="dates" value="${cash.date.split('T')[0]}">
+          <input type="hidden" name="suppliers" value="${cash.type === 'suppliers' ? cash.supplier_id : cash.customer_id}">
+          <input type="hidden" name="cash_nos" value="${cash.cash_no || ''}">
         </td>
-
-        <td class="px-4 py-3 text-left search-area">
-          ${cash.cashbank}
-          <input type="hidden" name="cashs" value="${cash.cashbank_id}">
-        </td>
-        <td class="px-4 py-3 text-left search-area">
-        ${cash.type === 'suppliers' ? cash.supplier : cash.customer}
-        <input 
-          type="hidden" 
-          name="suppliers" 
-          value="${cash.type === 'suppliers' ? cash.supplier_id : cash.customer_id}"
-        >
-      </td>
-
-        <td class="px-4 py-3 text-right search-area">
-          ${parseFloat(cash.amount).toFixed(2)}
-          <input type="hidden" name="amounts" value="${cash.amount}">   
-        </td>
-        <td class="px-4 py-3 text-right search-area">
-          ${cash.transaction}
-          <input type="hidden" name="transactions" value="${cash.transaction}">
-        </td>
-        <td class="px-4 py-3 text-right search-area">
+        <td class="px-1.5 py-1.5 text-left text-sm w-[250px] search-area">
           ${cash.description}
           <input type="hidden" name="descriptions" value="${cash.description}">
         </td>
-        <input type="hidden" name="cash_ids" id="cash_id" value="${cash.id}"> 
-        <input type="hidden" name="type" id="type" value="${cash.type}"> 
+        <td class="px-1.5 py-1.5 text-left text-sm w-[200px] search-area">
+          ${cash.cashbank}
+          <input type="hidden" name="cashs" value="${cash.cashbank_id}">
+        </td>
+        <td class="px-1.5 py-1.5 text-center text-sm w-24 search-area">
+          ${cash.transaction}
+          <input type="hidden" name="transactions" value="${cash.transaction}">
+        </td>
+        <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
+          ${parseFloat(cash.amount).toFixed(2)}
+          <input type="hidden" name="amounts" value="${cash.amount}">   
+          <input type="hidden" name="cash_ids" id="cash_id" value="${cash.id}"> 
+          <input type="hidden" name="type" id="type" value="${cash.type}"> 
+        </td>
       </tr>`;
     tableBody.insertAdjacentHTML('beforeend', newRow);
     $('#amount').val('');
@@ -517,71 +523,70 @@
             $(selectedTR).empty();
             $(selectedTR).removeClass('bg-blue-300');
             $(selectedTR).append(`
-             <td class="px-4 py-3 text-left w-1 flex">
-          <button type='button' class="text-blue-500 hover:underline mr-2" onclick="updateCash(this)">Edit</button>
-          <button type='button' class="text-red-500 hover:underline" onclick="deleteCash(this)">Delete</button>
+             <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap">
+          <button type='button' class="text-blue-500 hover:underline text-xs mr-2" onclick="updateCash(this)">Edit</button>
+          <button type='button' class="text-red-500 hover:underline text-xs" onclick="deleteCash(this)">Delete</button>
         </td>
-        <td class="px-4 py-3 text-left sl"></td>
-        <td class="px-4 py-3 text-left">${date}
-          <input type="hidden" name="dates" value="${date}">
-          </td>
-        <td class="px-4 py-3 text-left search-area">
-          ${cash}
-          <input type="hidden" name="cashs" value="${cashSelect}">
-        </td>
-        <td class="px-4 py-3 text-left search-area">
+        <td class="px-1.5 py-1.5 text-center text-sm w-12 sl"></td>
+        <td class="px-1.5 py-1.5 text-left text-sm w-[200px] search-area">
           ${supplier}
           <input type="hidden" name="suppliers" value="${supplierSelect}">
+          <input type="hidden" name="dates" value="${date}">
+          <input type="hidden" name="cash_nos" value="${cash_no || ''}">
         </td>
-        <td class="px-4 py-3 text-right search-area">
-          ${amount.toFixed(2)}
-          <input type="hidden" name="amounts" value="${amount}">
-        </td>
-         <td class="px-4 py-3 text-left search-area">
-          ${transaction}
-          <input type="hidden" name="transactions" value="${transaction}">
-        </td>
-         <td class="px-4 py-3 text-left search-area">
+        <td class="px-1.5 py-1.5 text-left text-sm w-[250px] search-area">
           ${description}
           <input type="hidden" name="descriptions" value="${description}">
         </td>
-        <input type="hidden" name="cash_ids" id="cash_id" value="${cash_id}"> 
-        <input type="hidden" name="type" id="type" value="${type_value}"> 
+        <td class="px-1.5 py-1.5 text-left text-sm w-[200px] search-area">
+          ${cash}
+          <input type="hidden" name="cashs" value="${cashSelect}">
+        </td>
+        <td class="px-1.5 py-1.5 text-center text-sm w-24 search-area">
+          ${transaction}
+          <input type="hidden" name="transactions" value="${transaction}">
+        </td>
+        <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
+          ${amount.toFixed(2)}
+          <input type="hidden" name="amounts" value="${amount}">
+          <input type="hidden" name="cash_ids" id="cash_id" value="${cash_id}"> 
+          <input type="hidden" name="type" id="type" value="${type_value}"> 
+        </td>
         `);
             selectedTR = '';
           } else {
             const newRow = `
-      <tr>
-        <td class="px-4 py-3 text-left w-1 flex">
-          <button type='button' class="text-blue-500 hover:underline mr-2" onclick="updateCash(this)">Edit</button>
-          <button type='button' class="text-red-500 hover:underline" onclick="deleteCash(this)">Delete</button>
+      <tr class="hover:bg-indigo-50/50 transition-all duration-200">
+        <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap">
+          <button type='button' class="text-blue-500 hover:underline text-xs mr-2" onclick="updateCash(this)">Edit</button>
+          <button type='button' class="text-red-500 hover:underline text-xs" onclick="deleteCash(this)">Delete</button>
         </td>
-        <td class="px-4 py-3 text-left sl"></td>
-        <td class="px-4 py-3 text-left">${date}
-          <input type="hidden" name="dates" value="${date}">
-          </td>
-        <td class="px-4 py-3 text-left search-area">
-          ${cash}
-          <input type="hidden" name="cashs" value="${cashSelect}">
-        </td>
-        <td class="px-4 py-3 text-left search-area">
+        <td class="px-1.5 py-1.5 text-center text-sm w-12 sl"></td>
+        
+        <td class="px-1.5 py-1.5 text-left text-sm w-[200px] search-area">
           ${supplier}
           <input type="hidden" name="suppliers" value="${supplierSelect}">
+          <input type="hidden" name="dates" value="${date}">
+          <input type="hidden" name="cash_nos" value="${cash_no || ''}">
         </td>
-        <td class="px-4 py-3 text-right search-area">
-          ${amount.toFixed(2)}
-          <input type="hidden" name="amounts" value="${amount}">
-        </td>
-         <td class="px-4 py-3 text-center search-area">
-          ${transaction}
-          <input type="hidden" name="transactions" value="${transaction}">
-        </td>
-         <td class="px-4 py-3 text-left search-area">
+        <td class="px-1.5 py-1.5 text-left text-sm w-[250px] search-area">
           ${description}
           <input type="hidden" name="descriptions" value="${description}">
         </td>
-        <input type="hidden" name="cash_ids" id="cash_id" value="${cash_id}"> 
-        <input type="hidden" name="type" id="type" value="${type_value}"> 
+        <td class="px-1.5 py-1.5 text-left text-sm w-[200px] search-area">
+          ${cash}
+          <input type="hidden" name="cashs" value="${cashSelect}">
+        </td>
+         <td class="px-1.5 py-1.5 text-center text-sm w-24 search-area">
+          ${transaction}
+          <input type="hidden" name="transactions" value="${transaction}">
+        </td>
+        <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
+          ${amount.toFixed(2)}
+          <input type="hidden" name="amounts" value="${amount}">
+          <input type="hidden" name="cash_ids" id="cash_id" value="${cash_id}"> 
+          <input type="hidden" name="type" id="type" value="${type_value}"> 
+        </td>
       </tr>`;
 
             tableBody.insertAdjacentHTML('beforeend', newRow);
@@ -630,30 +635,27 @@
     $('#viewDiv').addClass('hidden');
     const selectedRow = link.closest('tr');
     if (isUpdate) {
-
-      document.getElementById("cash_name").value = selectedRow.cells[2].innerText.trim();
-      document.getElementById("date").value = selectedRow.cells[3].innerText.trim();
-      document.getElementById("cash").value = selectedRow.cells[4].querySelector('input').value;
+      document.getElementById("cash_name").value = selectedRow.cells[2].querySelector('input[name="cash_nos"]')?.value || getLastCashNo(); 
+      document.getElementById("date").value = selectedRow.cells[2].querySelector('input[name="dates"]').value;
+      document.getElementById("cash").value = selectedRow.cells[4].querySelector('input[name="cashs"]').value;
       document.getElementById("amount").value = selectedRow.cells[6].innerText.trim();
-      document.getElementById("description").value = selectedRow.cells[8].innerText.trim();
+      document.getElementById("description").value = selectedRow.cells[3].innerText.trim();
       document.getElementById("cashId").value = selectedRow.querySelector('#cash_id').value;
-      document.getElementById("transaction").value = selectedRow.cells[7].innerText.trim();
+      document.getElementById("transaction").value = selectedRow.cells[5].innerText.trim();
       var type = selectedRow.querySelector('#type') ? selectedRow.querySelector('#type').value : 'suppliers';
-
-      document.getElementById("supplier").value = selectedRow.cells[5].querySelector('input').value;
+      document.getElementById("supplier").value = selectedRow.cells[2].querySelector('input[name="suppliers"]').value;
     } else {
       selectedTR = selectedRow;
       makeRowHighlight(selectedRow);
-      document.getElementById("cash_name").value = selectedRow.cells[1].innerText.trim();
-      document.getElementById("date").value = selectedRow.cells[2].innerText.trim();
-      document.getElementById("cash").value = selectedRow.cells[3].querySelector('input').value;
-      document.getElementById("amount").value = selectedRow.cells[5].innerText.trim();
-      document.getElementById("description").value = selectedRow.cells[7].innerText.trim();
-      document.getElementById("transaction").value = selectedRow.cells[6].innerText.trim();
+      document.getElementById("cash_name").value = selectedRow.cells[2].querySelector('input[name="cash_nos"]')?.value || getLastCashNo();
+      document.getElementById("date").value = selectedRow.cells[2].querySelector('input[name="dates"]').value;
+      document.getElementById("cash").value = selectedRow.cells[4].querySelector('input[name="cashs"]').value;
+      document.getElementById("amount").value = selectedRow.cells[6].innerText.trim();
+      document.getElementById("description").value = selectedRow.cells[3].innerText.trim();
+      document.getElementById("transaction").value = selectedRow.cells[5].innerText.trim();
       document.getElementById("cashId").value = selectedRow.querySelector('#cash_id').value;
       var type = selectedRow.querySelector('#type') ? selectedRow.querySelector('#type').value : 'suppliers';
-
-      document.getElementById("supplier").value = selectedRow.cells[4].querySelector('input').value;
+      document.getElementById("supplier").value = selectedRow.cells[2].querySelector('input[name="suppliers"]').value;
     }
 
     $('#addToGridText').text('Update Grid');
@@ -735,7 +737,6 @@
     const toPrice = parseFloat($('#to_price').val()) || Infinity;
 
     $('#viewCashTable tbody tr').each(function () {
-      console.log($(this).find('td:nth-child(7)'))
       const totalAmount = parseFloat($(this).find('td:nth-child(7)').text()) || 0;
       if (totalAmount >= fromPrice && totalAmount <= toPrice) {
         $(this).show();
@@ -762,40 +763,36 @@
         rateAvg = data.rate_avg || 0;
         data.cashs.forEach((cash, index) => {
           const newRow = `
-            <tr>
-              <td class="px-4 py-3 text-left w-1 flex">
-                <a href="#" class="text-blue-500 hover:underline mr-2" onclick="editViewData(this);">Edit</a>
-                <a href="#" class="text-red-500 hover:underline" onclick="deleteCash(this)">Delete</a>
+            <tr class="hover:bg-indigo-50/50 transition-all duration-200">
+              <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap">
+                <a href="#" class="text-blue-500 text-xs hover:underline mr-2" onclick="editViewData(this);">Edit</a>
+                <a href="#" class="text-red-500 text-xs hover:underline" onclick="deleteCash(this)">Delete</a>
               </td>
-              <td class="px-4 py-3 text-left sl">${index + 1}</td>
-              <td class="px-4 py-3 text-left search-area">${cash.cash_no}
-                <input type="hidden" name="cash_nos" value="${cash.cash_no}">
-                </td>
-              <td class="px-4 py-3 text-left search-area">${cash.date.split('T')[0]}
+              <td class="px-1.5 py-1.5 text-center text-sm w-12 sl">${index + 1}</td>
+              <td class="px-1.5 py-1.5 text-left text-sm w-[200px] search-area">
+                ${cash.type === 'suppliers' ? cash.supplier : cash.customer} 
+                <input type="hidden" name="cash_nos" value="${cash.cash_no || ''}">
                 <input type="hidden" name="dates" value="${cash.date.split('T')[0]}">
-                </td>
-              <td class="px-4 py-3 text-left search-area">${cash.cashbank}
-                <input type="hidden" name="cashs" value="${cash.cashbank_id}">
-                </td>
-              <td class="px-4 py-3 text-left search-area">
-        ${cash.type === 'suppliers' ? cash.supplier : cash.customer} 
-        <input 
-          type="hidden" 
-          name="suppliers" 
-          value="${cash.type === 'suppliers' ? cash.supplier_id : cash.customer_id}"
-        >
-                </td>
-              <td class="px-4 py-3 text-right font-bold">${parseFloat(cash.amount).toFixed(2)}
-                <input type="hidden" name="amounts" value="${cash.amount}">
-                </td>
-              <td class="px-4 py-3 text-center search-area">${cash.transaction}
-                <input type="hidden" name="transactions" value="${cash.transaction}">
-                </td>
-              <td class="px-4 py-3 text-right search-area">${cash.description}
+                <input type="hidden" name="suppliers" value="${cash.type === 'suppliers' ? cash.supplier_id : cash.customer_id}">
+              </td>
+              <td class="px-1.5 py-1.5 text-left text-sm w-[250px] search-area">
+                ${cash.description}
                 <input type="hidden" name="descriptions" value="${cash.description}">
-                </td>
-              <input type="hidden" name="cash_ids" id="cash_id" value="${cash.id}"> 
-              <input type="hidden" name="type" id="type" value="${cash.type}">
+              </td>
+              <td class="px-1.5 py-1.5 text-left text-sm w-[200px] search-area">
+                ${cash.cashbank}
+                <input type="hidden" name="cashs" value="${cash.cashbank_id}">
+              </td>
+              <td class="px-1.5 py-1.5 text-center text-sm w-24 search-area">
+                ${cash.transaction}
+                <input type="hidden" name="transactions" value="${cash.transaction}">
+              </td>
+              <td class="px-1.5 py-1.5 text-right text-sm w-32 font-bold search-area">
+                ${parseFloat(cash.amount).toFixed(2)}
+                <input type="hidden" name="amounts" value="${cash.amount}">
+                <input type="hidden" name="cash_ids" id="cash_id" value="${cash.id}"> 
+                <input type="hidden" name="type" id="type" value="${cash.type}">
+              </td>
             </tr>`;
           tableBody.append(newRow);
         });
