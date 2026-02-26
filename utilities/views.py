@@ -133,7 +133,17 @@ class RecycleBinView(View):
         
         categories = []
         for model, label, id_field in models_to_check:
-            count = model.objects.filter(is_active=False, client=client, deleted_at__isnull=False).count()
+            # Filter criteria: inactive, belongs to client, and has a deletion timestamp
+            filters = {
+                'is_active': False, 
+                'client': client, 
+                'deleted_at__isnull': False
+            }
+            # Exclude draft/held items if the model supports it
+            if hasattr(model, 'hold'):
+                filters['hold'] = False
+                
+            count = model.objects.filter(**filters).count()
             if count > 0:
                 categories.append({
                     'label': label,
@@ -184,7 +194,17 @@ class RecycleBinListView(View):
         }
         
         label, id_field = id_field_map.get(model_name, (model_name, 'id'))
-        items_query = model.objects.filter(is_active=False, client=client, deleted_at__isnull=False).order_by('-deleted_at')
+        
+        # Consistent filtering with dashboard view
+        filters = {
+            'is_active': False, 
+            'client': client, 
+            'deleted_at__isnull': False
+        }
+        if hasattr(model, 'hold'):
+            filters['hold'] = False
+            
+        items_query = model.objects.filter(**filters).order_by('-deleted_at')
         
         deleted_items = []
         for item in items_query:

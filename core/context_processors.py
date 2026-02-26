@@ -48,6 +48,6 @@ def notifications(request):
              notifications_data['pending_notifs'] = list(pending)
              
     except Exception as e:
-        print(f"Notification processor error: {e}")
+        pass
         
     return notifications_data

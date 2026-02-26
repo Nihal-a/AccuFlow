@@ -539,6 +539,7 @@ class SubscriptionPayment(models.Model):
     date = models.DateField(auto_now_add=True)
     transaction_id = models.TextField(blank=True, null=True)
     payment_method = models.TextField(blank=True, null=True)
+    is_renewal = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.client} - {self.plan} - {self.amount}"

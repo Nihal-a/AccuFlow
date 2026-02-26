@@ -13,14 +13,100 @@ from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.decorators import method_decorator
+from django.db.models import Sum
 
 logger = logging.getLogger(__name__)
 
 @method_decorator([login_required, staff_member_required], name='dispatch')
+class AdminDashboardView(View):
+    def get(self, request):
+        from core.models import SubscriptionPayment
+        import datetime
+        
+        clients = Clients.objects.filter(is_active=True)
+        total_clients = clients.count()
+        
+        active_subs = 0
+        expired_subs = 0
+        renewals_due = []
+        
+        today = timezone.now().date()
+        reminder_threshold = today + datetime.timedelta(days=7)
+        
+        for client in clients:
+            if client.is_subscription_active:
+                active_subs += 1
+                if client.subscription_end and today <= client.subscription_end <= reminder_threshold:
+                    renewals_due.append({
+                        'client': client,
+                        'days_left': (client.subscription_end - today).days
+                    })
+            else:
+                expired_subs += 1
+                
+        renewals_due = sorted(renewals_due, key=lambda x: x['days_left'])
+        
+        total_revenue = SubscriptionPayment.objects.aggregate(Sum('amount'))['amount__sum'] or 0
+        recent_payments = SubscriptionPayment.objects.select_related('client', 'plan').order_by('-date')[:5]
+        
+        context = {
+            'total_clients': total_clients,
+            'active_subs': active_subs,
+            'expired_subs': expired_subs,
+            'total_revenue': total_revenue,
+            'recent_payments': recent_payments,
+            'renewals_due': renewals_due
+        }
+        
+        return render(request, 'admin/dashboard/dashboard.html', context)
+
+@method_decorator([login_required, staff_member_required], name='dispatch')
 class ClientsView(View):
     def get(self, request):
-        clients = Clients.objects.filter(is_active=True).select_related('user')
-        return render(request, 'admin/clients/clients.html', {'clients': clients})
+        from core.models import SubscriptionPayment
+        from django.db.models import Prefetch
+        from django.utils import timezone
+        import datetime
+        
+        status_filter = request.GET.get('status', 'all')
+        
+        payment_prefetch = Prefetch(
+            'subscriptionpayment_set',
+            queryset=SubscriptionPayment.objects.select_related('plan').order_by('-date'),
+            to_attr='all_payments'
+        )
+        
+        clients_query = Clients.objects.filter(is_active=True).select_related('user', 'subscription_plan').prefetch_related(payment_prefetch).order_by('-id')
+        
+        clients = []
+        upcoming_renewals = []
+        today = timezone.now().date()
+        reminder_threshold = today + datetime.timedelta(days=7)
+        
+        for client in clients_query:
+            client.total_paid = sum(p.amount for p in client.all_payments)
+            is_active_sub = client.is_subscription_active
+            
+            if status_filter == 'active' and not is_active_sub:
+                continue
+            if status_filter == 'expired' and is_active_sub:
+                continue
+                
+            # Check for upcoming renewal (expiring in <= 7 days and not already expired)
+            if is_active_sub and client.subscription_end and today <= client.subscription_end <= reminder_threshold:
+                days_left = (client.subscription_end - today).days
+                upcoming_renewals.append({
+                    'client': client,
+                    'days_left': days_left
+                })
+                
+            clients.append(client)
+            
+        return render(request, 'admin/clients/clients.html', {
+            'clients': clients,
+            'current_status': status_filter,
+            'upcoming_renewals': sorted(upcoming_renewals, key=lambda x: x['days_left'])
+        })
     
 
 
@@ -308,6 +394,7 @@ class PaymentCreateView(View):
         amount = request.POST.get('amount')
         transaction_id = request.POST.get('transaction_id')
         payment_method = request.POST.get('payment_method')
+        is_renewal = request.POST.get('is_renewal') == 'on'
 
         try:
             client = Clients.objects.get(id=client_id)
@@ -318,7 +405,8 @@ class PaymentCreateView(View):
                 plan=plan,
                 amount=amount,
                 transaction_id=transaction_id,
-                payment_method=payment_method
+                payment_method=payment_method,
+                is_renewal=is_renewal
             )
             
             messages.success(request, f"Payment recorded for {client.name}")

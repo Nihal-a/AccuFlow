@@ -21,6 +21,7 @@ Subscription Payments
                     <th class="p-3 border-b">ID</th>
                     <th class="p-3 border-b">Client</th>
                     <th class="p-3 border-b">Plan</th>
+                    <th class="p-3 border-b">Type</th>
                     <th class="p-3 border-b">Amount</th>
                     <th class="p-3 border-b">Date</th>
                     <th class="p-3 border-b">Transaction ID</th>
@@ -33,9 +34,20 @@ Subscription Payments
                     <td class="p-3 font-medium text-gray-900">{{ payment.client.name }}</td>
                     <td class="p-3">
                         {% if payment.plan %}
-                        <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">{{ payment.plan.name               }}</span>
+                        <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">{{ payment.plan.name
+                            }}</span>
                         {% else %}
                         -
+                        {% endif %}
+                    </td>
+                    <td class="p-3">
+                        {% if payment.is_renewal %}
+                        <span
+                            class="bg-indigo-100 text-indigo-800 text-[10px] font-bold uppercase px-2 py-1 rounded">Renewal</span>
+                        {% else %}
+                        <span
+                            class="bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase px-2 py-1 rounded">New
+                            Client</span>
                         {% endif %}
                     </td>
                     <td class="p-3 font-semibold text-green-600">{{ payment.amount }}</td>

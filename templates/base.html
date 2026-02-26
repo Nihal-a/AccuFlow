@@ -163,6 +163,13 @@
         </div>
         <nav class="flex-1 overflow-y-auto p-3 space-y-1.5 custom-scrollbar text-sm">
             {% if request.user.is_admin %}
+            <div class="space-y-0 text-gray-500 mb-2">
+                <a href="{% url 'admin_dashboard' %}" class="nav-link font-medium uppercase" id="adminDashboardLink">
+                    <i data-lucide="layout-dashboard" class="w-3.5 h-3.5 "></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+
             <div class="space-y-0">
                 <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-medium uppercase">
                     <i data-lucide="user-plus" class="w-3.5 h-3.5 "></i><span>Client Management</span>

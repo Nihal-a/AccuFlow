@@ -5,6 +5,9 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from .models import Clients, Collection, Collectors
+from decimal import Decimal
+ 
+
 
 def user_login(request):
     if request.method == 'POST':
@@ -61,112 +64,61 @@ def user_login(request):
         return redirect('login')
     return render(request, 'login.html')
 
+
+
 def user_logout(request):
     logout(request)    
     messages.success(request, "You have been logged out successfully.")
     return redirect('login')
+ 
 
 def getClient(user):
-    if user.is_client:
-         return Clients.objects.get(user=user)
-    elif user.is_collector:
-         return Collectors.objects.get(user=user).client
-    return None
+    if Clients.objects.filter(user=user,is_active=True).exists():
+        return Clients.objects.get(user=user,is_active=True)
+    else:
+        return None
+       
 
 def update_party(party):
-    if party.debit > party.credit:
-        party.debit -= party.credit
-        party.credit = 0
-    elif party.credit > party.debit:
-        party.credit -= party.debit
-        party.debit = 0
-    else:
-        party.debit = 0
-        party.credit = 0
-    return party
+    if party.debit > 0 and party.credit > 0:
+        cancel = min(party.debit, party.credit)
+        party.debit -= cancel
+        party.credit -= cancel
+    
+    party.balance = party.debit - party.credit
 
 
+def update_ledger(where, to=None, old_purchase=0, new_purchase=0, old_sale=0, new_sale=0):
 
-from django.db import transaction
-from decimal import Decimal, InvalidOperation
-
-@transaction.atomic
-def update_ledger(where=None, to=None, old_purchase=0, new_purchase=0, old_sale=0, new_sale=0):
-    # Ensure all numerical inputs are Decimals for consistent arithmetic
-    def to_decimal(val):
-        try:
-            return Decimal(str(val or 0))
-        except (ValueError, TypeError, InvalidOperation):
-            return Decimal('0.0000')
-
-    old_p = to_decimal(old_purchase)
-    new_p = to_decimal(new_purchase)
-    old_s = to_decimal(old_sale)
-    new_s = to_decimal(new_sale)
-
-    # Handle 'where' argument (Suppliers/Customers)
     if where:
-        # Lock the row for update
-        obj_class = where.__class__
-        where = obj_class.objects.select_for_update().get(pk=where.pk)
-        
-        # Ensure model fields are also Decimals to avoid float + Decimal issues
-        where.credit = to_decimal(where.credit)
-        where.debit = to_decimal(where.debit)
-        
-        if old_p > 0:
-            where.credit -= old_p
+        where.refresh_from_db()
+
+        if Decimal(old_purchase) > 0: 
+            where.credit -= Decimal(old_purchase)
             if where.credit < 0:
                 where.debit += abs(where.credit)
-                where.credit = Decimal('0.0000')
-        
-        if new_p > 0:
-            where.credit += new_p
+                where.credit = 0
 
-        if old_s > 0:
-            where.debit -= old_s
-            if where.debit < 0:
-                where.credit += abs(where.debit)
-                where.debit = Decimal('0.0000')
-        
-        if new_s > 0:
-            where.debit += new_s
-            
+        if Decimal(new_purchase) > 0:
+            where.credit += Decimal(new_purchase)
+
         update_party(where)
         where.save()
 
     if to:
-        obj_class = to.__class__
-        to = obj_class.objects.select_for_update().get(pk=to.pk)
+        to.refresh_from_db()
 
-        # Ensure model fields are also Decimals
-        to.credit = to_decimal(to.credit)
-        to.debit = to_decimal(to.debit)
-
-        if old_s > 0:
-            to.debit -= old_s
+        if Decimal(old_sale) > 0:
+            to.debit -= Decimal(old_sale)
             if to.debit < 0:
                 to.credit += abs(to.debit)
-                to.debit = Decimal('0.0000')
+                to.debit = 0
 
-        if new_s > 0:
-            to.debit += new_s
-            
-        if old_p > 0:
-             to.credit -= old_p
-             if to.credit < 0:
-                 to.debit += abs(to.credit)
-                 to.credit = Decimal('0.0000')
-        
-        if new_p > 0:
-            to.credit += new_p
+        if Decimal(new_sale) > 0:
+            to.debit += Decimal(new_sale)
 
         update_party(to)
         to.save()
-
-def update_customer_balance(to,old_sale,new_sale):
-    if to:
-        update_ledger(to=to, old_sale=old_sale, new_sale=new_sale)
 
 
 @login_required
@@ -194,5 +146,3 @@ def get_plan_details(request, plan_id):
         return JsonResponse({'price': plan.price})
     except SubscriptionPlan.DoesNotExist:
         return JsonResponse({'error': 'Plan not found'}, status=404)
-
-

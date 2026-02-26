@@ -92,20 +92,22 @@ class PurchaseAddView(View):
                 purchase = Purchases.objects.get(id=id)
                 
                 # Validation
-                qty_val = validate_positive_decimal(qtys[count], "Quantity")
-                total_amount_val = validate_positive_decimal(total_amounts[count], "Total Amount")
-                amount_val = validate_positive_decimal(amounts[count], "Amount")
+                qty_val = qtys[count]
+                total_amount_val = total_amounts[count]
+                amount_val = amounts[count]
 
-                godown.qty = F('qty') + qty_val  
-                godown.save()
-                update_ledger(where=seller,to=None,new_purchase=total_amount_val,new_sale=0) 
-                
-                # Refresh instances to get updated values from DB
-                seller.refresh_from_db()
-                godown.refresh_from_db()
-                
-                purchase.seller_balance = seller.balance
-                purchase.purchaser_balance = godown.get_balance
+                if purchase.hold:
+                    godown.qty = F('qty') + qty_val  
+                    godown.save()
+                    update_ledger(where=seller,to=None,new_purchase=total_amount_val,new_sale=0) 
+                    
+                    # Refresh instances to get updated values from DB
+                    seller.refresh_from_db()
+                    godown.refresh_from_db()
+                    
+                    purchase.seller_balance = seller.balance
+                    purchase.purchaser_balance = godown.get_balance
+
                 purchase.supplier = supplier
                 purchase.godown = godown
                 purchase.date = dates[count]
@@ -129,9 +131,9 @@ class PurchaseHold(View):
             supplier = data.get('supplier')
             godown = data.get('godown')
             date = data.get('date')
-            qty = validate_positive_decimal(data.get('qty'), "Quantity")
-            amount = validate_positive_decimal(data.get('amount'), "Amount")
-            total_amount = validate_positive_decimal(data.get('total_amount'), "Total Amount")
+            qty =data.get('qty')
+            amount = data.get('amount')
+            total_amount = data.get('total_amount')
             description = data.get('description')
             type_value = data.get('type')
             customer = None
@@ -150,7 +152,6 @@ class PurchaseHold(View):
 
                 old_seller = purchase.customer or purchase.supplier
                 if not purchase.hold:
-                    print('updating ledger for old seller')
                     update_ledger(
                         where=purchase.party,  
                         to=None,
@@ -160,8 +161,8 @@ class PurchaseHold(View):
                         new_sale=0
                     )
                     purchase.party.save()
-                    godown.qty = F('qty') - purchase.qty
-                    godown.save()
+                    purchase.godown.qty = F('qty') - purchase.qty
+                    purchase.godown.save()
                     purchase.purchaser_balance = purchase.purchaser_balance - purchase.qty
                     purchase.seller_balance = purchase.seller_balance - purchase.amount
                 purchase.purchase_no = purchase_no 

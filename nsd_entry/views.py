@@ -31,11 +31,11 @@ class NSDEntryView(View):
                 'receiver_customer':nsd.receiver_customer.name if nsd.receiver_customer else '',
                 'receiver_customer_id':nsd.receiver_customer.id if nsd.receiver_customer else '',
                 'date':str(nsd.date),
-                'qty':nsd.qty,
-                'sell_rate':nsd.sell_rate,
-                'sell_amount':nsd.sell_amount,
-                'purchase_rate':nsd.purchase_rate,
-                'purchase_amount':nsd.purchase_amount,
+                'qty':str(nsd.qty),
+                'sell_rate':str(nsd.sell_rate),
+                'sell_amount':str(nsd.sell_amount),
+                'purchase_rate':str(nsd.purchase_rate),
+                'purchase_amount':str(nsd.purchase_amount),
                 'description':nsd.description if nsd.description else '', 
                 'which_receiver_type':nsd.which_receiver_type if nsd.which_receiver_type else '',
                 'which_sender_type':nsd.which_sender_type if nsd.which_sender_type else '',
@@ -48,7 +48,7 @@ class NSDEntryView(View):
                 'id':customer.id,
                 'name':customer.name,
                 'customerId':customer.customerId, 
-                'balance':customer.get_balance,
+                'balance':str(customer.get_balance) if customer.get_balance else '0',
             })
         suppliersData = []
         for supplier in suppliers:
@@ -56,12 +56,15 @@ class NSDEntryView(View):
                 'id':supplier.id,
                 'name':supplier.name,
                 'supplierId':supplier.supplierId,
-                'balance':supplier.get_balance,
+                'balance':str(supplier.get_balance) if supplier.get_balance else '0',
             })
         context = {
             'nsds':nsdData,
+            'nsds_json': json.dumps(nsdData),
             'suppliers':suppliersData,
+            'suppliers_json': json.dumps(suppliersData),
             'customers':customersData,
+            'customers_json': json.dumps(customersData),
             'last_nsd_no':getLastNSDNo(client=getClient(request.user)),
         }
         return render(request,'nsd_entry/nsd_entry.html',context)
@@ -293,11 +296,11 @@ def nsds_by_date(request):
             'receiver_customer':nsd.receiver_customer.name if nsd.receiver_customer else '',
             'receiver_customer_id':nsd.receiver_customer.id if nsd.receiver_customer else '',
             'date':str(nsd.date),
-            'qty':nsd.qty,
-            'sell_rate':nsd.sell_rate,
-            'sell_amount':nsd.sell_amount,
-            'purchase_rate':nsd.purchase_rate,
-            'purchase_amount':nsd.purchase_amount,
+            'qty':str(nsd.qty),
+            'sell_rate':str(nsd.sell_rate),
+            'sell_amount':str(nsd.sell_amount),
+            'purchase_rate':str(nsd.purchase_rate),
+            'purchase_amount':str(nsd.purchase_amount),
             'description':nsd.description if nsd.description else '', 
             'which_receiver_type':nsd.which_receiver_type if nsd.which_receiver_type else '',
             'which_sender_type':nsd.which_sender_type if nsd.which_sender_type else '',
@@ -308,14 +311,14 @@ def nsds_by_date(request):
         total_purchase_amount += nsd.purchase_amount
         purchase_rate_sum += nsd.purchase_rate
         count += 1
-    sell_rate_avg = sell_rate_sum / count if count > 0 else 0
-    purchase_rate_avg = purchase_rate_sum / count if count > 0 else 0
+    sell_rate_avg = float(sell_rate_sum / count) if count > 0 else 0
+    purchase_rate_avg = float(purchase_rate_sum / count) if count > 0 else 0
     context ={
-        'nsds': nsdData, 'total_qty': total_qty, 
-        'sell_rate_avg': sell_rate_avg, 
-        'purchase_rate_avg': purchase_rate_avg,
-        'total_sell_amount': total_sell_amount,
-        'total_purchase_amount': total_purchase_amount,
+        'nsds': nsdData, 'total_qty': str(total_qty), 
+        'sell_rate_avg': str(sell_rate_avg), 
+        'purchase_rate_avg': str(purchase_rate_avg),
+        'total_sell_amount': str(total_sell_amount),
+        'total_purchase_amount': str(total_purchase_amount),
         }
     return JsonResponse(context)
 

@@ -61,7 +61,8 @@
             {% endfor %}
           </select>
         </div>
-        <div id="expenseCredit" class="hidden md:flex w-[15%] md:w-[20%] items-center pl-3 text-xs font-semibold text-gray-700"></div>
+        <div id="expenseCredit"
+          class="hidden md:flex w-[15%] md:w-[20%] items-center pl-3 text-xs font-semibold text-gray-700"></div>
       </div>
 
       <!-- Expense Code -->
@@ -71,7 +72,8 @@
         </div>
         <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
           <input type="text" name="" id="expenseID" placeholder="" disabled
-            class="w-full md:w-[70%] px-2.5 py-1.5 border rounded-md bg-gray-50 bg-opacity-50 focus:ring-1 focus:ring-blue-500" required />
+            class="w-full md:w-[70%] px-2.5 py-1.5 border rounded-md bg-gray-50 bg-opacity-50 focus:ring-1 focus:ring-blue-500"
+            required />
         </div>
       </div>
 
@@ -86,12 +88,13 @@
             required>
             <option value="" selected>Select Godown</option>
             {% for godown in godowns %}
-            <option value="{{ godown.id }}" data-code="{{ godown.godownId }}"
-              data-balance="{{ godown.get_balance }}">{{ godown.name }}</option>
+            <option value="{{ godown.id }}" data-code="{{ godown.godownId }}" data-balance="{{ godown.get_balance }}">{{
+              godown.name }}</option>
             {% endfor %}
           </select>
         </div>
-        <div id="godownCredit" class="hidden md:flex w-[15%] md:w-[20%] items-center pl-3 text-xs font-semibold text-gray-700"></div>
+        <div id="godownCredit"
+          class="hidden md:flex w-[15%] md:w-[20%] items-center pl-3 text-xs font-semibold text-gray-700"></div>
       </div>
 
       <!-- Godown Code -->
@@ -101,7 +104,8 @@
         </div>
         <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
           <input type="text" name="" id="godownID" placeholder="" disabled
-            class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+            class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+            required />
         </div>
       </div>
 
@@ -112,7 +116,8 @@
         </div>
         <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
           <input type="number" name="" id="qty" placeholder="Enter Quantity"
-            class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+            class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+            required />
         </div>
       </div>
 
@@ -123,7 +128,8 @@
         </div>
         <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
           <input type="number" name="" id="amount" placeholder="Enter Amount"
-            class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md bg-gray-50 bg-opacity-50 focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+            class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md bg-gray-50 bg-opacity-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            required />
         </div>
       </div>
 
@@ -134,7 +140,8 @@
         </div>
         <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
           <input type="number" name="" id="total_amount" placeholder="" disabled
-            class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md bg-gray-50 bg-opacity-50 focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+            class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md bg-gray-50 bg-opacity-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            required />
         </div>
       </div>
 
@@ -175,18 +182,28 @@
           </button>
         </div>
       </div>
-      <div class="w-full lg:w-3/4 mr-auto xl:max-w-6xl 2xl:max-w-7xl overflow-x-auto shadow-sm rounded-md border border-slate-200 mt-5 mb-5" id="commissionCreateDiv">
+      <div
+        class="w-full lg:w-3/4 mr-auto xl:max-w-6xl 2xl:max-w-7xl overflow-x-auto shadow-sm rounded-md border border-slate-200 mt-5 mb-5"
+        id="commissionCreateDiv">
         <table class="table-auto w-full divide-y divide-slate-200 text-sm">
           <thead class="sticky top-0 bg-blue-200 text-gray-700 z-10">
             <tr>
-              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">Actions</th>
-              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">S.No</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Godown</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[250px]">Description</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-40">Expense</th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Qty</th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-28">Rate</th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Amount</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">
+                Actions</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">S.No
+              </th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Godown
+              </th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[250px]">
+                Description</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-40">Expense
+              </th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Qty
+              </th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-28">Rate
+              </th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Amount
+              </th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 bg-white" id="commissionTableBody">
@@ -201,12 +218,14 @@
         <div>
           <label class="block text-gray-700 font-medium whitespace-nowrap">From Date*</label>
           <input type="date" id="from_date"
-            class="w-full mt-1 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+            class="w-full mt-1 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+            required />
         </div>
         <div>
           <label class="block text-gray-700 font-medium whitespace-nowrap">End Date*</label>
           <input type="date" id="end_date"
-            class="w-full mt-1 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+            class="w-full mt-1 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+            required />
         </div>
         <div>
           <button id="dateFilter"
@@ -491,7 +510,7 @@
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log(data)
+
         commission_id = data.commission_id;
         hold = data.hold
 
@@ -693,7 +712,7 @@
     })
       .then(response => response.json())
       .then(data => {
-        console.log('Commission deleted successfully:', data);
+
 
         if (data.status === 'success') {
           selectedTR.remove();

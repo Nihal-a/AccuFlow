@@ -272,6 +272,7 @@
             <tr>
               <th class="px-4 py-3 text-left font-medium w-1">Actions</th>
               <th class="px-4 py-3 text-left font-medium w-1">#</th>
+              <th class="px-4 py-3 text-left font-medium">NSD No</th>
               <th class="px-4 py-3 text-left font-medium">Date</th>
               <th class="px-4 py-3 text-left font-medium">Supplier</th>
               <th class="px-4 py-3 text-left font-medium">Customer</th>
@@ -422,9 +423,9 @@
 {% endblock %} {% block externalJS %}
 <script>
 
-  var all_customers_data = {{ customers| safe }};
-  var all_suppliers_data = {{ suppliers| safe }};
-  isUpdate = false;
+  var all_customers_data = {{ customers_json| safe }};
+  var all_suppliers_data = {{ suppliers_json| safe }};
+  var isUpdate = false;
 
   function addLastRow() {
     const tableBody = document.getElementById("nsdTableBody");
@@ -434,9 +435,9 @@
     var rateSum = 0;
     count = 0;
     tableBody.querySelectorAll("tr").forEach(function (row) {
-      const qty = parseFloat(row.cells[5].innerText) || 0;
-      const amount = parseFloat(row.cells[6].innerText) || 0;
-      const total = parseFloat(row.cells[7].innerText) || 0;
+      const qty = parseFloat(row.cells[6].innerText) || 0;
+      const amount = parseFloat(row.cells[7].innerText) || 0;
+      const total = parseFloat(row.cells[8].innerText) || 0;
       totalQty += qty;
       rateSum += amount;
       totalAmount += total;
@@ -445,10 +446,12 @@
     rateAvg = rateSum / count || 0;
     const lastRow = `
       <tr class="bg-blue-200 font-bold" id="totalRow">
-        <td class="px-4 py-3 text-left" colspan="7">Totals:</td>
+        <td class="px-4 py-3 text-left" colspan="6">Totals:</td>
         <td class="px-4 py-3 text-right">${parseFloat(totalQty).toFixed(2)}</td>
         <td class="px-4 py-3 text-right">${parseFloat(rateAvg).toFixed(2)}</td>
         <td class="px-4 py-3 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
+        <td class="px-4 py-3 text-right"></td>
+        <td class="px-4 py-3 text-right"></td>
         <td class="px-4 py-3 text-right"></td>
       </tr>`;
     tableBody.insertAdjacentHTML('beforeend', lastRow);
@@ -462,8 +465,8 @@
     $('#date').val(new Date().toISOString().split('T')[0]);
     $('#from_date').val('');
     $('#end_date').val('');
-    $('#viewnsdDiv').addClass('hidden');
-    $('#viewnsdTable tbody').empty();
+    $('#viewNSDDiv').addClass('hidden');
+    $('#viewNSDTable tbody').empty();
     $('#createView').removeClass('hidden');
     $('#viewDiv').addClass('hidden');
     $('#nsd_name, #sell_rate,#sell_amount, #purchase_rate, #purchase_amount, #qty, #description').val('');
@@ -587,7 +590,7 @@
   });
 </script>
 <script>
-  var nsds = {{ nsds| safe }};
+  var nsds = {{ nsds_json| safe }};
 
   for (let i = 0; i < nsds.length; i++) {
     const nsd = nsds[i];
@@ -599,6 +602,9 @@
           <button type='button' class="text-red-500 hover:underline" onclick="deleteNSD(this)">Delete</button>
         </td>
         <td class="px-4 py-3 text-left w-1 sl">${i + 1}</td>
+        <td class="px-4 py-3 text-left search-area">
+          ${nsd.nsd_no || ''}
+        </td>
         <td class="px-4 py-3 text-left search-area">
           ${nsd.date.split('T')[0]}    
           <input type="hidden" name="dates" value="${nsd.date.split('T')[0]}">
@@ -741,6 +747,9 @@
           <button type='button' class="text-red-500 hover:underline" onclick="deleteNSD(this)">Delete</button>
         </td>
         <td class="px-4 py-3 text-left sl"></td>
+        <td class="px-4 py-3 text-left search-area">
+          ${nsd_no}
+        </td>
         <td class="px-4 py-3 text-left">${date}
           <input type="hidden" name="dates" value="${date}">
           </td>
@@ -777,8 +786,8 @@
           <input type="hidden" name="descriptions" value="${description}">
         </td>
         <input type="hidden" name="nsd_ids" id="nsd_id" value="${nsd_id}"> 
-        <input type="hidden" name="sender_type" id="type" value="${sender_type}">
-        <input type="hidden" name="receiver_type" id="type" value="${receiver_type}">
+        <input type="hidden" name="sender_type" id="sender_type" value="${sender_type}">
+        <input type="hidden" name="receiver_type" id="receiver_type" value="${receiver_type}">
         `);
             selectedTR = '';
           } else {
@@ -789,6 +798,9 @@
           <button type='button' class="text-red-500 hover:underline" onclick="deleteNSD(this)">Delete</button>
         </td>
         <td class="px-4 py-3 text-left sl"></td>
+        <td class="px-4 py-3 text-left search-area">
+          ${nsd_no}
+        </td>
         <td class="px-4 py-3 text-left">${date}
           <input type="hidden" name="dates" value="${date}">
           </td>
@@ -826,8 +838,8 @@
           <input type="hidden" name="descriptions" value="${description}">
         </td>
         <input type="hidden" name="nsd_ids" id="nsd_id" value="${nsd_id}"> 
-        <input type="hidden" name="sender_type" id="type" value="${sender_type}">
-        <input type="hidden" name="receiver_type" id="type" value="${receiver_type}">
+        <input type="hidden" name="sender_type" id="sender_type" value="${sender_type}">
+        <input type="hidden" name="receiver_type" id="receiver_type" value="${receiver_type}">
       </tr>`;
 
             tableBody.insertAdjacentHTML('beforeend', newRow);
@@ -905,15 +917,15 @@
     } else {
       selectedTR = selectedRow;
       makeRowHighlight(selectedRow);
-      document.getElementById("nsd_name").value = selectedRow.cells[1].innerText.trim();
-      document.getElementById("date").value = selectedRow.cells[2].innerText.trim();
-      document.getElementById("customer").value = selectedRow.cells[4].querySelector('input').value;
-      document.getElementById("qty").value = selectedRow.cells[5].innerText.trim();
-      document.getElementById("sell_rate").value = selectedRow.cells[6].innerText.trim();
-      document.getElementById("sell_amount").value = selectedRow.cells[7].innerText.trim();
-      document.getElementById("purchase_rate").value = selectedRow.cells[8].innerText.trim();
-      document.getElementById("purchase_amount").value = selectedRow.cells[9].innerText.trim();
-      document.getElementById("description").value = selectedRow.cells[10].innerText.trim();
+      document.getElementById("nsd_name").value = selectedRow.cells[2].innerText.trim();
+      document.getElementById("date").value = selectedRow.cells[3].innerText.trim();
+      document.getElementById("customer").value = selectedRow.cells[5].querySelector('input').value;
+      document.getElementById("qty").value = selectedRow.cells[6].innerText.trim();
+      document.getElementById("sell_rate").value = selectedRow.cells[7].innerText.trim();
+      document.getElementById("sell_amount").value = selectedRow.cells[8].innerText.trim();
+      document.getElementById("purchase_rate").value = selectedRow.cells[9].innerText.trim();
+      document.getElementById("purchase_amount").value = selectedRow.cells[10].innerText.trim();
+      document.getElementById("description").value = selectedRow.cells[11].innerText.trim();
       document.getElementById("nsdId").value = selectedRow.querySelector('#nsd_id').value;
       var sender_type = selectedRow.querySelector('#sender_type') ? selectedRow.querySelector('#sender_type').value : 'suppliers';
       var receiver_type = selectedRow.querySelector('#receiver_type') ? selectedRow.querySelector('#receiver_type').value : 'suppliers';
@@ -927,7 +939,7 @@
       } else {
         $('#allCustomer').prop('checked', false).change();
       }
-      document.getElementById("supplier").value = selectedRow.cells[3].querySelector('input').value;
+      document.getElementById("supplier").value = selectedRow.cells[4].querySelector('input').value;
     }
 
     $('#addToGridText').text('Update Grid');
@@ -957,7 +969,7 @@
     })
       .then(response => response.json())
       .then(data => {
-        console.log('NSD deleted successfully:', data);
+
 
         if (data.status === 'success') {
           selectedTR.remove();
