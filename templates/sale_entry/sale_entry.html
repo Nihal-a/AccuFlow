@@ -404,10 +404,8 @@ Sales Entry
     if ($(this).is(':checked')) {
       const suppliers = all_suppliers_data;
       var customerSelect = $('#customer');
-      customerSelect.empty();
       $('#customerID').val('');
       $('#customerCredit').text('');
-      customerSelect.append('<option value="" selected>Select Supplier</option>');
       suppliers.forEach(function (supplier) {
         var option = $('<option></option>')
           .attr('value', supplier.id)
@@ -812,7 +810,7 @@ Sales Entry
   function clearSaleForm() {
     $('#amount, #qty, #description, #total_amount, #customerID, #godownID,#saleId').val('');
     $('#customer, #godown').prop('selectedIndex', 0);
-    $('#allcustomers').prop('checked', false);
+    $('#allCustomers').prop('checked', false);
     $('#customerCredit').empty();
     $('#godownCredit').empty()
     $('#sale_name').val(getLastSaleNo());

@@ -400,10 +400,8 @@ Purchase Entry
     if ($(this).is(':checked')) {
       const customers = all_customers_data;
       var supplierSelect = $('#supplier');
-      supplierSelect.empty();
       $('#supplierID').val('');
       $('#supplierCredit').text('');
-      supplierSelect.append('<option value="" selected>Select Customer</option>');
       customers.forEach(function (customer) {
         var option = $('<option></option>')
           .attr('value', customer.id)
