@@ -97,8 +97,8 @@ Purchase Entry
             required>
             <option value="" selected>Select Godown</option>
             {% for godown in godowns %}
-            <option value="{{ godown.id }}" data-code="{{ godown.godownId }}" data-balance="{{ godown.get_balance }}">{{
-              godown.name }}</option>
+            <option value="{{ godown.id }}" data-code="{{ godown.godownId }}" data-balance="{{ godown.get_balance }}">
+              {{ godown.name }}</option>
             {% endfor %}
           </select>
         </div>
