@@ -179,6 +179,7 @@
             <tr>
               <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">Actions</th>
               <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">S.No</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Date</th>
               <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[200px]">Party</th>
               <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[250px]">Description</th>
               <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[200px]">Cash/Bank</th>
@@ -253,12 +254,17 @@
 
       </div>
 
+      <!-- TABLE REDESIGN: Borders + Zebra stripes from ATTACHED IMAGE -->
+      <!-- Borders: 1px solid #B0B0B0 -->
+      <!-- Zebra: odd=white(#FFF), even=light-gray(#E5E7EB) -->
+      <!-- All functionality preserved -->
       <div class="overflow-x-auto mt-5 w-full shadow-sm rounded-md border border-slate-200">
-        <table class="table-auto w-full divide-y divide-slate-200 text-sm" id="viewCashTable">
+        <table class="table-auto w-full text-sm" id="viewCashTable">
           <thead class="bg-blue-200 text-gray-700 uppercase text-xs">
             <tr>
               <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">Actions</th>
               <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">SNo</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Date</th>
               <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[200px]">Party</th>
               <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[250px]">Description</th>
               <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[200px]">Cash/Bank</th>
@@ -266,7 +272,7 @@
               <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Amount</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-100 bg-white" id="cashTableBody">
+          <tbody class="bg-white" id="cashTableBody">
           </tbody>
         </table>
       </div>
@@ -326,15 +332,15 @@
     var rateSum = 0;
     count = 0;
     tableBody.querySelectorAll("tr").forEach(function (row) {
-      const amount = parseFloat(row.cells[6].innerText) || 0;
+      const amount = parseFloat(row.cells[7].innerText) || 0;
       totalAmount += amount;
       count += 1;
     });
     rateAvg = rateSum / count || 0;
     const lastRow = `
-      <tr class="bg-blue-200 font-bold" id="totalRow">
-        <td class="px-4 py-3 text-left" colspan="6">Totals:</td>
-        <td class="px-4 py-3 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
+      <tr class="bg-blue-200 font-bold text-sm" id="totalRow">
+        <td class="px-1.5 py-1.5 text-left border-r border-[#B0B0B0]" colspan="7">Totals:</td>
+        <td class="px-1.5 py-1.5 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
       </tr>`;
     tableBody.insertAdjacentHTML('beforeend', lastRow);
 
@@ -419,28 +425,28 @@
     const cash = cashs[i];
     var tableBody = document.getElementById("cashTableBody");
     var newRow = `
-      <tr class="hover:bg-indigo-50/50 transition-all duration-200">
-        <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap">
+      <tr class="border-b border-[#B0B0B0] odd:bg-white even:bg-[#E5E7EB] hover:bg-[#F0F8FF] transition-all duration-200">
+        <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap border-r border-[#B0B0B0]">
           <button type='button' class="text-blue-500 hover:underline text-xs mr-2" onclick="updateCash(this)">Edit</button>
           <button type='button' class="text-red-500 hover:underline text-xs" onclick="deleteCash(this)">Delete</button>
         </td>
-        <td class="px-1.5 py-1.5 text-center text-sm w-12 sl">${i + 1}</td>
-        
-        <td class="px-1.5 py-1.5 text-left text-sm w-[200px] search-area">
+        <td class="px-1.5 py-1.5 text-center text-sm w-12 sl border-r border-[#B0B0B0]">${i + 1}</td>
+        <td class="px-1.5 py-1.5 text-center text-sm w-24 border-r border-[#B0B0B0]">${cash.date.split('T')[0].split('-').reverse().join('-')}</td>
+        <td class="px-1.5 py-1.5 text-left text-sm w-[200px] search-area border-r border-[#B0B0B0]">
           ${cash.type === 'suppliers' ? cash.supplier : cash.customer}
           <input type="hidden" name="dates" value="${cash.date.split('T')[0]}">
           <input type="hidden" name="suppliers" value="${cash.type === 'suppliers' ? cash.supplier_id : cash.customer_id}">
           <input type="hidden" name="cash_nos" value="${cash.cash_no || ''}">
         </td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-[250px] search-area">
+        <td class="px-1.5 py-1.5 text-left text-sm w-[250px] search-area border-r border-[#B0B0B0]">
           ${cash.description}
           <input type="hidden" name="descriptions" value="${cash.description}">
         </td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-[200px] search-area">
+        <td class="px-1.5 py-1.5 text-left text-sm w-[200px] search-area border-r border-[#B0B0B0]">
           ${cash.cashbank}
           <input type="hidden" name="cashs" value="${cash.cashbank_id}">
         </td>
-        <td class="px-1.5 py-1.5 text-center text-sm w-24 search-area">
+        <td class="px-1.5 py-1.5 text-center text-sm w-24 search-area border-r border-[#B0B0B0]">
           ${cash.transaction}
           <input type="hidden" name="transactions" value="${cash.transaction}">
         </td>
@@ -528,6 +534,7 @@
           <button type='button' class="text-red-500 hover:underline text-xs" onclick="deleteCash(this)">Delete</button>
         </td>
         <td class="px-1.5 py-1.5 text-center text-sm w-12 sl"></td>
+        <td class="px-1.5 py-1.5 text-center text-sm w-24 border-r border-[#B0B0B0]">${date.split('-').reverse().join('-')}</td>
         <td class="px-1.5 py-1.5 text-left text-sm w-[200px] search-area">
           ${supplier}
           <input type="hidden" name="suppliers" value="${supplierSelect}">
@@ -556,28 +563,28 @@
             selectedTR = '';
           } else {
             const newRow = `
-      <tr class="hover:bg-indigo-50/50 transition-all duration-200">
-        <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap">
+      <tr class="border-b border-[#B0B0B0] odd:bg-white even:bg-[#E5E7EB] hover:bg-[#F0F8FF] transition-all duration-200">
+        <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap border-r border-[#B0B0B0]">
           <button type='button' class="text-blue-500 hover:underline text-xs mr-2" onclick="updateCash(this)">Edit</button>
           <button type='button' class="text-red-500 hover:underline text-xs" onclick="deleteCash(this)">Delete</button>
         </td>
-        <td class="px-1.5 py-1.5 text-center text-sm w-12 sl"></td>
-        
-        <td class="px-1.5 py-1.5 text-left text-sm w-[200px] search-area">
+        <td class="px-1.5 py-1.5 text-center text-sm w-12 sl border-r border-[#B0B0B0]"></td>
+        <td class="px-1.5 py-1.5 text-center text-sm w-24 border-r border-[#B0B0B0]">${date.split('-').reverse().join('-')}</td>
+        <td class="px-1.5 py-1.5 text-left text-sm w-[200px] search-area border-r border-[#B0B0B0]">
           ${supplier}
           <input type="hidden" name="suppliers" value="${supplierSelect}">
           <input type="hidden" name="dates" value="${date}">
           <input type="hidden" name="cash_nos" value="${cash_no || ''}">
         </td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-[250px] search-area">
+        <td class="px-1.5 py-1.5 text-left text-sm w-[250px] search-area border-r border-[#B0B0B0]">
           ${description}
           <input type="hidden" name="descriptions" value="${description}">
         </td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-[200px] search-area">
+        <td class="px-1.5 py-1.5 text-left text-sm w-[200px] search-area border-r border-[#B0B0B0]">
           ${cash}
           <input type="hidden" name="cashs" value="${cashSelect}">
         </td>
-         <td class="px-1.5 py-1.5 text-center text-sm w-24 search-area">
+         <td class="px-1.5 py-1.5 text-center text-sm w-24 search-area border-r border-[#B0B0B0]">
           ${transaction}
           <input type="hidden" name="transactions" value="${transaction}">
         </td>
@@ -635,27 +642,27 @@
     $('#viewDiv').addClass('hidden');
     const selectedRow = link.closest('tr');
     if (isUpdate) {
-      document.getElementById("cash_name").value = selectedRow.cells[2].querySelector('input[name="cash_nos"]')?.value || getLastCashNo(); 
-      document.getElementById("date").value = selectedRow.cells[2].querySelector('input[name="dates"]').value;
-      document.getElementById("cash").value = selectedRow.cells[4].querySelector('input[name="cashs"]').value;
-      document.getElementById("amount").value = selectedRow.cells[6].innerText.trim();
-      document.getElementById("description").value = selectedRow.cells[3].innerText.trim();
+      document.getElementById("cash_name").value = selectedRow.cells[3].querySelector('input[name="cash_nos"]')?.value || getLastCashNo(); 
+      document.getElementById("date").value = selectedRow.cells[3].querySelector('input[name="dates"]').value;
+      document.getElementById("cash").value = selectedRow.cells[5].querySelector('input[name="cashs"]').value;
+      document.getElementById("amount").value = selectedRow.cells[7].innerText.trim();
+      document.getElementById("description").value = selectedRow.cells[4].innerText.trim();
       document.getElementById("cashId").value = selectedRow.querySelector('#cash_id').value;
-      document.getElementById("transaction").value = selectedRow.cells[5].innerText.trim();
+      document.getElementById("transaction").value = selectedRow.cells[6].innerText.trim();
       var type = selectedRow.querySelector('#type') ? selectedRow.querySelector('#type').value : 'suppliers';
-      document.getElementById("supplier").value = selectedRow.cells[2].querySelector('input[name="suppliers"]').value;
+      document.getElementById("supplier").value = selectedRow.cells[3].querySelector('input[name="suppliers"]').value;
     } else {
       selectedTR = selectedRow;
       makeRowHighlight(selectedRow);
-      document.getElementById("cash_name").value = selectedRow.cells[2].querySelector('input[name="cash_nos"]')?.value || getLastCashNo();
-      document.getElementById("date").value = selectedRow.cells[2].querySelector('input[name="dates"]').value;
-      document.getElementById("cash").value = selectedRow.cells[4].querySelector('input[name="cashs"]').value;
-      document.getElementById("amount").value = selectedRow.cells[6].innerText.trim();
-      document.getElementById("description").value = selectedRow.cells[3].innerText.trim();
-      document.getElementById("transaction").value = selectedRow.cells[5].innerText.trim();
+      document.getElementById("cash_name").value = selectedRow.cells[3].querySelector('input[name="cash_nos"]')?.value || getLastCashNo();
+      document.getElementById("date").value = selectedRow.cells[3].querySelector('input[name="dates"]').value;
+      document.getElementById("cash").value = selectedRow.cells[5].querySelector('input[name="cashs"]').value;
+      document.getElementById("amount").value = selectedRow.cells[7].innerText.trim();
+      document.getElementById("description").value = selectedRow.cells[4].innerText.trim();
+      document.getElementById("transaction").value = selectedRow.cells[6].innerText.trim();
       document.getElementById("cashId").value = selectedRow.querySelector('#cash_id').value;
       var type = selectedRow.querySelector('#type') ? selectedRow.querySelector('#type').value : 'suppliers';
-      document.getElementById("supplier").value = selectedRow.cells[2].querySelector('input[name="suppliers"]').value;
+      document.getElementById("supplier").value = selectedRow.cells[3].querySelector('input[name="suppliers"]').value;
     }
 
     $('#addToGridText').text('Update Grid');
@@ -737,7 +744,7 @@
     const toPrice = parseFloat($('#to_price').val()) || Infinity;
 
     $('#viewCashTable tbody tr').each(function () {
-      const totalAmount = parseFloat($(this).find('td:nth-child(7)').text()) || 0;
+      const totalAmount = parseFloat($(this).find('td:nth-child(8)').text()) || 0;
       if (totalAmount >= fromPrice && totalAmount <= toPrice) {
         $(this).show();
       } else {
@@ -763,27 +770,28 @@
         rateAvg = data.rate_avg || 0;
         data.cashs.forEach((cash, index) => {
           const newRow = `
-            <tr class="hover:bg-indigo-50/50 transition-all duration-200">
-              <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap">
+            <tr class="border-b border-[#B0B0B0] odd:bg-white even:bg-[#E5E7EB] hover:bg-[#F0F8FF] transition-all duration-200">
+              <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap border-r border-[#B0B0B0]">
                 <a href="#" class="text-blue-500 text-xs hover:underline mr-2" onclick="editViewData(this);">Edit</a>
                 <a href="#" class="text-red-500 text-xs hover:underline" onclick="deleteCash(this)">Delete</a>
               </td>
-              <td class="px-1.5 py-1.5 text-center text-sm w-12 sl">${index + 1}</td>
-              <td class="px-1.5 py-1.5 text-left text-sm w-[200px] search-area">
+              <td class="px-1.5 py-1.5 text-center text-sm w-12 sl border-r border-[#B0B0B0]">${index + 1}</td>
+              <td class="px-1.5 py-1.5 text-center text-sm w-24 border-r border-[#B0B0B0]">${cash.date.split('T')[0].split('-').reverse().join('-')}</td>
+              <td class="px-1.5 py-1.5 text-left text-sm w-[200px] search-area border-r border-[#B0B0B0]">
                 ${cash.type === 'suppliers' ? cash.supplier : cash.customer} 
                 <input type="hidden" name="cash_nos" value="${cash.cash_no || ''}">
                 <input type="hidden" name="dates" value="${cash.date.split('T')[0]}">
                 <input type="hidden" name="suppliers" value="${cash.type === 'suppliers' ? cash.supplier_id : cash.customer_id}">
               </td>
-              <td class="px-1.5 py-1.5 text-left text-sm w-[250px] search-area">
+              <td class="px-1.5 py-1.5 text-left text-sm w-[250px] search-area border-r border-[#B0B0B0]">
                 ${cash.description}
                 <input type="hidden" name="descriptions" value="${cash.description}">
               </td>
-              <td class="px-1.5 py-1.5 text-left text-sm w-[200px] search-area">
+              <td class="px-1.5 py-1.5 text-left text-sm w-[200px] search-area border-r border-[#B0B0B0]">
                 ${cash.cashbank}
                 <input type="hidden" name="cashs" value="${cash.cashbank_id}">
               </td>
-              <td class="px-1.5 py-1.5 text-center text-sm w-24 search-area">
+              <td class="px-1.5 py-1.5 text-center text-sm w-24 search-area border-r border-[#B0B0B0]">
                 ${cash.transaction}
                 <input type="hidden" name="transactions" value="${cash.transaction}">
               </td>
@@ -797,10 +805,9 @@
           tableBody.append(newRow);
         });
         tableBody.append(`
-          <tr class="bg-blue-200 font-bold">
-            <td class="px-4 py-3 text-left" colspan="7">Totals:</td>
-            <td class="px-4 py-3 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
-            <td class="px-4 py-3 text-right"></td>
+          <tr class="bg-blue-200 font-bold text-sm" id="totalRow">
+            <td class="px-1.5 py-1.5 text-left border-r border-[#B0B0B0]" colspan="7">Totals:</td>
+            <td class="px-1.5 py-1.5 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
           </tr>
         `);
 

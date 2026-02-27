@@ -88,8 +88,7 @@
             required>
             <option value="" selected>Select Godown</option>
             {% for godown in godowns %}
-            <option value="{{ godown.id }}" data-code="{{ godown.godownId }}" data-balance="{{ godown.get_balance }}">{{
-              godown.name }}</option>
+            <option value="{{ godown.id }}" data-code="{{ godown.godownId }}" data-balance="{{ godown.get_balance }}">{{ godown.name }}</option>
             {% endfor %}
           </select>
         </div>
@@ -185,25 +184,18 @@
       <div
         class="w-full lg:w-3/4 mr-auto xl:max-w-6xl 2xl:max-w-7xl overflow-x-auto shadow-sm rounded-md border border-slate-200 mt-5 mb-5"
         id="commissionCreateDiv">
-        <table class="table-auto w-full divide-y divide-slate-200 text-sm">
+        <table class="table-auto w-full text-sm">
           <thead class="sticky top-0 bg-blue-200 text-gray-700 z-10">
             <tr>
-              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">
-                Actions</th>
-              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">S.No
-              </th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Godown
-              </th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[250px]">
-                Description</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-40">Expense
-              </th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Qty
-              </th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-28">Rate
-              </th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Amount
-              </th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">Actions</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">S.No</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Date</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Godown</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[250px]">Description</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-40">Expense</th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Qty</th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-28">Rate</th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Amount</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 bg-white" id="commissionTableBody">
@@ -261,21 +253,22 @@
           <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-2 pointer-events-none"></i>
         </div>
       </div>
-      <div class="overflow-x-auto mt-5 w-full">
-        <table class="min-w-full rounded-t-lg overflow-hidden" id="viewCommissionTable">
+      <div class="overflow-x-auto mt-5 w-full shadow-sm rounded-md border border-slate-200">
+        <table class="table-auto w-full text-sm" id="viewCommissionTable">
           <thead class="bg-blue-200 text-gray-700 uppercase text-xs">
             <tr>
-              <th class="px-4 py-3 text-left font-medium w-1">Actions</th>
-              <th class="px-4 py-3 text-left font-medium w-1">SNo</th>
-              <th class="px-4 py-3 text-left font-medium">Godown</th>
-              <th class="px-4 py-3 text-left font-medium">Description</th>
-              <th class="px-4 py-3 text-left font-medium">Expense</th>
-              <th class="px-4 py-3 text-right font-medium">Qty</th>
-              <th class="px-4 py-3 text-right font-medium">Rate</th>
-              <th class="px-4 py-3 text-right font-medium">Amount</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">Actions</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">SNo</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Date</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Godown</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[250px]">Description</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-40">Expense</th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Qty</th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-28">Rate</th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Amount</th>
             </tr>
           </thead>
-          <tbody class="bg-gray-100" id="commissionTableBody">
+          <tbody class="bg-white" id="commissionTableBody">
           </tbody>
         </table>
       </div>
@@ -321,20 +314,21 @@
     var rateSum = 0;
     count = 0;
     tableBody.querySelectorAll("tr").forEach(function (row) {
-      const qty = parseFloat(row.cells[5].innerText) || 0;
-      const amount = parseFloat(row.cells[6].innerText) || 0;
-      const total = parseFloat(row.cells[7].innerText) || 0;
+      if (row.id === 'totalRow') return;
+      const qty = parseFloat(row.cells[6].innerText) || 0;
+      const amount = parseFloat(row.cells[7].innerText) || 0;
+      const total = parseFloat(row.cells[8].innerText) || 0;
       totalQty += qty;
       rateSum += amount;
       totalAmount += total;
       count += 1;
     });
-    rateAvg = rateSum / count || 0;
+    rateAvg = count > 0 ? (rateSum / count) : 0;
     const lastRow = `
       <tr class="bg-blue-200 font-bold text-sm" id="totalRow">
-        <td class="px-1.5 py-1.5 text-left" colspan="5">Totals:</td>
-        <td class="px-1.5 py-1.5 text-right">${parseFloat(totalQty).toFixed(2)}</td>
-        <td class="px-1.5 py-1.5 text-right">${parseFloat(rateAvg).toFixed(2)}</td>
+        <td class="px-1.5 py-1.5 text-left border-r border-[#B0B0B0]" colspan="6">Totals:</td>
+        <td class="px-1.5 py-1.5 text-right border-r border-[#B0B0B0]">${parseFloat(totalQty).toFixed(2)}</td>
+        <td class="px-1.5 py-1.5 text-right border-r border-[#B0B0B0]">${parseFloat(rateAvg).toFixed(2)}</td>
         <td class="px-1.5 py-1.5 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
       </tr>`;
     tableBody.insertAdjacentHTML('beforeend', lastRow);
@@ -409,38 +403,40 @@
     const commission = commissions[i];
     var tableBody = document.getElementById("commissionTableBody");
     var newRow = `
-      <tr class="hover:bg-indigo-50/50 transition-all duration-200">
-        <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap">
-          <button type='button' class="text-blue-500 text-xs hover:underline mr-2" onclick="updateCommission(this)">Edit</button>
-          <button type='button' class="text-red-500 text-xs hover:underline" onclick="deleteCommission(this)">Delete</button>
+      <tr class="border-b border-[#B0B0B0] odd:bg-white even:bg-[#E5E7EB] hover:bg-[#F0F8FF] transition-all duration-200">
+        <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap border-r border-[#B0B0B0]">
+          <button type='button' class="text-blue-500 hover:underline text-xs mr-2" onclick="updateCommission(this)">Edit</button>
+          <button type='button' class="text-red-500 hover:underline text-xs" onclick="deleteCommission(this)">Delete</button>
         </td>
-        <td class="px-1.5 py-1.5 text-center text-sm w-12 sl">${i + 1}</td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-32 search-area">
+        <td class="px-1.5 py-1.5 text-center text-sm w-12 sl border-r border-[#B0B0B0]">${i + 1}</td>
+        <td class="px-1.5 py-1.5 text-center text-sm w-24 border-r border-[#B0B0B0]">${commission.date.split('T')[0].split('-').reverse().join('-')}</td>
+        <td class="px-1.5 py-1.5 text-left text-sm w-32 search-area border-r border-[#B0B0B0]">
           ${commission.godown}
           <input type="hidden" name="godowns" value="${commission.godown_id}">
           <input type="hidden" name="dates" value="${commission.date.split('T')[0]}">
+          <input type="hidden" name="commission_nos" value="${commission.commission_no}">
         </td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-[250px] search-area">
+        <td class="px-1.5 py-1.5 text-left text-sm w-[250px] search-area border-r border-[#B0B0B0]">
           ${commission.description}
           <input type="hidden" name="descriptions" value="${commission.description}">
         </td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-40 search-area">
+        <td class="px-1.5 py-1.5 text-left text-sm w-40 search-area border-r border-[#B0B0B0]">
           ${commission.expense}
           <input type="hidden" name="expenses" value="${commission.expense_id}">
         </td>
-        <td class="px-1.5 py-1.5 text-right text-sm w-24 search-area">
+        <td class="px-1.5 py-1.5 text-right text-sm w-24 search-area border-r border-[#B0B0B0]">
           ${parseFloat(commission.qty).toFixed(2)}
           <input type="hidden" name="qtys" value="${commission.qty}">
         </td>
-        <td class="px-1.5 py-1.5 text-right text-sm w-28 search-area">
+        <td class="px-1.5 py-1.5 text-right text-sm w-28 search-area border-r border-[#B0B0B0]">
           ${parseFloat(commission.amount).toFixed(2)}
           <input type="hidden" name="amounts" value="${commission.amount}">   
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
           ${parseFloat(commission.total_amount).toFixed(2)}
           <input type="hidden" name="total_amounts" value="${parseFloat(commission.total_amount).toFixed(2)}">
+          <input type="hidden" name="commission_ids" id="commission_id" value="${commission.id}"> 
         </td>
-        <input type="hidden" name="commission_ids" id="commission_id" value="${commission.id}"> 
       </tr>`;
     tableBody.insertAdjacentHTML('beforeend', newRow);
     $('#amount, #qty, #description, #total_amount').val('');
@@ -521,38 +517,40 @@
             $(selectedTR).removeClass('bg-blue-300');
             $(selectedTR).empty();
             $(selectedTR).append(`
-          <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap">
-          <button type='button' class="text-blue-500 text-xs hover:underline mr-2" onclick="updateCommission(this)">Edit</button>
-          <button type='button' class="text-red-500 text-xs hover:underline" onclick="deleteCommission(this)">Delete</button>
+          <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap border-r border-[#B0B0B0]">
+          <button type='button' class="text-blue-500 hover:underline text-xs mr-2" onclick="updateCommission(this)">Edit</button>
+          <button type='button' class="text-red-500 hover:underline text-xs" onclick="deleteCommission(this)">Delete</button>
         </td>
-        <td class="px-1.5 py-1.5 text-center text-sm w-12 sl"></td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-32 search-area">
+        <td class="px-1.5 py-1.5 text-center text-sm w-12 sl border-r border-[#B0B0B0]"></td>
+        <td class="px-1.5 py-1.5 text-center text-sm w-24 border-r border-[#B0B0B0]">${date.split('-').reverse().join('-')}</td>
+        <td class="px-1.5 py-1.5 text-left text-sm w-32 search-area border-r border-[#B0B0B0]">
           ${godown}
           <input type="hidden" name="godowns" value="${godownSelect}">
           <input type="hidden" name="dates" value="${date}">
+          <input type="hidden" name="commission_nos" value="${commission_no}">
         </td>
-         <td class="px-1.5 py-1.5 text-left text-sm w-[250px] search-area">
+         <td class="px-1.5 py-1.5 text-left text-sm w-[250px] search-area border-r border-[#B0B0B0]">
           ${description}
           <input type="hidden" name="descriptions" value="${description}">
         </td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-40 search-area">
+        <td class="px-1.5 py-1.5 text-left text-sm w-40 search-area border-r border-[#B0B0B0]">
           ${expense}
           <input type="hidden" name="expenses" value="${expenseSelect}">
         </td>
-        <td class="px-1.5 py-1.5 text-right text-sm w-24 search-area">
+        <td class="px-1.5 py-1.5 text-right text-sm w-24 search-area border-r border-[#B0B0B0]">
           ${parseFloat(qty).toFixed(2)}
           <input type="hidden" name="qtys" value="${qty}">
         </td>
-        <td class="px-1.5 py-1.5 text-right text-sm w-28 search-area">
+        <td class="px-1.5 py-1.5 text-right text-sm w-28 search-area border-r border-[#B0B0B0]">
           ${parseFloat(amount).toFixed(2)}
           <input type="hidden" name="amounts" value="${amount}">
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
           ${parseFloat(total_amount).toFixed(2)}
           <input type="hidden" name="total_amounts" value="${total_amount.toFixed(2)}">
+          <input type="hidden" name="commission_ids" id="commission_id" value="${commission_id}"> 
+          <input type="hidden" name="type" id="type" value="${type_value}"> 
         </td>
-        <input type="hidden" name="commission_ids" id="commission_id" value="${commission_id}"> 
-        <input type="hidden" name="type" id="type" value="${type_value}"> 
         `);
             selectedTR = '';
           } else {
@@ -639,40 +637,19 @@
     $('#viewDiv').addClass('hidden');
     const selectedRow = link.closest('tr');
     selectedTR = selectedRow;
-    if (isUpdate) {
-      document.getElementById("commission_name").value = selectedRow.cells[2].innerText.trim();
-      document.getElementById("date").value = selectedRow.cells[3].innerText.trim();
-      document.getElementById("godown").value = selectedRow.cells[5].querySelector('input').value;
-      document.getElementById("amount").value = selectedRow.cells[7].innerText.trim();
-      document.getElementById("qty").value = selectedRow.cells[6].innerText.trim();
-      document.getElementById("total_amount").value = selectedRow.cells[8].innerText.trim();
-      document.getElementById("description").value = selectedRow.cells[9].innerText.trim();
-      document.getElementById("commissionId").value = selectedRow.querySelector('#commission_id').value;
+    
+    document.getElementById("commission_name").value = selectedRow.querySelector('input[name="commission_nos"]')?.value || "";
+    document.getElementById("date").value = selectedRow.querySelector('input[name="dates"]')?.value || "";
+    document.getElementById("godown").value = selectedRow.querySelector('input[name="godowns"]')?.value || "";
+    document.getElementById("expense").value = selectedRow.querySelector('input[name="expenses"]')?.value || "";
+    document.getElementById("qty").value = selectedRow.querySelector('input[name="qtys"]')?.value || "";
+    document.getElementById("amount").value = selectedRow.querySelector('input[name="amounts"]')?.value || "";
+    document.getElementById("total_amount").value = selectedRow.querySelector('input[name="total_amounts"]')?.value || "";
+    document.getElementById("description").value = selectedRow.querySelector('input[name="descriptions"]')?.value || "";
+    document.getElementById("commissionId").value = selectedRow.querySelector('#commission_id')?.value || "";
 
-      if (type === 'customers') {
-        $('#allExpenses').prop('checked', true).change();
-      } else {
-        $('#allExpenses').prop('checked', false).change();
-      }
-      document.getElementById("expense").value = selectedRow.cells[4].querySelector('input').value;
-    } else {
+    if (!isUpdate) {
       makeRowHighlight(selectedRow);
-      document.getElementById("commission_name").value = selectedRow.cells[1].innerText.trim();
-      document.getElementById("date").value = selectedRow.cells[2].innerText.trim();
-      document.getElementById("godown").value = selectedRow.cells[4].querySelector('input').value;
-      document.getElementById("amount").value = selectedRow.cells[6].innerText.trim();
-      document.getElementById("qty").value = selectedRow.cells[5].innerText.trim();
-      document.getElementById("total_amount").value = selectedRow.cells[7].innerText.trim();
-      document.getElementById("description").value = selectedRow.cells[8].innerText.trim();
-      document.getElementById("commissionId").value = selectedRow.querySelector('#commission_id').value;
-
-      if (type === 'customers') {
-        $('#allExpenses').prop('checked', true).change();
-      } else {
-        $('#allExpenses').prop('checked', false).change();
-      }
-
-      document.getElementById("expense").value = selectedRow.cells[3].querySelector('input').value;
     }
 
     // selectedRow.remove();
@@ -780,43 +757,44 @@
         rateAvg = data.rate_avg || 0;
         data.commissions.forEach((commission, index) => {
           const newRow = `
-            <tr class="hover:bg-indigo-50/50 transition-all duration-200">
-              <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap">
+            <tr class="border-b border-[#B0B0B0] odd:bg-white even:bg-[#E5E7EB] hover:bg-[#F0F8FF] transition-all duration-200">
+              <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap border-r border-[#B0B0B0]">
                 <a href="#" class="text-blue-500 text-xs hover:underline mr-2" onclick="updateViewData(this)">Edit</a>
                 <a href="#" class="text-red-500 text-xs hover:underline" onclick="deleteCommission(this)">Delete</a>
               </td>
-              <td class="px-1.5 py-1.5 text-center text-sm w-12 sl">${index + 1}</td>
-              <td class="px-1.5 py-1.5 text-left text-sm w-32 search-area">${commission.godown}
+              <td class="px-1.5 py-1.5 text-center text-sm w-12 sl border-r border-[#B0B0B0]">${index + 1}</td>
+              <td class="px-1.5 py-1.5 text-center text-sm w-24 border-r border-[#B0B0B0]">${commission.date.split('T')[0].split('-').reverse().join('-')}</td>
+              <td class="px-1.5 py-1.5 text-left text-sm w-32 search-area border-r border-[#B0B0B0]">${commission.godown}
                 <input type="hidden" name="godowns" value="${commission.godown_id}">
                 <input type="hidden" name="commission_nos" value="${commission.commission_no}">
                 <input type="hidden" name="dates" value="${commission.date.split('T')[0]}">
                 </td>
-              <td class="px-1.5 py-1.5 text-left text-sm w-[250px] search-area">${commission.description}
+              <td class="px-1.5 py-1.5 text-left text-sm w-[250px] search-area border-r border-[#B0B0B0]">${commission.description}
                 <input type="hidden" name="descriptions" value="${commission.description}">
                 </td>
-              <td class="px-1.5 py-1.5 text-left text-sm w-40 search-area">
+              <td class="px-1.5 py-1.5 text-left text-sm w-40 search-area border-r border-[#B0B0B0]">
         ${commission.expense} 
-        <input type="hidden" name="expenses" value="${commission.id}">
+        <input type="hidden" name="expenses" value="${commission.expense_id || commission.expense}">
                 </td>
-              <td class="px-1.5 py-1.5 text-right text-sm w-24 font-bold">${parseFloat(commission.qty).toFixed(2)}
+              <td class="px-1.5 py-1.5 text-right text-sm w-24 font-bold border-r border-[#B0B0B0]">${parseFloat(commission.qty).toFixed(2)}
                 <input type="hidden" name="qtys" value="${commission.qty}">
                 </td>
-              <td class="px-1.5 py-1.5 text-right text-sm w-28 font-bold">${parseFloat(commission.amount).toFixed(2)}
+              <td class="px-1.5 py-1.5 text-right text-sm w-28 font-bold border-r border-[#B0B0B0]">${parseFloat(commission.amount).toFixed(2)}
                 <input type="hidden" name="amounts" value="${commission.amount}">
                 </td>
               <td class="px-1.5 py-1.5 text-right text-sm w-32 font-bold">${parseFloat(commission.total_amount).toFixed(2)}
                 <input type="hidden" name="total_amounts" value="${parseFloat(commission.total_amount).toFixed(2)}">
+                <input type="hidden" name="commission_ids" id="commission_id" value="${commission.id}"> 
+                <input type="hidden" name="type" id="type" value="${commission.type}">
                 </td>
-              <input type="hidden" name="commission_ids" id="commission_id" value="${commission.id}"> 
-              <input type="hidden" name="type" id="type" value="${commission.type}">
             </tr>`;
           tableBody.append(newRow);
         });
         tableBody.append(`
-          <tr class="bg-blue-200 font-bold text-sm">
-            <td class="px-1.5 py-1.5 text-left" colspan="5">Totals:</td>
-            <td class="px-1.5 py-1.5 text-right">${parseFloat(totalQty).toFixed(2)}</td>
-            <td class="px-1.5 py-1.5 text-right">${parseFloat(rateAvg).toFixed(2)}</td>
+          <tr class="bg-blue-200 font-bold text-sm" id="totalRow">
+            <td class="px-1.5 py-1.5 text-left border-r border-[#B0B0B0]" colspan="6">Totals:</td>
+            <td class="px-1.5 py-1.5 text-right border-r border-[#B0B0B0]">${parseFloat(totalQty).toFixed(2)}</td>
+            <td class="px-1.5 py-1.5 text-right border-r border-[#B0B0B0]">${parseFloat(rateAvg).toFixed(2)}</td>
             <td class="px-1.5 py-1.5 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
           </tr>
         `);
