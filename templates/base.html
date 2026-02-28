@@ -302,11 +302,15 @@
                     <a href="{% url 'salesreport' %}" class="nav-link" id="salesreportLink">
                         <span>Sales Report</span>
                     </a>
-                    <a href="{% url 'transaction_report' %}" class="nav-link" id="transactionReportLink">Entry View</a>
-                    <a href="{% url 'receivablereport' %}" class="nav-link" id="receivableReportLink">Receivables</a>
-                    <a href="{% url 'payablereport' %}" class="nav-link" id="payableReportLink">Payable</a>
                     <a href="{% url 'collectionreport' %}" class="nav-link" id="collectionReportLink">Collection
                         Report</a>
+                    <a href="{% url 'payablereport' %}" class="nav-link" id="payableReportLink">Payable</a>
+                    <a href="{% url 'receivablereport' %}" class="nav-link" id="receivableReportLink">Receivables</a>
+                    <a href="{% url 'outstanding_customer' %}" class="nav-link" id="outstandingCustomerLink">Outstanding
+                        Customer</a>
+                    <a href="{% url 'outstanding_supplier' %}" class="nav-link" id="outstandingSupplierLink">Outstanding
+                        Supplier</a>
+                    <a href="{% url 'transaction_report' %}" class="nav-link" id="transactionReportLink">Entry View</a>
                 </div>
             </div>
             <div class="space-y-0">
@@ -314,10 +318,10 @@
                     <i data-lucide="clipboard-list" class="w-3.5 h-3.5 "></i><span class="">Online Currency</span>
                 </div>
                 <div class="pl-6 space-y-0 text-gray-500 ">
-                    <a href="{% url 'outstanding_customer' %}" class="nav-link" id="outstandingCustomerLink">Outstanding
+                    <!-- <a href="{% url 'outstanding_customer' %}" class="nav-link" id="outstandingCustomerLink">Outstanding
                         Customer</a>
                     <a href="{% url 'outstanding_supplier' %}" class="nav-link" id="outstandingSupplierLink">Outstanding
-                        Supplier</a>
+                        Supplier</a> -->
                 </div>
             </div>
             <div class="space-y-0">
@@ -357,11 +361,11 @@
                     <a href="{% url 'address_view' %}" class="nav-link" id="addressViewLink">
                         <span>Address View</span>
                     </a>
-                    <a href="{% url 'recycle_bin' %}" class="nav-link" id="recycleBinLink">
-                        <span>Recycle Bin</span>
-                    </a>
                     <a href="{% url 'changepass' %}" class="nav-link" id="">
                         <span>Change Password</span>
+                    </a>
+                    <a href="{% url 'recycle_bin' %}" class="nav-link" id="recycleBinLink">
+                        <span>Recycle Bin</span>
                     </a>
                     <a href="#" onclick="openLogoutModal()" class="nav-link">
                         <span>Logout</span>

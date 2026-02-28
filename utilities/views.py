@@ -47,13 +47,14 @@ class AddressView(View):
                         is_active=True,
                         date__range=[date_from, date_to],
                         sender_supplier_id=party_id
-                    )
-                    for n in nsds:
+                    ).order_by('date')
+                    for i, n in enumerate(nsds, start=1):
                         transactions.append({
-                            'slno': n.nsd_no, 
+                            'slno': i, 
                             'description': n.description,
                             'qty': n.qty,
-                            'date': n.date
+                            'date': n.date,
+                            'ref_no': n.nsd_no
                         })
                 else:
                     sales = Sales.objects.filter(
@@ -61,13 +62,14 @@ class AddressView(View):
                         is_active=True,
                         date__range=[date_from, date_to],
                          godown_id=party_id
-                    )
-                    for s in sales:
+                    ).order_by('date')
+                    for i, s in enumerate(sales, start=1):
                         transactions.append({
-                            'slno': s.sale_no,
+                            'slno': i,
                             'description': s.description,
                             'qty': s.qty,
-                            'date': s.date
+                            'date': s.date,
+                            'ref_no': s.sale_no
                         })
                         
             except ValueError:
