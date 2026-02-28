@@ -1,5 +1,6 @@
 import datetime
 import json
+from django.utils.dateparse import parse_date
 from django.shortcuts import render, redirect, get_object_or_404
 from core.models import StockTransfers, Godowns
 from django.views import View
@@ -12,12 +13,16 @@ class StockTransferView(View):
         from_date = request.GET.get('from_date')
         to_date = request.GET.get('to_date')
 
-        transfers = StockTransfers.objects.filter(is_active=True, client=client).order_by('-id')
-
-        if from_date:
-            transfers = transfers.filter(date__gte=from_date)
-        if to_date:
-            transfers = transfers.filter(date__lte=to_date)
+        if from_date and to_date:
+            transfers = StockTransfers.objects.filter(
+                is_active=True, 
+                hold=False, 
+                client=client,
+                date__gte=from_date,
+                date__lte=to_date
+            ).order_by('-id')
+        else:
+            transfers = []
 
         transferData = []
         for transfer in transfers:
@@ -68,7 +73,6 @@ class StockTransferAddView(View):
         request_transfer_no = request.POST.get('transfer_no')
 
         transfer_ids = request.POST.getlist('transfer_ids')
-        
         if dates:
             for i in range(len(dates)):
                 if not (godown_from_ids[i] and godown_to_ids[i] and qtys[i]):
@@ -210,3 +214,30 @@ def delete_transfer_api(request):
     except Exception as e:
         print(f"Error deleting transfer: {e}")
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+def transfers_by_date(request):
+    client = getClient(request.user)
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
+    transfersData = []
+
+    if from_date and to_date:
+        transfers = StockTransfers.objects.filter(
+            is_active=True,
+            hold=False,
+            client=client,
+            date__range=[parse_date(from_date), parse_date(to_date)]
+        ).order_by('-id')
+
+        for transfer in transfers:
+            transfersData.append({
+                'id': transfer.id,
+                'transfer_no': transfer.transfer_no,
+                'godown_from': transfer.transfer_from.name if transfer.transfer_from else '',
+                'godown_to': transfer.transfer_to.name if transfer.transfer_to else '',
+                'date': str(transfer.date),
+                'qty': str(transfer.qty),
+                'description': transfer.description if transfer.description else '',
+            })
+            
+    return JsonResponse({'transfers': transfersData})

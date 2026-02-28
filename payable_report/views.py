@@ -25,7 +25,6 @@ class PayableReportView(View):
 
     def process_report(self, request):
         client = getClient(request.user)
-        date_from_str = request.POST.get("dateFrom")
         date_to_str = request.POST.get("dateTo")
         
         date_limit = None
@@ -36,11 +35,10 @@ class PayableReportView(View):
                 pass
 
         # Optimization: If no date filter is applied, do not show any data initially
-        if not date_from_str and not date_to_str:
+        if not date_to_str:
              return render(request, 'payable_report/payable_report.html', {
                 'payables': [],
                 'total_amount': Decimal('0.0000'),
-                'date_from': '',
                 'date_to': '',
             })
         
@@ -123,7 +121,6 @@ class PayableReportView(View):
             'payables': page_obj.object_list,
             'page_obj': page_obj,
             'total_amount': total_amount,
-            'date_from': date_from_str,
             'date_to': date_to_str,
             'min_amount': min_amount_str or ''
         }

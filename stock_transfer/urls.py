@@ -7,4 +7,5 @@ urlpatterns = [
     path('api/transfer-no/', views.get_transfer_no_api, name='api-transfer-no'),
     path('api/hold_transfer/', views.StockTransferHoldView.as_view(), name='api-hold-transfer'),
     path('api/delete_transfer/', views.delete_transfer_api, name='api-delete-transfer'),
+    path('api/transfers_by_date/', views.transfers_by_date, name='api-transfers-by-date'),
 ]
