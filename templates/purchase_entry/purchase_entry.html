@@ -271,22 +271,26 @@ Purchase Entry
         <div class="relative w-full md:w-1/4">
           <input type="text" id="searchInput" placeholder="Search purchase..."
             class="w-full bg-white searchInput rounded-md px-3 py-1.5 pl-9 border focus:border-transparent ring-2 ring-blue-200 focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none" />
-            <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-2 pointer-events-none"></i>
+          <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-2 pointer-events-none"></i>
         </div>
       </div>
       <div class="overflow-x-auto mt-5 w-full shadow-sm rounded-md border border-slate-200">
         <table class="table-auto w-full text-sm" id="viewPurchaseTable">
           <thead class="bg-blue-200 text-gray-700 uppercase text-xs">
             <tr>
-              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">Actions</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">
+                Actions</th>
               <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Date</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Supplier Name</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Description</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Supplier
+                Name</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Description
+              </th>
               <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Godown</th>
               <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider">Qty</th>
               <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider">Rate</th>
               <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider">Amount</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Purchase No</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Purchase No
+              </th>
             </tr>
           </thead>
           <tbody class="bg-white" id="purchaseTableBody">
@@ -397,35 +401,33 @@ Purchase Entry
       `);
   });
   $('#allSuppliers').on('change', function () {
+    var select = $('#supplier');
+    select.empty();
+    select.append('<option value="" selected>Select Supplier</option>');
+    $('#supplierID').val('');
+    $('#supplierCredit').text('');
+
     if ($(this).is(':checked')) {
       const customers = all_customers_data;
-      var supplierSelect = $('#supplier');
-      $('#supplierID').val('');
-      $('#supplierCredit').text('');
-      customers.forEach(function (customer) {
-        var option = $('<option></option>')
-          .attr('value', customer.id)
-          .attr('data-code', customer.customerId)
-          .attr('data-balance', customer.balance)
+      customers.forEach(function (c) {
+        var opt = $('<option></option>')
+          .attr('value', c.id)
+          .attr('data-code', c.customerId)
+          .attr('data-balance', c.balance)
           .attr('data-type', 'customers')
-          .text(customer.name);
-        supplierSelect.append(option);
+          .text(c.name);
+        select.append(opt);
       });
     } else {
       const suppliers = all_suppliers_data;
-      var supplierSelect = $('#supplier');
-      supplierSelect.empty();
-      $('#supplierID').val('');
-      $('#supplierCredit').text('');
-      supplierSelect.append('<option value="" selected>Select Supplier</option>');
-      suppliers.forEach(function (supplier) {
-        var option = $('<option></option>')
-          .attr('value', supplier.id)
-          .attr('data-code', supplier.supplierId)
-          .attr('data-balance', supplier.balance)
+      suppliers.forEach(function (s) {
+        var opt = $('<option></option>')
+          .attr('value', s.id)
+          .attr('data-code', s.supplierId)
+          .attr('data-balance', s.balance)
           .attr('data-type', 'suppliers')
-          .text(supplier.name);
-        supplierSelect.append(option);
+          .text(s.name);
+        select.append(opt);
       });
     }
   });
@@ -466,9 +468,13 @@ Purchase Entry
     var tableBody = document.getElementById("purchaseTableBody");
     var newRow = `
       <tr class="hover:bg-indigo-50/50 transition-all duration-200">
-        <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap">
-          <button type='button' class="text-blue-500 text-xs hover:underline mr-2" onclick="updatePurchase(this)">Edit</button>
-          <button type='button' class="text-red-500 text-xs hover:underline" onclick="deletePurchase(this)">Delete</button>
+        <td class="px-1.5 py-1.5 text-center w-24 whitespace-nowrap">
+          <button type='button' class="text-blue-500 hover:text-blue-700 p-1" onclick="updatePurchase(this)" title="Edit">
+            <i data-lucide="edit-3" class="w-4 h-4 inline"></i>
+          </button>
+          <button type='button' class="text-red-500 hover:text-red-700 p-1" onclick="deletePurchase(this)" title="Delete">
+            <i data-lucide="trash-2" class="w-4 h-4 inline"></i>
+          </button>
         </td>
         <td class="px-1.5 py-1.5 text-center text-sm w-12 sl">${i + 1}</td>
         <td class="px-1.5 py-1.5 text-left text-sm w-32 search-area">
@@ -578,9 +584,13 @@ Purchase Entry
             $(selectedTR).empty();
             $(selectedTR).removeClass('bg-blue-300');
             $(selectedTR).append(`
-             <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap">
-          <button type='button' class="text-blue-500 text-xs hover:underline mr-2" onclick="updatePurchase(this)">Edit</button>
-          <button type='button' class="text-red-500 text-xs hover:underline" onclick="deletePurchase(this)">Delete</button>
+             <td class="px-1.5 py-1.5 text-center w-24 whitespace-nowrap">
+          <button type='button' class="text-blue-500 hover:text-blue-700 p-1" onclick="updatePurchase(this)" title="Edit">
+            <i data-lucide="edit-3" class="w-4 h-4 inline"></i>
+          </button>
+          <button type='button' class="text-red-500 hover:text-red-700 p-1" onclick="deletePurchase(this)" title="Delete">
+            <i data-lucide="trash-2" class="w-4 h-4 inline"></i>
+          </button>
         </td>
         <td class="px-1.5 py-1.5 text-center text-sm w-12 sl"></td>
         <td class="px-1.5 py-1.5 text-left text-sm w-32 search-area">
@@ -615,9 +625,13 @@ Purchase Entry
           } else {
             const newRow = `
       <tr class="hover:bg-indigo-50/50 transition-all duration-200">
-        <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap">
-          <button type='button' class="text-blue-500 text-xs hover:underline mr-2" onclick="updatePurchase(this)">Edit</button>
-          <button type='button' class="text-red-500 text-xs hover:underline" onclick="deletePurchase(this)">Delete</button>
+        <td class="px-1.5 py-1.5 text-center w-24 whitespace-nowrap">
+          <button type='button' class="text-blue-500 hover:text-blue-700 p-1" onclick="updatePurchase(this)" title="Edit">
+            <i data-lucide="edit-3" class="w-4 h-4 inline"></i>
+          </button>
+          <button type='button' class="text-red-500 hover:text-red-700 p-1" onclick="deletePurchase(this)" title="Delete">
+            <i data-lucide="trash-2" class="w-4 h-4 inline"></i>
+          </button>
         </td>
         <td class="px-1.5 py-1.5 text-center text-sm w-12 sl"></td>
         <td class="px-1.5 py-1.5 text-left text-sm w-32 search-area">
@@ -650,6 +664,7 @@ Purchase Entry
       </tr>`;
 
             tableBody.insertAdjacentHTML('beforeend', newRow);
+            lucide.createIcons();
 
           }
           $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-green-500 text-white');
@@ -691,59 +706,55 @@ Purchase Entry
   }
 
   function updatePurchase(link) {
+    // ROBUST_FETCH: Updated to use named input selectors for Purchase
     $('#viewPurchaseDiv').addClass('hidden');
-    // $('#viewPurchaseTable tbody').empty();
     $('#createView').removeClass('hidden');
     $('#viewDiv').addClass('hidden');
+
     const selectedRow = link.closest('tr');
+
+    // Extract values using name attributes for robustness
+    const inputs = {
+      date: selectedRow.querySelector('input[name="dates"]')?.value || '',
+      godown: selectedRow.querySelector('input[name="godowns"]')?.value || '',
+      amount: selectedRow.querySelector('input[name="amounts"]')?.value || '',
+      qty: selectedRow.querySelector('input[name="qtys"]')?.value || '',
+      total_amount: selectedRow.querySelector('input[name="total_amounts"]')?.value || '',
+      description: selectedRow.querySelector('input[name="descriptions"]')?.value || '',
+      purchaseId: selectedRow.querySelector('input[name="purchase_ids"]')?.value || selectedRow.querySelector('#purchase_id')?.value || '',
+      type: selectedRow.querySelector('input[name="type"]')?.value || selectedRow.querySelector('#type')?.value || 'suppliers',
+      supplier: selectedRow.querySelector('input[name="suppliers"]')?.value || '',
+      purchase_nos: selectedRow.querySelector('input[name="purchase_nos"]')?.value || ''
+    };
+
     if (isUpdate) {
-
-      document.getElementById("purchase_name").value = selectedRow.cells[4].querySelector('input[name="purchase_nos"]').value; // Fallback or irrelevant in view-edit
-      document.getElementById("date").value = selectedRow.cells[1].querySelector('input[name="dates"]').value;
-      document.getElementById("godown").value = selectedRow.cells[4].querySelector('input[name="godowns"]').value;
-      document.getElementById("amount").value = selectedRow.cells[6].innerText.trim();
-      document.getElementById("qty").value = selectedRow.cells[5].innerText.trim();
-      document.getElementById("total_amount").value = selectedRow.cells[7].innerText.trim();
-      document.getElementById("description").value = selectedRow.cells[3].innerText.trim();
-      document.getElementById("purchaseId").value = selectedRow.querySelector('#purchase_id').value;
-      var type = selectedRow.querySelector('#type') ? selectedRow.querySelector('#type').value : 'suppliers';
-
-      if (type === 'customers') {
-        $('#allSuppliers').prop('checked', true).change();
-      } else {
-        $('#allSuppliers').prop('checked', false).change();
-      }
-      document.getElementById("supplier").value = selectedRow.cells[2].querySelector('input[name="suppliers"]').value;
+      document.getElementById("purchase_name").value = inputs.purchase_nos;
     } else {
       selectedTR = selectedRow;
       makeRowHighlight(selectedRow);
-      // document.getElementById("purchase_name").value is handled by getLastPurchaseNo();
-      document.getElementById("date").value = selectedRow.cells[2].querySelector('input[name="dates"]').value;
-      document.getElementById("godown").value = selectedRow.cells[2].querySelector('input[name="godowns"]').value;
-      document.getElementById("amount").value = selectedRow.cells[6].innerText.trim();
-      document.getElementById("qty").value = selectedRow.cells[5].innerText.trim();
-      document.getElementById("total_amount").value = selectedRow.cells[7].innerText.trim();
-      document.getElementById("description").value = selectedRow.cells[3].innerText.trim();
-      document.getElementById("purchaseId").value = selectedRow.querySelector('#purchase_id').value;
-      var type = selectedRow.querySelector('#type') ? selectedRow.querySelector('#type').value : 'suppliers';
-
-      if (type === 'customers') {
-        $('#allSuppliers').prop('checked', true).change();
-      } else {
-        $('#allSuppliers').prop('checked', false).change();
-      }
-      document.getElementById("supplier").value = selectedRow.cells[4].querySelector('input[name="suppliers"]').value;
     }
 
-    // selectedRow.remove();
+    document.getElementById("date").value = inputs.date;
+    document.getElementById("godown").value = inputs.godown;
+    document.getElementById("amount").value = inputs.amount;
+    document.getElementById("qty").value = inputs.qty;
+    document.getElementById("total_amount").value = inputs.total_amount;
+    document.getElementById("description").value = inputs.description;
+    document.getElementById("purchaseId").value = inputs.purchaseId;
+
+    if (inputs.type === 'customers') {
+      $('#allSuppliers').prop('checked', true).change();
+    } else {
+      $('#allSuppliers').prop('checked', false).change();
+    }
+    document.getElementById("supplier").value = inputs.supplier;
+
     $('#addToGridText').text('Update Grid');
     $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-blue-500 text-white');
 
     $('#supplier, #godown').change()
     resetSLNo()
     addLastRow()
-
-
   }
 
 
@@ -842,9 +853,13 @@ Purchase Entry
         data.purchases.forEach((purchase, index) => {
           const newRow = `
             <tr class="border-b border-[#B0B0B0] odd:bg-white even:bg-[#E5E7EB] hover:bg-[#F0F8FF] transition-all duration-200">
-              <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap border-r border-[#B0B0B0]">
-                <a href="#" class="text-blue-500 text-xs hover:underline mr-2" onclick="editViewData(this);">Edit</a>
-                <a href="#" class="text-red-500 text-xs hover:underline" onclick="deletePurchase(this)">Delete</a>
+              <td class="px-1.5 py-1.5 text-center w-24 whitespace-nowrap border-r border-[#B0B0B0]">
+                <button type="button" class="text-blue-500 hover:text-blue-700 p-1" onclick="editViewData(this)" title="Edit">
+                  <i data-lucide="edit-3" class="w-4 h-4 inline"></i>
+                </button>
+                <button type="button" class="text-red-500 hover:text-red-700 p-1" onclick="deletePurchase(this)" title="Delete">
+                  <i data-lucide="trash-2" class="w-4 h-4 inline"></i>
+                </button>
               </td>
               <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">
                 ${purchase.date.split('T')[0].split('-').reverse().join('-')}
@@ -883,6 +898,7 @@ Purchase Entry
             </tr>`;
           tableBody.append(newRow);
         });
+        lucide.createIcons();
         tableBody.append(`
           <tr class="bg-blue-200 font-bold">
             <td class="px-1.5 py-1.5 text-left" colspan="5">Totals:</td>

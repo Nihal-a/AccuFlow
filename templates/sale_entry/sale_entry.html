@@ -97,7 +97,8 @@ Sales Entry
             required>
             <option value="" selected>Select Godown</option>
             {% for godown in godowns %}
-            <option value="{{ godown.id }}" data-code="{{ godown.godownId }}" data-balance="{{ godown.get_balance }}">{{ godown.name }}</option>
+            <option value="{{ godown.id }}" data-code="{{ godown.godownId }}" data-balance="{{ godown.get_balance }}">{{
+              godown.name }}</option>
             {% endfor %}
           </select>
         </div>
@@ -272,7 +273,7 @@ Sales Entry
         <div class="relative w-full md:w-1/4">
           <input type="text" id="searchInput" placeholder="Search sale..."
             class="w-full bg-white searchInput rounded-md px-3 py-1.5 pl-9 border focus:border-transparent ring-2 ring-blue-200 focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none" />
-            <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-2 pointer-events-none"></i>
+          <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-2 pointer-events-none"></i>
         </div>
       </div>
       <!-- TABLE REDESIGN: Borders + Zebra stripes from ATTACHED IMAGE -->
@@ -283,14 +284,18 @@ Sales Entry
         <table class="table-auto w-full text-sm" id="viewSaleTable">
           <thead class="bg-blue-200 text-gray-700 uppercase text-xs">
             <tr>
-              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">Actions</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">
+                Actions</th>
               <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Date</th>
               <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Godown</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Description</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Customer Name</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Description
+              </th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Customer
+                Name</th>
               <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider">Qty</th>
               <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider">Rate</th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider">Total Amount</th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider">Total
+                Amount</th>
               <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Sale No</th>
             </tr>
           </thead>
@@ -583,9 +588,13 @@ Sales Entry
             $(selectedTR).empty();
             $(selectedTR).removeClass('bg-blue-300');
             $(selectedTR).append(`
-        <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap">
-          <button type='button' class="text-blue-500 hover:underline text-xs mr-2" onclick="updateSale(this)">Edit</button>
-          <button type='button' class="text-red-500 hover:underline text-xs" onclick="deleteSale(this)">Delete</button>
+        <td class="px-1.5 py-1.5 text-center w-24 whitespace-nowrap">
+          <button type='button' class="text-blue-500 hover:text-blue-700 p-1" onclick="updateSale(this)" title="Edit">
+            <i data-lucide="edit-3" class="w-4 h-4 inline"></i>
+          </button>
+          <button type='button' class="text-red-500 hover:text-red-700 p-1" onclick="deleteSale(this)" title="Delete">
+            <i data-lucide="trash-2" class="w-4 h-4 inline"></i>
+          </button>
         </td>
         <td class="px-1.5 py-1.5 text-center text-sm w-12 sl">
           <input type="date" name="dates" class="hidden" value="${date}">
@@ -623,9 +632,13 @@ Sales Entry
           else {
             const newRow = `
       <tr class="hover:bg-indigo-50/50 transition-all duration-200">
-        <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap">
-          <button type='button' class="text-blue-500 hover:underline text-xs mr-2" onclick="updateSale(this)">Edit</button>
-          <button type='button' class="text-red-500 hover:underline text-xs" onclick="deleteSale(this)">Delete</button>
+        <td class="px-1.5 py-1.5 text-center w-24 whitespace-nowrap">
+          <button type='button' class="text-blue-500 hover:text-blue-700 p-1" onclick="updateSale(this)" title="Edit">
+            <i data-lucide="edit-3" class="w-4 h-4 inline"></i>
+          </button>
+          <button type='button' class="text-red-500 hover:text-red-700 p-1" onclick="deleteSale(this)" title="Delete">
+            <i data-lucide="trash-2" class="w-4 h-4 inline"></i>
+          </button>
         </td>
         <td class="px-1.5 py-1.5 text-center text-sm w-12 sl">
           <input type="date" name="dates" class="hidden" value="${date}">
@@ -700,50 +713,49 @@ Sales Entry
   }
 
   function updateSale(link) {
+    // ROBUST_FETCH: Updated to use named input selectors for Sale
     $('#viewSaleDiv').addClass('hidden');
     // $('#viewSaleTable tbody').empty();
     $('#createView').removeClass('hidden');
     $('#viewDiv').addClass('hidden');
-    const selectedRow = link.closest('tr');
+
+    const row = link.closest('tr');
+
+    // Extract values using name attributes for robustness
+    const inputs = {
+      date: row.querySelector('input[name="dates"]')?.value || '',
+      godown: row.querySelector('input[name="godowns"]')?.value || '',
+      amount: row.querySelector('input[name="amounts"]')?.value || '',
+      qty: row.querySelector('input[name="qtys"]')?.value || '',
+      total_amount: row.querySelector('input[name="total_amounts"]')?.value || '',
+      description: row.querySelector('input[name="descriptions"]')?.value || '',
+      saleId: row.querySelector('input[name="sale_ids"]')?.value || row.querySelector('.sale-id')?.value || '',
+      type: row.querySelector('input[name="type"]')?.value || 'suppliers',
+      customer: row.querySelector('input[name="customers"]')?.value || '',
+      sale_nos: row.querySelector('input[name="sale_nos"]')?.value || ''
+    };
+
     if (!isUpdate) {
-      selectedTR = selectedRow;
-      makeRowHighlight(selectedRow);
-      // document.getElementById("sale_name").value remains unchanged for grid row edit
-      document.getElementById("date").value = selectedRow.cells[7].querySelector('input[name="dates"]').value;
-      document.getElementById("godown").value = selectedRow.cells[2].querySelector('input[name="godowns"]').value;
-      document.getElementById("amount").value = selectedRow.cells[6].querySelector('input[name="amounts"]').value;
-      document.getElementById("qty").value = selectedRow.cells[5].querySelector('input[name="qtys"]').value;
-      document.getElementById("total_amount").value = selectedRow.cells[7].querySelector('input[name="total_amounts"]').value;
-      document.getElementById("description").value = selectedRow.cells[3].querySelector('input[name="descriptions"]').value;
-      document.getElementById("saleId").value = selectedRow.querySelector('.sale-id').value;
-      var type = selectedRow.querySelector('#type') ? selectedRow.querySelector('#type').value : 'suppliers';
-      if (type == 'customers') {
-        $('#allCustomers').prop('checked', false).change();
-      } else {
-        $('#allCustomers').prop('checked', true).change();
-      }
-      document.getElementById("customer").value = selectedRow.cells[4].querySelector('input[name="customers"]').value;
-
+      selectedTR = row;
+      makeRowHighlight(row);
     } else {
-
-      document.getElementById("sale_name").value = selectedRow.cells[2].innerText.trim();
-      document.getElementById("date").value = selectedRow.cells[3].innerText.trim();
-      document.getElementById("godown").value = selectedRow.cells[5].querySelector('input').value;
-      document.getElementById("amount").value = selectedRow.cells[7].innerText.trim();
-      document.getElementById("qty").value = selectedRow.cells[6].innerText.trim();
-      document.getElementById("total_amount").value = selectedRow.cells[8].innerText.trim();
-      document.getElementById("description").value = selectedRow.cells[9].innerText.trim();
-      document.getElementById("saleId").value = selectedRow.querySelector('.sale-id').value;
-      var type = selectedRow.querySelector('#type') ? selectedRow.querySelector('#type').value : 'supplier';
-
-
-      if (type === 'customers') {
-        $('#allCustomers').prop('checked', false).change();
-      } else {
-        $('#allCustomers').prop('checked', true).change();
-      }
-      document.getElementById("customer").value = selectedRow.cells[4].querySelector('input').value;
+      document.getElementById("sale_name").value = inputs.sale_nos;
     }
+
+    document.getElementById("date").value = inputs.date;
+    document.getElementById("godown").value = inputs.godown;
+    document.getElementById("amount").value = inputs.amount;
+    document.getElementById("qty").value = inputs.qty;
+    document.getElementById("total_amount").value = inputs.total_amount;
+    document.getElementById("description").value = inputs.description;
+    document.getElementById("saleId").value = inputs.saleId;
+
+    if (inputs.type === 'customers') {
+      $('#allCustomers').prop('checked', false).change();
+    } else {
+      $('#allCustomers').prop('checked', true).change();
+    }
+    document.getElementById("customer").value = inputs.customer;
     $('#addToGridText').text('Update Grid');
     $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-blue-500 text-white');
 
@@ -853,9 +865,13 @@ Sales Entry
         data.sales.forEach((sale, index) => {
           const newRow = `
             <tr class="border-b border-[#B0B0B0] odd:bg-white even:bg-[#E5E7EB] hover:bg-[#F0F8FF] transition-all duration-200">
-              <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap flex border-r border-[#B0B0B0]">
-                <a href="#" class="text-blue-500 text-xs hover:underline mr-2" onclick="onViewUpdate(this)">Edit</a>
-                <a href="#" class="text-red-500 text-xs hover:underline" onclick="deleteSale(this)">Delete</a>
+              <td class="px-1.5 py-1.5 text-center w-24 whitespace-nowrap flex border-r border-[#B0B0B0]">
+                <button type="button" class="text-blue-500 hover:text-blue-700 p-1" onclick="onViewUpdate(this)" title="Edit">
+                  <i data-lucide="edit-3" class="w-4 h-4 inline"></i>
+                </button>
+                <button type="button" class="text-red-500 hover:text-red-700 p-1" onclick="deleteSale(this)" title="Delete">
+                  <i data-lucide="trash-2" class="w-4 h-4 inline"></i>
+                </button>
               </td>
               <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">
                 ${sale.date.split('T')[0].split('-').reverse().join('-')}
@@ -894,6 +910,7 @@ Sales Entry
             </tr>`;
           tableBody.append(newRow);
         });
+        lucide.createIcons();
         tableBody.append(`
           <tr class="bg-blue-200 font-bold text-sm">
             <td class="px-1.5 py-1.5 text-left" colspan="5">Totals:</td>

@@ -220,6 +220,8 @@ Stock Transfer
         <table class="table-auto w-full divide-y divide-slate-200 text-sm" id="viewStockTransferTable">
           <thead class="bg-blue-200 text-gray-700 uppercase text-xs z-10 sticky top-0">
             <tr>
+              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">
+                Actions</th>
               <th class="px-4 py-3 text-left font-medium">Transfer No</th>
               <th class="px-4 py-3 text-left font-medium">Date</th>
               <th class="px-4 py-3 text-left font-medium">Godown From</th>
@@ -230,7 +232,7 @@ Stock Transfer
           </thead>
           <tbody class="bg-white divide-y divide-slate-100" id="viewStockTransferTableBody">
             <tr>
-              <td colspan="6" class="px-4 py-3 text-center text-gray-500">No transfers found. Please select dates.</td>
+              <td colspan="7" class="px-4 py-3 text-center text-gray-500">No transfers found. Please select dates.</td>
             </tr>
           </tbody>
         </table>
@@ -282,12 +284,12 @@ Stock Transfer
     var tableBody = document.getElementById("stockTransferTableBody");
     var newRow = `
             <tr class="hover:bg-indigo-50/50 transition-all duration-200" data-editing="false">
-                <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap">
-                    <button type="button" class="text-blue-500 text-xs hover:underline mr-2" onclick="editTransferRow(this)">
-                         Edit
+                <td class="px-1.5 py-1.5 text-center w-24 whitespace-nowrap">
+                    <button type="button" class="text-blue-500 hover:text-blue-700 p-1" onclick="editTransferRow(this)" title="Edit">
+                         <i data-lucide="edit-3" class="w-4 h-4 inline"></i>
                     </button>
-                    <button type="button" class="text-red-500 text-xs hover:underline" onclick="deleteTransferRow(this, '${transfer.id}')">
-                         Delete
+                    <button type="button" class="text-red-500 hover:text-red-700 p-1" onclick="deleteTransferRow(this, '${transfer.id}')" title="Delete">
+                         <i data-lucide="trash-2" class="w-4 h-4 inline"></i>
                     </button>
                     <input type="hidden" name="transfer_ids" value="${transfer.id}">
                 </td>
@@ -555,22 +557,26 @@ Stock Transfer
   }
 
   function editTransferRow(button) {
-    const row = $(button).closest('tr');
+    const row = button.closest('tr');
 
-    // Extract values from the row's hidden inputs
-    const date = row.find('input[name="dates"]').val();
-    const godownFromId = row.find('input[name="godowns_from"]').val();
-    const godownToId = row.find('input[name="godowns_to"]').val();
-    const qty = row.find('input[name="qtys"]').val();
-    const description = row.find('input[name="descriptions"]').val();
-    activeEditingTransferId = row.find('input[name="transfer_ids"]').val();
+    // ROBUST_FETCH: Updated to use named input selectors for Grid Edit
+    const inputs = {
+      date: row.querySelector('input[name="dates"]')?.value || '',
+      godownFromId: row.querySelector('input[name="godowns_from"]')?.value || '',
+      godownToId: row.querySelector('input[name="godowns_to"]')?.value || '',
+      qty: row.querySelector('input[name="qtys"]')?.value || '',
+      description: row.querySelector('input[name="descriptions"]')?.value || '',
+      transferId: row.querySelector('input[name="transfer_ids"]')?.value || ''
+    };
+
+    activeEditingTransferId = inputs.transferId;
 
     // Populate the form fields with the extracted values
-    $('#date').val(date);
-    $('#godownFrom').val(godownFromId).trigger('change');
-    $('#godownTo').val(godownToId).trigger('change');
-    $('#qty').val(qty).trigger('input');
-    $('#description').val(description);
+    document.getElementById("date").value = inputs.date;
+    $('#godownFrom').val(inputs.godownFromId).trigger('change');
+    $('#godownTo').val(inputs.godownToId).trigger('change');
+    $('#qty').val(inputs.qty).trigger('input');
+    document.getElementById("description").value = inputs.description;
 
     // Remove the row from the table
     row.remove();
@@ -632,29 +638,57 @@ Stock Transfer
       return;
     }
 
-    fetch(`/stock_transfer/api/transfers_by_date/?from_date=${startDate}&to_date=${endDate}`)
+    fetch(`{% url 'api-transfers-by-date' %}?from_date=${startDate}&to_date=${endDate}`)
       .then(response => response.json())
       .then(data => {
         const tableBody = $('#viewStockTransferTableBody');
         tableBody.empty();
 
         if (!data.transfers || data.transfers.length === 0) {
-          tableBody.append(`<tr><td colspan="6" class="px-4 py-3 text-center text-gray-500">No transfers found.</td></tr>`);
+          tableBody.append(`<tr><td colspan="7" class="px-4 py-3 text-center text-gray-500">No transfers found.</td></tr>`);
           return;
         }
 
         data.transfers.forEach((transfer) => {
           const newRow = `
-            <tr class="hover:bg-indigo-50/50 transition-all duration-200">
-              <td class="px-4 py-2 border-b">${transfer.transfer_no}</td>
-              <td class="px-4 py-2 border-b">${transfer.date}</td>
-              <td class="px-4 py-2 border-b">${transfer.godown_from}</td>
-              <td class="px-4 py-2 border-b">${transfer.godown_to}</td>
-              <td class="px-4 py-2 border-b text-right">${parseFloat(transfer.qty).toFixed(2)}</td>
-              <td class="px-4 py-2 border-b text-left">${transfer.description}</td>
+            <tr class="border-b border-[#B0B0B0] odd:bg-white even:bg-[#E5E7EB] hover:bg-[#F0F8FF] transition-all duration-200">
+              <td class="px-1.5 py-1.5 text-center w-24 whitespace-nowrap border-r border-[#B0B0B0]">
+                <button type="button" class="text-blue-500 hover:text-blue-700 p-1" onclick="onViewUpdate(this)" title="Edit">
+                  <i data-lucide="edit-3" class="w-4 h-4 inline"></i>
+                </button>
+                <button type="button" class="text-red-500 hover:text-red-700 p-1" onclick="onViewDelete(this)" title="Delete">
+                  <i data-lucide="trash-2" class="w-4 h-4 inline"></i>
+                </button>
+              </td>
+              <td class="px-4 py-2 border-b">
+                ${transfer.transfer_no}
+                <input type="hidden" name="transfer_nos" value="${transfer.transfer_no}">
+              </td>
+              <td class="px-4 py-2 border-b">
+                ${transfer.date.split('-').reverse().join('-')}
+                <input type="hidden" name="dates" value="${transfer.date}">
+              </td>
+              <td class="px-4 py-2 border-b">
+                ${transfer.godown_from}
+                <input type="hidden" name="godowns_from" value="${transfer.godown_from_id}">
+              </td>
+              <td class="px-4 py-2 border-b">
+                ${transfer.godown_to}
+                <input type="hidden" name="godowns_to" value="${transfer.godown_to_id}">
+              </td>
+              <td class="px-4 py-2 border-b text-right">
+                ${parseFloat(transfer.qty).toFixed(2)}
+                <input type="hidden" name="qtys" value="${transfer.qty}">
+              </td>
+              <td class="px-4 py-2 border-b text-left">
+                ${transfer.description}
+                <input type="hidden" name="descriptions" value="${transfer.description}">
+              </td>
+              <input type="hidden" name="transfer_ids" class="transfer-id" value="${transfer.id}">
             </tr>
           `;
           tableBody.append(newRow);
+          lucide.createIcons(); // Initialize icons for newly added rows
         });
       })
       .catch(error => {
@@ -662,6 +696,73 @@ Stock Transfer
         alert('An error occurred while fetching transfers.');
       });
   });
+
+  var isViewUpdate = false;
+
+  function onViewUpdate(button) {
+    const row = button.closest('tr');
+    isViewUpdate = true;
+
+    // Switch to create view
+    $('#createView').removeClass('hidden');
+    $('#viewDiv').addClass('hidden');
+
+    // ROBUST_FETCH: Updated to use named input selectors for View Update
+    const inputs = {
+      transferNo: row.querySelector('input[name="transfer_nos"]')?.value || '',
+      date: row.querySelector('input[name="dates"]')?.value || '',
+      godownFromId: row.querySelector('input[name="godowns_from"]')?.value || '',
+      godownToId: row.querySelector('input[name="godowns_to"]')?.value || '',
+      qty: row.querySelector('input[name="qtys"]')?.value || '',
+      description: row.querySelector('input[name="descriptions"]')?.value || '',
+      transferId: row.querySelector('input[name="transfer_ids"]')?.value || row.querySelector('.transfer-id')?.value || ''
+    };
+
+    document.getElementById("transfer_no").value = inputs.transferNo;
+    document.getElementById("date").value = inputs.date;
+    $('#godownFrom').val(inputs.godownFromId).trigger('change');
+    $('#godownTo').val(inputs.godownToId).trigger('change');
+    $('#qty').val(inputs.qty).trigger('input');
+    document.getElementById("description").value = inputs.description;
+
+    activeEditingTransferId = inputs.transferId;
+
+    // Update button text
+    $('#addToGridText').text('Update Grid');
+    $('#addToGrid').removeClass('bg-blue-500').addClass('bg-green-500');
+  }
+
+  function onViewDelete(button) {
+    const selectedRow = $(button).closest('tr');
+    const transferId = selectedRow.find('input[name="transfer_ids"]').val();
+
+    if (!confirm("Are you sure you want to delete this transfer?")) return;
+
+    fetch("{% url 'api-delete-transfer' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCookie("csrftoken"),
+      },
+      body: JSON.stringify({ id: transferId }),
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          selectedRow.remove();
+          // Refresh the view table
+          if ($('#viewStockTransferTableBody tr').length === 0) {
+            $('#viewStockTransferTableBody').append(`<tr><td colspan="7" class="px-4 py-3 text-center text-gray-500">No transfers found.</td></tr>`);
+          }
+        } else {
+          showErrorModal("Delete failed: " + data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error deleting transfer:', error);
+        showErrorModal("An unexpected error occurred while deleting.");
+      });
+  }
 
   function clearForm() {
     // If an edit was in progress but canceled, we need to refresh the page to bring the held row back,
