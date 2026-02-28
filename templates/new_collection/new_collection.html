@@ -5,135 +5,106 @@ Smart Collection
 {% endblock title %}
 
 {% block content %}
-<div class="bg-white rounded-xl p-6 mt-3">
+<div class="bg-white sm:rounded-xl p-4 sm:p-6 mt-3 -mx-4 sm:mx-0 w-[calc(100%+2rem)] sm:w-full shadow-sm sm:shadow-none">
     <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">
         Collection
     </h1>
 
-    <p class="text-sm text-gray-500 mt-2">
-    </p>
-
     <hr class="mt-5">
 
     <div id="createView" class="mt-5 w-full">
-        <form method="post" action="{% url 'newcollection' %}" class="grid  grid-cols-12 gap-4 ">
-            {% csrf_token %}
+        <div class="grid w-full">
+            <form method="post" action="{% url 'newcollection' %}"
+                class="flex flex-col gap-3 sm:gap-4 ignore-unsaved-changes">
+                {% csrf_token %}
+                
+                <!-- Inputs Section (Matching Ledger layout style) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 w-full items-end">
+                    
+                    <!-- Date Input -->
+                    <div class="col-span-1">
+                        <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">Date*</label>
+                        <input type="date" id="date" name="date" value="{{date}}" required
+                            class="w-full bg-white px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm">
+                    </div>
 
-
-            <div class="col-span-12 w-full flex items-end gap-3">
-                <div class="w-[15%]">
-                    <label class="block text-gray-700 mb-1">Date*</label>
-                    <div class="flex items-center gap-4">
-                        <div class="flex-1">
-                            <input type="date" id="date" name="date" value="{{date}}"
-                                class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
+                    <!-- Collector Select -->
+                    <div class="col-span-1">
+                        <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">Collector*</label>
+                        <select id="collector" name="collector"
+                            class="w-full bg-white px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
+                            required>
+                            <option value="" selected>-- Select Collector --</option>
+                            {% for collector in collectors %}
+                            <option value="{{ collector.id }}" data-code="{{ collector.supplierId }}"
+                                data-balance="{{ collector.balance }}" data-type="collectors">
+                                {{ collector.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
                     </div>
                 </div>
 
-                <div class="w-[20%]">
-                    <label class="block text-gray-700 mb-1">Collector*</label>
-                    <div class="flex items-center gap-4">
-                        <div class="flex-1">
-                            <select id="collector" name="collector"
-                                class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                required>
-                                <option value="" selected>Select Collector</option>
-                                {% for collector in collectors %}
-                                <option value="{{ collector.id }}" data-code="{{ collector.supplierId }}"
-                                    data-balance="{{ collector.balance }}" data-type="collectors">
-                                    {{ collector.name }}
-                                </option>
-                                {% endfor %}
-                            </select>
+                <!-- Action Buttons (Matching Ledger layout style) -->
+                <div class="col-span-12 w-full flex items-center mt-2 lg:mt-3 pb-1 sm:pb-0">
+                    <div class="w-full flex flex-row items-center gap-4 sm:gap-5 flex-nowrap">
+                        <div class="flex gap-2 shrink-0">
+                            <!-- Add New Collection Button -->
+                            <button id="btnAddNew" type="submit"
+                                class="leading-none inline-flex items-center justify-center gap-1 bg-green-500 text-white text-xs sm:text-sm font-medium px-4 py-1.5 sm:py-2 rounded-md shadow-sm hover:bg-green-600 transition-all duration-300">
+                                <span>Add New<span class="hidden sm:inline"> Collection</span></span>
+                            </button>
+
+                            <!-- View Collection Button -->
+                            <button id="btnView" type="submit"
+                                class="leading-none inline-flex items-center justify-center gap-1 bg-blue-500 text-white text-xs sm:text-sm font-medium px-4 py-1.5 sm:py-2 rounded-md shadow-sm hover:bg-blue-600 transition-all duration-300">
+                                <span>View<span class="hidden sm:inline"> Collection</span></span>
+                            </button>
+                            
+                            <!-- Clear Details Button -->
+                            <a id="btnClear" href="{% url 'newcollection' %}"
+                                class="leading-none inline-flex items-center justify-center gap-1 bg-gray-500 text-white text-xs sm:text-sm font-medium px-4 py-1.5 sm:py-2 rounded-md shadow-sm hover:bg-gray-600 transition-all duration-300">
+                                <span>Clear<span class="hidden sm:inline"> Details</span></span>
+                            </a>
                         </div>
                     </div>
                 </div>
+            </form>
 
-                <div class="w-[20%]">
-                    <div class="flex items-end gap-4">
-                        <button id="btnView" type="submit"
-                            class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
-                            Add New Collection
-                        </button>
-                    </div>
-                </div>
-
-                {% comment %} <div class="w-[15%]">
-                    <label class="block text-gray-700 mb-1">Sort Order*</label>
-                    <div class="flex items-center gap-4">
-                        <div class="flex-1">
-                            <select id="sortOrder" name="sort"
-                                class="w-full bg-white px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="Serial" selected>SlNo</option>
-                                <option value="Detailed">Detailed</option>
-                                <option value="Remark">Remark</option>
-
-                            </select>
-                        </div>
-                    </div>
-                </div> {% endcomment %}
+            <!-- Table Section (Matching Ledger Table strictness) -->
+            <div class="overflow-x-auto mt-5 w-full border border-gray-200 rounded-lg">
+                <table id="viewPurchaseTable" class="w-full min-w-[800px] md:min-w-full text-xs sm:text-sm rounded-t-sm overflow-hidden whitespace-nowrap">
+                    <thead class="bg-blue-200 text-gray-700 uppercase text-xs">
+                        <tr>
+                            <th class="px-2 py-1 text-left font-semibold tracking-wide w-1">#</th>
+                            <th class="px-2 py-1 text-left font-semibold tracking-wide w-1">view</th>
+                            <th class="px-2 py-1 text-left font-semibold tracking-wide">C.No</th>
+                            <th class="px-2 py-1 text-left font-semibold tracking-wide">Collector</th>
+                            <th class="px-2 py-1 text-left font-semibold tracking-wide">Approval Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="purchaseTableBody" class="bg-gray-100">
+                        {% for ledger in ledgers %}
+                        {% if ledger.type != 'OB' %}
+                        <tr class="hover:bg-gray-50 divide-y divide-gray-300 odd:bg-white even:bg-gray-100">
+                            <td class="px-2 py-1 text-left font-medium">{{forloop.counter}}</td>
+                            <td class="px-2 py-1 text-left">{{ledger.date|date:"d-m-Y"}}</td>
+                            <td class="px-2 py-1 text-left">{{ledger.transaction_no}}</td>
+                            <td class="px-2 py-1 text-left">{{ledger.type}}</td>
+                            <td class="px-2 py-1 text-left">{{ledger.description}}</td>
+                        </tr>
+                        {% endif %}
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-2 py-4 text-center text-gray-500 font-medium">No collections found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
 
-            <div class="col-span-6 w-full flex items-center gap-3">
-                <div class="w-full">
-                    <div class="flex items-center gap-4">
-
-                        <div class="w-full flex items-center gap-5">
-
-                            <div class="flex gap-2">
-                                <a id="btnClear" href="{% url 'newcollection' %}"
-                                    class="leading-none inline-flex items-center gap-1.5 bg-gray-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-gray-600 transition-all duration-300">
-                                    Clear Details
-                                </a>
-                                <button id="btnView" type="submit"
-                                    class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:bg-blue-600 transition-all duration-300">
-                                    View Collection
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </form>
-
-        <div class="overflow-x-auto mt-5 w-full col-span-8">
-            <table id="viewPurchaseTable" class="w-full min-w-max rounded-t-lg overflow-hidden">
-                <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
-
-                    <tr>
-                        <!-- <th class="px-4 py-3 text-left font-medium w-1">Actions</th> -->
-                        <th class="px-4 py-3 text-left font-medium w-1">#</th>
-                        <th class="px-4 py-3 text-left font-medium w-1">view</th>
-                        <th class="px-4 py-3 text-left font-medium">C.No</th>
-                        <th class="px-4 py-3 text-left font-medium">Collector</th>
-                        <th class="px-4 py-3 text-left font-medium">Approval Status</th>
-                    </tr>
-                </thead>
-                <tbody id="purchaseTableBody" class="bg-gray-100">
-                    {% for ledger in ledgers %}
-                    {% if ledger.type != 'OB' %}
-                    <tr>
-                        <td class="px-4 py-3 text-left font-medium">{{forloop.counter}}</td>
-                        <td class="px-4 py-3 text-left font-medium">{{ledger.date|date:"d-m-Y"}}</td>
-                        <td class="px-4 py-3 text-left font-medium">{{ledger.transaction_no}}</td>
-                        <td class="px-4 py-3 text-left font-medium">{{ledger.type}}</td>
-                        <td class="px-4 py-3 text-left font-medium">{{ledger.description}}</td>
-                        <td class="px-4 py-3 text-right font-medium">{{ledger.qty}}</td>
-                        <td class="px-4 py-3 text-right font-medium">{{ledger.rate}}</td>
-                        <td class="px-4 py-3 text-right font-medium">{{ledger.debit}}</td>
-                        <td class="px-4 py-3 text-right font-medium">{{ledger.credit}}</td>
-                        <td class="px-4 py-3 text-right font-medium">{{ledger.balance}}</td>
-                    </tr>
-                    {% endif %}
-                    {% endfor %}
-
-                </tbody>
-            </table>
         </div>
-
     </div>
-</div>
 </div>
 {% endblock content %}
 

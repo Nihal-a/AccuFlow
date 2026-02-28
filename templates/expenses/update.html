@@ -32,7 +32,7 @@
                     required>
             </div>
             <div>
-                <label class="block text-gray-700">Descriprion</label>
+                <label class="block text-gray-700">Description</label>
                 <input type="text" name="description" value="{{ expense.description }}"
                     class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
@@ -43,8 +43,10 @@
                     required>
             </div>
         </div>
-        <div class="mt-6">
-            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Update
+        <div class="mt-6 flex gap-2 justify-end">
+            <a href="{% url 'expenses' %}"
+                class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 font-semibold flex items-center justify-center">Cancel</a>
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 font-semibold">Update
                 Expense</button>
         </div>
     </form>

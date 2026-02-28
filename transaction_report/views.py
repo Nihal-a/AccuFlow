@@ -161,11 +161,16 @@ class TransactionReportView(View):
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
 
+        total_debit = sum(t['debit'] for t in transactions)
+        total_credit = sum(t['credit'] for t in transactions)
+
         context = {
             'transactions': page_obj.object_list,
             'page_obj': page_obj,
             'date_from': date_from_str,
             'date_to': date_to_str,
+            'total_debit': total_debit,
+            'total_credit': total_credit,
         }
 
         export_type = request.POST.get('export')

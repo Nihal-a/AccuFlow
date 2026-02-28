@@ -1,87 +1,103 @@
 {% extends 'base.html' %}
 {% load static %}
+{% block title %}
+Balance Sheet
+{% endblock title %}
+
 {% block content %}
+<div class="bg-white sm:rounded-xl p-4 sm:p-6 mt-3 sm:mt-5 mx-0 sm:mx-0 w-full max-w-full font-sans">
+    <h1 class="text-xl sm:text-2xl font-medium mb-0 text-gray-700 uppercase">
+        Balance Sheet View
+    </h1>
 
-<div class="font-sans">
-    <div class="w-full">
+    <hr class="mt-4 sm:mt-5">
 
-        <!-- Header -->
-        <h2 class="text-2xl font-bold text-black border-b-2 border-black inline-block pb-1 mb-6">
-            Balance Sheet View
-        </h2>
-
-        <!-- Date Selection Box -->
-        <div>
-            <form method="POST" class="inline-block">
-                {% csrf_token %}
-                <div class="border border-black p-2.5 inline-flex items-center gap-3 bg-white mb-6">
-                    <div>
-                        <div class="text-xs text-gray-500 mb-1 leading-none">Date As ON</div>
-                        <div class="flex gap-2">
-                            <input type="date" name="dateTo" value="{{ date_to }}"
-                                class="border border-gray-300 p-1 bg-gray-50 text-sm w-36 focus:outline-none focus:border-blue-500">
-                            <button type="submit"
-                                class="bg-gray-200 border border-gray-400 px-4 py-1 text-black font-medium hover:bg-gray-300 transition-colors text-sm">
-                                Date From
-                            </button>
-                        </div>
+    <div id="createView" class="mt-4 sm:mt-5 w-full">
+        <form method="POST" class="flex flex-col gap-3 sm:gap-4 ignore-unsaved-changes">
+            {% csrf_token %}
+            <div class="flex flex-col gap-3 sm:gap-4 w-full md:w-5/12 lg:w-4/12">
+                <!-- Date Input -->
+                <div class="flex flex-row gap-3 sm:gap-4 w-full">
+                    <div class="w-1/2">
+                        <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">Date As On</label>
+                        <input type="date" name="dateTo" value="{{ date_to }}"
+                            class="w-full bg-white px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm">
                     </div>
+                    <div class="w-1/2"></div>
                 </div>
-            </form>
-        </div>
+            </div>
 
-        <div class="w-full overflow-x-auto" id="printableArea">
-            <table class="w-full border-collapse text-sm bg-white">
-                <thead>
+            <div class="flex flex-wrap gap-2 mt-2">
+                <div class="flex gap-2">
+                    <button type="submit"
+                        class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white font-medium h-[32px] sm:h-[34px] px-4 sm:px-6 rounded-md shadow-sm hover:bg-blue-600 transition-all duration-300 text-xs sm:text-sm">
+                        Select Date
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <div class="overflow-x-auto mt-5 w-full shadow-sm rounded-md border border-slate-200" id="printableArea">
+            <table class="table-auto w-full text-sm font-sans">
+                <thead class="bg-blue-200 text-gray-700 uppercase text-xs">
                     <tr>
-                        <th
-                            class="w-[10%] bg-[#4a6fa5] text-white text-left px-3 py-2 font-semibold border border-[#6c8db5]">
+                        <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-32">
                             Code
                         </th>
-                        <th
-                            class="w-[40%] bg-[#4a6fa5] text-white text-left px-3 py-2 font-semibold border border-[#6c8db5]">
+                        <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">
                             Name
                         </th>
-                        <th
-                            class="w-[25%] bg-[#4a6fa5] text-white text-right px-3 py-2 font-semibold border border-[#6c8db5]">
+                        <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider">
                             Debit
                         </th>
-                        <th
-                            class="w-[25%] bg-[#4a6fa5] text-white text-right px-3 py-2 font-semibold border border-[#6c8db5]">
+                        <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider">
                             Credit
                         </th>
                     </tr>
                 </thead>
-                <tbody class="border-l border-r border-gray-300">
+                <tbody class="divide-y divide-slate-100 bg-white">
 
                     {% for account in accounts %}
                     <tr class="
-                        {% if account.highlight == 'orange' %}bg-[#f39c12] text-black border-[#e67e22]
-                        {% elif account.highlight == 'green' %}bg-[#adff2f] text-black border-[#9acd32]
-                        {% else %}border-gray-300{% endif %}
-                        border-b
+                        {% if account.highlight %}
+                            {% if account.highlight == 'orange' %}
+                                bg-yellow-100 text-yellow-800 uppercase divide-y divide-yellow-300 text-xs font-bold
+                            {% elif account.highlight == 'green' %}
+                                bg-green-100 text-green-800 uppercase divide-y divide-green-300 text-xs font-bold
+                            {% endif %}
+                        {% else %}
+                            hover:bg-indigo-50/50 transition-all duration-200
+                        {% endif %}
                     ">
 
-                        <td class="px-3 py-2 
-                            {% if account.highlight %}border-r border-transparent{% else %}border-r border-gray-300 text-gray-600{% endif %}
+                        <td class="px-1.5 py-1.5 text-left 
+                            {% if account.highlight %}border-t{% else %}text-sm{% endif %}
+                            {% if account.highlight == 'orange' %}border-yellow-300
+                            {% elif account.highlight == 'green' %}border-green-300{% endif %}
                         ">
                             {{ account.code }}
                         </td>
 
-                        <td class="px-3 py-2 
-                            {% if account.highlight %}border-r border-transparent uppercase font-normal{% else %}border-r border-gray-300 text-gray-800 uppercase{% endif %}
+                        <td class="px-1.5 py-1.5 text-left 
+                            {% if account.highlight %}border-t tracking-wide{% else %}text-sm font-medium{% endif %}
+                            {% if account.highlight == 'orange' %}border-yellow-300
+                            {% elif account.highlight == 'green' %}border-green-300{% endif %}
                         ">
                             {{ account.name }}
                         </td>
 
-                        <td class="px-3 py-2 text-right font-mono 
-                            {% if account.highlight %}border-r border-transparent{% else %}border-r border-gray-300 text-gray-800{% endif %}
+                        <td class="px-1.5 py-1.5 text-right 
+                            {% if account.highlight %}border-t{% else %}text-sm font-bold text-gray-700{% endif %}
+                            {% if account.highlight == 'orange' %}border-yellow-300
+                            {% elif account.highlight == 'green' %}border-green-300{% endif %}
                         ">
                             {% if account.debit > 0 %}{{ account.debit|floatformat:2 }}{% endif %}
                         </td>
 
-                        <td class="px-3 py-2 text-right font-mono 
-                            {% if account.highlight %}{% else %}text-gray-800{% endif %}
+                        <td class="px-1.5 py-1.5 text-right 
+                            {% if account.highlight %}border-t{% else %}text-sm{% endif %}
+                            {% if account.highlight == 'orange' %}border-yellow-300
+                            {% elif account.highlight == 'green' %}border-green-300{% endif %}
                         ">
                             {% if account.credit > 0 %}{{ account.credit|floatformat:2 }}{% endif %}
                         </td>
@@ -89,11 +105,11 @@
                     {% endfor %}
 
                     <!-- Footer Total Row -->
-                    <tr class="bg-[#4a6fa5] text-white font-bold">
-                        <td class="px-3 py-2 border-r border-[#6c8db5]"></td>
-                        <td class="px-3 py-2 text-right border-r border-[#6c8db5]">Total</td>
-                        <td class="px-3 py-2 text-right font-mono border-r border-[#6c8db5]">{{ total_debit|floatformat:2 }}</td>
-                        <td class="px-3 py-2 text-right font-mono">{{ total_credit|floatformat:2 }}</td>
+                    <tr class="bg-blue-100 text-blue-800 uppercase divide-y divide-blue-300 text-xs font-bold">
+                        <td class="px-1.5 py-2 text-left border-t border-blue-300"></td>
+                        <td class="px-1.5 py-2 text-right tracking-wide border-t border-blue-300">Total</td>
+                        <td class="px-1.5 py-2 text-right border-t border-blue-300">{{ total_debit|floatformat:2 }}</td>
+                        <td class="px-1.5 py-2 text-right border-t border-blue-300">{{ total_credit|floatformat:2 }}</td>
                     </tr>
 
                 </tbody>
