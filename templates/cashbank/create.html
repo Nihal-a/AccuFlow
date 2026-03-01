@@ -2,47 +2,37 @@
 
 {% block title %}CashBank{% endblock %}
 
-{% block externalCSS %}
-<style>
-    /* Remove number input arrows */
-    input.no-spinners::-webkit-outer-spin-button,
-    input.no-spinners::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-    }
-
-    input.no-spinners {
-        -moz-appearance: textfield;
-    }
-</style>
-{% endblock %}
+{% block externalCSS %}{% endblock %}
 
 {% block content %}
-<h1 class="text-3xl font-bold mb-4 text-gray-700">Create CashBank</h1>
-<div class="bg-white rounded-xl p-6  ">
-    <form method="post" action="{% url 'create-cashbank' %}">
+<div class="bg-white sm:rounded-xl p-4 sm:p-6 mt-3 sm:mt-5 w-full max-w-full font-sans">
+  <div class="flex flex-col flex-wrap border-b border-gray-200 pb-4">
+    <h1 class="text-xl sm:text-2xl font-medium mb-0 text-gray-700 uppercase">Create Cash/Bank</h1>
+  </div>
+  <div class="mt-4 sm:mt-5 w-full">
+    <form method="post" action="{% url 'create-cashbank' %}" class="flex flex-col gap-3 sm:gap-4">
         {% csrf_token %}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-                <label class="block text-gray-700">Name*</label>
+                <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">Name*</label>
                 <input type="text" placeholder="Enter cash/bank name..." name="name"
-                    class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 input-text-only"
+                    class="w-full bg-white px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs sm:text-sm input-text-only"
                     required>
             </div>
             <div>
-                <label class="block text-gray-700">Description</label>
+                <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">Description</label>
                 <input type="text" placeholder="Enter cash/Bank description..." name="description"
-                    class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    class="w-full bg-white px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs sm:text-sm">
             </div>
         </div>
-        <div class="mt-6 flex gap-2 justify-end">
-            <a href="{% url 'cashbank'%}" type="submit"
-                class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 font-semibold">Cancel</a>
+        <div class="mt-4 sm:mt-6 flex flex-wrap gap-2 justify-end">
+            <a href="{% url 'cashbank'%}"
+                class="leading-none inline-flex items-center gap-1.5 bg-red-500 text-white font-medium h-[32px] sm:h-[34px] px-4 sm:px-6 rounded-md shadow-sm hover:bg-red-600 transition-all duration-300 text-xs sm:text-sm">Cancel</a>
             <button type="submit"
-                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 font-semibold">Create
-                Cash/Bank</button>
+                class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white font-medium h-[32px] sm:h-[34px] px-4 sm:px-6 rounded-md shadow-sm hover:bg-blue-600 transition-all duration-300 text-xs sm:text-sm">Create Cash/Bank</button>
         </div>
     </form>
+  </div>
 </div>
 {% endblock %}
 

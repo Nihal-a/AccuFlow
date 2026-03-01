@@ -127,17 +127,17 @@ class ClientAddView(View):
 
         if password != confirm_password:
             messages.error(request, "Passwords do not match.")
-            return redirect('create-clients')
+            return redirect('create-client')
 
         if UserAccount.objects.filter(username=username).exists():
             messages.error(request, "Username already exists.")
-            return redirect('create-clients')
+            return redirect('create-client')
 
         try:
             validate_password(password)
         except ValidationError as e:
             messages.error(request, ' '.join(e.messages))
-            return redirect('create-clients')
+            return redirect('create-client')
 
         user = UserAccount.objects.create_client(
             username=username,

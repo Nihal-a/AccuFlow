@@ -1,62 +1,46 @@
 {% extends 'base.html' %}
 {% block title %}View Collector{% endblock %}
-{% block externalCSS %}
-<style>
-  /* Remove number input arrows */
-  input.no-spinners::-webkit-outer-spin-button,
-  input.no-spinners::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-
-  input.no-spinners {
-    -moz-appearance: textfield;
-  }
-</style>
-{% endblock %} 
+{% block externalCSS %}{% endblock %}
 
 {% block content %}
-<div class="bg-white rounded-xl p-6 shadow-md border border-gray-100">
-  <div class="flex items-center justify-between mb-6 border-b-2 border-gray-200 pb-4">
-    <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 tracking-tight">View Collector</h1>
+<div class="bg-white sm:rounded-xl p-4 sm:p-6 mt-3 sm:mt-5 w-full max-w-full font-sans">
+  <div class="flex items-center justify-between border-b border-gray-200 pb-4 mb-4 sm:mb-5">
+    <h1 class="text-xl sm:text-2xl font-medium text-gray-700 uppercase">View Collector</h1>
   </div>
-
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div>
-      <label class="block text-gray-700 font-medium mb-1">Name</label>
+      <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">Name</label>
       <input type="text" value="{{ collector.name }}"
-        class="w-full mt-1 px-3 py-2 border rounded-xl bg-gray-50 text-gray-600 focus:outline-none cursor-not-allowed"
+        class="w-full bg-gray-50 px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md text-xs sm:text-sm text-gray-600 focus:outline-none cursor-not-allowed"
         disabled readonly />
     </div>
     <div>
-      <label class="block text-gray-700 font-medium mb-1">Address</label>
+      <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">Address</label>
       <input type="text" value="{{ collector.address|default:'' }}"
-        class="w-full mt-1 px-3 py-2 border rounded-xl bg-gray-50 text-gray-600 focus:outline-none cursor-not-allowed" 
+        class="w-full bg-gray-50 px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md text-xs sm:text-sm text-gray-600 focus:outline-none cursor-not-allowed"
         disabled readonly />
     </div>
     <div>
-      <label class="block text-gray-700 font-medium mb-1">Phone</label>
+      <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">Phone</label>
       <input type="text" value="{{ collector.phone|default:'' }}"
-        class="w-full mt-1 px-3 py-2 border rounded-xl bg-gray-50 text-gray-600 focus:outline-none cursor-not-allowed no-spinners" 
+        class="w-full bg-gray-50 px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md text-xs sm:text-sm text-gray-600 focus:outline-none cursor-not-allowed"
         disabled readonly />
     </div>
     <div>
-      <label class="block text-gray-700 font-medium mb-1">Whatsapp No.</label>
-      <div class="flex mt-1">
+      <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">Whatsapp No.</label>
+      <div class="flex">
         <input type="text" value="{{ collector.country_code|default:'' }}"
-          class="w-16 px-2 py-2 border rounded-l-xl bg-gray-50 text-gray-600 text-center focus:outline-none cursor-not-allowed"
+          class="w-16 bg-gray-50 px-2 h-[32px] sm:h-[34px] border border-gray-300 rounded-l-md text-xs sm:text-sm text-gray-600 text-center focus:outline-none cursor-not-allowed"
           disabled readonly />
         <input type="text" value="{{ collector.wa|default:'' }}"
-          class="w-full px-3 py-2 border-t border-b border-r rounded-r-xl bg-gray-50 text-gray-600 focus:outline-none cursor-not-allowed no-spinners"
+          class="w-full bg-gray-50 px-2 sm:px-2.5 h-[32px] sm:h-[34px] border-t border-b border-r border-gray-300 rounded-r-md text-xs sm:text-sm text-gray-600 focus:outline-none cursor-not-allowed"
           disabled readonly />
       </div>
     </div>
-
     <div class="md:col-span-2">
-      <label
-        class="flex items-center gap-3 cursor-not-allowed bg-gray-50 p-4 rounded-xl border border-gray-200 opacity-80">
-        <input type="checkbox"
-          class="w-5 h-5 text-gray-400 rounded cursor-not-allowed" {% if collector.can_collect_directly %}checked{% endif %} disabled readonly>
+      <label class="flex items-center gap-3 cursor-not-allowed bg-gray-50 p-4 rounded-xl border border-gray-200 opacity-80">
+        <input type="checkbox" class="w-5 h-5 text-gray-400 rounded cursor-not-allowed"
+          {% if collector.can_collect_directly %}checked{% endif %} disabled readonly>
         <div class="flex flex-col">
           <span class="text-gray-700 font-medium select-none">Allow Direct Collection</span>
           <span class="text-xs text-gray-500 select-none mt-0.5">If enabled, this collector can create new collections
@@ -64,18 +48,16 @@
         </div>
       </label>
     </div>
-    
     <div>
-      <label class="block text-gray-700 font-medium mb-1">Username</label>
+      <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">Username</label>
       <input type="text" value="{{ collector.user.username|default:'None' }}"
-        class="w-full mt-1 px-3 py-2 border rounded-xl bg-gray-50 text-gray-600 focus:outline-none cursor-not-allowed"
+        class="w-full bg-gray-50 px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md text-xs sm:text-sm text-gray-600 focus:outline-none cursor-not-allowed"
         disabled readonly />
     </div>
   </div>
-
-  <div class="mt-8 pt-6 border-t border-gray-100 flex justify-end">
+  <div class="mt-4 sm:mt-6 flex justify-end">
     <a href="{% url 'collectors' %}"
-      class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 font-semibold transition-colors">
+      class="leading-none inline-flex items-center gap-1.5 bg-gray-500 text-white font-medium h-[32px] sm:h-[34px] px-4 sm:px-6 rounded-md shadow-sm hover:bg-gray-600 transition-all duration-300 text-xs sm:text-sm">
       Back to Collectors
     </a>
   </div>

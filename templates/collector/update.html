@@ -2,138 +2,110 @@
 {% block title %}Update Collector{% endblock %}
 {% block externalCSS %}
 <style>
-  /* Remove number input arrows */
   input.no-spinners::-webkit-outer-spin-button,
   input.no-spinners::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
   }
-
   input.no-spinners {
     -moz-appearance: textfield;
   }
-
-  .password-strength {
-    height: 6px;
-    border-radius: 4px;
-    background-color: #ddd;
-    margin-top: 4px;
-  }
-
-  .strength-weak {
-    background-color: red;
-    width: 33%;
-  }
-
-  .strength-medium {
-    background-color: orange;
-    width: 66%;
-  }
-
-  .strength-strong {
-    background-color: green;
-    width: 100%;
-  }
+  .password-strength { height: 6px; border-radius: 4px; background-color: #ddd; margin-top: 4px; }
+  .strength-weak { background-color: red; width: 33%; }
+  .strength-medium { background-color: orange; width: 66%; }
+  .strength-strong { background-color: green; width: 100%; }
 </style>
 {% endblock %}
 {% block content %}
-<div class="bg-white rounded-xl p-6">
-  <div class="flex items-center justify-between mb-6 border-b-2 border-gray-200 pb-4">
-    <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 tracking-tight">Update Collector</h1>
+<div class="bg-white sm:rounded-xl p-4 sm:p-6 mt-3 sm:mt-5 w-full max-w-full font-sans">
+  <div class="flex flex-col flex-wrap border-b border-gray-200 pb-4 mb-4 sm:mb-5">
+    <h1 class="text-xl sm:text-2xl font-medium text-gray-700 uppercase">Update Collector</h1>
   </div>
-  <form method="post" action="{% url 'edit-collector' collector.id %}">
-    {% csrf_token %}
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div>
-        <label class="block text-gray-700">Name*</label>
-        <input type="text" placeholder="Enter collector name..." name="name" value="{{ collector.name }}"
-          class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 input-text-only"
-          required />
-      </div>
-      <div>
-        <label class="block text-gray-700">Address</label>
-        <input type="text" placeholder="Enter Address..." name="address" value="{{ collector.address|default:'' }}"
-          class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
-      </div>
-      <div>
-        <label class="block text-gray-700">Phone</label>
-        <input type="number" placeholder="Enter phone number..." name="phone" value="{{ collector.phone|default:'' }}"
-          class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 no-spinners input-number-only" />
-      </div>
-      <div>
-        <label class="block text-gray-700">Whatsapp No.</label>
-        <div class="flex mt-1">
-          <select name="country_code"
-            class="w-[40%] border rounded-l-xl px-1 sm:px-2 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            id="countryCode" data-selected="{{ collector.country_code|default:'91' }}"></select>
-
-          <input type="tel" name="whatsapp_number" value="{{ collector.wa|default:'' }}"
-            placeholder="Enter whatsapp number..."
-            class="w-[60%] px-3 py-2 border-t border-b border-r rounded-r-xl focus:outline-none focus:ring-2 focus:ring-blue-500 no-spinners input-number-only"
-            inputmode="numeric" pattern="[0-9]*" />
-        </div>
-      </div>
-
-      <div class="md:col-span-2">
-        <label
-          class="flex items-center gap-3 cursor-pointer bg-gray-50 p-4 rounded-xl border border-gray-200 hover:bg-white hover:border-blue-300 hover:shadow-sm transition-all">
-          <input type="checkbox" name="can_collect_directly"
-            class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"  {% if collector.can_collect_directly %}checked{% endif %}>
-          <div class="flex flex-col">
-            <span class="text-gray-800 font-medium select-none">Allow Direct Collection</span>
-            <span class="text-xs text-gray-500 select-none mt-0.5">If enabled, this collector can create new collections
-              directly from their dashboard without waiting for an assignment.</span>
-          </div>
-        </label>
-      </div>
-      <div>
-        <label class="block text-gray-700">Username*</label>
-        <div class="relative">
-          <input type="text" id="usernameInput" name="username" value="{{ collector.user.username|default:'' }}"
-            placeholder="Enter Username"
-            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+  <div class="w-full">
+    <form method="post" action="{% url 'edit-collector' collector.id %}" class="flex flex-col gap-3 sm:gap-4">
+      {% csrf_token %}
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">Name*</label>
+          <input type="text" placeholder="Enter collector name..." name="name" value="{{ collector.name }}"
+            class="w-full bg-white px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs sm:text-sm input-text-only"
             required />
-          <span id="usernameStatus" class="absolute right-3 top-3 text-sm"></span>
         </div>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
-          <label class="block text-gray-700">
-             {% if collector.user %}New Password (Optional){% else %}Password*{% endif %}
+          <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">Address</label>
+          <input type="text" placeholder="Enter Address..." name="address" value="{{ collector.address|default:'' }}"
+            class="w-full bg-white px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs sm:text-sm" />
+        </div>
+        <div>
+          <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">Phone</label>
+          <input type="number" placeholder="Enter phone number..." name="phone" value="{{ collector.phone|default:'' }}"
+            class="w-full bg-white px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs sm:text-sm no-spinners input-number-only" />
+        </div>
+        <div>
+          <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">Whatsapp No.</label>
+          <div class="flex">
+            <select name="country_code"
+              class="w-[40%] bg-white px-1 sm:px-2 h-[32px] sm:h-[34px] border border-gray-300 rounded-l-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs sm:text-sm"
+              id="countryCode" data-selected="{{ collector.country_code|default:'91' }}"></select>
+            <input type="tel" name="whatsapp_number" value="{{ collector.wa|default:'' }}"
+              placeholder="Enter whatsapp number..."
+              class="w-[60%] bg-white px-2 sm:px-2.5 h-[32px] sm:h-[34px] border-t border-b border-r border-gray-300 rounded-r-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs sm:text-sm no-spinners input-number-only"
+              inputmode="numeric" pattern="[0-9]*" />
+          </div>
+        </div>
+        <div class="md:col-span-2">
+          <label class="flex items-center gap-3 cursor-pointer bg-gray-50 p-4 rounded-xl border border-gray-200 hover:bg-white hover:border-blue-300 hover:shadow-sm transition-all">
+            <input type="checkbox" name="can_collect_directly"
+              class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 cursor-pointer" {% if collector.can_collect_directly %}checked{% endif %}>
+            <div class="flex flex-col">
+              <span class="text-gray-800 font-medium select-none">Allow Direct Collection</span>
+              <span class="text-xs text-gray-500 select-none mt-0.5">If enabled, this collector can create new collections
+                directly from their dashboard without waiting for an assignment.</span>
+            </div>
           </label>
-          <div class="relative">
-            <input type="password" id="passwordInput" name="password"
-              placeholder=" {% if collector.user %}Leave blank to keep existing{% else %}Enter Password{% endif %}"
-              class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"  {% if not collector.user %}required{% endif %} />
-            <button type="button" id="togglePassword" class="absolute right-3 top-3 text-gray-500">
-              👁️
-            </button>
-          </div>
-          <div id="password-strength" class="password-strength"></div>
         </div>
-
         <div>
-          <label class="block text-gray-700">Confirm Password</label>
+          <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">Username*</label>
           <div class="relative">
-            <input type="password" id="confirmPasswordInput" name="confirm_password" placeholder="Confirm password"
-              class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"  {% if not collector.user %}required{% endif %} />
-            <button type="button" id="toggleConfirmPassword" class="absolute right-3 top-3 text-gray-500">
-              👁️
-            </button>
+            <input type="text" id="usernameInput" name="username" value="{{ collector.user.username|default:'' }}"
+              placeholder="Enter Username"
+              class="w-full bg-white px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs sm:text-sm"
+              required />
+            <span id="usernameStatus" class="absolute right-3 top-2 text-sm"></span>
           </div>
-          <small id="passwordMatch" class="text-sm"></small>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">
+              {% if collector.user %}New Password (Optional){% else %}Password*{% endif %}
+            </label>
+            <div class="relative">
+              <input type="password" id="passwordInput" name="password"
+                placeholder="{% if collector.user %}Leave blank to keep existing{% else %}Enter Password{% endif %}"
+                class="w-full bg-white px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs sm:text-sm" {% if not collector.user %}required{% endif %} />
+              <button type="button" id="togglePassword" class="absolute right-3 top-1.5 text-gray-500">👁️</button>
+            </div>
+            <div id="password-strength" class="password-strength"></div>
+          </div>
+          <div>
+            <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">Confirm Password</label>
+            <div class="relative">
+              <input type="password" id="confirmPasswordInput" name="confirm_password" placeholder="Confirm password"
+                class="w-full bg-white px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs sm:text-sm" {% if not collector.user %}required{% endif %} />
+              <button type="button" id="toggleConfirmPassword" class="absolute right-3 top-1.5 text-gray-500">👁️</button>
+            </div>
+            <small id="passwordMatch" class="text-sm"></small>
+          </div>
         </div>
       </div>
-
-    </div>
-    <div class="mt-6 flex gap-2 justify-end">
-      <a href="{% url 'collectors'%}" type="submit"
-        class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 font-semibold">Cancel</a>
-      <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 font-semibold">
-        Update Collector
-      </button>
-    </div>
-  </form>
+      <div class="mt-4 sm:mt-6 flex flex-wrap gap-2 justify-end">
+        <a href="{% url 'collectors'%}"
+          class="leading-none inline-flex items-center gap-1.5 bg-red-500 text-white font-medium h-[32px] sm:h-[34px] px-4 sm:px-6 rounded-md shadow-sm hover:bg-red-600 transition-all duration-300 text-xs sm:text-sm">Cancel</a>
+        <button type="submit"
+          class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white font-medium h-[32px] sm:h-[34px] px-4 sm:px-6 rounded-md shadow-sm hover:bg-blue-600 transition-all duration-300 text-xs sm:text-sm">Update Collector</button>
+      </div>
+    </form>
+  </div>
 </div>
 {% endblock %}
 
@@ -146,32 +118,20 @@
   if (usernameInput) {
     usernameInput.addEventListener('input', async () => {
       const username = usernameInput.value.trim();
-      if (username.length < 3) {
-        usernameStatus.textContent = '';
-        return;
-      }
-
-      if (currentUsername && username === currentUsername) {
-        usernameStatus.textContent = '';
-        return;
-      }
-
+      if (username.length < 3) { usernameStatus.textContent = ''; return; }
+      if (currentUsername && username === currentUsername) { usernameStatus.textContent = ''; return; }
       const response = await fetch("{% url 'check-username' %}", {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': getCookie('csrftoken'),
-        },
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
         body: JSON.stringify({ username }),
       });
-
       const data = await response.json();
       if (data.available) {
         usernameStatus.textContent = '✅ Available';
-        usernameStatus.className = 'absolute right-3 top-3 text-green-600 text-sm';
+        usernameStatus.className = 'absolute right-3 top-2 text-green-600 text-sm';
       } else {
         usernameStatus.textContent = '❌ Taken';
-        usernameStatus.className = 'absolute right-3 top-3 text-red-600 text-sm';
+        usernameStatus.className = 'absolute right-3 top-2 text-red-600 text-sm';
       }
     });
   }
@@ -184,13 +144,8 @@
   const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
 
   function toggleVisibility(input, icon) {
-    if (input.type === 'password') {
-      input.type = 'text';
-      icon.textContent = '🙈';
-    } else {
-      input.type = 'password';
-      icon.textContent = '👁️';
-    }
+    if (input.type === 'password') { input.type = 'text'; icon.textContent = '🙈'; }
+    else { input.type = 'password'; icon.textContent = '👁️'; }
   }
 
   if (togglePassword) togglePassword.addEventListener('click', () => toggleVisibility(passwordInput, togglePassword));
@@ -204,7 +159,6 @@
       if (/[A-Z]/.test(val)) strength++;
       if (/[0-9]/.test(val)) strength++;
       if (/[^A-Za-z0-9]/.test(val)) strength++;
-
       passwordStrength.className = "password-strength";
       if (strength <= 1 && val) passwordStrength.classList.add("strength-weak");
       else if (strength === 2) passwordStrength.classList.add("strength-medium");
@@ -214,10 +168,7 @@
 
   if (confirmPasswordInput) {
     confirmPasswordInput.addEventListener('input', () => {
-      if (!passwordInput.value) {
-        passwordMatch.textContent = '';
-        return;
-      }
+      if (!passwordInput.value) { passwordMatch.textContent = ''; return; }
       if (confirmPasswordInput.value === passwordInput.value) {
         passwordMatch.textContent = '✅ Passwords match';
         passwordMatch.className = 'text-green-600 text-sm';
