@@ -5,85 +5,76 @@ Cash/Bank Balance
 {% endblock title %}
 
 {% block content %}
-<div class="space-y-6 mt-3">
-    <!-- Header -->
-    <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        <h1 class="text-2xl font-bold text-gray-800 uppercase tracking-wide">
-            Cash/Bank Balance
-        </h1>
-        <p class="text-sm text-gray-500 mt-1">
-            Current balance overview for all cash and bank accounts.
-        </p>
-    </div>
+<!-- DESIGN: matching supplier_ledger / stock_view page wrapper -->
+<div class="bg-white sm:rounded-xl p-4 sm:p-6 mt-3 -mx-4 sm:mx-0 w-[calc(100%+2rem)] sm:w-full shadow-sm sm:shadow-none">
 
-    <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Total Accounts -->
-        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-center justify-between">
-            <div>
-                <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Total Accounts</p>
-                <p class="text-2xl font-bold text-gray-800 mt-1">{{ cashbank_data|length }}</p>
-            </div>
-            <div class="p-3 bg-blue-50 rounded-lg text-blue-600">
-                <i data-lucide="wallet" class="w-6 h-6"></i>
-            </div>
-        </div>
+    <!-- DESIGN: project-standard heading + divider -->
+    <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">
+        Cash / Bank Balance
+    </h1>
 
-        <!-- Net Balance -->
-        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-center justify-between">
-            <div>
-                <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Net Balance</p>
-                <p
-                    class="text-2xl font-bold {% if total_balance_all >= 0 %}text-green-600{% else %}text-red-500{% endif %} mt-1">
-                    {{ total_balance_all|floatformat:2 }}
-                </p>
-            </div>
-            <div class="p-3 bg-green-50 rounded-lg text-green-600">
-                <i data-lucide="dollar-sign" class="w-6 h-6"></i>
-            </div>
-        </div>
-    </div>
+    <hr class="mt-5">
 
-    <!-- Data Table -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-            <h2 class="text-lg font-semibold text-gray-800">Account Details</h2>
-        </div>
+    <div class="mt-5 w-full">
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm text-left">
-                <thead class="bg-gray-50 text-gray-600 uppercase font-semibold text-xs tracking-wider">
+        <!-- DESIGN: compact colored summary block (mirrors stock_view summary table) -->
+        <div class="w-full sm:w-auto inline-block border border-gray-300 rounded overflow-hidden text-sm sm:text-base">
+            <table class="border-collapse">
+                <tbody>
                     <tr>
-                        <th class="px-6 py-3 border-b border-gray-100 w-16">#</th>
-                        <th class="px-6 py-3 border-b border-gray-100">Account Name</th>
-                        <th class="px-6 py-3 border-b border-gray-100 text-right">Total Received</th>
-                        <th class="px-6 py-3 border-b border-gray-100 text-right">Total Paid</th>
-                        <th class="px-6 py-3 border-b border-gray-100 text-right">Current Balance</th>
-                        <th class="px-6 py-3 border-b border-gray-100 text-center w-32">Actions</th>
+                        <td class="px-4 py-1.5 font-semibold text-gray-700 bg-gray-100 border border-gray-300 whitespace-nowrap">Total Accounts</td>
+                        <td class="px-5 py-1.5 font-bold text-gray-800 bg-yellow-200 border border-gray-300 min-w-[160px] text-right">{{ cashbank_data|length }}</td>
+                    </tr>
+                    <tr>
+                        <td class="px-4 py-1.5 font-semibold text-gray-700 bg-gray-100 border border-gray-300 whitespace-nowrap">Net Balance</td>
+                        <td class="px-5 py-1.5 font-bold border border-gray-300 text-right
+                            {% if total_balance_all >= 0 %}bg-green-300 text-gray-800{% else %}bg-red-300 text-gray-800{% endif %}">
+                            {{ total_balance_all|floatformat:2 }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- DESIGN: project-standard table — identical styling to supplier_ledger & stock_view -->
+        <div class="overflow-x-auto mt-5 w-full max-w-3xl border border-gray-200 rounded-lg">
+            <table class="w-full min-w-[500px] text-xs sm:text-sm rounded-t-sm overflow-hidden whitespace-nowrap">
+
+                <!-- DESIGN: bg-blue-200 thead matching all project tables -->
+                <thead class="bg-blue-200 text-gray-700 uppercase text-xs">
+                    <tr>
+                        <th class="px-2 py-1 text-left font-semibold tracking-wide w-8">#</th>
+                        <th class="px-2 py-1 text-left font-semibold tracking-wide">Account Name</th>
+                        <th class="px-2 py-1 text-right font-semibold tracking-wide">Total Received</th>
+                        <th class="px-2 py-1 text-right font-semibold tracking-wide">Total Paid</th>
+                        <th class="px-2 py-1 text-right font-semibold tracking-wide">Current Balance</th>
+                        <th class="px-2 py-1 text-center font-semibold tracking-wide w-28">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100">
+
+                <tbody>
                     {% for item in cashbank_data %}
-                    <tr class="hover:bg-blue-50/50 transition-colors duration-150 group">
-                        <td class="px-6 py-3 font-medium text-gray-500">{{ forloop.counter }}</td>
-                        <td class="px-6 py-3 font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
-                            {{ item.obj.name }}
-                        </td>
-                        <td class="px-6 py-3 text-right text-green-600 font-medium">
+                    <!-- DESIGN: odd/even zebra + border-[#B0B0B0] matching purchase_entry/supplier_ledger rows -->
+                    <tr class="border-b border-[#B0B0B0] odd:bg-white even:bg-[#E5E7EB] hover:bg-[#F0F8FF] transition-all duration-200">
+                        <td class="px-2 py-1 text-left font-medium border-r border-[#B0B0B0]">{{ forloop.counter }}</td>
+                        <td class="px-2 py-1 text-left border-r border-[#B0B0B0]">{{ item.obj.name }}</td>
+                        <td class="px-2 py-1 text-right text-green-700 font-medium border-r border-[#B0B0B0]">
                             {{ item.received|floatformat:2 }}
                         </td>
-                        <td class="px-6 py-3 text-right text-red-500 font-medium">
+                        <td class="px-2 py-1 text-right text-red-600 font-medium border-r border-[#B0B0B0]">
                             {{ item.paid|floatformat:2 }}
                         </td>
-                        <td class="px-6 py-3 text-right font-bold text-gray-800">
+                        <td class="px-2 py-1 text-right font-bold border-r border-[#B0B0B0]
+                            {% if item.balance >= 0 %}text-gray-800{% else %}text-red-600{% endif %}">
                             {{ item.balance|floatformat:2 }}
                         </td>
-                        <td class="px-6 py-3 text-center">
+                        <td class="px-2 py-1 text-center">
+                            <!-- FUNCTIONAL: form/action/CSRF untouched -->
                             <form action="{% url 'cashbankledger' %}" method="post" class="inline">
                                 {% csrf_token %}
                                 <input type="hidden" name="cashbank" value="{{ item.obj.id }}">
                                 <button type="submit"
-                                    class="bg-blue-100 text-blue-600 hover:bg-blue-200 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors">
+                                    class="leading-none inline-flex items-center justify-center bg-blue-500 text-white text-xs font-medium px-2.5 py-1 rounded-md hover:bg-blue-600 transition-all duration-300">
                                     View Ledger
                                 </button>
                             </form>
@@ -91,26 +82,24 @@ Cash/Bank Balance
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="px-6 py-8 text-center text-gray-500">
-                            <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 text-gray-300"></i>
-                            <p>No cash/bank accounts found.</p>
-                        </td>
+                        <td colspan="6" class="px-2 py-4 text-center text-gray-500 font-medium">No cash/bank accounts found.</td>
                     </tr>
                     {% endfor %}
-                </tbody>
-                <tfoot class="bg-gray-50 font-bold text-gray-800 border-t-2 border-gray-200">
-                    <tr>
-                        <td colspan="4" class="px-6 py-3 text-right uppercase text-xs tracking-wide text-gray-500">Net
-                            Balance:</td>
-                        <td
-                            class="px-6 py-3 text-right {% if total_balance_all >= 0 %}text-green-600{% else %}text-red-500{% endif %} text-base">
+
+                    <!-- DESIGN: blue total footer row — identical to supplier_ledger total row -->
+                    <tr class="bg-blue-200 text-gray-700 uppercase divide-y divide-blue-300 text-xs">
+                        <td colspan="4" class="px-2 py-1 text-right font-bold tracking-wide">Net Balance :</td>
+                        <td class="px-2 py-1 text-right font-bold
+                            {% if total_balance_all >= 0 %}text-green-700{% else %}text-red-600{% endif %}">
                             {{ total_balance_all|floatformat:2 }}
                         </td>
                         <td></td>
                     </tr>
-                </tfoot>
+                </tbody>
+
             </table>
         </div>
+
     </div>
 </div>
 {% endblock content %}
@@ -118,7 +107,5 @@ Cash/Bank Balance
 {% block externalJS %}
 <script>
     navActive("cashbankBalanceLink");
-    // Assuming you might add an ID to the sidebar link for this page
-    // If not, you can leave it or remove it.
 </script>
 {% endblock externalJS %}
