@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 @method_decorator([login_required, staff_member_required], name='dispatch')
 class AdminDashboardView(View):
     def get(self, request):
-        from core.models import SubscriptionPayment
+        from core.models import SubscriptionPayment, AdminExpense
         import datetime
         
         clients = Clients.objects.filter(is_active=True)
@@ -47,14 +47,21 @@ class AdminDashboardView(View):
         renewals_due = sorted(renewals_due, key=lambda x: x['days_left'])
         
         total_revenue = SubscriptionPayment.objects.aggregate(Sum('amount'))['amount__sum'] or 0
+        total_expenses = AdminExpense.objects.filter(is_active=True).aggregate(Sum('amount'))['amount__sum'] or 0
+        profit = total_revenue - total_expenses
+
         recent_payments = SubscriptionPayment.objects.select_related('client', 'plan').order_by('-date')[:5]
+        recent_expenses = AdminExpense.objects.filter(is_active=True).order_by('-date', '-id')[:5]
         
         context = {
             'total_clients': total_clients,
             'active_subs': active_subs,
             'expired_subs': expired_subs,
             'total_revenue': total_revenue,
+            'total_expenses': total_expenses,
+            'profit': profit,
             'recent_payments': recent_payments,
+            'recent_expenses': recent_expenses,
             'renewals_due': renewals_due
         }
         
@@ -275,10 +282,12 @@ class DeleteClientView(View):
             raise PermissionDenied("Only superusers can delete clients")
         
         client = get_object_or_404(Clients, id=client_id)
-        client.is_active = False 
+        client.is_active = False
+        client.deleted_at = timezone.now()
         client.user.is_active = False
         client.user.save()
         client.save()
+        messages.success(request, f"Client '{client.name}' moved to recycle bin.")
         return redirect('clients')
 
 
@@ -415,3 +424,192 @@ class PaymentCreateView(View):
         except (Clients.DoesNotExist, SubscriptionPlan.DoesNotExist):
             messages.error(request, "Invalid Client or Plan selected.")
             return redirect('payment-create')
+@method_decorator([login_required, staff_member_required], name='dispatch')
+class PaymentUpdateView(View):
+    def get(self, request, id):
+        payment = get_object_or_404(SubscriptionPayment, id=id)
+        clients = Clients.objects.filter(is_active=True)
+        plans = SubscriptionPlan.objects.filter(is_active=True)
+        return render(request, 'admin/subscription_payments/create.html', {
+            'payment': payment,
+            'clients': clients,
+            'plans': plans
+        })
+
+    def post(self, request, id):
+        payment = get_object_or_404(SubscriptionPayment, id=id)
+        client_id = request.POST.get('client_id')
+        plan_id = request.POST.get('plan_id')
+        amount = request.POST.get('amount')
+        transaction_id = request.POST.get('transaction_id')
+        payment_method = request.POST.get('payment_method')
+        is_renewal = request.POST.get('is_renewal') == 'on'
+
+        try:
+            client = Clients.objects.get(id=client_id)
+            plan = SubscriptionPlan.objects.get(id=plan_id)
+            
+            payment.client = client
+            payment.plan = plan
+            payment.amount = amount
+            payment.transaction_id = transaction_id
+            payment.payment_method = payment_method
+            payment.is_renewal = is_renewal
+            payment.save()
+            
+            messages.success(request, f"Payment updated for {client.name}")
+            return redirect('payments')
+            
+        except (Clients.DoesNotExist, SubscriptionPlan.DoesNotExist):
+            messages.error(request, "Invalid Client or Plan selected.")
+            return redirect('payment-update', id=id)
+
+from core.models import AdminExpense
+
+@method_decorator([login_required, staff_member_required], name='dispatch')
+class AdminExpenseListView(View):
+    def get(self, request):
+        expenses = AdminExpense.objects.filter(is_active=True).order_by('-date', '-id')
+        return render(request, 'admin/expenses/list.html', {'expenses': expenses})
+
+@method_decorator([login_required, staff_member_required], name='dispatch')
+class AdminExpenseCreateView(View):
+    def get(self, request):
+        return render(request, 'admin/expenses/create.html')
+
+    def post(self, request):
+        title = request.POST.get('title')
+        amount = request.POST.get('amount')
+        remark = request.POST.get('remark')
+
+        AdminExpense.objects.create(
+            title=title,
+            amount=amount,
+            remark=remark
+        )
+        messages.success(request, "Expense created successfully.")
+        return redirect('admin-expenses')
+
+@method_decorator([login_required, staff_member_required], name='dispatch')
+class AdminExpenseUpdateView(View):
+    def get(self, request, id):
+        expense = get_object_or_404(AdminExpense, id=id)
+        return render(request, 'admin/expenses/create.html', {'expense': expense})
+
+    def post(self, request, id):
+        expense = get_object_or_404(AdminExpense, id=id)
+        expense.title = request.POST.get('title')
+        expense.amount = request.POST.get('amount')
+        expense.remark = request.POST.get('remark')
+        expense.save()
+
+        messages.success(request, "Expense updated successfully.")
+        return redirect('admin-expenses')
+
+@method_decorator([login_required, staff_member_required], name='dispatch')
+class AdminExpenseDeleteView(View):
+    def post(self, request, id):
+        expense = get_object_or_404(AdminExpense, id=id)
+        expense.soft_delete()
+        messages.success(request, "Expense moved to recycle bin.")
+        return redirect('admin-expenses')
+
+
+@method_decorator([login_required, staff_member_required], name='dispatch')
+class AdminRecycleBinView(View):
+    def get(self, request):
+        categories = []
+        
+        # AdminExpense
+        expense_count = AdminExpense.objects.filter(is_active=False, deleted_at__isnull=False).count()
+        if expense_count > 0:
+            categories.append({
+                'label': 'Expense',
+                'model_name': 'AdminExpense',
+                'count': expense_count,
+                'icon': 'receipt',
+            })
+        
+        # Clients (soft-deleted via is_active=False)
+        client_count = Clients.objects.filter(is_active=False).count()
+        if client_count > 0:
+            categories.append({
+                'label': 'Client',
+                'model_name': 'Clients',
+                'count': client_count,
+                'icon': 'users',
+            })
+        
+        return render(request, 'admin/recycle_bin/dashboard.html', {'categories': categories})
+
+
+@method_decorator([login_required, staff_member_required], name='dispatch')
+class AdminRecycleBinListView(View):
+    def get(self, request, model_name):
+        from django.apps import apps
+        
+        id_field_map = {
+            'AdminExpense': ('Expense', 'title'),
+            'Clients': ('Client', 'clientId'),
+        }
+        
+        label, id_field = id_field_map.get(model_name, (model_name, 'id'))
+        model = apps.get_model('core', model_name)
+        
+        if model_name == 'Clients':
+            items_query = model.objects.filter(is_active=False).order_by('-id')
+        else:
+            items_query = model.objects.filter(is_active=False, deleted_at__isnull=False).order_by('-deleted_at')
+        
+        deleted_items = []
+        for item in items_query:
+            display_id = getattr(item, id_field, None) or f"{label}-{item.id}"
+            name = getattr(item, 'name', None) or getattr(item, 'title', None) or label
+            deleted_at = getattr(item, 'deleted_at', None)
+            
+            deleted_items.append({
+                'id': item.id,
+                'display_id': display_id,
+                'name': name,
+                'deleted_at': deleted_at,
+            })
+        
+        return render(request, 'admin/recycle_bin/list.html', {
+            'items': deleted_items,
+            'label': label,
+            'model_name': model_name,
+        })
+
+
+@method_decorator([login_required, staff_member_required], name='dispatch')
+class AdminRestoreView(View):
+    def post(self, request, model_name, pk):
+        from django.apps import apps
+        model = apps.get_model('core', model_name)
+        item = get_object_or_404(model, id=pk)
+        
+        item.is_active = True
+        item.deleted_at = None
+        
+        # For Clients, also reactivate their user account
+        if model_name == 'Clients' and hasattr(item, 'user') and item.user:
+            item.user.is_active = True
+            item.user.save()
+        
+        item.save()
+        return JsonResponse({'status': 'success', 'message': 'Item restored successfully'})
+
+
+@method_decorator([login_required, staff_member_required], name='dispatch')
+class AdminPermanentDeleteView(View):
+    def post(self, request, model_name, pk):
+        from django.apps import apps
+        model = apps.get_model('core', model_name)
+        item = get_object_or_404(model, id=pk)
+        
+        # For Clients, also delete their user account
+        if model_name == 'Clients' and hasattr(item, 'user') and item.user:
+            item.user.delete()
+        
+        item.delete()
+        return JsonResponse({'status': 'success', 'message': 'Item permanently deleted'})

@@ -25,16 +25,19 @@ Subscription Payments
                     <th class="p-3 border-b">Amount</th>
                     <th class="p-3 border-b">Date</th>
                     <th class="p-3 border-b">Transaction ID</th>
+                    <th class="p-3 border-b text-right">Actions</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
                 {% for payment in payments %}
-                <tr class="hover:bg-gray-50">
-                    <td class="p-3">{{ payment.id }}</td>
+                <tr class="hover:bg-gray-50 group">
+                    <td class="p-3 text-gray-400 text-xs">#{{ payment.id }}</td>
                     <td class="p-3 font-medium text-gray-900">{{ payment.client.name }}</td>
                     <td class="p-3">
                         {% if payment.plan %}
-                        <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">{{ payment.plan.name }}</span>
+                        <span
+                            class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-1 rounded-full uppercase">
+                            {{ payment.plan.name }}</span>
                         {% else %}
                         -
                         {% endif %}
@@ -49,9 +52,16 @@ Subscription Payments
                             Client</span>
                         {% endif %}
                     </td>
-                    <td class="p-3 font-semibold text-green-600">{{ payment.amount }}</td>
-                    <td class="p-3 text-gray-500">{{ payment.date }}</td>
-                    <td class="p-3 text-gray-500">{{ payment.transaction_id|default:"-" }}</td>
+                    <td class="p-3 font-semibold text-green-600">{{ payment.amount|floatformat:2 }}</td>
+                    <td class="p-3 text-gray-500 text-sm">{{ payment.date }}</td>
+                    <td class="p-3 text-gray-400 text-xs font-mono">{{ payment.transaction_id|default:"-" }}</td>
+                    <td class="p-3 text-right">
+                        <a href="{% url 'payment-update' payment.id %}"
+                            class="inline-flex items-center gap-1.5 bg-white border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm opacity-0 group-hover:opacity-100">
+                            <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
+                            Edit
+                        </a>
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>
@@ -63,3 +73,13 @@ Subscription Payments
     </div>
 </div>
 {% endblock content %}
+
+{% block externalJS %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    });
+</script>
+{% endblock externalJS %}

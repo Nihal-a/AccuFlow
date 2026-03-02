@@ -18,7 +18,7 @@
 <div class="bg-white sm:rounded-xl p-4 sm:p-6 mt-3 sm:mt-5 mx-0 sm:mx-0 w-full max-w-full font-sans">
   <div class="flex flex-col flex-wrap border-b border-gray-200 pb-4">
     <h1 class="text-xl sm:text-2xl font-medium mb-0 text-gray-700 uppercase">
-        Create Client
+      Create Client
     </h1>
   </div>
   <div class="mt-4 sm:mt-5 w-full">
@@ -60,7 +60,7 @@
             <option value="">Select a Plan...</option>
             {% for plan in plans %}
             <option value="{{ plan.id }}">
-              {{ plan.name }} - {{ plan.price }} ({{ plan.duration_days }} days)
+              {{ plan.name }} ({{ plan.duration_days }} days)
               {% if plan.is_trial %} [TRIAL]{% endif %}
             </option>
             {% endfor %}
@@ -99,7 +99,8 @@
                 placeholder="Enter Confirm Password"
                 class="w-full bg-white px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm pr-10"
                 required />
-              <button type="button" id="toggleConfirmPassword" class="absolute right-2 top-1.5 sm:top-2 text-sm text-gray-500">
+              <button type="button" id="toggleConfirmPassword"
+                class="absolute right-2 top-1.5 sm:top-2 text-sm text-gray-500">
                 👁️
               </button>
             </div>
@@ -110,7 +111,8 @@
       <div class="mt-4 sm:mt-6 flex flex-wrap gap-2 justify-end">
         <a href="{% url 'clients'%}"
           class="leading-none inline-flex items-center gap-1.5 bg-red-500 text-white font-medium h-[32px] sm:h-[34px] px-4 sm:px-6 rounded-md shadow-sm hover:bg-red-600 transition-all duration-300 text-xs sm:text-sm">Cancel</a>
-        <button type="submit" class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white font-medium h-[32px] sm:h-[34px] px-4 sm:px-6 rounded-md shadow-sm hover:bg-blue-600 transition-all duration-300 text-xs sm:text-sm">
+        <button type="submit" id="submitBtn"
+          class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white font-medium h-[32px] sm:h-[34px] px-4 sm:px-6 rounded-md shadow-sm hover:bg-blue-600 transition-all duration-300 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed">
           Create Client
         </button>
       </div>
@@ -121,13 +123,22 @@
 
 {% block externalJS %}
 <script>
-  const usernameInput = document.getElementById('usernameInput');
-  const usernameStatus = document.getElementById('usernameStatus');
+  const submitBtn = document.getElementById('submitBtn');
+  let isUsernameValid = false;
+  let isPasswordValid = false;
+  let isPasswordMatch = false;
+
+  function validateForm() {
+    submitBtn.disabled = !(isUsernameValid && isPasswordValid && isPasswordMatch);
+  }
 
   usernameInput.addEventListener('input', async () => {
     const username = usernameInput.value.trim();
     if (username.length < 3) {
-      usernameStatus.textContent = '';
+      usernameStatus.textContent = '❌ Min 3 characters';
+      usernameStatus.className = 'absolute right-3 top-3 text-red-600 text-[10px]';
+      isUsernameValid = false;
+      validateForm();
       return;
     }
 
@@ -143,11 +154,14 @@
     const data = await response.json();
     if (data.available) {
       usernameStatus.textContent = '✅ Available';
-      usernameStatus.className = 'absolute right-3 top-3 text-green-600 text-sm';
+      usernameStatus.className = 'absolute right-3 top-3 text-green-600 text-[10px]';
+      isUsernameValid = true;
     } else {
       usernameStatus.textContent = '❌ Taken';
-      usernameStatus.className = 'absolute right-3 top-3 text-red-600 text-sm';
+      usernameStatus.className = 'absolute right-3 top-3 text-red-600 text-[10px]';
+      isUsernameValid = false;
     }
+    validateForm();
   });
 
   const passwordInput = document.getElementById('passwordInput');
@@ -172,25 +186,40 @@
   passwordInput.addEventListener('input', () => {
     const val = passwordInput.value;
     let strength = 'Weak', color = 'text-red-500';
+    isPasswordValid = val.length >= 6;
+
     if (val.length >= 8 && /[A-Z]/.test(val) && /[a-z]/.test(val) && /\d/.test(val) && /[@$!%*?&#]/.test(val)) {
       strength = 'Strong'; color = 'text-green-600';
     } else if (val.length >= 6) {
       strength = 'Medium'; color = 'text-yellow-500';
+    } else if (val.length > 0) {
+      strength = 'Too Short'; color = 'text-red-500';
+    } else {
+      strength = '';
     }
-    passwordStrength.textContent = strength + ' password';
-    passwordStrength.className = 'text-sm ' + color;
+
+    passwordStrength.textContent = strength ? strength + ' password' : '';
+    passwordStrength.className = 'text-xs ' + color;
+
+    // Check match again if confirm has value
+    isPasswordMatch = confirmPasswordInput.value === val && val.length > 0;
+    validateForm();
   });
 
   confirmPasswordInput.addEventListener('input', () => {
-    if (confirmPasswordInput.value === passwordInput.value) {
+    if (confirmPasswordInput.value === passwordInput.value && passwordInput.value.length > 0) {
       passwordMatch.textContent = '✅ Passwords match';
-      passwordMatch.className = 'text-green-600 text-sm';
+      passwordMatch.className = 'text-green-600 text-xs';
+      isPasswordMatch = true;
     } else {
       passwordMatch.textContent = '❌ Passwords do not match';
-      passwordMatch.className = 'text-red-600 text-sm';
+      passwordMatch.className = 'text-red-600 text-xs';
+      isPasswordMatch = false;
     }
+    validateForm();
   });
 
+  validateForm(); // Initial check
   countryCode();
 </script>
 {% endblock %}

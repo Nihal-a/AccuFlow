@@ -6,18 +6,23 @@ New Subscription Payment
 
 {% block content %}
 <div class="bg-white sm:rounded-xl p-4 sm:p-6 mt-3 sm:mt-5 w-full max-w-full font-sans">
-    <h2 class="text-xl font-bold text-gray-800 mb-6 border-b pb-4">Record New Payment</h2>
+    <h2 class="text-xl font-bold text-gray-800 mb-6 border-b pb-4">
+        {% if payment %}Edit Payment #{{ payment.id }}{% else %}Record New Payment{% endif %}
+    </h2>
 
-    <form method="POST" action="{% url 'payment-create' %}">
+    <form method="POST"
+        action="{% if payment %}{% url 'payment-update' payment.id %}{% else %}{% url 'payment-create' %}{% endif %}">
         {% csrf_token %}
         <div class="space-y-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Client</label>
-                <select name="client_id" required
+                <select name="client_id" id="clientSelect" required
                     class="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="" disabled selected>Select Client</option>
+                    <option value="" disabled>Select Client</option>
                     {% for client in clients %}
-                    <option value="{{ client.id }}">{{ client.name }} ({{ client.user.username }})</option>
+                    <option value="{{ client.id }}">
+                        {{ client.name }} ({{ client.user.username }})
+                    </option>
                     {% endfor %}
                 </select>
             </div>
@@ -27,7 +32,7 @@ New Subscription Payment
                     <label class="block text-sm font-medium text-gray-700 mb-1">Subscription Plan</label>
                     <select name="plan_id" id="planSelect" required
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="" disabled selected>Select Plan</option>
+                        <option value="" disabled>Select Plan</option>
                         {% for plan in plans %}
                         <option value="{{ plan.id }}">{{ plan.name }}</option>
                         {% endfor %}
@@ -37,7 +42,7 @@ New Subscription Payment
                     <label class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
                     <input type="number" name="amount" id="amountInput" step="0.01" required
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="0.00">
+                        placeholder="0.00" value="{{ payment.amount|floatformat:2|default:'' }}">
                 </div>
             </div>
 
@@ -45,12 +50,12 @@ New Subscription Payment
                 <label class="block text-sm font-medium text-gray-700 mb-1">Transaction ID / Reference</label>
                 <input type="text" name="transaction_id"
                     class="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Optional">
+                    placeholder="Optional" value="{{ payment.transaction_id|default:'' }}">
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
-                <select name="payment_method"
+                <select name="payment_method" id="methodSelect"
                     class="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="Cash">Cash</option>
                     <option value="Bank Transfer">Bank Transfer</option>
@@ -59,23 +64,33 @@ New Subscription Payment
                 </select>
             </div>
 
-            <div class="flex items-center mt-4">
-                <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" name="is_renewal" class="sr-only peer">
-                    <div
-                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+            <div x-data="{ isRenewal: false }" id="renewalToggle" @click="isRenewal = !isRenewal"
+                class="flex items-center p-4 bg-gray-50 rounded-xl border border-gray-200 mt-4 transition-all hover:bg-white hover:border-blue-300 hover:shadow-sm group cursor-pointer">
+
+                <input type="checkbox" name="is_renewal" id="renewalCheckbox" class="hidden" :checked="isRenewal">
+
+                <div :class="isRenewal ? 'bg-blue-600' : 'bg-gray-300'"
+                    class="relative w-11 h-6 transition-colors duration-200 ease-in-out rounded-full shadow-inner">
+                    <div :class="isRenewal ? 'translate-x-5' : 'translate-x-0'"
+                        class="absolute top-[2px] left-[2px] w-5 h-5 transition-transform duration-200 ease-in-out bg-white border border-gray-300 rounded-full">
                     </div>
-                    <span class="ml-3 text-sm font-medium text-gray-700">Is this a Renewal? (Leave unchecked for New
-                        Client)</span>
-                </label>
+                </div>
+
+                <div class="ml-4">
+                    <span
+                        class="block text-sm font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">Is
+                        this a Renewal?</span>
+                    <span class="block text-xs text-gray-500">Enable for Renewals, Disable for New Clients</span>
+                </div>
             </div>
 
             <div class="flex justify-end gap-3 mt-6">
                 <a href="{% url 'payments' %}"
                     class="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">Cancel</a>
                 <button type="submit"
-                    class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">Save
-                    Payment</button>
+                    class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                    {% if payment %}Update{% else %}Save{% endif %} Payment
+                </button>
             </div>
         </div>
     </form>
@@ -85,9 +100,22 @@ New Subscription Payment
 
 {% block externalJS %}
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    $(document).ready(function () {
         const planSelect = document.getElementById('planSelect');
         const amountInput = document.getElementById('amountInput');
+
+        {% if payment %}
+        // Pre-select values using jQuery for Edit mode
+        $('#clientSelect').val('{{ payment.client_id }}');
+        $('#planSelect').val('{{ payment.plan_id }}');
+        $('#methodSelect').val('{{ payment.payment_method }}');
+
+        // Handle renewal toggle (Alpine state)
+        if ("{{ payment.is_renewal }}" === "True") {
+            // Trigger a click to set Alpine's state if we're in edit mode and it's a renewal
+            document.getElementById('renewalToggle').click();
+        }
+        {% endif %}
 
         planSelect.addEventListener('change', function () {
             const planId = this.value;

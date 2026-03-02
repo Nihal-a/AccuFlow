@@ -7,6 +7,7 @@
     -webkit-appearance: none;
     margin: 0;
   }
+
   input.no-spinners {
     -moz-appearance: textfield;
   }
@@ -49,15 +50,25 @@
           </div>
         </div>
         <div class="md:col-span-2">
-          <label class="flex items-center gap-3 cursor-pointer bg-gray-50 p-4 rounded-xl border border-gray-200 hover:bg-white hover:border-blue-300 hover:shadow-sm transition-all">
-            <input type="checkbox" name="can_collect_directly"
-              class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 cursor-pointer">
-            <div class="flex flex-col">
-              <span class="text-gray-800 font-medium select-none">Allow Direct Collection</span>
-              <span class="text-xs text-gray-500 select-none mt-0.5">If enabled, this collector can create new collections
-                directly from their dashboard without waiting for an assignment.</span>
+          <div x-data="{ canCollect: false }" @click="canCollect = !canCollect"
+            class="flex items-center p-4 bg-gray-50 rounded-xl border border-gray-200 transition-all hover:bg-white hover:border-blue-300 hover:shadow-sm group cursor-pointer">
+
+            <input type="checkbox" name="can_collect_directly" class="hidden" :checked="canCollect">
+
+            <div :class="canCollect ? 'bg-blue-600' : 'bg-gray-300'"
+              class="relative w-11 h-6 transition-colors duration-200 ease-in-out rounded-full shadow-inner">
+              <div :class="canCollect ? 'translate-x-5' : 'translate-x-0'"
+                class="absolute top-[2px] left-[2px] w-5 h-5 transition-transform duration-200 ease-in-out bg-white border border-gray-300 rounded-full">
+              </div>
             </div>
-          </label>
+
+            <div class="ml-4">
+              <span class="block text-sm font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">Allow
+                Direct Collection</span>
+              <span class="block text-xs text-gray-500">If enabled, this collector can create new collections directly
+                from their dashboard.</span>
+            </div>
+          </div>
         </div>
         <div>
           <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">Username*</label>
@@ -82,10 +93,12 @@
           <div>
             <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">Confirm Password*</label>
             <div class="relative">
-              <input type="password" id="confirmPasswordInput" name="confirm_password" placeholder="Enter Confirm Password"
+              <input type="password" id="confirmPasswordInput" name="confirm_password"
+                placeholder="Enter Confirm Password"
                 class="w-full bg-white px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs sm:text-sm"
                 required />
-              <button type="button" id="toggleConfirmPassword" class="absolute right-3 top-1.5 text-gray-500">👁️</button>
+              <button type="button" id="toggleConfirmPassword"
+                class="absolute right-3 top-1.5 text-gray-500">👁️</button>
             </div>
             <small id="passwordMatch" class="text-sm"></small>
           </div>
@@ -95,7 +108,8 @@
         <a href="{% url 'collectors'%}"
           class="leading-none inline-flex items-center gap-1.5 bg-red-500 text-white font-medium h-[32px] sm:h-[34px] px-4 sm:px-6 rounded-md shadow-sm hover:bg-red-600 transition-all duration-300 text-xs sm:text-sm">Cancel</a>
         <button type="submit"
-          class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white font-medium h-[32px] sm:h-[34px] px-4 sm:px-6 rounded-md shadow-sm hover:bg-blue-600 transition-all duration-300 text-xs sm:text-sm">Create Collector</button>
+          class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white font-medium h-[32px] sm:h-[34px] px-4 sm:px-6 rounded-md shadow-sm hover:bg-blue-600 transition-all duration-300 text-xs sm:text-sm">Create
+          Collector</button>
       </div>
     </form>
   </div>

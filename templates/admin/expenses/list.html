@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Admin Expenses
+{% endblock title %}
+
+{% block content %}
+<div class="bg-white sm:rounded-xl p-4 sm:p-6 mt-3 sm:mt-5 w-full max-w-full font-sans">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-bold text-gray-800">Admin Expenses</h2>
+        <a href="{% url 'admin-expense-create' %}"
+            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+            <i class="fa-solid fa-plus mr-2"></i>New Expense
+        </a>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-50 text-gray-700 text-sm uppercase">
+                    <th class="p-3 border-b">ID</th>
+                    <th class="p-3 border-b">Date</th>
+                    <th class="p-3 border-b">Title</th>
+                    <th class="p-3 border-b">Amount</th>
+                    <th class="p-3 border-b">Remark</th>
+                    <th class="p-3 border-b text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for expense in expenses %}
+                <tr class="hover:bg-gray-50 group">
+                    <td class="p-3 text-gray-400 text-xs">#{{ expense.id }}</td>
+                    <td class="p-3 text-gray-500 text-sm">{{ expense.date }}</td>
+                    <td class="p-3 font-medium text-gray-900">{{ expense.title }}</td>
+                    <td class="p-3 font-semibold text-red-600">{{ expense.amount|floatformat:2 }}</td>
+                    <td class="p-3 text-gray-500 text-sm">{{ expense.remark|default:"-"|truncatechars:50 }}</td>
+                    <td class="p-3 text-right">
+                        <div
+                            class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <a href="{% url 'admin-expense-update' expense.id %}"
+                                class="inline-flex items-center gap-1.5 bg-white border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm">
+                                <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
+                                Edit
+                            </a>
+                            <form method="POST" action="{% url 'admin-expense-delete' expense.id %}"
+                                class="inline-block"
+                                onsubmit="return confirm('Are you sure you want to delete this expense?');">
+                                {% csrf_token %}
+                                <button type="submit"
+                                    class="inline-flex items-center gap-1.5 bg-white border border-gray-200 text-red-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:border-red-500 hover:bg-red-50 transition-all shadow-sm">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="p-6 text-center text-gray-500">No expenses found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock content %}
+
+{% block externalJS %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    });
+</script>
+{% endblock externalJS %}

@@ -17,64 +17,82 @@
     </div>
 
     <form method="POST" class="space-y-6">
-            {% csrf_token %}
+        {% csrf_token %}
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Plan Name</label>
-                    <input type="text" name="name" value="{{ plan.name|default:'' }}" required
-                        class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all input-text-only"
-                        placeholder="e.g. Basic Monthly">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Price</label>
-                    <input type="number" step="0.01" name="price" value="{{ plan.price|default:'' }}" required
-                        class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                        placeholder="0.00">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Duration (Days)</label>
-                    <input type="number" name="duration" value="{{ plan.duration_days|default:'30' }}" required
-                        class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all input-number-only"
-                        placeholder="30">
-                </div>
-
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                    <textarea name="description" rows="3"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                        placeholder="Plan details...">{{ plan.description|default:'' }}</textarea>
-                </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Plan Name</label>
+                <input type="text" name="name" value="{{ plan.name|default:'' }}" required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all input-text-only"
+                    placeholder="e.g. Basic Monthly">
             </div>
 
-            <div class="flex flex-col gap-3 pt-2 border-t border-gray-100">
-                <label class="flex items-center gap-3 cursor-pointer">
-                    <input type="checkbox" name="is_trial" id="isTrial"
-                        class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300">
-                    <div>
-                        <span class="block text-sm font-medium text-gray-900">Is Free Trial?</span>
-                        <span class="block text-xs text-gray-500">Enable if this is a trial plan (e.g. 7 days free).
-                            Price is ignored if checked.</span>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                <input type="number" step="0.01" name="price" value="{{ plan.price|default:'' }}" required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    placeholder="0.00">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Duration (Days)</label>
+                <input type="number" name="duration" value="{{ plan.duration_days|default:'30' }}" required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all input-number-only"
+                    placeholder="30">
+            </div>
+
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea name="description" rows="3"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    placeholder="Plan details...">{{ plan.description|default:'' }}</textarea>
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-4 pt-4 border-t border-gray-100"
+            x-data="{ isTrial: {% if plan.is_trial %}true{% else %}false{% endif %}, isActive: {% if plan.is_active or not plan %}true{% else %}false{% endif %} }">
+            <div @click="isTrial = !isTrial"
+                class="flex items-center p-4 bg-gray-50 rounded-xl border border-gray-200 transition-all hover:bg-white hover:border-blue-300 hover:shadow-sm group cursor-pointer">
+                <input type="checkbox" name="is_trial" id="isTrial" class="hidden" :checked="isTrial">
+                <div :class="isTrial ? 'bg-blue-600' : 'bg-gray-300'"
+                    class="relative w-11 h-6 transition-colors duration-200 ease-in-out rounded-full shadow-inner">
+                    <div :class="isTrial ? 'translate-x-5' : 'translate-x-0'"
+                        class="absolute top-[2px] left-[2px] w-5 h-5 transition-transform duration-200 ease-in-out bg-white border border-gray-300 rounded-full">
                     </div>
-                </label>
-
-                {% if plan %}
-                <label class="flex items-center gap-3 cursor-pointer">
-                    <input type="checkbox" name="is_active" id="isActive"
-                        class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300">
-                    <span class="text-sm font-medium text-gray-900">Active</span>
-                </label>
-                {% endif %}
+                </div>
+                <div class="ml-4">
+                    <span
+                        class="block text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">Is
+                        Free Trial?</span>
+                    <span class="block text-xs text-gray-500">Price is ignored if enabled.</span>
+                </div>
             </div>
 
-            <div class="flex items-center justify-end pt-4">
-                <button type="submit"
-                    class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-8 py-2.5 rounded-xl transition-all shadow-lg hover:shadow-blue-200">
-                    {% if plan %}Update Plan{% else %}Create Plan{% endif %}
-                </button>
+            {% if plan %}
+            <div @click="isActive = !isActive"
+                class="flex items-center p-4 bg-gray-50 rounded-xl border border-gray-200 transition-all hover:bg-white hover:border-blue-300 hover:shadow-sm group cursor-pointer">
+                <input type="checkbox" name="is_active" id="isActive" class="hidden" :checked="isActive">
+                <div :class="isActive ? 'bg-blue-600' : 'bg-gray-300'"
+                    class="relative w-11 h-6 transition-colors duration-200 ease-in-out rounded-full shadow-inner">
+                    <div :class="isActive ? 'translate-x-5' : 'translate-x-0'"
+                        class="absolute top-[2px] left-[2px] w-5 h-5 transition-transform duration-200 ease-in-out bg-white border border-gray-300 rounded-full">
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <span
+                        class="block text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">Active</span>
+                    <span class="block text-xs text-gray-500">Plan will be visible for subscriptions if enabled.</span>
+                </div>
             </div>
+            {% endif %}
+        </div>
+
+        <div class="flex items-center justify-end pt-4">
+            <button type="submit"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-8 py-2.5 rounded-xl transition-all shadow-lg hover:shadow-blue-200">
+                {% if plan %}Update Plan{% else %}Create Plan{% endif %}
+            </button>
+        </div>
     </form>
 </div>
 {% endblock content %}
@@ -88,13 +106,6 @@
     });
 
     $(document).ready(function () {
-        {% if plan.is_trial %}
-        $('#isTrial').prop('checked', true);
-        {% endif %}
-
-        {% if plan.is_active %}
-        $('#isActive').prop('checked', true);
-        {% endif %}
     });
 </script>
 {% endblock externalJS %}

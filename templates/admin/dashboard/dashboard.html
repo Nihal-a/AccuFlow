@@ -5,7 +5,7 @@ Admin Dashboard
 {% endblock title %}
 
 {% block content %}
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
     <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex items-center justify-between">
         <div>
             <p class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-1">Total Clients</p>
@@ -45,6 +45,27 @@ Admin Dashboard
             <i class="fa-solid fa-rupee-sign"></i>
         </div>
     </div>
+
+    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex items-center justify-between">
+        <div>
+            <p class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-1">Total Expenses</p>
+            <h3 class="text-3xl font-bold text-orange-600">₹{{ total_expenses|floatformat:2 }}</h3>
+        </div>
+        <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-xl">
+            <i class="fa-solid fa-receipt"></i>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex items-center justify-between">
+        <div>
+            <p class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-1">Net Profit</p>
+            <h3 class="text-3xl font-bold text-emerald-600">₹{{ profit|floatformat:2 }}</h3>
+        </div>
+        <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-xl">
+            <i class="fa-solid fa-chart-line"></i>
+        </div>
+    </div>
+
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -82,7 +103,8 @@ Admin Dashboard
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100 bg-amber-50 flex items-center justify-between">
             <h3 class="font-bold text-amber-800">Renewals Due Soon</h3>
-            <span class="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full font-semibold">{{ renewals_due|length }}</span>
+            <span class="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full font-semibold">
+                {{ renewals_due|length }}</span>
         </div>
         <div class="p-0">
             <ul class="divide-y divide-gray-100">

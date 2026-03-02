@@ -125,6 +125,7 @@ class Clients(models.Model):
     wa = models.TextField(blank=True,null=True)
     country_code = models.TextField(blank=True,null=True)
     clientId = models.TextField(blank=True,null=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
     
     # Subscription Fields
     subscription_plan = models.ForeignKey(SubscriptionPlan, on_delete=models.SET_NULL, null=True, blank=True)
@@ -561,5 +562,19 @@ def update_client_subscription(sender, instance, created, **kwargs):
         client.subscription_end = client.subscription_start + datetime.timedelta(days=plan.duration_days)
         client.save()
 
-
+class AdminExpense(models.Model):
+    title = models.CharField(max_length=200)
+    amount = models.DecimalField(max_digits=19, decimal_places=4, default=Decimal('0.0000'))
+    remark = models.TextField(blank=True, null=True)
+    date = models.DateField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"{self.title} - {self.amount}"
+    
+    def soft_delete(self):
+        self.is_active = False
+        self.deleted_at = timezone.now()
+        self.save()
 

@@ -9,13 +9,13 @@ if (searchInput) {
   searchInput.addEventListener("keyup", function () {
     const filter = searchInput.value.toLowerCase();
     const rows = document.querySelectorAll("tbody tr");
-    
+
     let visibleCount = 0;
-    
+
     rows.forEach((row) => {
       // Ignore the "no-data" row if it exists
       if (row.classList.contains("no-search-data")) return;
-        
+
       const text = row.querySelector(".search-area")
         ? row.querySelectorAll(".search-area")
         : [];
@@ -26,30 +26,30 @@ if (searchInput) {
       });
 
       if (rowText.includes(filter)) {
-          row.style.display = "";
-          visibleCount++;
+        row.style.display = "";
+        visibleCount++;
       } else {
-          row.style.display = "none";
+        row.style.display = "none";
       }
     });
-    
+
     // Add or remove "No data found" row
     const tbody = document.querySelector("tbody");
     if (tbody) {
-        let noDataRow = tbody.querySelector(".no-search-data");
-        
-        if (visibleCount === 0 && rows.length > 0) {
-            if (!noDataRow) {
-                noDataRow = document.createElement("tr");
-                noDataRow.className = "no-search-data bg-white";
-                noDataRow.innerHTML = `<td colspan="20" class="text-left sm:text-center px-4 py-2 text-sm sm:text-base text-gray-500 bg-white">No data found</td>`;
-                tbody.appendChild(noDataRow);
-            } else {
-                noDataRow.style.display = "";
-            }
-        } else if (noDataRow) {
-            noDataRow.style.display = "none";
+      let noDataRow = tbody.querySelector(".no-search-data");
+
+      if (visibleCount === 0 && rows.length > 0) {
+        if (!noDataRow) {
+          noDataRow = document.createElement("tr");
+          noDataRow.className = "no-search-data bg-white";
+          noDataRow.innerHTML = `<td colspan="20" class="text-left sm:text-center px-4 py-2 text-sm sm:text-base text-gray-500 bg-white">No data found</td>`;
+          tbody.appendChild(noDataRow);
+        } else {
+          noDataRow.style.display = "";
         }
+      } else if (noDataRow) {
+        noDataRow.style.display = "none";
+      }
     }
   });
 }
@@ -170,10 +170,9 @@ const csrftoken = getToken('csrftoken')
 
 
 let isFormDirty = false;
-const forms = document.getElementsByTagName("form");
 
-// Track input changes in all forms, excluding those marked to ignore
-$(document).on("input change", "form:not(.ignore-unsaved-changes) :input", function () {
+// Track input changes only in POST forms (data entry), excluding those marked to ignore
+$(document).on("input change", "form:not(.ignore-unsaved-changes)[method='POST'] :input", function () {
   isFormDirty = true;
 });
 
@@ -193,7 +192,7 @@ window.addEventListener("beforeunload", function (e) {
 function countryCode() {
   var countrySelect = document.getElementById('countryCode')
   $(countrySelect).html(`
-      <option value="+971">🇦🇪 +971 (UAE)</option>
+      <option value="+971" selected>🇦🇪 +971 (UAE)</option>
                 <option value="+966">🇸🇦 +966 (Saudi Arabia)</option>
                 <option value="+974">🇶🇦 +974 (Qatar)</option>
                 <option value="+965">🇰🇼 +965 (Kuwait)</option>
@@ -208,8 +207,7 @@ function countryCode() {
                 <option value="+212">🇲🇦 +212 (Morocco)</option>
                 <option value="+213">🇩🇿 +213 (Algeria)</option>
                 <option value="+249">🇸🇩 +249 (Sudan)</option>
-
-                <option value="+91" selected>🇮🇳 +91 (India)</option>
+                <option value="+91">🇮🇳 +91 (India)</option>
                 <option value="+1">🇺🇸 +1 (USA)</option>
                 <option value="+44">🇬🇧 +44 (UK)</option>
                 <option value="+61">🇦🇺 +61 (Australia)</option>
