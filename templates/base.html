@@ -332,6 +332,19 @@
             </div>
             <div class="space-y-0">
                 <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-semibold uppercase">
+                    <i data-lucide="message-circle" class="w-3.5 h-3.5 "></i><span class="">WhatsApp</span>
+                </div>
+                <div class="pl-6 space-y-0 text-gray-500 ">
+                    <a href="{% url 'whatsapp:whatsapp_scan' %}" class="nav-link" id="whatsappScanLink">
+                        <span>WhatsApp Scan</span>
+                    </a>
+                    <a href="{% url 'whatsapp:balance_accounts' %}" class="nav-link" id="whatsappBalanceLink">
+                        <span>Send Balance</span>
+                    </a>
+                </div>
+            </div>
+            <div class="space-y-0">
+                <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-semibold uppercase">
                     <i data-lucide="clipboard-list" class="w-3.5 h-3.5 "></i><span class="">MIS Reports</span>
                 </div>
                 <div class="pl-6 space-y-0 text-gray-500 ">

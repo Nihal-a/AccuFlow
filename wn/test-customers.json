@@ -1,0 +1,124 @@
+[
+    {
+        "balance": "123.45",
+        "whatsappnumber": "12025550101",
+        "transactions": [
+            {
+                "id": 1,
+                "details": "BTC Buy",
+                "rate": "65000",
+                "qty": "0.01"
+            },
+            {
+                "id": 2,
+                "details": "ETH Sell",
+                "rate": "3200",
+                "qty": "0.15"
+            }
+        ],
+        "optin_verified": true
+    },
+    {
+        "balance": "4500.00",
+        "whatsappnumber": "12025550102",
+        "transactions": [
+            {
+                "id": 3,
+                "details": "SOL Long",
+                "rate": "140",
+                "qty": "10"
+            }
+        ],
+        "optin_verified": true
+    },
+    {
+        "balance": "99.99",
+        "whatsappnumber": "12025550103",
+        "transactions": [
+            {
+                "id": 4,
+                "details": "XRP Spot",
+                "rate": "0.60",
+                "qty": "1000"
+            }
+        ],
+        "optin_verified": false
+    },
+    {
+        "balance": "888.88",
+        "whatsappnumber": "12025550104",
+        "transactions": [
+            {
+                "id": 5,
+                "details": "DOGE",
+                "rate": "0.15",
+                "qty": "500"
+            }
+        ],
+        "optin_verified": true
+    },
+    {
+        "balance": "50000.00",
+        "whatsappnumber": "12025550105",
+        "transactions": [
+            {
+                "id": 6,
+                "details": "BTC",
+                "rate": "64500",
+                "qty": "0.5"
+            }
+        ],
+        "optin_verified": true
+    },
+    {
+        "balance": "12.50",
+        "whatsappnumber": "12025550106",
+        "transactions": [],
+        "optin_verified": true
+    },
+    {
+        "balance": "300.25",
+        "whatsappnumber": "12025550107",
+        "transactions": [
+            {
+                "id": 7,
+                "details": "LINK",
+                "rate": "15.00",
+                "qty": "20"
+            }
+        ],
+        "optin_verified": true
+    },
+    {
+        "balance": "0.00",
+        "whatsappnumber": "12025550108",
+        "transactions": [],
+        "optin_verified": true
+    },
+    {
+        "balance": "1000.00",
+        "whatsappnumber": "12025550109",
+        "transactions": [
+            {
+                "id": 8,
+                "details": "USDT",
+                "rate": "1.00",
+                "qty": "1000"
+            }
+        ],
+        "optin_verified": true
+    },
+    {
+        "balance": "750.00",
+        "whatsappnumber": "12025550110",
+        "transactions": [
+            {
+                "id": 9,
+                "details": "ADA",
+                "rate": "0.45",
+                "qty": "100"
+            }
+        ],
+        "optin_verified": true
+    }
+]

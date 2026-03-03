@@ -1,0 +1,438 @@
+{% extends 'base.html' %}
+
+{% block title %}Balance Accounts - WhatsApp - AccuFlow{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <i data-lucide="send" class="w-5 h-5 text-blue-500"></i>
+                Send Balance via WhatsApp
+            </h2>
+            <p class="text-sm text-gray-500 mt-1">Select accounts and send their current balance via WhatsApp.</p>
+        </div>
+        <a href="{% url 'whatsapp:whatsapp_scan' %}"
+            class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-green-600 transition">
+            <i data-lucide="message-circle" class="w-4 h-4"></i>
+            WhatsApp Status
+        </a>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 mb-4">
+        <div class="flex flex-wrap items-center gap-3">
+            <!-- Type Filter -->
+            <div class="flex items-center bg-gray-100 rounded-lg p-0.5">
+                <button onclick="filterType('all')" id="filterAll"
+                    class="px-3 py-1.5 rounded-md text-xs font-medium transition bg-blue-500 text-white">
+                    All
+                </button>
+                <button onclick="filterType('customer')" id="filterCustomer"
+                    class="px-3 py-1.5 rounded-md text-xs font-medium transition text-gray-600 hover:bg-gray-200">
+                    Customers
+                </button>
+                <button onclick="filterType('supplier')" id="filterSupplier"
+                    class="px-3 py-1.5 rounded-md text-xs font-medium transition text-gray-600 hover:bg-gray-200">
+                    Suppliers
+                </button>
+            </div>
+
+            <!-- Search -->
+            <div class="flex-1 min-w-48">
+                <input type="text" id="searchInput" placeholder="Search by name or ID..."
+                    class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    oninput="filterAccounts()">
+            </div>
+
+            <!-- Select All -->
+            <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-600">
+                <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" class="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-400">
+                Select All
+            </label>
+
+            <!-- Selected Count -->
+            <span id="selectedCount" class="text-xs text-gray-400 font-medium">0 selected</span>
+        </div>
+    </div>
+
+    <!-- Accounts Table -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-4">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-gray-50 border-b border-gray-200">
+                        <th class="w-10 px-4 py-3 text-left"></th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Type</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">ID</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Balance</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">WhatsApp</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase" title="Toggle to send image instead of text">
+                            <i data-lucide="image" class="w-3.5 h-3.5 inline text-gray-400"></i>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="accountsBody">
+                    <!-- Rendered by JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden p-12 text-center">
+            <i data-lucide="users" class="w-10 h-10 text-gray-300 mx-auto mb-3"></i>
+            <p class="text-sm text-gray-400">No accounts match your filters</p>
+        </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex items-center justify-between flex-wrap gap-3">
+        <div class="flex items-center gap-3">
+            <span id="actionSelectedCount" class="text-sm font-medium text-gray-700">0 accounts selected</span>
+            <span id="noWaWarning" class="text-xs text-orange-500 hidden">
+                <i data-lucide="alert-circle" class="w-3.5 h-3.5 inline"></i>
+                Some accounts don't have WhatsApp numbers (will be skipped)
+            </span>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="startSending()" id="sendBtn"
+                class="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium px-5 py-2.5 rounded-xl transition-all text-sm"
+                disabled>
+                <i data-lucide="send" class="w-4 h-4"></i>
+                Send Balance Summary
+            </button>
+        </div>
+    </div>
+
+    <!-- Progress Modal -->
+    <div id="progressModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50">
+        <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md mx-4">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <i data-lucide="loader-2" class="w-5 h-5 text-green-500 animate-spin" id="progressSpinner"></i>
+                    <span id="progressTitle">Sending Messages</span>
+                </h3>
+                <button onclick="cancelSending()" id="cancelBtn" class="text-gray-400 hover:text-red-500 transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-gray-100 rounded-full h-3 mb-3 overflow-hidden">
+                <div id="progressBar" class="bg-green-500 h-full rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+            </div>
+
+            <div class="flex justify-between text-xs text-gray-500 mb-4">
+                <span id="progressText">Starting...</span>
+                <span id="progressPercent">0%</span>
+            </div>
+
+            <!-- Log -->
+            <div id="progressLog" class="bg-gray-50 rounded-lg p-3 max-h-48 overflow-y-auto text-xs font-mono space-y-1 custom-scrollbar">
+            </div>
+
+            <!-- Done Actions -->
+            <div id="doneActions" class="hidden mt-4 flex justify-end gap-3">
+                <button onclick="closeProgressModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const csrfToken = getCookie('csrftoken');
+
+    // Account data from Django context
+    const customers = {{ customers|safe }};
+    const suppliers = {{ suppliers|safe }};
+
+    let allAccounts = [];
+    let currentFilter = 'all';
+    let currentJobId = null;
+    let pollInterval = null;
+
+    // --- INIT ---
+    function initAccounts() {
+        allAccounts = [];
+        customers.forEach(c => {
+            allAccounts.push({ ...c, prefixedId: 'c_' + c.id });
+        });
+        suppliers.forEach(s => {
+            allAccounts.push({ ...s, prefixedId: 's_' + s.id });
+        });
+        renderAccounts();
+    }
+
+    // --- RENDER ---
+    function renderAccounts() {
+        const search = (document.getElementById('searchInput').value || '').toLowerCase();
+        const tbody = document.getElementById('accountsBody');
+        const emptyState = document.getElementById('emptyState');
+
+        let filtered = allAccounts.filter(a => {
+            if (currentFilter !== 'all' && a.type !== currentFilter) return false;
+            if (search && !a.name.toLowerCase().includes(search) && !a.account_id.toLowerCase().includes(search)) return false;
+            return true;
+        });
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = '';
+            emptyState.classList.remove('hidden');
+            return;
+        }
+
+        emptyState.classList.add('hidden');
+
+        tbody.innerHTML = filtered.map(a => {
+            const balanceNum = parseFloat(a.balance);
+            const balanceColor = balanceNum > 0 ? 'text-green-600' : balanceNum < 0 ? 'text-red-600' : 'text-gray-600';
+            const typeLabel = a.type === 'customer' ? 'Customer' : 'Supplier';
+            const typeBg = a.type === 'customer' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700';
+            const waIcon = a.has_wa
+                ? '<span class="text-green-500"><i data-lucide="check-circle-2" class="w-4 h-4 inline"></i></span>'
+                : '<span class="text-gray-300"><i data-lucide="minus-circle" class="w-4 h-4 inline"></i></span>';
+
+            return `
+                <tr class="border-b border-gray-100 hover:bg-gray-50 transition account-row" data-type="${a.type}">
+                    <td class="px-4 py-3">
+                        <input type="checkbox" class="account-checkbox w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-400"
+                            value="${a.prefixedId}" onchange="updateSelection()">
+                    </td>
+                    <td class="px-4 py-3">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${typeBg}">${typeLabel}</span>
+                    </td>
+                    <td class="px-4 py-3 text-xs font-mono text-gray-500">${a.account_id}</td>
+                    <td class="px-4 py-3 font-medium text-gray-800">${a.name}</td>
+                    <td class="px-4 py-3 text-right font-mono font-medium ${balanceColor}">${parseFloat(a.balance).toFixed(2)}</td>
+                    <td class="px-4 py-3 text-center">${waIcon}</td>
+                    <td class="px-4 py-3 text-center">
+                        <button type="button" onclick="toggleImageMode(this, '${a.prefixedId}')" 
+                            data-account="${a.prefixedId}" data-mode="text"
+                            class="image-toggle w-7 h-7 rounded-md border border-gray-200 flex items-center justify-center transition-all text-gray-300 hover:text-gray-500 hover:border-gray-300" 
+                            title="Click to send as image">
+                            <i data-lucide="camera" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    // --- FILTERS ---
+    function filterType(type) {
+        currentFilter = type;
+        ['filterAll', 'filterCustomer', 'filterSupplier'].forEach(id => {
+            const el = document.getElementById(id);
+            el.className = 'px-3 py-1.5 rounded-md text-xs font-medium transition ' +
+                (el.id === 'filter' + type.charAt(0).toUpperCase() + type.slice(1) || (type === 'all' && el.id === 'filterAll')
+                    ? 'bg-blue-500 text-white'
+                    : 'text-gray-600 hover:bg-gray-200');
+        });
+        // Fix active button
+        document.getElementById('filterAll').className = 'px-3 py-1.5 rounded-md text-xs font-medium transition ' + (type === 'all' ? 'bg-blue-500 text-white' : 'text-gray-600 hover:bg-gray-200');
+        document.getElementById('filterCustomer').className = 'px-3 py-1.5 rounded-md text-xs font-medium transition ' + (type === 'customer' ? 'bg-blue-500 text-white' : 'text-gray-600 hover:bg-gray-200');
+        document.getElementById('filterSupplier').className = 'px-3 py-1.5 rounded-md text-xs font-medium transition ' + (type === 'supplier' ? 'bg-blue-500 text-white' : 'text-gray-600 hover:bg-gray-200');
+        renderAccounts();
+    }
+
+    function filterAccounts() {
+        renderAccounts();
+    }
+
+    // --- SELECTION ---
+    function toggleSelectAll() {
+        const checked = document.getElementById('selectAll').checked;
+        document.querySelectorAll('.account-checkbox').forEach(cb => cb.checked = checked);
+        updateSelection();
+    }
+
+    function updateSelection() {
+        const checked = document.querySelectorAll('.account-checkbox:checked');
+        const count = checked.length;
+        document.getElementById('selectedCount').textContent = count + ' selected';
+        document.getElementById('actionSelectedCount').textContent = count + ' accounts selected';
+        document.getElementById('sendBtn').disabled = count === 0;
+
+        // Check for accounts without WhatsApp
+        let hasNoWa = false;
+        checked.forEach(cb => {
+            const account = allAccounts.find(a => a.prefixedId === cb.value);
+            if (account && !account.has_wa) hasNoWa = true;
+        });
+        document.getElementById('noWaWarning').classList.toggle('hidden', !hasNoWa);
+    }
+
+    function toggleImageMode(btn, accountId) {
+        const current = btn.dataset.mode;
+        if (current === 'text') {
+            btn.dataset.mode = 'image';
+            btn.className = 'image-toggle w-7 h-7 rounded-md border border-blue-400 bg-blue-50 flex items-center justify-center transition-all text-blue-500';
+            btn.title = 'Will send as image (click to switch to text)';
+        } else {
+            btn.dataset.mode = 'text';
+            btn.className = 'image-toggle w-7 h-7 rounded-md border border-gray-200 flex items-center justify-center transition-all text-gray-300 hover:text-gray-500 hover:border-gray-300';
+            btn.title = 'Click to send as image';
+        }
+    }
+
+    // --- SENDING ---
+    async function startSending() {
+        const checked = document.querySelectorAll('.account-checkbox:checked');
+        const accountIds = Array.from(checked).map(cb => cb.value);
+
+        if (accountIds.length === 0) return;
+
+        // Collect per-account send modes
+        const accountModes = {};
+        accountIds.forEach(id => {
+            const toggle = document.querySelector(`.image-toggle[data-account="${id}"]`);
+            accountModes[id] = toggle ? toggle.dataset.mode : 'text';
+        });
+
+        // Show progress modal
+        showProgressModal();
+
+        try {
+            const res = await fetch("{% url 'whatsapp:send_balance' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    account_ids: accountIds,
+                    account_type: 'all',
+                    account_modes: accountModes
+                })
+            });
+
+            const data = await res.json();
+
+            if (data.error) {
+                addLog('❌ ' + data.error, 'error');
+                return;
+            }
+
+            if (data.job_id) {
+                currentJobId = data.job_id;
+                addLog(`✅ Job started. Sending to ${data.total} accounts...`, 'info');
+                startProgressPolling(data.job_id);
+            }
+        } catch (err) {
+            addLog('❌ Failed to start: ' + err.message, 'error');
+        }
+    }
+
+    function showProgressModal() {
+        document.getElementById('progressModal').classList.remove('hidden');
+        document.getElementById('progressBar').style.width = '0%';
+        document.getElementById('progressText').textContent = 'Starting...';
+        document.getElementById('progressPercent').textContent = '0%';
+        document.getElementById('progressLog').innerHTML = '';
+        document.getElementById('doneActions').classList.add('hidden');
+        document.getElementById('cancelBtn').classList.remove('hidden');
+        document.getElementById('progressSpinner').classList.remove('hidden');
+        document.getElementById('progressTitle').textContent = 'Sending Messages';
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function closeProgressModal() {
+        document.getElementById('progressModal').classList.add('hidden');
+        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+        currentJobId = null;
+    }
+
+    function startProgressPolling(jobId) {
+        if (pollInterval) clearInterval(pollInterval);
+        pollInterval = setInterval(async () => {
+            try {
+                const res = await fetch(`/whatsapp/api/job-status/${jobId}/`, {
+                    headers: { 'X-CSRFToken': csrfToken }
+                });
+                const data = await res.json();
+                updateProgress(data);
+
+                if (data.status === 'completed' || data.status === 'cancelled' || data.status === 'error') {
+                    clearInterval(pollInterval);
+                    pollInterval = null;
+                    finishProgress(data);
+                }
+            } catch (err) {
+                // Silently retry
+            }
+        }, 2000);
+    }
+
+    function updateProgress(data) {
+        const total = data.total || 1;
+        const done = (data.sent || 0) + (data.failed || 0) + (data.skipped || 0);
+        const percent = Math.round((done / total) * 100);
+
+        document.getElementById('progressBar').style.width = percent + '%';
+        document.getElementById('progressPercent').textContent = percent + '%';
+        document.getElementById('progressText').textContent =
+            `Sent: ${data.sent || 0} | Failed: ${data.failed || 0} | Skipped: ${data.skipped || 0} / ${total}`;
+    }
+
+    function finishProgress(data) {
+        document.getElementById('progressSpinner').classList.add('hidden');
+        document.getElementById('cancelBtn').classList.add('hidden');
+        document.getElementById('doneActions').classList.remove('hidden');
+
+        const status = data.status;
+        if (status === 'completed') {
+            document.getElementById('progressTitle').textContent = '✅ Complete';
+            document.getElementById('progressBar').className = 'bg-green-500 h-full rounded-full';
+            document.getElementById('progressBar').style.width = '100%';
+            addLog(`✅ Done! Sent: ${data.sent}, Failed: ${data.failed}, Skipped: ${data.skipped}`, 'success');
+        } else if (status === 'cancelled') {
+            document.getElementById('progressTitle').textContent = '⏹ Cancelled';
+            addLog('Job cancelled by user.', 'warning');
+        } else {
+            document.getElementById('progressTitle').textContent = '❌ Error';
+            addLog('Job encountered an error.', 'error');
+        }
+
+        // Show errors
+        if (data.errors && data.errors.length > 0) {
+            data.errors.forEach(e => addLog('⚠ ' + e, 'warning'));
+        }
+    }
+
+    async function cancelSending() {
+        if (!currentJobId) { closeProgressModal(); return; }
+
+        try {
+            await fetch(`/whatsapp/api/cancel-job/${currentJobId}/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrfToken }
+            });
+            addLog('Cancelling...', 'warning');
+        } catch (err) {
+            closeProgressModal();
+        }
+    }
+
+    function addLog(message, type = 'info') {
+        const log = document.getElementById('progressLog');
+        const colors = {
+            info: 'text-gray-600',
+            success: 'text-green-600',
+            error: 'text-red-600',
+            warning: 'text-orange-500'
+        };
+        const time = new Date().toLocaleTimeString();
+        log.innerHTML += `<div class="${colors[type] || 'text-gray-600'}">[${time}] ${message}</div>`;
+        log.scrollTop = log.scrollHeight;
+    }
+
+    // --- INIT ---
+    document.addEventListener('DOMContentLoaded', initAccounts);
+</script>
+{% endblock %}

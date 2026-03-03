@@ -53,6 +53,13 @@ Address View
                     <button type="submit" name="export" value="excel" class="leading-none inline-flex items-center gap-1.5 bg-green-600 text-white font-medium h-[32px] sm:h-[34px] px-4 sm:px-6 rounded-md shadow-sm hover:bg-green-700 transition-all duration-300 text-xs sm:text-sm">
                         <i class="fa-solid fa-file-excel hidden sm:block"></i> Excel
                     </button>
+                    {% if transactions and is_nsd and selected_party %}
+                    <button type="button" onclick="openWhatsAppModal()"
+                        class="leading-none inline-flex items-center gap-1.5 bg-emerald-500 text-white font-medium h-[32px] sm:h-[34px] px-4 sm:px-6 rounded-md shadow-sm hover:bg-emerald-600 transition-all duration-300 text-xs sm:text-sm">
+                        <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                        Send to WhatsApp
+                    </button>
+                    {% endif %}
                 </div>
             </div>
         </form>
@@ -91,6 +98,96 @@ Address View
 
     </div>
 </div>
+
+<!-- WhatsApp Send Modal -->
+{% if transactions and is_nsd and selected_party %}
+<div id="waModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50">
+    <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md mx-4">
+        <!-- Confirmation State -->
+        <div id="waConfirmState">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="message-circle" class="w-5 h-5 text-green-600"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800">Send to WhatsApp</h3>
+                    <p class="text-xs text-gray-500">{{ transactions|length }} items will be sent to supplier</p>
+                </div>
+            </div>
+
+            {% if supplier_wa_number %}
+            <div class="bg-gray-50 rounded-lg p-3 mb-4">
+                <div class="flex items-center gap-2 text-sm">
+                    <i data-lucide="user" class="w-4 h-4 text-gray-400"></i>
+                    <span class="text-gray-600">Supplier:</span>
+                    <span class="font-medium text-gray-800">{{ supplier_name }}</span>
+                </div>
+                <div class="flex items-center gap-2 text-sm mt-1">
+                    <i data-lucide="phone" class="w-4 h-4 text-gray-400"></i>
+                    <span class="text-gray-600">WhatsApp:</span>
+                    <span class="font-medium text-green-600">+{{ supplier_wa_number }}</span>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <button onclick="closeWhatsAppModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm">
+                    Cancel
+                </button>
+                <button onclick="sendToWhatsApp()" id="waSendBtn"
+                    class="px-5 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm inline-flex items-center gap-2">
+                    <i data-lucide="send" class="w-4 h-4"></i>
+                    Send Now
+                </button>
+            </div>
+            {% else %}
+            <div class="bg-orange-50 border border-orange-100 rounded-lg p-3 mb-4">
+                <div class="flex items-start gap-2">
+                    <i data-lucide="alert-circle" class="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5"></i>
+                    <div>
+                        <p class="text-sm font-medium text-orange-700">No WhatsApp number</p>
+                        <p class="text-xs text-orange-600 mt-1">This supplier doesn't have a WhatsApp number configured. Update it in Supplier Master first.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end">
+                <button onclick="closeWhatsAppModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm">
+                    Close
+                </button>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Progress State -->
+        <div id="waProgressState" class="hidden">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <span id="waProgressIcon" class="inline-block">
+                        <i data-lucide="loader-2" class="w-5 h-5 text-green-500 animate-spin"></i>
+                    </span>
+                    <span id="waProgressTitle">Sending...</span>
+                </h3>
+                <button onclick="cancelWaJob()" id="waCancelBtn" class="text-gray-400 hover:text-red-500 transition" title="Cancel sending">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="w-full bg-gray-100 rounded-full h-3 mb-3 overflow-hidden">
+                <div id="waProgressBar" class="bg-green-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+            <div class="flex justify-between text-xs text-gray-500 mb-4">
+                <span id="waProgressText">Starting...</span>
+                <span id="waProgressPercent">0%</span>
+            </div>
+            <div id="waProgressLog" class="bg-gray-50 rounded-lg p-3 max-h-40 overflow-y-auto text-xs font-mono space-y-1 custom-scrollbar"></div>
+            <div id="waDoneActions" class="hidden mt-4 flex justify-end">
+                <button onclick="closeWhatsAppModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 {% endblock content %}
 
 {% block externalJS %}
@@ -147,5 +244,127 @@ Address View
     document.getElementById('date_to').valueAsDate = new Date();
     {% endif %}
 
+    // --- WHATSAPP SEND ---
+    const csrfToken = getCookie('csrftoken');
+    let waJobId = null;
+    let waPollInterval = null;
+
+    function openWhatsAppModal() {
+        document.getElementById('waModal').classList.remove('hidden');
+        document.getElementById('waConfirmState').classList.remove('hidden');
+        document.getElementById('waProgressState').classList.add('hidden');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function closeWhatsAppModal() {
+        document.getElementById('waModal').classList.add('hidden');
+        if (waPollInterval) { clearInterval(waPollInterval); waPollInterval = null; }
+        waJobId = null;
+    }
+
+    async function sendToWhatsApp() {
+        const btn = document.getElementById('waSendBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Sending...';
+
+        // Switch to progress state
+        document.getElementById('waConfirmState').classList.add('hidden');
+        document.getElementById('waProgressState').classList.remove('hidden');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+
+        // Collect transaction rows
+        const rows = [];
+        {% for t in transactions %}
+        rows.push({
+            sno: "{{ t.slno|default:'-' }}",
+            description: "{{ t.description|default:'-' }}",
+            qty: "{{ t.qty }}",
+            date: "{{ t.date|date:'d-m-Y' }}"
+        });
+        {% endfor %}
+
+        try {
+            const res = await fetch("/whatsapp/api/send-address-rows/", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    supplier_id: "{{ selected_party }}",
+                    rows: rows
+                })
+            });
+
+            const data = await res.json();
+
+            if (data.error) {
+                addWaLog('❌ ' + data.error, 'error');
+                document.getElementById('waDoneActions').classList.remove('hidden');
+                return;
+            }
+
+            if (data.job_id) {
+                waJobId = data.job_id;
+                addWaLog('✅ Sending ' + data.total + ' rows...', 'info');
+                startWaPolling(data.job_id);
+            }
+        } catch (err) {
+            addWaLog('❌ Error: ' + err.message, 'error');
+            document.getElementById('waDoneActions').classList.remove('hidden');
+        }
+    }
+
+    function startWaPolling(jobId) {
+        waPollInterval = setInterval(async () => {
+            try {
+                const res = await fetch(`/whatsapp/api/job-status/${jobId}/`, {
+                    headers: { 'X-CSRFToken': csrfToken }
+                });
+                const data = await res.json();
+
+                const total = data.total || 1;
+                const done = (data.sent || 0) + (data.failed || 0);
+                const pct = Math.round((done / total) * 100);
+
+                document.getElementById('waProgressBar').style.width = pct + '%';
+                document.getElementById('waProgressPercent').textContent = pct + '%';
+                document.getElementById('waProgressText').textContent = `Sent: ${data.sent || 0} / ${total}`;
+
+                if (data.status === 'completed' || data.status === 'error' || data.status === 'cancelled') {
+                    clearInterval(waPollInterval);
+                    waPollInterval = null;
+                    document.getElementById('waProgressTitle').textContent = data.status === 'completed' ? '✅ Complete' : '❌ ' + data.status;
+                    document.getElementById('waProgressBar').style.width = '100%';
+                    document.getElementById('waDoneActions').classList.remove('hidden');
+                    document.getElementById('waProgressIcon').innerHTML = '';
+                    document.getElementById('waCancelBtn').classList.add('hidden');
+                    addWaLog(`Done — Sent: ${data.sent}, Failed: ${data.failed}`, data.status === 'completed' ? 'success' : 'error');
+                    if (data.errors) data.errors.forEach(e => addWaLog('⚠ ' + e, 'warning'));
+                }
+            } catch (e) { /* retry */ }
+        }, 2000);
+    }
+
+    async function cancelWaJob() {
+        if (!waJobId) { closeWhatsAppModal(); return; }
+        try {
+            await fetch(`/whatsapp/api/cancel-job/${waJobId}/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrfToken }
+            });
+            addWaLog('Cancelling...', 'warning');
+        } catch (err) {
+            closeWhatsAppModal();
+        }
+    }
+
+    function addWaLog(msg, type = 'info') {
+        const log = document.getElementById('waProgressLog');
+        const colors = { info: 'text-gray-600', success: 'text-green-600', error: 'text-red-600', warning: 'text-orange-500' };
+        const time = new Date().toLocaleTimeString();
+        log.innerHTML += `<div class="${colors[type] || 'text-gray-600'}">[${time}] ${msg}</div>`;
+        log.scrollTop = log.scrollHeight;
+    }
 </script>
 {% endblock externalJS %}

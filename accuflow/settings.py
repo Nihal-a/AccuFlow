@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'profit_loss',
     'balance_sheet',
     'axes',
+    'whatsapp',
 ]
 
 MIDDLEWARE = [
@@ -149,4 +150,40 @@ MEDIA_ROOT = os.path.join(BASE_DIR,'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# --- WhatsApp Integration Settings ---
+WHATSAPP_ENABLED = env('WHATSAPP_ENABLED', default='True') == 'True'
+WHATSAPP_NODE_URL = env('WHATSAPP_NODE_URL', default='http://localhost:3001')
+WHATSAPP_API_KEY = env('WHATSAPP_API_KEY', default='accuflow-wa-dev-key-2024')
+WHATSAPP_TIMEOUT = int(env('WHATSAPP_TIMEOUT', default='30'))
 
+# Logging for WhatsApp
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{asctime}] {levelname} {name}: {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'whatsapp_file': {
+            'level': 'DEBUG' if DEBUG == 'True' else 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'whatsapp.log'),
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'DEBUG' if DEBUG == 'True' else 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'whatsapp': {
+            'handlers': ['whatsapp_file', 'console'],
+            'level': 'DEBUG' if DEBUG == 'True' else 'INFO',
+            'propagate': False,
+        },
+    },
+}

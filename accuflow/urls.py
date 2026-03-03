@@ -57,6 +57,7 @@ urlpatterns = [
     path('profitloss/', include('profit_loss.urls')),
     path('balancesheet/', include('balance_sheet.urls')),
     path('', include('utilities.urls')),
+    path('whatsapp/', include('whatsapp.urls')),
 ]
 
 if settings.DEBUG:

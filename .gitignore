@@ -89,4 +89,18 @@ Desktop.ini
 
 # Other system junk
 *.orig
+
+# Node.js (WhatsApp service)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# WhatsApp auth session (contains login credentials — NEVER commit)
+wn/auth_info/
+
+# Django log files
+*.log
+whatsapp.log
   0  

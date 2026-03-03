@@ -103,6 +103,20 @@ class AddressView(View):
             response['Content-Disposition'] = 'attachment; filename="address_view_report.xlsx"'
             return response
 
+        # Prepare WhatsApp data for NSD supplier
+        supplier_name = ''
+        supplier_wa_number = ''
+        if is_nsd and party_id and transactions:
+            try:
+                supplier_obj = Suppliers.objects.get(id=party_id, is_active=True, client=client)
+                supplier_name = supplier_obj.name or ''
+                if supplier_obj.country_code and supplier_obj.wa:
+                    cc = str(supplier_obj.country_code).strip().replace('+', '')
+                    num = str(supplier_obj.wa).strip().replace(' ', '').replace('-', '')
+                    supplier_wa_number = f'{cc}{num}'
+            except Suppliers.DoesNotExist:
+                pass
+
         return render(request, 'stock_view/address_view.html', {
             'godowns': godowns,
             'suppliers': suppliers,
@@ -110,7 +124,9 @@ class AddressView(View):
             'date_from': date_from_str,
             'date_to': date_to_str,
             'selected_party': party_id,
-            'is_nsd': is_nsd
+            'is_nsd': is_nsd,
+            'supplier_name': supplier_name,
+            'supplier_wa_number': supplier_wa_number,
         })
 
 class RecycleBinView(View):
