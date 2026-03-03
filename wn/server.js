@@ -37,16 +37,20 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // --- CONFIG ---
-// const PORT = process.env.NODE_PORT || process.env.PORT || 3001;
 const PORT = process.env.NODE_PORT || process.env.PORT || 3005;
 const NODE_ENV = process.env.NODE_ENV || 'development';
-const API_KEY = process.env.WA_API_KEY || 'accuflow-wa-dev-key-2024';
+const API_KEY = process.env.WA_API_KEY || (NODE_ENV === 'development' ? 'accuflow-wa-dev-key-2024' : null);
+if (!API_KEY) {
+    console.error('FATAL: WA_API_KEY environment variable is required in production');
+    process.exit(1);
+}
 const DJANGO_ORIGIN = process.env.DJANGO_ORIGIN || 'http://localhost:8000';
 const DEV_WHATSAPP_NUMBER = process.env.DEV_WHATSAPP_NUMBER || '';
 
 // Rate limiting & anti-ban — all configurable via env vars
 const POISSON_LAMBDA_MINUTES = parseFloat(process.env.POISSON_DELAY || (NODE_ENV === 'development' ? '0.5' : '3'));
 const GLOBAL_RATE_LIMIT = parseInt(process.env.RATE_LIMIT || (NODE_ENV === 'development' ? '20' : '10'));
+const DAILY_MESSAGE_LIMIT = parseInt(process.env.DAILY_LIMIT || (NODE_ENV === 'development' ? '500' : '200'));
 const START_HOUR_DUBAI = parseInt(process.env.SAFE_HOUR_START || (NODE_ENV === 'development' ? '0' : '8'));
 const END_HOUR_DUBAI = parseInt(process.env.SAFE_HOUR_END || (NODE_ENV === 'development' ? '24' : '22'));
 
@@ -76,6 +80,27 @@ async function waitForRateLimit(session) {
     while (session.messagesSentThisMinute >= GLOBAL_RATE_LIMIT) {
         await new Promise(r => setTimeout(r, 2000));
     }
+    if (session.messagesSentToday >= DAILY_MESSAGE_LIMIT) {
+        throw new Error(`Daily message limit (${DAILY_MESSAGE_LIMIT}) reached. Resume tomorrow.`);
+    }
+}
+
+// --- DAILY COUNTER RESET (midnight Dubai time) ---
+function startDailyReset() {
+    setInterval(() => {
+        const now = new Date();
+        const dubaiStr = now.toLocaleString('en-US', { timeZone: 'Asia/Dubai' });
+        const dubaiHour = new Date(dubaiStr).getHours();
+        const dubaiMin = new Date(dubaiStr).getMinutes();
+        if (dubaiHour === 0 && dubaiMin < 5) {
+            activeSessions.forEach(session => {
+                if (session.messagesSentToday > 0) {
+                    logger.info(`[${session.clientId}] Daily counter reset: ${session.messagesSentToday} msgs yesterday`);
+                    session.messagesSentToday = 0;
+                }
+            });
+        }
+    }, 300000); // Check every 5 minutes
 }
 
 // --- UTILS ---
@@ -89,7 +114,10 @@ function isSafeTime() {
 }
 
 function getPoissonDelay() {
-    return -Math.log(Math.random()) * POISSON_LAMBDA_MINUTES * 60 * 1000;
+    const poissonMs = -Math.log(Math.random()) * POISSON_LAMBDA_MINUTES * 60 * 1000;
+    const minFloor = NODE_ENV === 'production' ? 60000 : 5000; // 60s prod, 5s dev
+    const jitter = Math.random() * 30000; // 0-30s extra randomness
+    return Math.max(minFloor, poissonMs) + jitter;
 }
 
 function formatPhone(number) {
@@ -116,6 +144,21 @@ const CAPTIONS = [
     "💼 Daily trade report generated. Balance details attached."
 ];
 
+// --- HUMAN-LIKE TYPING SIMULATION (Anti-Ban) ---
+async function simulateTyping(sock, phone) {
+    try {
+        await sock.presenceSubscribe(phone);
+        await sock.sendPresenceUpdate('composing', phone);
+        const typingMs = 1000 + Math.random() * 3000; // 1-4 seconds
+        await new Promise(r => setTimeout(r, typingMs));
+        await sock.sendPresenceUpdate('paused', phone);
+        await new Promise(r => setTimeout(r, 300 + Math.random() * 500));
+    } catch (e) {
+        // Non-critical — don't block send if presence fails
+        logger.debug(`Typing simulation skipped: ${e.message}`);
+    }
+}
+
 // --- MULTI-SESSION BAILEYS CONNECTION ---
 async function getOrCreateSession(clientId) {
     if (activeSessions.has(clientId)) {
@@ -132,6 +175,8 @@ async function getOrCreateSession(clientId) {
         currentQR: null,
         lastActive: Date.now(),
         messagesSentThisMinute: 0,
+        messagesSentToday: 0,
+        reconnectAttempts: 0,
         clientId: clientId
     };
     activeSessions.set(clientId, session);
@@ -187,23 +232,32 @@ async function connectSession(clientId) {
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
                 logger.warn(`[${clientId}] Connection closed (Status: ${statusCode})`);
 
+                // Exponential backoff for reconnects
+                session.reconnectAttempts = (session.reconnectAttempts || 0) + 1;
+                const backoff = Math.min(3000 * Math.pow(2, session.reconnectAttempts - 1), 300000); // max 5 min
+
                 if (statusCode === DisconnectReason.loggedOut || statusCode === 401) {
                     // Session expired — auto-clear stale auth
                     session.currentQR = null;
+                    session.reconnectAttempts = 0;
                     if (fs.existsSync(authDir)) {
                         fs.rmSync(authDir, { recursive: true, force: true });
                         logger.info(`[${clientId}] 🗑️ Cleared stale auth — ready for new QR scan`);
                     }
                     setTimeout(() => connectSession(clientId), 3000);
+                } else if (session.reconnectAttempts > 10) {
+                    logger.error(`[${clientId}] ❌ Too many reconnect failures (${session.reconnectAttempts}). Stopping.`);
+                    // Don't reconnect — likely banned or network issue
                 } else {
-                    logger.info(`[${clientId}] Reconnecting in 3s...`);
-                    setTimeout(() => connectSession(clientId), 3000);
+                    logger.info(`[${clientId}] Reconnecting in ${(backoff/1000).toFixed(0)}s (attempt ${session.reconnectAttempts})...`);
+                    setTimeout(() => connectSession(clientId), backoff);
                 }
             } else if (connection === 'open') {
                 session.isConnected = true;
                 session.isConnecting = false;
                 session.currentQR = null;
                 session.lastActive = Date.now();
+                session.reconnectAttempts = 0;
                 logger.info(`[${clientId}] ✅ WhatsApp Connected`);
             }
         });
@@ -260,16 +314,11 @@ app.use(cors({
     credentials: true
 }));
 
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '1mb' }));
 
-// Health check (no auth required)
+// Health check (no auth required — minimal info)
 app.get('/health', (req, res) => {
-    res.json({
-        status: 'ok',
-        uptime: process.uptime(),
-        active_sessions: activeSessions.size,
-        active_jobs: activeJobs.size
-    });
+    res.json({ status: 'ok' });
 });
 
 // --- ADMIN: LIST ALL SESSIONS ---
@@ -401,6 +450,8 @@ app.post('/api/:clientId/send-ledger', authMiddleware, validateClientId, async (
         const phone = formatPhone(waNumber);
         const hasTransactions = customer_data.transactions && customer_data.transactions.length > 0;
 
+        await simulateTyping(session.sock, phone);
+
         if (hasTransactions) {
             const imageBuffer = await generateTradeTable(customer_data);
             await session.sock.sendMessage(phone, { image: imageBuffer, caption: `BALANCE='${customer_data.balance}'` });
@@ -411,6 +462,7 @@ app.post('/api/:clientId/send-ledger', authMiddleware, validateClientId, async (
         }
 
         session.messagesSentThisMinute++;
+        session.messagesSentToday++;
         session.lastActive = Date.now();
         logger.info(`[${req.params.clientId}] Sent ledger to ${waNumber}`);
 
@@ -418,7 +470,7 @@ app.post('/api/:clientId/send-ledger', authMiddleware, validateClientId, async (
 
     } catch (err) {
         logger.error(`[${req.params.clientId}] Send ledger error: ${err.message}`);
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: NODE_ENV === 'production' ? 'Internal server error' : err.message });
     }
 });
 
@@ -431,6 +483,9 @@ app.post('/api/:clientId/send-balance-accounts', authMiddleware, validateClientI
 
         if (!accounts || !Array.isArray(accounts) || accounts.length === 0) {
             return res.status(400).json({ error: 'accounts array is required' });
+        }
+        if (accounts.length > 100) {
+            return res.status(400).json({ error: `Maximum 100 accounts per batch. You sent ${accounts.length}.` });
         }
 
         if (!session.isConnected) {
@@ -467,7 +522,7 @@ app.post('/api/:clientId/send-balance-accounts', authMiddleware, validateClientI
 
     } catch (err) {
         logger.error(`[${req.params.clientId}] Batch send error: ${err.message}`);
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: NODE_ENV === 'production' ? 'Internal server error' : err.message });
     }
 });
 
@@ -475,6 +530,9 @@ async function processBatchSend(jobId, clientId, accounts) {
     const job = activeJobs.get(jobId);
     const session = activeSessions.get(clientId);
     if (!job || !session) return;
+
+    // Presence lifecycle: go "online" for the batch window
+    try { await session.sock.sendPresenceUpdate('available'); } catch(e) {}
 
     for (let i = 0; i < accounts.length; i++) {
         const account = accounts[i];
@@ -514,6 +572,8 @@ async function processBatchSend(jobId, clientId, accounts) {
             const phone = formatPhone(waNumber);
             const hasTransactions = account.transactions && account.transactions.length > 0;
 
+            await simulateTyping(session.sock, phone);
+
             if (accountMode === 'image' && hasTransactions) {
                 const imageBuffer = await generateTradeTable(account);
                 await session.sock.sendMessage(phone, { image: imageBuffer, caption: `BALANCE='${account.balance}'` });
@@ -526,6 +586,7 @@ async function processBatchSend(jobId, clientId, accounts) {
             }
 
             session.messagesSentThisMinute++;
+            session.messagesSentToday++;
             session.lastActive = Date.now();
             job.sent++;
 
@@ -553,6 +614,9 @@ async function processBatchSend(jobId, clientId, accounts) {
             await new Promise(r => setTimeout(r, delay));
         }
     }
+
+    // Presence lifecycle: go "offline" after batch
+    try { await session.sock.sendPresenceUpdate('unavailable'); } catch(e) {}
 
     job.status = 'completed';
     job.completedAt = new Date().toISOString();
@@ -624,8 +688,10 @@ app.post('/api/:clientId/send-address-row', authMiddleware, validateClientId, as
             amount ? `Amount: ${amount}` : null
         ].filter(Boolean).join('\n');
 
+        await simulateTyping(session.sock, phone);
         await session.sock.sendMessage(phone, { text });
         session.messagesSentThisMinute++;
+        session.messagesSentToday++;
         session.lastActive = Date.now();
 
         logger.info(`[${req.params.clientId}] Sent address row to ${whatsapp_number}`);
@@ -633,11 +699,11 @@ app.post('/api/:clientId/send-address-row', authMiddleware, validateClientId, as
 
     } catch (err) {
         logger.error(`[${req.params.clientId}] Send address row error: ${err.message}`);
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: NODE_ENV === 'production' ? 'Internal server error' : err.message });
     }
 });
 
-// --- SEND BATCH ADDRESS ROWS ---
+// --- SEND BATCH ADDRESS ROWS (Smart Context Delay for same-user) ---
 app.post('/api/:clientId/send-address-rows', authMiddleware, validateClientId, async (req, res) => {
     try {
         const clientId = req.params.clientId;
@@ -646,6 +712,9 @@ app.post('/api/:clientId/send-address-rows', authMiddleware, validateClientId, a
 
         if (!whatsapp_number || !rows || !Array.isArray(rows)) {
             return res.status(400).json({ error: 'whatsapp_number and rows array are required' });
+        }
+        if (rows.length > 200) {
+            return res.status(400).json({ error: `Maximum 200 rows per batch. You sent ${rows.length}.` });
         }
 
         if (!session.isConnected) {
@@ -669,11 +738,15 @@ app.post('/api/:clientId/send-address-rows', authMiddleware, validateClientId, a
         };
         activeJobs.set(jobId, job);
 
-        // Start async processing
+        // Start async processing with Smart Context Delay
         (async () => {
             const phone = formatPhone(whatsapp_number);
 
-            // Send header message removed — go straight to rows
+            // Presence lifecycle: go online for the conversation
+            try { await session.sock.sendPresenceUpdate('available'); } catch(e) {}
+
+            // Simulate typing only ONCE at the start — these are all to the same person
+            await simulateTyping(session.sock, phone);
 
             for (let i = 0; i < rows.length; i++) {
                 if (job.status === 'cancelled') break;
@@ -686,6 +759,7 @@ app.post('/api/:clientId/send-address-rows', authMiddleware, validateClientId, a
 
                     await session.sock.sendMessage(phone, { text });
                     session.messagesSentThisMinute++;
+                    session.messagesSentToday++;
                     session.lastActive = Date.now();
                     job.sent++;
 
@@ -703,12 +777,16 @@ app.post('/api/:clientId/send-address-rows', authMiddleware, validateClientId, a
                     });
                 }
 
-                // Delay between rows (shorter than balance sends)
-                if (i < rows.length - 1) {
-                    const delay = 2000 + Math.random() * 3000;
+                // Smart Context Delay: shorter gaps for same-user sequential messages
+                // Mimics a human rapidly typing related data points in a conversation
+                if (i < rows.length - 1 && job.status !== 'cancelled') {
+                    const delay = 1500 + Math.random() * 2500; // 1.5-4s (natural chat pace)
                     await new Promise(r => setTimeout(r, delay));
                 }
             }
+
+            // Presence lifecycle: go offline after conversation
+            try { await session.sock.sendPresenceUpdate('unavailable'); } catch(e) {}
 
             job.status = 'completed';
             notifySSE(job, {
@@ -725,7 +803,7 @@ app.post('/api/:clientId/send-address-rows', authMiddleware, validateClientId, a
 
     } catch (err) {
         logger.error(`[${req.params.clientId}] Send address rows error: ${err.message}`);
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: NODE_ENV === 'production' ? 'Internal server error' : err.message });
     }
 });
 
@@ -779,6 +857,7 @@ app.post('/api/:clientId/cancel-all-jobs', authMiddleware, validateClientId, (re
 // --- STARTUP ---
 async function main() {
     startRateLimitReset();
+    startDailyReset();
     startSessionCleanup();
 
     app.listen(PORT, () => {

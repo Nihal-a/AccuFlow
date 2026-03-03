@@ -53,7 +53,7 @@ Address View
                     <button type="submit" name="export" value="excel" class="leading-none inline-flex items-center gap-1.5 bg-green-600 text-white font-medium h-[32px] sm:h-[34px] px-4 sm:px-6 rounded-md shadow-sm hover:bg-green-700 transition-all duration-300 text-xs sm:text-sm">
                         <i class="fa-solid fa-file-excel hidden sm:block"></i> Excel
                     </button>
-                    {% if transactions and is_nsd and selected_party %}
+                    {% if transactions and selected_party %}
                     {% if client_has_whatsapp %}
                     <button type="button" onclick="openWhatsAppModal()"
                         class="leading-none inline-flex items-center gap-1.5 bg-emerald-500 text-white font-medium h-[32px] sm:h-[34px] px-4 sm:px-6 rounded-md shadow-sm hover:bg-emerald-600 transition-all duration-300 text-xs sm:text-sm">

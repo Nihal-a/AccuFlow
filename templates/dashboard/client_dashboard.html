@@ -9,16 +9,34 @@
             <h1 class="text-2xl font-bold text-gray-800">Operational Dashboard</h1>
             <p class="text-gray-600">Client: <span class="font-semibold text-blue-600">{{ client.name }}</span></p>
         </div>
-        <div class="bg-blue-50 px-4 py-2 rounded-xl border border-blue-100 flex items-center gap-3">
-            <div class="p-2 bg-blue-100 rounded-lg text-blue-600">
-                <i data-lucide="calendar" class="w-4 h-4"></i>
+        <div class="flex items-center gap-3 flex-wrap">
+            <!-- Month Picker -->
+            <div class="bg-white px-3 py-2 rounded-xl border border-gray-200 flex items-center gap-2 shadow-sm">
+                <i data-lucide="calendar-days" class="w-4 h-4 text-gray-500"></i>
+                <select id="monthPicker" onchange="window.location.href='?month='+this.value"
+                    class="text-sm font-semibold text-gray-700 bg-transparent border-none outline-none cursor-pointer pr-6 appearance-auto">
+                    {% for m in available_months %}
+                    <option value="{{ m.value }}" {% if m.value == selected_month %}selected{% endif %}>{{ m.label }}</option>
+                    {% endfor %}
+                </select>
             </div>
-            <div>
-                <p class="text-[10px] uppercase font-bold text-blue-400 tracking-wider">Plan Expiry</p>
-                <p class="text-sm font-bold text-blue-700">{{ client.subscription_end|date:"M d, Y" }} ({{
-                    days_remaining }} days)</p>
+            <!-- Plan Expiry Badge -->
+            <div class="bg-blue-50 px-4 py-2 rounded-xl border border-blue-100 flex items-center gap-3">
+                <div class="p-2 bg-blue-100 rounded-lg text-blue-600">
+                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] uppercase font-bold text-blue-400 tracking-wider">Plan Expiry</p>
+                    <p class="text-sm font-bold text-blue-700">{{ client.subscription_end|date:"M d, Y" }} ({{ days_remaining }} days)</p>
+                </div>
             </div>
         </div>
+    </div>
+
+    <!-- Month indicator -->
+    <div class="mb-4 flex items-center gap-2">
+        <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Showing data for</span>
+        <span class="text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">{{ month_display }}</span>
     </div>
 
     <!-- Metrics Grid -->
@@ -95,6 +113,25 @@
             <p
                 class="text-[10px] text-amber-600 font-bold {% if pending_col_stats.count > 0 %}animate-pulse{% endif %}">
                 Count: {{ pending_col_stats.count|default:0 }}</p>
+        </div>
+    </div>
+
+    <!-- Chart Section -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+                <i data-lucide="bar-chart-3" class="w-5 h-5 text-blue-500"></i>
+                <h2 class="text-base font-bold text-gray-800">Trend — {{ month_display }}</h2>
+            </div>
+            <div class="flex gap-4 text-[10px] font-semibold">
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span> Purchase</span>
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Sale</span>
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-orange-400"></span> NSD</span>
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Cash</span>
+            </div>
+        </div>
+        <div style="height: 280px; position: relative;">
+            <canvas id="dailyTrendChart"></canvas>
         </div>
     </div>
 
@@ -180,11 +217,121 @@
 {% endblock %}
 
 {% block externalJS %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         if (typeof navActive === 'function') {
             navActive('dashboardLink');
         }
+
+        // --- Daily Trend Chart ---
+        const chartData = {{ chart_data_json|safe }};
+        const ctx = document.getElementById('dailyTrendChart').getContext('2d');
+
+        const purpleGrad = ctx.createLinearGradient(0, 0, 0, 280);
+        purpleGrad.addColorStop(0, 'rgba(147, 51, 234, 0.12)');
+        purpleGrad.addColorStop(1, 'rgba(147, 51, 234, 0)');
+
+        const blueGrad = ctx.createLinearGradient(0, 0, 0, 280);
+        blueGrad.addColorStop(0, 'rgba(59, 130, 246, 0.12)');
+        blueGrad.addColorStop(1, 'rgba(59, 130, 246, 0)');
+
+        Chart.defaults.font.family = "'Inter', 'Segoe UI', system-ui, sans-serif";
+        Chart.defaults.font.size = 11;
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartData.labels,
+                datasets: [
+                    {
+                        label: 'Purchase',
+                        data: chartData.purchase,
+                        borderColor: '#9333ea',
+                        backgroundColor: purpleGrad,
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: '#9333ea',
+                    },
+                    {
+                        label: 'Sale',
+                        data: chartData.sale,
+                        borderColor: '#3b82f6',
+                        backgroundColor: blueGrad,
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: '#3b82f6',
+                    },
+                    {
+                        label: 'NSD',
+                        data: chartData.nsd,
+                        borderColor: '#f97316',
+                        backgroundColor: 'transparent',
+                        fill: false,
+                        tension: 0.4,
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        pointRadius: 0,
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: '#f97316',
+                    },
+                    {
+                        label: 'Cash',
+                        data: chartData.cash,
+                        borderColor: '#10b981',
+                        backgroundColor: 'transparent',
+                        fill: false,
+                        tension: 0.4,
+                        borderWidth: 1.5,
+                        borderDash: [3, 3],
+                        pointRadius: 0,
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: '#10b981',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { intersect: false, mode: 'index' },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1f2937',
+                        titleFont: { weight: '600' },
+                        bodyFont: { size: 12 },
+                        cornerRadius: 8,
+                        padding: 10,
+                        callbacks: {
+                            label: function(ctx) {
+                                const v = ctx.raw || 0;
+                                return ctx.dataset.label + ': ' + v.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#9ca3af', maxRotation: 0, autoSkipPadding: 15 }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#f3f4f6' },
+                        ticks: {
+                            color: '#9ca3af',
+                            callback: function(v) { return v >= 1000 ? (v/1000).toFixed(0) + 'k' : v; }
+                        }
+                    }
+                }
+            }
+        });
     });
 </script>
 {% endblock %}

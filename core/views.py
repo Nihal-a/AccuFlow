@@ -87,42 +87,167 @@ class ClientDashboardView(View):
         from django.db.models import Sum, Count
         from django.utils import timezone
         from .models import Purchases, Sales, NSDs, Cashs, Collection, Customers, Collectors, Suppliers, Expenses
+        import calendar
+        from datetime import date
+
+        today = timezone.now().date()
+
+        # --- Parse month/year from query param ---
+        month_param = request.GET.get('month', '')
+        is_year_view = month_param.startswith('year-')
+
+        if is_year_view:
+            try:
+                sel_year = int(month_param.replace('year-', ''))
+                if sel_year < 2000 or sel_year > 2100:
+                    raise ValueError
+            except ValueError:
+                sel_year = today.year
+            sel_month = today.month
+            # For KPI cards, show full year
+            month_start = date(sel_year, 1, 1)
+            month_end = date(sel_year, 12, 31)
+            selected_month = f"year-{sel_year}"
+            month_display = f"Year {sel_year}"
+        else:
+            try:
+                parts = month_param.split('-')
+                sel_year = int(parts[0])
+                sel_month = int(parts[1])
+                if sel_month < 1 or sel_month > 12 or sel_year < 2000 or sel_year > 2100:
+                    raise ValueError
+            except (ValueError, IndexError):
+                sel_year = today.year
+                sel_month = today.month
+            month_start = date(sel_year, sel_month, 1)
+            month_end = date(sel_year, sel_month, calendar.monthrange(sel_year, sel_month)[1])
+            selected_month = f"{sel_year}-{sel_month:02d}"
+            month_display = month_start.strftime('%B %Y')
+
+        # Build picker options: last 12 months + last 3 years
+        available_months = []
+        d = today.replace(day=1)
+        for _ in range(12):
+            available_months.append({
+                'value': f"{d.year}-{d.month:02d}",
+                'label': d.strftime('%B %Y'),
+            })
+            if d.month == 1:
+                d = d.replace(year=d.year - 1, month=12)
+            else:
+                d = d.replace(month=d.month - 1)
+        # Add year options
+        for yr in range(today.year, today.year - 3, -1):
+            available_months.append({
+                'value': f"year-{yr}",
+                'label': f"── Year {yr} ──",
+            })
+
+        # Date filter kwargs for transactions
+        date_filter = {'date__gte': month_start, 'date__lte': month_end}
 
         # Purchase Metrics
-        purchase_stats = Purchases.objects.filter(client=client, is_active=True).aggregate(
+        purchase_stats = Purchases.objects.filter(client=client, is_active=True, **date_filter).aggregate(
             count=Count('id'), total=Sum('total_amount'))
         
         # Sale Metrics
-        sale_stats = Sales.objects.filter(client=client, is_active=True).aggregate(
+        sale_stats = Sales.objects.filter(client=client, is_active=True, **date_filter).aggregate(
             count=Count('id'), total=Sum('total_amount'))
             
         # NSD Metrics
-        nsd_stats = NSDs.objects.filter(client=client, is_active=True).aggregate(
+        nsd_stats = NSDs.objects.filter(client=client, is_active=True, **date_filter).aggregate(
             count=Count('id'), total=Sum('sell_amount'))
             
         # Cash/Bank Metrics
-        cash_stats = Cashs.objects.filter(client=client, is_active=True).aggregate(
+        cash_stats = Cashs.objects.filter(client=client, is_active=True, **date_filter).aggregate(
             count=Count('id'), total=Sum('amount'))
 
         # Approved Collections
-        approved_col_stats = Collection.objects.filter(client=client, status='Approved', is_active=True).aggregate(
+        approved_col_stats = Collection.objects.filter(client=client, status='Approved', is_active=True, **date_filter).aggregate(
             count=Count('id'), total=Sum('total_amount'))
             
         # Pending Collections
-        pending_col_stats = Collection.objects.filter(client=client, status='Pending', is_active=True).aggregate(
+        pending_col_stats = Collection.objects.filter(client=client, status='Pending', is_active=True, **date_filter).aggregate(
             count=Count('id'), total=Sum('total_amount'))
 
-        # Top 5 Outstanding Customers
+        # Top 5 Outstanding Customers (cumulative, not filtered)
         outstanding_customers = Customers.objects.filter(client=client, is_active=True, balance__gt=0).order_by('-balance')[:5]
 
-        # Recent activities
-        recent_collections = Collection.objects.filter(client=client, is_active=True).select_related('collector').order_by('-date', '-id')[:5]
+        # Recent collections for selected period
+        recent_collections = Collection.objects.filter(
+            client=client, is_active=True, **date_filter
+        ).select_related('collector').order_by('-date', '-id')[:5]
         
         # Subscription status
         days_remaining = 0
         if client.subscription_end:
             days_remaining = (client.subscription_end - timezone.now().date()).days
             if days_remaining < 0: days_remaining = 0
+
+        # --- Chart data ---
+        import json
+        from datetime import timedelta
+
+        chart_labels = []
+        chart_purchase = []
+        chart_sale = []
+        chart_nsd = []
+        chart_cash = []
+
+        if is_year_view:
+            # Year view: monthly totals for each month of the year
+            for mo in range(1, 13):
+                mo_start = date(sel_year, mo, 1)
+                mo_end = date(sel_year, mo, calendar.monthrange(sel_year, mo)[1])
+                mo_filter = {'date__gte': mo_start, 'date__lte': mo_end}
+                chart_labels.append(mo_start.strftime('%b'))
+
+                p = Purchases.objects.filter(client=client, is_active=True, **mo_filter).aggregate(t=Sum('total_amount'))
+                chart_purchase.append(float(p['t'] or 0))
+                s = Sales.objects.filter(client=client, is_active=True, **mo_filter).aggregate(t=Sum('total_amount'))
+                chart_sale.append(float(s['t'] or 0))
+                n = NSDs.objects.filter(client=client, is_active=True, **mo_filter).aggregate(t=Sum('sell_amount'))
+                chart_nsd.append(float(n['t'] or 0))
+                c_val = Cashs.objects.filter(client=client, is_active=True, **mo_filter).aggregate(t=Sum('amount'))
+                chart_cash.append(float(c_val['t'] or 0))
+        else:
+            # Month view: daily totals for each day
+            def daily_totals(model, value_field):
+                rows = (
+                    model.objects.filter(client=client, is_active=True, **date_filter)
+                    .values('date')
+                    .annotate(total=Sum(value_field))
+                    .order_by('date')
+                )
+                result = {}
+                for row in rows:
+                    rd = row['date']
+                    if hasattr(rd, 'date'):
+                        rd = rd.date()
+                    result[rd] = float(row['total'] or 0)
+                return result
+
+            p_daily = daily_totals(Purchases, 'total_amount')
+            s_daily = daily_totals(Sales, 'total_amount')
+            n_daily = daily_totals(NSDs, 'sell_amount')
+            c_daily = daily_totals(Cashs, 'amount')
+
+            current_day = month_start
+            while current_day <= month_end:
+                chart_labels.append(current_day.strftime('%d'))
+                chart_purchase.append(p_daily.get(current_day, 0))
+                chart_sale.append(s_daily.get(current_day, 0))
+                chart_nsd.append(n_daily.get(current_day, 0))
+                chart_cash.append(c_daily.get(current_day, 0))
+                current_day += timedelta(days=1)
+
+        chart_data = {
+            'labels': chart_labels,
+            'purchase': chart_purchase,
+            'sale': chart_sale,
+            'nsd': chart_nsd,
+            'cash': chart_cash,
+        }
 
         context = {
             'purchase_stats': purchase_stats,
@@ -136,6 +261,10 @@ class ClientDashboardView(View):
             'client': client,
             'days_remaining': days_remaining,
             'total_customers': Customers.objects.filter(client=client, is_active=True).count(),
+            'selected_month': selected_month,
+            'month_display': month_display,
+            'available_months': available_months,
+            'chart_data_json': json.dumps(chart_data),
         }
         return render(request, 'dashboard/client_dashboard.html', context)
 
