@@ -87,6 +87,25 @@
         </div>
     </div>
 
+    <!-- Date Range for Ledger (Required) -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex items-center gap-4 flex-wrap mb-4">
+        <div class="flex items-center gap-2">
+            <i data-lucide="calendar" class="w-4 h-4 text-gray-400"></i>
+            <span class="text-xs font-semibold text-gray-500 uppercase">Ledger Date Range <span class="text-red-400">*</span></span>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="flex items-center gap-1.5">
+                <label class="text-xs text-gray-500">From <span class="text-red-400">*</span></label>
+                <input type="date" id="dateFrom" required class="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:ring-1 focus:ring-blue-400 focus:border-blue-400">
+            </div>
+            <div class="flex items-center gap-1.5">
+                <label class="text-xs text-gray-500">To <span class="text-red-400">*</span></label>
+                <input type="date" id="dateTo" required class="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:ring-1 focus:ring-blue-400 focus:border-blue-400">
+            </div>
+            <span class="text-xs text-gray-400">Opening balance auto-calculated from "From" date</span>
+        </div>
+    </div>
+
     <!-- Action Bar -->
     <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex items-center justify-between flex-wrap gap-3">
         <div class="flex items-center gap-3">
@@ -147,8 +166,8 @@
     const csrfToken = getCookie('csrftoken');
 
     // Account data from Django context
-    const customers = {{ customers|safe }};
-    const suppliers = {{ suppliers|safe }};
+    const customers = {{ customers_json|safe }};
+    const suppliers = {{ suppliers_json|safe }};
 
     let allAccounts = [];
     let currentFilter = 'all';
@@ -165,6 +184,13 @@
             allAccounts.push({ ...s, prefixedId: 's_' + s.id });
         });
         renderAccounts();
+
+        // Default dates: yesterday → today
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        document.getElementById('dateTo').value = today.toISOString().split('T')[0];
+        document.getElementById('dateFrom').value = yesterday.toISOString().split('T')[0];
     }
 
     // --- RENDER ---
@@ -288,6 +314,19 @@
 
         if (accountIds.length === 0) return;
 
+        // Validate dates are set (required)
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+        if (!dateFrom || !dateTo) {
+            alert('Please select both From and To dates before sending.');
+            document.getElementById('dateFrom').classList.toggle('border-red-400', !dateFrom);
+            document.getElementById('dateTo').classList.toggle('border-red-400', !dateTo);
+            return;
+        }
+        // Clear red borders
+        document.getElementById('dateFrom').classList.remove('border-red-400');
+        document.getElementById('dateTo').classList.remove('border-red-400');
+
         // Collect per-account send modes
         const accountModes = {};
         accountIds.forEach(id => {
@@ -308,7 +347,9 @@
                 body: JSON.stringify({
                     account_ids: accountIds,
                     account_type: 'all',
-                    account_modes: accountModes
+                    account_modes: accountModes,
+                    date_from: document.getElementById('dateFrom').value || null,
+                    date_to: document.getElementById('dateTo').value || null
                 })
             });
 

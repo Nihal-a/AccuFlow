@@ -16,4 +16,5 @@ urlpatterns = [
     path('api/send-address-rows/', views.send_address_rows_api, name='send_address_rows'),
     path('api/job-status/<str:job_id>/', views.job_status_api, name='job_status'),
     path('api/cancel-job/<str:job_id>/', views.cancel_job_api, name='cancel_job'),
+    path('api/cancel-all-jobs/', views.cancel_all_jobs_api, name='cancel_all_jobs'),
 ]

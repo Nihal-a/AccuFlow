@@ -2,22 +2,49 @@ import { createCanvas } from 'canvas';
 
 function wrapText(ctx, text, maxWidth) {
     if (!text) return [""];
-    const words = String(text).split(/\s+/);
+    const str = String(text);
+    // If a single word is still too long, we need to break it by characters
     const lines = [];
-    let currentLine = words[0];
+    let currentLine = "";
 
-    for (let i = 1; i < words.length; i++) {
-        const word = words[i];
-        const width = ctx.measureText(currentLine + " " + word).width;
-        if (width < maxWidth) {
-            currentLine += " " + word;
-        } else {
+    for (let i = 0; i < str.length; i++) {
+        const char = str[i];
+        
+        // Handle explicit newlines if any
+        if (char === '\n') {
             lines.push(currentLine);
-            currentLine = word;
+            currentLine = "";
+            continue;
+        }
+
+        const widthWithChar = ctx.measureText(currentLine + char).width;
+        if (widthWithChar < maxWidth) {
+            currentLine += char;
+        } else {
+            // Find the last space to break at word boundary if possible
+            const lastSpaceIdx = currentLine.lastIndexOf(' ');
+            if (lastSpaceIdx > 0) {
+                const wordToMove = currentLine.substring(lastSpaceIdx + 1);
+                lines.push(currentLine.substring(0, lastSpaceIdx));
+                currentLine = wordToMove + char;
+            } else {
+                // No space found, must break the word mid-character
+                lines.push(currentLine);
+                currentLine = char;
+            }
         }
     }
-    lines.push(currentLine);
+    if (currentLine) {
+        lines.push(currentLine);
+    }
     return lines;
+}
+
+function formatNum(val) {
+    if (val === null || val === undefined || val === '') return '';
+    const num = parseFloat(String(val).replace(/,/g, ''));
+    if (isNaN(num) || num === 0) return '';
+    return num.toFixed(2);
 }
 
 export async function generateTradeTable(customer) {
@@ -86,7 +113,7 @@ export async function generateTradeTable(customer) {
     ctx.font = 'bold 13px Arial';
     ctx.textAlign = 'right';
     ctx.fillText('Opening Balance', getX(4), padding + 22);
-    ctx.fillText(customer.opening_balance || '0.00', width - padding - 15, padding + 22);
+    ctx.fillText(formatNum(customer.opening_balance) || '0.00', width - padding - 15, padding + 22);
 
     // 4. Table Header
     const headerY = padding + headerHeight;
@@ -133,11 +160,15 @@ export async function generateTradeTable(customer) {
         // Other Columns (Centered vertically in row)
         ctx.textAlign = 'center';
         const midY = currentY + 20;
-        ctx.fillText(tx.qty || '', getX(3) + colWidths[3] / 2, midY);
-        ctx.fillText(tx.rate || '', getX(4) + colWidths[4] / 2, midY);
-        ctx.fillText(tx.debit || '', getX(5) + colWidths[5] / 2, midY);
-        ctx.fillText(tx.credit || '', getX(6) + colWidths[6] / 2, midY);
-        ctx.fillText(tx.balance || '', getX(7) + colWidths[7] / 2, midY);
+        
+        const typeStr = tx.type || 'JL';
+        const showRate = typeStr !== 'JL'; // Don't show rate for Cash/Journal entries
+
+        ctx.fillText(formatNum(tx.qty), getX(3) + colWidths[3] / 2, midY);
+        ctx.fillText(showRate ? formatNum(tx.rate) : '', getX(4) + colWidths[4] / 2, midY);
+        ctx.fillText(formatNum(tx.debit), getX(5) + colWidths[5] / 2, midY);
+        ctx.fillText(formatNum(tx.credit), getX(6) + colWidths[6] / 2, midY);
+        ctx.fillText(formatNum(tx.balance), getX(7) + colWidths[7] / 2, midY);
 
         totalQty += parseFloat(String(tx.qty).replace(/,/g, '')) || 0;
         totalDebit += parseFloat(String(tx.debit).replace(/,/g, '')) || 0;
@@ -155,10 +186,10 @@ export async function generateTradeTable(customer) {
     ctx.textAlign = 'right';
     ctx.fillText('Total', getX(2) + colWidths[2] - 10, currentY + 20);
     ctx.textAlign = 'center';
-    ctx.fillText(totalQty.toFixed(2), getX(3) + colWidths[3] / 2, currentY + 20);
-    ctx.fillText(totalDebit.toFixed(2), getX(5) + colWidths[5] / 2, currentY + 20);
-    ctx.fillText(totalCredit.toFixed(2), getX(6) + colWidths[6] / 2, currentY + 20);
-    ctx.fillText(customer.balance || '0.00', getX(7) + colWidths[7] / 2, currentY + 20);
+    ctx.fillText(totalQty ? totalQty.toFixed(2) : '', getX(3) + colWidths[3] / 2, currentY + 20);
+    ctx.fillText(totalDebit ? totalDebit.toFixed(2) : '', getX(5) + colWidths[5] / 2, currentY + 20);
+    ctx.fillText(totalCredit ? totalCredit.toFixed(2) : '', getX(6) + colWidths[6] / 2, currentY + 20);
+    ctx.fillText(formatNum(customer.balance) || '0.00', getX(7) + colWidths[7] / 2, currentY + 20);
 
     return canvas.toBuffer('image/png');
 }

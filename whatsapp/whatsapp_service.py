@@ -3,6 +3,7 @@ WhatsApp Service — Django HTTP client for Node.js WhatsApp API.
 
 Handles all communication between Django and the Node.js Express server.
 Uses requests library with timeout, retry logic, and error handling.
+Multi-client: each WhatsAppService instance is scoped to a client_id.
 """
 
 import requests
@@ -22,74 +23,78 @@ class WhatsAppService:
     HTTP client for the Node.js WhatsApp Express API.
     
     Usage:
-        service = WhatsAppService()
+        service = WhatsAppService(client_id='wa_abc123def456')
         status = service.get_status()
         service.send_ledger(customer_data)
     """
-
-    def __init__(self):
+    
+    def __init__(self, client_id):
+        """
+        Initialize with client-specific session.
+        
+        Args:
+            client_id: str — the whatsapp_client_id from the Clients model
+        """
+        if not client_id:
+            raise WhatsAppServiceError("client_id is required for WhatsApp service")
+        self.client_id = client_id
         self.base_url = getattr(settings, 'WHATSAPP_NODE_URL', 'http://localhost:3001')
         self.api_key = getattr(settings, 'WHATSAPP_API_KEY', 'accuflow-wa-dev-key-2024')
         self.timeout = getattr(settings, 'WHATSAPP_TIMEOUT', 30)
-        self.enabled = getattr(settings, 'WHATSAPP_ENABLED', True)
 
     def _headers(self):
         return {
+            'X-API-Key': self.api_key,
             'Content-Type': 'application/json',
-            'X-Api-Key': self.api_key
         }
 
     def _request(self, method, endpoint, **kwargs):
         """
         Make an HTTP request to the Node.js server.
-        Returns parsed JSON response or raises WhatsAppServiceError.
+        All endpoints are scoped under /api/{client_id}/...
         """
-        if not self.enabled:
-            raise WhatsAppServiceError('WhatsApp integration is disabled')
-
-        url = f'{self.base_url}{endpoint}'
+        url = f'{self.base_url}/api/{self.client_id}{endpoint}'
         kwargs.setdefault('headers', self._headers())
         kwargs.setdefault('timeout', self.timeout)
 
         try:
             response = requests.request(method, url, **kwargs)
 
-            # For QR image endpoint, return raw response
-            if endpoint == '/qr.png' and response.headers.get('Content-Type', '').startswith('image/'):
+            # Handle image responses (QR code)
+            if response.headers.get('Content-Type', '').startswith('image/'):
                 return {
                     'is_image': True,
                     'content': response.content,
                     'content_type': response.headers['Content-Type']
                 }
 
-            # Parse JSON
             data = response.json()
 
-            if response.status_code == 503:
-                raise WhatsAppServiceError('WhatsApp not connected. Please scan QR code first.')
-            
             if response.status_code == 403:
-                raise WhatsAppServiceError('API authentication failed. Check WHATSAPP_API_KEY.')
+                raise WhatsAppServiceError('API key invalid or missing')
+            
+            if response.status_code == 503:
+                raise WhatsAppServiceError(data.get('error', 'WhatsApp service unavailable'))
 
-            if response.status_code >= 500:
-                raise WhatsAppServiceError(f'Node.js server error: {data.get("error", "Unknown")}')
+            if response.status_code >= 400:
+                raise WhatsAppServiceError(data.get('error', f'HTTP {response.status_code}'))
 
             return data
 
-        except requests.ConnectionError:
+        except requests.exceptions.ConnectionError:
             raise WhatsAppServiceError(
                 'Cannot connect to WhatsApp server. '
-                'Make sure the Node.js server is running on ' + self.base_url
+                'Ensure the Node.js server is running (npm start in wn/ directory).'
             )
-        except requests.Timeout:
-            raise WhatsAppServiceError('WhatsApp server request timed out')
-        except requests.JSONDecodeError:
-            # Could be a non-JSON response (shouldn't happen except for QR image)
+        except requests.exceptions.Timeout:
+            raise WhatsAppServiceError(
+                f'WhatsApp server request timed out after {self.timeout}s'
+            )
+        except requests.exceptions.JSONDecodeError:
             raise WhatsAppServiceError('Invalid response from WhatsApp server')
         except WhatsAppServiceError:
             raise
         except Exception as e:
-            logger.error(f'WhatsApp service error: {e}')
             raise WhatsAppServiceError(f'Unexpected error: {str(e)}')
 
     # --- PRE-FLIGHT CHECK ---
@@ -104,28 +109,30 @@ class WhatsAppService:
             status = self.get_status()
         except WhatsAppServiceError:
             raise WhatsAppServiceError(
-                'WhatsApp service unavailable. Make sure the Node.js server is running.'
+                'WhatsApp server is not reachable. '
+                'Please ensure the Node.js server is running.'
             )
-
+        
         if not status.get('linked', False):
             raise WhatsAppServiceError(
-                'WhatsApp not linked. Please scan the QR code first at /whatsapp/scan/'
+                'WhatsApp is not linked. '
+                'Please scan the QR code on the WhatsApp Scan page first.'
             )
-
+        
         if not status.get('safe_time', True):
-            logger.warning('Sending outside safe hours (8AM-10PM Dubai). Messages may be delayed.')
-
+            logger.warning(f'[{self.client_id}] Sending outside safe hours (Dubai timezone)')
+        
         return status
 
-    # --- PUBLIC API ---
+    # --- ENDPOINTS ---
 
     def get_status(self):
-        """Get WhatsApp connection status."""
+        """Get WhatsApp connection status for this client."""
         return self._request('GET', '/status')
 
     def get_qr_image(self):
         """
-        Get QR code image. 
+        Get QR code image for this client.
         Returns dict with either:
           - {'is_image': True, 'content': bytes, 'content_type': str}
           - {'linked': True, ...} if already linked
@@ -134,7 +141,7 @@ class WhatsAppService:
         return self._request('GET', '/qr.png')
 
     def unlink(self):
-        """Unlink WhatsApp session."""
+        """Unlink this client's WhatsApp session."""
         return self._request('POST', '/unlink')
 
     def send_ledger(self, customer_data):
@@ -143,14 +150,12 @@ class WhatsAppService:
         
         Args:
             customer_data: dict with keys:
-                - whatsappnumber: str (country_code + number, e.g., '919846080265')
+                - whatsappnumber: str (country_code + number)
                 - balance: str
-                - opening_balance: str (optional)
                 - transactions: list of dicts (optional)
-                - optin_verified: bool (optional)
         """
         self.ensure_connected()
-        return self._request('POST', '/api/send-ledger', json={
+        return self._request('POST', '/send-ledger', json={
             'customer_data': customer_data
         })
 
@@ -170,20 +175,16 @@ class WhatsAppService:
             dict with 'job_id' for tracking progress
         """
         self.ensure_connected()
-        return self._request('POST', '/api/send-balance-accounts', json={
+        return self._request('POST', '/send-balance-accounts', json={
             'accounts': accounts
         })
 
     def send_address_row(self, whatsapp_number, row_data):
         """
         Send a single address row as text message.
-        
-        Args:
-            whatsapp_number: str (country_code + number)
-            row_data: dict with keys: sno, description, amount, qty, date
         """
         self.ensure_connected()
-        return self._request('POST', '/api/send-address-row', json={
+        return self._request('POST', '/send-address-row', json={
             'whatsapp_number': whatsapp_number,
             'row_data': row_data
         })
@@ -192,16 +193,11 @@ class WhatsAppService:
         """
         Send multiple address rows as batch.
         
-        Args:
-            whatsapp_number: str (country_code + number)
-            rows: list of dicts with keys: sno, description, qty, date
-            supplier_name: str (optional, for header message)
-        
         Returns:
             dict with 'job_id' for tracking progress
         """
         self.ensure_connected()
-        return self._request('POST', '/api/send-address-rows', json={
+        return self._request('POST', '/send-address-rows', json={
             'whatsapp_number': whatsapp_number,
             'rows': rows,
             'supplier_name': supplier_name
@@ -209,26 +205,32 @@ class WhatsAppService:
 
     def get_job_status(self, job_id):
         """Get batch job status by ID."""
-        return self._request('GET', f'/api/job-status/{job_id}')
+        return self._request('GET', f'/job-status/{job_id}')
 
     def cancel_job(self, job_id):
         """Cancel a running batch job."""
-        return self._request('POST', f'/api/cancel-job/{job_id}')
+        return self._request('POST', f'/cancel-job/{job_id}')
+
+    def cancel_all_jobs(self):
+        """Cancel ALL running jobs for this client (global stop)."""
+        return self._request('POST', '/cancel-all-jobs')
 
     def is_available(self):
         """Check if WhatsApp server is running and reachable."""
         try:
-            status = self.get_status()
-            return True
-        except WhatsAppServiceError:
+            # Health endpoint has no client_id scope
+            url = f'{self.base_url}/health'
+            response = requests.get(url, timeout=5)
+            return response.status_code == 200
+        except Exception:
             return False
 
     def is_linked(self):
-        """Check if WhatsApp is linked (authenticated)."""
+        """Check if this client's WhatsApp is linked."""
         try:
             status = self.get_status()
             return status.get('linked', False)
-        except WhatsAppServiceError:
+        except Exception:
             return False
 
 
@@ -245,14 +247,22 @@ def format_whatsapp_number(country_code, wa_number):
         str: e.g., '919846080265'
         None: if inputs are invalid
     """
-    if not country_code or not wa_number:
+    if not wa_number:
         return None
     
-    # Clean up
-    cc = str(country_code).strip().replace('+', '')
-    num = str(wa_number).strip().replace(' ', '').replace('-', '')
+    # Clean inputs
+    code = str(country_code or '').strip().replace('+', '')
+    number = str(wa_number).strip()
     
-    if not cc or not num:
+    # Remove any non-numeric characters
+    code = ''.join(filter(str.isdigit, code))
+    number = ''.join(filter(str.isdigit, number))
+    
+    if not number:
         return None
     
-    return f'{cc}{num}'
+    # If number already starts with the country code, don't double-add
+    if code and number.startswith(code) and len(number) > len(code) + 5:
+        return number
+    
+    return f'{code}{number}' if code else number

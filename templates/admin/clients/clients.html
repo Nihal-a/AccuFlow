@@ -102,7 +102,12 @@
           <td class="px-4 py-2 w-1">
             {{forloop.counter}}
           </td>
-          <td class="px-4 py-2 font-semibold uppercase search-area">{{ client.name }} ({{client.clientId}})</td>
+          <td class="px-4 py-2 font-semibold uppercase search-area">
+            {{ client.name }} ({{client.clientId}})
+            {% if client.has_whatsapp_access %}
+            <i class="fa-brands fa-whatsapp text-green-500 ml-1 text-lg" title="WhatsApp Automation Enabled"></i>
+            {% endif %}
+          </td>
           <td class="px-4 py-2 text-gray-700 search-area"> {{ client.phone }}</td>
           <td class="px-4 py-2 text-gray-700 search-area">{{ client.email }}</td>
           <td class="px-4 py-2">

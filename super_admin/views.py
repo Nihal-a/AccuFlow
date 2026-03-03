@@ -128,6 +128,7 @@ class ClientAddView(View):
         phone = request.POST.get('phone')
         email = request.POST.get('email')
         wa = request.POST.get('wa')
+        has_whatsapp_access = request.POST.get('has_whatsapp_access') == 'on'
         username = request.POST.get('username')
         password = request.POST.get('password')
         confirm_password = request.POST.get('confirm_password')
@@ -156,6 +157,7 @@ class ClientAddView(View):
             email=email,
             user=user,
             wa = wa,
+            has_whatsapp_access=has_whatsapp_access,
             is_active=True,
             clientId = last_client_id()
         )
@@ -212,6 +214,7 @@ class ClientUpdateView(View):
         phone = request.POST.get('phone')
         wa = request.POST.get('wa')
         country_code = request.POST.get('country_code')
+        has_whatsapp_access = request.POST.get('has_whatsapp_access') == 'on'
         username = request.POST.get('username')
         password = request.POST.get('password')
         confirm_password = request.POST.get('confirm_password')
@@ -236,6 +239,7 @@ class ClientUpdateView(View):
         client.email = email
         client.phone = phone
         client.country_code = country_code
+        client.has_whatsapp_access = has_whatsapp_access
 
 
         plan_id = request.POST.get('subscription_plan')

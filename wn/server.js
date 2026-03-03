@@ -1,19 +1,24 @@
 /**
- * AccuFlow WhatsApp Express Server
+ * AccuFlow WhatsApp Express Server — Multi-Client Edition
  * 
- * HTTP API wrapper around existing Baileys WhatsApp automation.
- * Replaces qr.js for auth — handles QR scanning + message sending in one process.
+ * Single Node.js process managing multiple isolated WhatsApp sessions.
+ * Each client gets their own Baileys connection, QR code, and auth folder.
  * 
- * Endpoints:
- *   GET  /qr.png                    - Returns QR code as PNG image
- *   GET  /status                    - Returns { linked: true/false }
- *   POST /unlink                    - Unlinks WhatsApp session
- *   POST /api/send-ledger           - Sends ledger image to a customer
- *   POST /api/send-balance-accounts - Sends balance to multiple accounts (sequential + Poisson delays)
- *   POST /api/send-address-row      - Sends a single address row as text
- *   GET  /api/send-progress/:jobId  - SSE endpoint for batch send progress
+ * Endpoints (all scoped by :clientId):
+ *   GET  /health                                    - Server health check
+ *   GET  /api/:clientId/qr.png                      - Client's QR code as PNG
+ *   GET  /api/:clientId/status                      - Client's { linked: true/false }
+ *   POST /api/:clientId/unlink                      - Unlink client's WhatsApp
+ *   POST /api/:clientId/send-ledger                 - Send ledger to a customer
+ *   POST /api/:clientId/send-balance-accounts       - Batch send balances
+ *   POST /api/:clientId/send-address-row            - Send single address row
+ *   POST /api/:clientId/send-address-rows           - Batch send address rows
+ *   GET  /api/:clientId/send-progress/:jobId        - SSE progress stream
+ *   GET  /api/:clientId/job-status/:jobId           - Polling job status
+ *   POST /api/:clientId/cancel-job/:jobId           - Cancel batch job
+ *   GET  /api/sessions                              - List all active sessions (admin)
  * 
- * No Redis/BullMQ dependency — in-memory sequential sending with Poisson delays.
+ * No Redis/BullMQ — in-memory sequential sending with Poisson delays.
  */
 
 import { makeWASocket, useMultiFileAuthState, Browsers, fetchLatestBaileysVersion, DisconnectReason } from '@whiskeysockets/baileys';
@@ -44,37 +49,36 @@ const GLOBAL_RATE_LIMIT = parseInt(process.env.RATE_LIMIT || (NODE_ENV === 'deve
 const START_HOUR_DUBAI = parseInt(process.env.SAFE_HOUR_START || (NODE_ENV === 'development' ? '0' : '8'));
 const END_HOUR_DUBAI = parseInt(process.env.SAFE_HOUR_END || (NODE_ENV === 'development' ? '24' : '22'));
 
+// Session management
+const SESSION_INACTIVE_HOURS = parseInt(process.env.SESSION_INACTIVE_HOURS || '24');
+
 // --- LOGGING ---
 const logger = pino({ level: NODE_ENV === 'production' ? 'info' : 'debug' });
 
-// --- GLOBAL STATE ---
-let sock = null;
-let currentQR = null;
-let isConnected = false;
-let isConnecting = false;
-let messagesSentThisMinute = 0;
-let rateLimitResetInterval = null;
+// --- MULTI-SESSION STATE ---
+// Map<clientId, { sock, isConnected, isConnecting, currentQR, lastActive, messagesSentThisMinute }>
+const activeSessions = new Map();
 
-// In-memory job tracking for batch sends
+// In-memory job tracking for batch sends (shared across all clients)
 const activeJobs = new Map();
 
-// --- RATE LIMITER ---
+// --- RATE LIMITER (per-client) ---
 function startRateLimitReset() {
-    if (rateLimitResetInterval) clearInterval(rateLimitResetInterval);
-    rateLimitResetInterval = setInterval(() => {
-        messagesSentThisMinute = 0;
+    setInterval(() => {
+        activeSessions.forEach(session => {
+            session.messagesSentThisMinute = 0;
+        });
     }, 60000);
 }
 
-async function waitForRateLimit() {
-    while (messagesSentThisMinute >= GLOBAL_RATE_LIMIT) {
+async function waitForRateLimit(session) {
+    while (session.messagesSentThisMinute >= GLOBAL_RATE_LIMIT) {
         await new Promise(r => setTimeout(r, 2000));
     }
 }
 
 // --- UTILS ---
 function isSafeTime() {
-    // If window is 0-24, it's always safe
     if (START_HOUR_DUBAI === 0 && END_HOUR_DUBAI === 24) return true;
     const now = new Date();
     const dubaiTimeStr = now.toLocaleString("en-US", { timeZone: "Asia/Dubai" });
@@ -88,7 +92,6 @@ function getPoissonDelay() {
 }
 
 function formatPhone(number) {
-    // If in dev mode and DEV_WHATSAPP_NUMBER is set, override all numbers
     if (NODE_ENV === 'development' && DEV_WHATSAPP_NUMBER) {
         return DEV_WHATSAPP_NUMBER.replace(/[^0-9]/g, '') + '@s.whatsapp.net';
     }
@@ -101,22 +104,57 @@ function isValidWhatsAppNumber(number) {
     return cleaned.length >= 10 && cleaned.length <= 15;
 }
 
+function isValidClientId(clientId) {
+    // Only allow safe characters: alphanumeric, underscore, hyphen
+    return /^[a-zA-Z0-9_-]{3,50}$/.test(clientId);
+}
+
 const CAPTIONS = [
     "📈 Your latest trade summary is ready. Please review above.",
     "📊 Account update: Here is your recent activity snapshot.",
     "💼 Daily trade report generated. Balance details attached."
 ];
 
-// --- BAILEYS CONNECTION ---
-async function connectToWhatsApp() {
-    if (isConnecting) return;
-    isConnecting = true;
+// --- MULTI-SESSION BAILEYS CONNECTION ---
+async function getOrCreateSession(clientId) {
+    if (activeSessions.has(clientId)) {
+        const session = activeSessions.get(clientId);
+        session.lastActive = Date.now();
+        return session;
+    }
+
+    // Create a new session
+    const session = {
+        sock: null,
+        isConnected: false,
+        isConnecting: false,
+        currentQR: null,
+        lastActive: Date.now(),
+        messagesSentThisMinute: 0,
+        clientId: clientId
+    };
+    activeSessions.set(clientId, session);
+
+    // Start connection
+    await connectSession(clientId);
+    return session;
+}
+
+async function connectSession(clientId) {
+    const session = activeSessions.get(clientId);
+    if (!session || session.isConnecting) return;
+    session.isConnecting = true;
+
+    const authDir = path.join(__dirname, 'auth_info', clientId);
 
     try {
-        const { state, saveCreds } = await useMultiFileAuthState(path.join(__dirname, 'auth_info'));
+        // Ensure auth directory exists
+        fs.mkdirSync(authDir, { recursive: true });
+
+        const { state, saveCreds } = await useMultiFileAuthState(authDir);
         const { version } = await fetchLatestBaileysVersion();
 
-        sock = makeWASocket({
+        const sock = makeWASocket({
             version,
             logger: pino({ level: 'fatal' }),
             printQRInTerminal: false,
@@ -129,47 +167,69 @@ async function connectToWhatsApp() {
             keepAliveIntervalMs: 10000
         });
 
+        session.sock = sock;
+
         sock.ev.on('creds.update', saveCreds);
 
         sock.ev.on('connection.update', (update) => {
             const { connection, lastDisconnect, qr } = update;
 
             if (qr) {
-                currentQR = qr;
-                isConnected = false;
-                logger.info('New QR code generated');
+                session.currentQR = qr;
+                session.isConnected = false;
+                logger.info(`[${clientId}] New QR code generated`);
             }
 
             if (connection === 'close') {
-                isConnected = false;
-                isConnecting = false;
+                session.isConnected = false;
+                session.isConnecting = false;
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
-                logger.warn(`Connection closed (Status: ${statusCode})`);
+                logger.warn(`[${clientId}] Connection closed (Status: ${statusCode})`);
 
                 if (statusCode === DisconnectReason.loggedOut || statusCode === 401) {
-                    // Session expired — clear auth and wait for new QR scan
-                    currentQR = null;
-                    logger.info('Logged out. Delete auth_info to re-authenticate.');
-                    // Auto-reconnect to generate new QR
-                    setTimeout(() => connectToWhatsApp(), 3000);
+                    // Session expired — auto-clear stale auth
+                    session.currentQR = null;
+                    if (fs.existsSync(authDir)) {
+                        fs.rmSync(authDir, { recursive: true, force: true });
+                        logger.info(`[${clientId}] 🗑️ Cleared stale auth — ready for new QR scan`);
+                    }
+                    setTimeout(() => connectSession(clientId), 3000);
                 } else {
-                    // Network error or other — auto-reconnect
-                    logger.info('Reconnecting in 3s...');
-                    setTimeout(() => connectToWhatsApp(), 3000);
+                    logger.info(`[${clientId}] Reconnecting in 3s...`);
+                    setTimeout(() => connectSession(clientId), 3000);
                 }
             } else if (connection === 'open') {
-                isConnected = true;
-                isConnecting = false;
-                currentQR = null;
-                logger.info('✅ WhatsApp Connected');
+                session.isConnected = true;
+                session.isConnecting = false;
+                session.currentQR = null;
+                session.lastActive = Date.now();
+                logger.info(`[${clientId}] ✅ WhatsApp Connected`);
             }
         });
 
     } catch (err) {
-        isConnecting = false;
-        logger.error(`Connection error: ${err.message}`);
-        setTimeout(() => connectToWhatsApp(), 5000);
+        session.isConnecting = false;
+        logger.error(`[${clientId}] Connection error: ${err.message}`);
+        setTimeout(() => connectSession(clientId), 5000);
     }
+}
+
+// --- SESSION CLEANUP (unload inactive sessions) ---
+function startSessionCleanup() {
+    setInterval(() => {
+        const now = Date.now();
+        const maxInactive = SESSION_INACTIVE_HOURS * 60 * 60 * 1000;
+
+        activeSessions.forEach((session, clientId) => {
+            if (now - session.lastActive > maxInactive && !session.isConnected) {
+                logger.info(`[${clientId}] Unloading inactive session (>${SESSION_INACTIVE_HOURS}h)`);
+                try {
+                    if (session.sock) session.sock.end(undefined);
+                } catch (e) { /* ignore */ }
+                activeSessions.delete(clientId);
+            }
+        });
+    }, 3600000); // Check every hour
 }
 
 // --- API KEY MIDDLEWARE ---
@@ -177,6 +237,15 @@ function authMiddleware(req, res, next) {
     const key = req.headers['x-api-key'] || req.query.api_key;
     if (key !== API_KEY) {
         return res.status(403).json({ error: 'Invalid API key' });
+    }
+    next();
+}
+
+// Validate clientId param
+function validateClientId(req, res, next) {
+    const { clientId } = req.params;
+    if (!clientId || !isValidClientId(clientId)) {
+        return res.status(400).json({ error: 'Invalid client ID' });
     }
     next();
 }
@@ -194,30 +263,47 @@ app.use(express.json({ limit: '10mb' }));
 
 // Health check (no auth required)
 app.get('/health', (req, res) => {
-    res.json({ status: 'ok', uptime: process.uptime() });
+    res.json({
+        status: 'ok',
+        uptime: process.uptime(),
+        active_sessions: activeSessions.size,
+        active_jobs: activeJobs.size
+    });
+});
+
+// --- ADMIN: LIST ALL SESSIONS ---
+app.get('/api/sessions', authMiddleware, (req, res) => {
+    const sessions = [];
+    activeSessions.forEach((session, clientId) => {
+        sessions.push({
+            client_id: clientId,
+            linked: session.isConnected,
+            qr_available: !!session.currentQR,
+            last_active: new Date(session.lastActive).toISOString(),
+            messages_this_minute: session.messagesSentThisMinute
+        });
+    });
+    res.json({ sessions, total: sessions.length });
 });
 
 // --- QR CODE ENDPOINT ---
-app.get('/qr.png', authMiddleware, async (req, res) => {
+app.get('/api/:clientId/qr.png', authMiddleware, validateClientId, async (req, res) => {
     try {
-        if (isConnected) {
-            // Already linked — return a simple "linked" image or JSON
+        const session = await getOrCreateSession(req.params.clientId);
+
+        if (session.isConnected) {
             return res.json({ linked: true, message: 'WhatsApp already linked' });
         }
 
-        if (!currentQR) {
+        if (!session.currentQR) {
             return res.status(202).json({ linked: false, message: 'QR code not yet generated. Please wait...' });
         }
 
-        // Generate QR as PNG buffer
-        const qrBuffer = await QRCode.toBuffer(currentQR, {
+        const qrBuffer = await QRCode.toBuffer(session.currentQR, {
             type: 'png',
             width: 400,
             margin: 2,
-            color: {
-                dark: '#000000',
-                light: '#ffffff'
-            }
+            color: { dark: '#000000', light: '#ffffff' }
         });
 
         res.set('Content-Type', 'image/png');
@@ -225,123 +311,135 @@ app.get('/qr.png', authMiddleware, async (req, res) => {
         res.send(qrBuffer);
 
     } catch (err) {
-        logger.error(`QR generation error: ${err.message}`);
+        logger.error(`[${req.params.clientId}] QR generation error: ${err.message}`);
         res.status(500).json({ error: 'Failed to generate QR code' });
     }
 });
 
 // --- STATUS ENDPOINT ---
-app.get('/status', authMiddleware, (req, res) => {
+app.get('/api/:clientId/status', authMiddleware, validateClientId, async (req, res) => {
+    const clientId = req.params.clientId;
+    const session = activeSessions.get(clientId);
+
+    if (!session) {
+        return res.json({
+            linked: false,
+            phone: null,
+            qr_available: false,
+            safe_time: isSafeTime(),
+            messages_this_minute: 0,
+            active_jobs: 0
+        });
+    }
+
+    session.lastActive = Date.now();
     res.json({
-        linked: isConnected,
-        phone: isConnected && sock?.user ? sock.user.id.split(':')[0] : null,
-        qr_available: !!currentQR,
+        linked: session.isConnected,
+        phone: session.isConnected && session.sock?.user ? session.sock.user.id.split(':')[0] : null,
+        qr_available: !!session.currentQR,
         safe_time: isSafeTime(),
-        messages_this_minute: messagesSentThisMinute,
-        active_jobs: activeJobs.size
+        messages_this_minute: session.messagesSentThisMinute,
+        active_jobs: [...activeJobs.values()].filter(j => j.clientId === clientId).length
     });
 });
 
 // --- UNLINK ENDPOINT ---
-app.post('/unlink', authMiddleware, async (req, res) => {
+app.post('/api/:clientId/unlink', authMiddleware, validateClientId, async (req, res) => {
+    const clientId = req.params.clientId;
+    const session = activeSessions.get(clientId);
+
     try {
-        if (sock) {
-            await sock.logout();
+        if (session?.sock) {
+            try { await session.sock.logout(); } catch (e) { /* ignore */ }
         }
 
-        // Delete auth_info directory
-        const authDir = path.join(__dirname, 'auth_info');
+        // Delete auth directory
+        const authDir = path.join(__dirname, 'auth_info', clientId);
         if (fs.existsSync(authDir)) {
             fs.rmSync(authDir, { recursive: true, force: true });
         }
 
-        isConnected = false;
-        currentQR = null;
-
-        // Reconnect to generate new QR
-        setTimeout(() => connectToWhatsApp(), 2000);
+        // Remove from active sessions
+        activeSessions.delete(clientId);
 
         res.json({ success: true, message: 'WhatsApp unlinked. Scan new QR to re-link.' });
 
     } catch (err) {
-        logger.error(`Unlink error: ${err.message}`);
-        // Even on error, try to clean up
-        const authDir = path.join(__dirname, 'auth_info');
+        logger.error(`[${clientId}] Unlink error: ${err.message}`);
+        // Force cleanup
+        const authDir = path.join(__dirname, 'auth_info', clientId);
         if (fs.existsSync(authDir)) {
             fs.rmSync(authDir, { recursive: true, force: true });
         }
-        isConnected = false;
-        currentQR = null;
-        setTimeout(() => connectToWhatsApp(), 2000);
+        activeSessions.delete(clientId);
         res.json({ success: true, message: 'WhatsApp session cleared.' });
     }
 });
 
 // --- SEND LEDGER (single customer with image) ---
-app.post('/api/send-ledger', authMiddleware, async (req, res) => {
+app.post('/api/:clientId/send-ledger', authMiddleware, validateClientId, async (req, res) => {
     try {
+        const session = await getOrCreateSession(req.params.clientId);
         const { customer_data } = req.body;
 
         if (!customer_data) {
             return res.status(400).json({ error: 'customer_data is required' });
         }
 
-        if (!isConnected) {
+        if (!session.isConnected) {
             return res.status(503).json({ error: 'WhatsApp not connected' });
         }
 
         const waNumber = customer_data.whatsappnumber;
         if (!isValidWhatsAppNumber(waNumber)) {
-            return res.json({
-                success: false,
-                skipped: true,
-                message: `Invalid/missing WhatsApp number for this account`
-            });
+            return res.json({ success: false, skipped: true, message: 'Invalid/missing WhatsApp number' });
         }
 
-        await waitForRateLimit();
+        await waitForRateLimit(session);
 
         const phone = formatPhone(waNumber);
         const hasTransactions = customer_data.transactions && customer_data.transactions.length > 0;
 
         if (hasTransactions) {
             const imageBuffer = await generateTradeTable(customer_data);
-            const caption = CAPTIONS[Math.floor(Math.random() * CAPTIONS.length)];
-            await sock.sendMessage(phone, { image: imageBuffer, caption });
+            await session.sock.sendMessage(phone, { image: imageBuffer, caption: `BALANCE='${customer_data.balance}'` });
         } else {
-            await sock.sendMessage(phone, {
-                text: `📋 Account Balance Update\n\nYour current balance is: *${customer_data.balance}*\n\n(No recent transactions to display)`
+            await session.sock.sendMessage(phone, {
+                text: `BALANCE='${customer_data.balance}'`
             });
         }
 
-        messagesSentThisMinute++;
-        logger.info(`Sent ledger to ${waNumber}: ${hasTransactions ? 'IMAGE' : 'TEXT'}`);
+        session.messagesSentThisMinute++;
+        session.lastActive = Date.now();
+        logger.info(`[${req.params.clientId}] Sent ledger to ${waNumber}`);
 
         res.json({ success: true, type: hasTransactions ? 'image' : 'text' });
 
     } catch (err) {
-        logger.error(`Send ledger error: ${err.message}`);
+        logger.error(`[${req.params.clientId}] Send ledger error: ${err.message}`);
         res.status(500).json({ error: err.message });
     }
 });
 
 // --- SEND BALANCE ACCOUNTS (batch with Poisson delays) ---
-app.post('/api/send-balance-accounts', authMiddleware, async (req, res) => {
+app.post('/api/:clientId/send-balance-accounts', authMiddleware, validateClientId, async (req, res) => {
     try {
+        const clientId = req.params.clientId;
+        const session = await getOrCreateSession(clientId);
         const { accounts } = req.body;
 
         if (!accounts || !Array.isArray(accounts) || accounts.length === 0) {
             return res.status(400).json({ error: 'accounts array is required' });
         }
 
-        if (!isConnected) {
+        if (!session.isConnected) {
             return res.status(503).json({ error: 'WhatsApp not connected' });
         }
 
-        // Create job
         const jobId = crypto.randomUUID();
         const job = {
             id: jobId,
+            clientId: clientId,
             total: accounts.length,
             sent: 0,
             failed: 0,
@@ -354,9 +452,8 @@ app.post('/api/send-balance-accounts', authMiddleware, async (req, res) => {
 
         activeJobs.set(jobId, job);
 
-        // Start async sending (don't await — return immediately)
-        processBatchSend(jobId, accounts).catch(err => {
-            logger.error(`Batch job ${jobId} crashed: ${err.message}`);
+        processBatchSend(jobId, clientId, accounts).catch(err => {
+            logger.error(`[${clientId}] Batch job ${jobId} crashed: ${err.message}`);
             job.status = 'error';
         });
 
@@ -368,24 +465,22 @@ app.post('/api/send-balance-accounts', authMiddleware, async (req, res) => {
         });
 
     } catch (err) {
-        logger.error(`Batch send error: ${err.message}`);
+        logger.error(`[${req.params.clientId}] Batch send error: ${err.message}`);
         res.status(500).json({ error: err.message });
     }
 });
 
-async function processBatchSend(jobId, accounts) {
+async function processBatchSend(jobId, clientId, accounts) {
     const job = activeJobs.get(jobId);
-    if (!job) return;
+    const session = activeSessions.get(clientId);
+    if (!job || !session) return;
 
     for (let i = 0; i < accounts.length; i++) {
         const account = accounts[i];
-        // Per-account send mode (default: 'text')
         const accountMode = account.send_mode === 'image' ? 'image' : 'text';
 
-        // Check if job was cancelled
         if (job.status === 'cancelled') break;
 
-        // Check safe time
         if (!isSafeTime()) {
             notifySSE(job, {
                 type: 'warning',
@@ -400,86 +495,60 @@ async function processBatchSend(jobId, accounts) {
         const waNumber = account.whatsappnumber;
         const accountName = account.name || 'Unknown';
 
-        // Validate number
         if (!isValidWhatsAppNumber(waNumber)) {
             job.skipped++;
             const msg = `Skipped "${accountName}": Invalid/missing WhatsApp number`;
             job.errors.push(msg);
-            logger.info(msg);
+            logger.info(`[${clientId}] ${msg}`);
             notifySSE(job, {
-                type: 'skipped',
-                message: msg,
-                index: i,
-                sent: job.sent,
-                failed: job.failed,
-                skipped: job.skipped,
-                total: job.total
+                type: 'skipped', message: msg, index: i,
+                sent: job.sent, failed: job.failed, skipped: job.skipped, total: job.total
             });
             continue;
         }
 
         try {
-            await waitForRateLimit();
+            await waitForRateLimit(session);
 
             const phone = formatPhone(waNumber);
             const hasTransactions = account.transactions && account.transactions.length > 0;
 
-            // Per-account: 'image' mode uses image when transactions exist, otherwise text
             if (accountMode === 'image' && hasTransactions) {
                 const imageBuffer = await generateTradeTable(account);
-                const caption = CAPTIONS[Math.floor(Math.random() * CAPTIONS.length)];
-                await sock.sendMessage(phone, { image: imageBuffer, caption });
-                logger.info(`[Job ${jobId}] Sent IMAGE to ${accountName} (${i + 1}/${accounts.length})`);
+                await session.sock.sendMessage(phone, { image: imageBuffer, caption: `BALANCE='${account.balance}'` });
+                logger.info(`[${clientId}] [Job ${jobId}] Sent IMAGE to ${accountName} (${i + 1}/${accounts.length})`);
             } else {
-                const balanceStr = account.balance || '0.0000';
-                const balanceNum = parseFloat(balanceStr);
-                const emoji = balanceNum > 0 ? '📈' : balanceNum < 0 ? '📉' : '📋';
-                await sock.sendMessage(phone, {
-                    text: `${emoji} *Account Balance Update*\n\nName: *${accountName}*\nBalance: *${balanceStr}*\n\n_Sent via AccuFlow_`
+                await session.sock.sendMessage(phone, {
+                    text: `BALANCE='${account.balance}'`
                 });
-                logger.info(`[Job ${jobId}] Sent TEXT to ${accountName} (${i + 1}/${accounts.length})`);
+                logger.info(`[${clientId}] [Job ${jobId}] Sent TEXT to ${accountName} (${i + 1}/${accounts.length})`);
             }
 
-            messagesSentThisMinute++;
+            session.messagesSentThisMinute++;
+            session.lastActive = Date.now();
             job.sent++;
-            logger.info(`[Job ${jobId}] Sent to ${accountName} (${i + 1}/${accounts.length})`);
 
             notifySSE(job, {
-                type: 'sent',
-                message: `Sent to "${accountName}"`,
-                index: i,
-                sent: job.sent,
-                failed: job.failed,
-                skipped: job.skipped,
-                total: job.total
+                type: 'sent', message: `Sent to "${accountName}"`, index: i,
+                sent: job.sent, failed: job.failed, skipped: job.skipped, total: job.total
             });
 
         } catch (err) {
             job.failed++;
             const msg = `Failed to send to "${accountName}": ${err.message}`;
             job.errors.push(msg);
-            logger.error(msg);
-
+            logger.error(`[${clientId}] ${msg}`);
             notifySSE(job, {
-                type: 'error',
-                message: msg,
-                index: i,
-                sent: job.sent,
-                failed: job.failed,
-                skipped: job.skipped,
-                total: job.total
+                type: 'error', message: msg, index: i,
+                sent: job.sent, failed: job.failed, skipped: job.skipped, total: job.total
             });
         }
 
-        // Poisson delay between sends (not after last one)
+        // Poisson delay between sends
         if (i < accounts.length - 1 && job.status !== 'cancelled') {
             const delay = getPoissonDelay();
             const delaySecs = (delay / 1000).toFixed(1);
-            notifySSE(job, {
-                type: 'delay',
-                message: `Waiting ${delaySecs}s before next send...`,
-                delay_ms: delay
-            });
+            notifySSE(job, { type: 'delay', message: `Waiting ${delaySecs}s before next send...`, delay_ms: delay });
             await new Promise(r => setTimeout(r, delay));
         }
     }
@@ -489,50 +558,33 @@ async function processBatchSend(jobId, accounts) {
     notifySSE(job, {
         type: 'complete',
         message: `Batch complete. Sent: ${job.sent}, Failed: ${job.failed}, Skipped: ${job.skipped}`,
-        sent: job.sent,
-        failed: job.failed,
-        skipped: job.skipped,
-        total: job.total
+        sent: job.sent, failed: job.failed, skipped: job.skipped, total: job.total
     });
 
-    // Cleanup job after 10 minutes
     setTimeout(() => activeJobs.delete(jobId), 600000);
 }
 
 function notifySSE(job, data) {
     job.listeners.forEach(res => {
-        try {
-            res.write(`data: ${JSON.stringify(data)}\n\n`);
-        } catch (e) { /* connection closed */ }
+        try { res.write(`data: ${JSON.stringify(data)}\n\n`); } catch (e) { /* closed */ }
     });
 }
 
 // --- SSE PROGRESS ENDPOINT ---
-app.get('/api/send-progress/:jobId', authMiddleware, (req, res) => {
+app.get('/api/:clientId/send-progress/:jobId', authMiddleware, validateClientId, (req, res) => {
     const job = activeJobs.get(req.params.jobId);
-    if (!job) {
+    if (!job || job.clientId !== req.params.clientId) {
         return res.status(404).json({ error: 'Job not found' });
     }
 
-    res.set({
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive'
-    });
+    res.set({ 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' });
 
-    // Send current status immediately
     res.write(`data: ${JSON.stringify({
-        type: 'status',
-        sent: job.sent,
-        failed: job.failed,
-        skipped: job.skipped,
-        total: job.total,
-        status: job.status
+        type: 'status', sent: job.sent, failed: job.failed,
+        skipped: job.skipped, total: job.total, status: job.status
     })}\n\n`);
 
-    // Register listener
     job.listeners.push(res);
-
     req.on('close', () => {
         const idx = job.listeners.indexOf(res);
         if (idx > -1) job.listeners.splice(idx, 1);
@@ -540,34 +592,30 @@ app.get('/api/send-progress/:jobId', authMiddleware, (req, res) => {
 });
 
 // --- SEND ADDRESS ROW (single text message) ---
-app.post('/api/send-address-row', authMiddleware, async (req, res) => {
+app.post('/api/:clientId/send-address-row', authMiddleware, validateClientId, async (req, res) => {
     try {
+        const session = await getOrCreateSession(req.params.clientId);
         const { whatsapp_number, row_data } = req.body;
 
         if (!whatsapp_number || !row_data) {
             return res.status(400).json({ error: 'whatsapp_number and row_data are required' });
         }
 
-        if (!isConnected) {
+        if (!session.isConnected) {
             return res.status(503).json({ error: 'WhatsApp not connected' });
         }
 
         if (!isValidWhatsAppNumber(whatsapp_number)) {
-            return res.json({
-                success: false,
-                skipped: true,
-                message: 'Invalid WhatsApp number — skipped'
-            });
+            return res.json({ success: false, skipped: true, message: 'Invalid WhatsApp number — skipped' });
         }
 
-        await waitForRateLimit();
+        await waitForRateLimit(session);
 
         const phone = formatPhone(whatsapp_number);
         const { sno, description, amount, qty, date } = row_data;
 
         const text = [
-            `📦 *Transaction Detail*`,
-            ``,
+            `📦 *Transaction Detail*`, ``,
             `S.No: ${sno || '-'}`,
             date ? `Date: ${date}` : null,
             `Description: ${description || '-'}`,
@@ -575,47 +623,44 @@ app.post('/api/send-address-row', authMiddleware, async (req, res) => {
             amount ? `Amount: ${amount}` : null
         ].filter(Boolean).join('\n');
 
-        await sock.sendMessage(phone, { text });
-        messagesSentThisMinute++;
+        await session.sock.sendMessage(phone, { text });
+        session.messagesSentThisMinute++;
+        session.lastActive = Date.now();
 
-        logger.info(`Sent address row to ${whatsapp_number}`);
+        logger.info(`[${req.params.clientId}] Sent address row to ${whatsapp_number}`);
         res.json({ success: true });
 
     } catch (err) {
-        logger.error(`Send address row error: ${err.message}`);
+        logger.error(`[${req.params.clientId}] Send address row error: ${err.message}`);
         res.status(500).json({ error: err.message });
     }
 });
 
 // --- SEND BATCH ADDRESS ROWS ---
-app.post('/api/send-address-rows', authMiddleware, async (req, res) => {
+app.post('/api/:clientId/send-address-rows', authMiddleware, validateClientId, async (req, res) => {
     try {
+        const clientId = req.params.clientId;
+        const session = await getOrCreateSession(clientId);
         const { whatsapp_number, rows, supplier_name } = req.body;
 
         if (!whatsapp_number || !rows || !Array.isArray(rows)) {
             return res.status(400).json({ error: 'whatsapp_number and rows array are required' });
         }
 
-        if (!isConnected) {
+        if (!session.isConnected) {
             return res.status(503).json({ error: 'WhatsApp not connected' });
         }
 
         if (!isValidWhatsAppNumber(whatsapp_number)) {
-            return res.json({
-                success: false,
-                skipped: true,
-                message: 'Invalid WhatsApp number — skipped'
-            });
+            return res.json({ success: false, skipped: true, message: 'Invalid WhatsApp number — skipped' });
         }
 
-        // Create job for tracking
         const jobId = crypto.randomUUID();
         const job = {
             id: jobId,
+            clientId: clientId,
             total: rows.length,
-            sent: 0,
-            failed: 0,
-            skipped: 0,
+            sent: 0, failed: 0, skipped: 0,
             errors: [],
             status: 'running',
             startedAt: new Date().toISOString(),
@@ -627,87 +672,66 @@ app.post('/api/send-address-rows', authMiddleware, async (req, res) => {
         (async () => {
             const phone = formatPhone(whatsapp_number);
 
-            // Send header message
-            try {
-                await waitForRateLimit();
-                const header = `📋 *Address View Report*${supplier_name ? `\nSupplier: *${supplier_name}*` : ''}\nTotal Items: ${rows.length}\n${'─'.repeat(20)}`;
-                await sock.sendMessage(phone, { text: header });
-                messagesSentThisMinute++;
-            } catch (e) {
-                logger.error(`Header send failed: ${e.message}`);
-            }
+            // Send header message removed — go straight to rows
 
             for (let i = 0; i < rows.length; i++) {
                 if (job.status === 'cancelled') break;
 
                 const row = rows[i];
                 try {
-                    await waitForRateLimit();
+                    await waitForRateLimit(session);
 
-                    const text = [
-                        `${row.sno || i + 1}. ${row.description || '-'}`,
-                        row.qty ? `   Qty: ${row.qty}` : null,
-                        row.date ? `   Date: ${row.date}` : null,
-                    ].filter(Boolean).join('\n');
+                    const text = `${row.description || '-'}=${row.qty || '0'}`;
 
-                    await sock.sendMessage(phone, { text });
-                    messagesSentThisMinute++;
+                    await session.sock.sendMessage(phone, { text });
+                    session.messagesSentThisMinute++;
+                    session.lastActive = Date.now();
                     job.sent++;
 
                     notifySSE(job, {
-                        type: 'sent',
-                        message: `Sent row ${i + 1}/${rows.length}`,
-                        index: i,
-                        sent: job.sent,
-                        total: job.total
+                        type: 'sent', message: `Sent row ${i + 1}/${rows.length}`,
+                        index: i, sent: job.sent, total: job.total
                     });
 
                 } catch (err) {
                     job.failed++;
-                    logger.error(`Row ${i + 1} send failed: ${err.message}`);
+                    logger.error(`[${clientId}] Row ${i + 1} send failed: ${err.message}`);
                     notifySSE(job, {
-                        type: 'error',
-                        message: `Row ${i + 1} failed: ${err.message}`,
-                        index: i,
-                        sent: job.sent,
-                        failed: job.failed,
-                        total: job.total
+                        type: 'error', message: `Row ${i + 1} failed: ${err.message}`,
+                        index: i, sent: job.sent, failed: job.failed, total: job.total
                     });
                 }
 
                 // Delay between rows (shorter than balance sends)
                 if (i < rows.length - 1) {
-                    const delay = 2000 + Math.random() * 3000; // 2-5 seconds
+                    const delay = 2000 + Math.random() * 3000;
                     await new Promise(r => setTimeout(r, delay));
                 }
             }
 
             job.status = 'completed';
             notifySSE(job, {
-                type: 'complete',
-                message: `Complete. Sent: ${job.sent}/${job.total}`,
-                sent: job.sent,
-                failed: job.failed,
-                total: job.total
+                type: 'complete', message: `Complete. Sent: ${job.sent}/${job.total}`,
+                sent: job.sent, failed: job.failed, total: job.total
             });
             setTimeout(() => activeJobs.delete(jobId), 600000);
         })().catch(err => {
             job.status = 'error';
-            logger.error(`Batch rows job error: ${err.message}`);
+            logger.error(`[${clientId}] Batch rows job error: ${err.message}`);
         });
 
         res.json({ success: true, job_id: jobId, total: rows.length });
 
     } catch (err) {
-        logger.error(`Send address rows error: ${err.message}`);
+        logger.error(`[${req.params.clientId}] Send address rows error: ${err.message}`);
         res.status(500).json({ error: err.message });
     }
 });
 
-// --- JOB STATUS (polling alternative to SSE) ---
-app.get('/api/job-status/:jobId', authMiddleware, (req, res) => {
+// --- JOB STATUS (polling) ---
+app.get('/api/:clientId/job-status/:jobId', authMiddleware, validateClientId, (req, res) => {
     const job = activeJobs.get(req.params.jobId);
-    if (!job) {
+    if (!job || job.clientId !== req.params.clientId) {
         return res.status(404).json({ error: 'Job not found' });
     }
 
@@ -725,9 +749,9 @@ app.get('/api/job-status/:jobId', authMiddleware, (req, res) => {
 });
 
 // --- CANCEL JOB ---
-app.post('/api/cancel-job/:jobId', authMiddleware, (req, res) => {
+app.post('/api/:clientId/cancel-job/:jobId', authMiddleware, validateClientId, (req, res) => {
     const job = activeJobs.get(req.params.jobId);
-    if (!job) {
+    if (!job || job.clientId !== req.params.clientId) {
         return res.status(404).json({ error: 'Job not found' });
     }
 
@@ -736,15 +760,31 @@ app.post('/api/cancel-job/:jobId', authMiddleware, (req, res) => {
     res.json({ success: true, message: 'Job cancelled' });
 });
 
+// --- CANCEL ALL JOBS (global stop button) ---
+app.post('/api/:clientId/cancel-all-jobs', authMiddleware, validateClientId, (req, res) => {
+    const clientId = req.params.clientId;
+    let cancelled = 0;
+    for (const [jobId, job] of activeJobs) {
+        if (job.clientId === clientId && job.status === 'running') {
+            job.status = 'cancelled';
+            notifySSE(job, { type: 'cancelled', message: 'Job cancelled by user (stop all)' });
+            cancelled++;
+        }
+    }
+    logger.info(`[${clientId}] Cancelled ${cancelled} running job(s)`);
+    res.json({ success: true, cancelled });
+});
+
 // --- STARTUP ---
 async function main() {
     startRateLimitReset();
-    await connectToWhatsApp();
+    startSessionCleanup();
 
     app.listen(PORT, () => {
-        logger.info(`🚀 WhatsApp API Server running on port ${PORT}`);
+        logger.info(`🚀 WhatsApp API Server (Multi-Client) running on port ${PORT}`);
         logger.info(`   Environment: ${NODE_ENV}`);
         logger.info(`   CORS origin: ${DJANGO_ORIGIN}`);
+        logger.info(`   Session timeout: ${SESSION_INACTIVE_HOURS}h`);
         if (DEV_WHATSAPP_NUMBER) {
             logger.info(`   ⚠️  DEV MODE: All messages routed to ${DEV_WHATSAPP_NUMBER}`);
         }
@@ -754,16 +794,18 @@ async function main() {
 // --- GRACEFUL SHUTDOWN ---
 process.on('SIGINT', async () => {
     logger.info('Shutting down...');
-    if (rateLimitResetInterval) clearInterval(rateLimitResetInterval);
-    if (sock) {
-        try { await sock.end(undefined); } catch (e) { /* ignore */ }
+    for (const [clientId, session] of activeSessions) {
+        try {
+            if (session.sock) await session.sock.end(undefined);
+            logger.info(`[${clientId}] Session closed`);
+        } catch (e) { /* ignore */ }
     }
     process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
-    if (sock) {
-        try { await sock.end(undefined); } catch (e) { /* ignore */ }
+    for (const [, session] of activeSessions) {
+        try { if (session.sock) await session.sock.end(undefined); } catch (e) { /* ignore */ }
     }
     process.exit(0);
 });

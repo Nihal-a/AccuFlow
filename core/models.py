@@ -1,6 +1,7 @@
 from django.db import models
 from decimal import Decimal
 from django.utils import timezone
+import uuid
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, PermissionsMixin, Group, Permission
 
 class SoftDeleteMixin(models.Model):
@@ -132,6 +133,21 @@ class Clients(models.Model):
     subscription_start = models.DateField(null=True, blank=True)
     subscription_end = models.DateField(null=True, blank=True)
     is_trial_active = models.BooleanField(default=False)
+
+    # WhatsApp Integration
+    has_whatsapp_access = models.BooleanField(default=False)
+    whatsapp_client_id = models.CharField(max_length=50, unique=True, null=True, blank=True, db_index=True)
+    whatsapp_status = models.CharField(
+        max_length=20, default='inactive', db_index=True,
+        choices=[('inactive', 'Inactive'), ('pending', 'Pending'), ('linked', 'Linked')]
+    )
+    whatsapp_linked_at = models.DateTimeField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        # Auto-generate whatsapp_client_id when access is first enabled
+        if self.has_whatsapp_access and not self.whatsapp_client_id:
+            self.whatsapp_client_id = f'wa_{uuid.uuid4().hex[:12]}'
+        super().save(*args, **kwargs)
     
     @property
     def is_subscription_active(self):

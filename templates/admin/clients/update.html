@@ -93,6 +93,13 @@
           class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" required>
         <p id="username-status" class="text-sm mt-1"></p>
       </div>
+      <div>
+        <label class="block text-gray-700">WhatsApp Automation</label>
+        <div class="flex items-center space-x-2 mt-3">
+          <input type="checkbox" name="has_whatsapp_access" id="has_whatsapp_access" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" {% if client.has_whatsapp_access %}checked{% endif %}>
+          <label for="has_whatsapp_access" class="text-sm text-gray-700">Enable WhatsApp Automation features</label>
+        </div>
+      </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
           <label class="block text-gray-700">Password</label>
@@ -129,6 +136,7 @@
 {% endblock %}
 
 {% block externalJS %}
+<script>
 const submitBtn = document.getElementById('submitBtn');
 let isUsernameValid = true; // Initialized as true since it's an existing user
 let isPasswordValid = true; // Initialized as true since it's optional
@@ -209,6 +217,7 @@ if (strength <= 1 && pVal) strengthBar.classList.add("strength-weak"); else if (
     JSON.stringify({ username }), }); const data=await response.json(); if (data.exists) {
     usernameStatus.textContent="❌ Username already taken" ; usernameStatus.className="text-red-600 text-sm mt-1" ;
     isUsernameValid=false; } else { usernameStatus.textContent="✅ Username available" ;
-    usernameStatus.className="text-green-600 text-sm mt-1" ; isUsernameValid=true; } validateForm(); }); countryCode();
+    isUsernameValid=true; } validateForm(); }); countryCode();
+</script>
     </script>
     {% endblock %}

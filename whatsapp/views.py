@@ -5,31 +5,76 @@ Provides:
   - WhatsApp Scan page (QR code display, status polling, unlink)
   - Balance Accounts page (multi-select accounts, batch send)
   - API proxy endpoints to avoid CORS issues
+
+All views are client-scoped via @client_whatsapp_required decorator.
 """
 
 import json
 import logging
-from decimal import Decimal
+from functools import wraps
 
 from django.shortcuts import render
-from django.http import JsonResponse, HttpResponse, StreamingHttpResponse
+from django.http import JsonResponse, HttpResponse
 from django.views import View
-from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET, require_POST
 from django.conf import settings
+from django.core.exceptions import PermissionDenied
+from django.utils import timezone
 
 from core.models import Customers, Suppliers
 from core.views import getClient
 from whatsapp.whatsapp_service import WhatsAppService, WhatsAppServiceError, format_whatsapp_number
+from whatsapp.ledger_helper import get_customer_ledger, get_supplier_ledger
 
 logger = logging.getLogger('whatsapp')
 
 
+# ============================================================
+# DECORATORS
+# ============================================================
+
 def whatsapp_enabled_check(view_func):
-    """Decorator to check if WhatsApp integration is enabled."""
+    """Decorator to check if WhatsApp integration is enabled globally."""
+    @wraps(view_func)
     def wrapper(request, *args, **kwargs):
         if not getattr(settings, 'WHATSAPP_ENABLED', True):
             return JsonResponse({'error': 'WhatsApp integration is disabled'}, status=503)
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
+def client_whatsapp_required(view_func):
+    """
+    Decorator that:
+    1. Checks global WHATSAPP_ENABLED
+    2. Gets the logged-in user's Client record
+    3. Verifies client.has_whatsapp_access is True
+    4. Injects client_id from client.whatsapp_client_id
+    
+    The decorated view receives 'client_id' and 'client' as kwargs.
+    """
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not getattr(settings, 'WHATSAPP_ENABLED', True):
+            return JsonResponse({'error': 'WhatsApp integration is disabled'}, status=503)
+        
+        client = getClient(request.user)
+        if not client:
+            return JsonResponse({'error': 'No client account found'}, status=403)
+        
+        if not client.has_whatsapp_access:
+            return JsonResponse({'error': 'WhatsApp access not enabled for your account'}, status=403)
+        
+        if not client.whatsapp_client_id:
+            # Auto-generate on first access
+            client.save()  # triggers the save() override that generates whatsapp_client_id
+            if not client.whatsapp_client_id:
+                return JsonResponse({'error': 'Failed to generate WhatsApp client ID'}, status=500)
+        
+        kwargs['client_id'] = client.whatsapp_client_id
+        kwargs['client'] = client
         return view_func(request, *args, **kwargs)
     return wrapper
 
@@ -42,19 +87,38 @@ class WhatsAppScanView(View):
     """Renders the WhatsApp QR scan / link management page."""
 
     def get(self, request):
-        service = WhatsAppService()
+        client = getClient(request.user)
+        
+        if not client or not client.has_whatsapp_access:
+            raise PermissionDenied("WhatsApp access not enabled for your account")
+        
+        # Ensure client_id exists
+        if not client.whatsapp_client_id:
+            client.save()
+        
+        client_id = client.whatsapp_client_id
+        service = WhatsAppService(client_id)
         server_available = service.is_available()
+        
         context = {
             'server_available': server_available,
             'whatsapp_enabled': getattr(settings, 'WHATSAPP_ENABLED', True),
+            'client_id': client_id,
         }
         if server_available:
             try:
                 status = service.get_status()
                 context['linked'] = status.get('linked', False)
                 context['phone'] = status.get('phone')
+                
+                # Update client status in DB
+                if status.get('linked', False) and client.whatsapp_status != 'linked':
+                    client.whatsapp_status = 'linked'
+                    client.whatsapp_linked_at = timezone.now()
+                    client.save(update_fields=['whatsapp_status', 'whatsapp_linked_at'])
             except WhatsAppServiceError:
                 context['linked'] = False
+        
         return render(request, 'whatsapp/whatsapp_scan.html', context)
 
 
@@ -63,40 +127,53 @@ class BalanceAccountsView(View):
 
     def get(self, request):
         client = getClient(request.user)
+        
+        if not client or not client.has_whatsapp_access:
+            raise PermissionDenied("WhatsApp access not enabled for your account")
+        
+        if not client.whatsapp_client_id:
+            client.save()
+        
+        # Fetch customers
         customers = Customers.objects.filter(
-            is_active=True, client=client
-        ).values('id', 'name', 'customerId', 'balance', 'wa', 'country_code')
-        suppliers = Suppliers.objects.filter(
-            is_active=True, client=client
-        ).values('id', 'name', 'supplierId', 'balance', 'wa', 'country_code')
+            client=client, is_active=True
+        ).values('id', 'name', 'customerId', 'balance', 'country_code', 'wa')
 
-        # Serialize for template (convert Decimal to string)
         customer_list = []
         for c in customers:
+            wa_number = format_whatsapp_number(c['country_code'], c['wa'])
             customer_list.append({
                 'id': c['id'],
                 'name': c['name'] or 'Unnamed',
                 'account_id': c['customerId'] or '',
                 'balance': str(c['balance'] or '0.0000'),
-                'has_wa': bool(c['wa']),
-                'type': 'customer'
+                'has_wa': bool(wa_number),
+                'type': 'customer',
             })
+
+        # Fetch suppliers
+        suppliers = Suppliers.objects.filter(
+            client=client, is_active=True
+        ).values('id', 'name', 'supplierId', 'balance', 'country_code', 'wa')
 
         supplier_list = []
         for s in suppliers:
+            wa_number = format_whatsapp_number(s['country_code'], s['wa'])
             supplier_list.append({
                 'id': s['id'],
                 'name': s['name'] or 'Unnamed',
                 'account_id': s['supplierId'] or '',
                 'balance': str(s['balance'] or '0.0000'),
-                'has_wa': bool(s['wa']),
-                'type': 'supplier'
+                'has_wa': bool(wa_number),
+                'type': 'supplier',
             })
 
         context = {
-            'customers': json.dumps(customer_list),
-            'suppliers': json.dumps(supplier_list),
-            'whatsapp_enabled': getattr(settings, 'WHATSAPP_ENABLED', True),
+            'customers_json': json.dumps(customer_list),
+            'suppliers_json': json.dumps(supplier_list),
+            'total_customers': len(customer_list),
+            'total_suppliers': len(supplier_list),
+            'client_id': client.whatsapp_client_id,
         }
         return render(request, 'whatsapp/balance_accounts.html', context)
 
@@ -105,63 +182,83 @@ class BalanceAccountsView(View):
 # AJAX API ENDPOINTS
 # ============================================================
 
-def whatsapp_proxy_qr(request):
+@require_GET
+@client_whatsapp_required
+def whatsapp_proxy_qr(request, client_id=None, client=None):
     """Proxy QR image from Node.js to avoid CORS. Returns PNG image or JSON status."""
     try:
-        service = WhatsAppService()
+        service = WhatsAppService(client_id)
         result = service.get_qr_image()
 
         if result.get('is_image'):
-            response = HttpResponse(result['content'], content_type=result['content_type'])
-            response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-            return response
-
+            return HttpResponse(result['content'], content_type=result['content_type'])
         return JsonResponse(result)
 
     except WhatsAppServiceError as e:
         return JsonResponse({'error': str(e)}, status=503)
 
 
-def whatsapp_status_api(request):
+@require_GET
+@client_whatsapp_required
+def whatsapp_status_api(request, client_id=None, client=None):
     """Returns WhatsApp connection status as JSON."""
     try:
-        service = WhatsAppService()
+        service = WhatsAppService(client_id)
         status = service.get_status()
+        
+        # Update client status in DB if changed
+        linked = status.get('linked', False)
+        if linked and client.whatsapp_status != 'linked':
+            client.whatsapp_status = 'linked'
+            client.whatsapp_linked_at = timezone.now()
+            client.save(update_fields=['whatsapp_status', 'whatsapp_linked_at'])
+        elif not linked and client.whatsapp_status == 'linked':
+            client.whatsapp_status = 'pending'
+            client.save(update_fields=['whatsapp_status'])
+        
         return JsonResponse(status)
     except WhatsAppServiceError as e:
-        return JsonResponse({'error': str(e), 'linked': False}, status=503)
+        return JsonResponse({'error': str(e)}, status=503)
 
 
-def whatsapp_unlink_api(request):
-    """Unlinks WhatsApp session."""
-    if request.method != 'POST':
-        return JsonResponse({'error': 'POST required'}, status=405)
+@require_POST
+@client_whatsapp_required
+def whatsapp_unlink_api(request, client_id=None, client=None):
+    """Unlinks WhatsApp session for this client."""
     try:
-        service = WhatsAppService()
+        service = WhatsAppService(client_id)
         result = service.unlink()
+        
+        # Update client status
+        client.whatsapp_status = 'inactive'
+        client.save(update_fields=['whatsapp_status'])
+        
         return JsonResponse(result)
     except WhatsAppServiceError as e:
         return JsonResponse({'error': str(e)}, status=500)
 
 
-def send_balance_api(request):
+@require_POST
+@client_whatsapp_required
+def send_balance_api(request, client_id=None, client=None):
     """
     Collects selected accounts from POST data, prepares payloads,
     and sends to Node.js for batch processing.
+    
+    For accounts with send_mode='image', fetches actual ledger transactions
+    from the database so a trade table image can be generated.
     """
-    if request.method != 'POST':
-        return JsonResponse({'error': 'POST required'}, status=405)
-
     try:
         data = json.loads(request.body)
         account_ids = data.get('account_ids', [])
         account_type = data.get('account_type', 'all')
-        account_modes = data.get('account_modes', {})  # { 'c_1': 'text', 's_2': 'image', ... }
+        account_modes = data.get('account_modes', {})
+        date_from = data.get('date_from', None)
+        date_to = data.get('date_to', None)
 
         if not account_ids:
             return JsonResponse({'error': 'No accounts selected'}, status=400)
 
-        client = getClient(request.user)
         accounts_payload = []
 
         # Collect customer data
@@ -174,14 +271,26 @@ def send_balance_api(request):
             for c in customers:
                 prefix_id = f'c_{c.id}'
                 wa_number = format_whatsapp_number(c.country_code, c.wa)
-                accounts_payload.append({
+                mode = account_modes.get(prefix_id, 'text')
+
+                payload = {
                     'name': c.name or 'Unnamed Customer',
                     'whatsappnumber': wa_number or '',
                     'balance': str(c.balance or '0.0000'),
                     'transactions': [],
+                    'opening_balance': '0.00',
                     'optin_verified': True,
-                    'send_mode': account_modes.get(prefix_id, 'text')
-                })
+                    'send_mode': mode,
+                }
+
+                # Fetch real transactions for image mode
+                if mode == 'image':
+                    ledger = get_customer_ledger(c, client, date_from, date_to)
+                    payload['transactions'] = ledger['transactions']
+                    payload['opening_balance'] = ledger['opening_balance']
+                    payload['balance'] = ledger['closing_balance']
+
+                accounts_payload.append(payload)
 
         # Collect supplier data
         if account_type in ('supplier', 'all'):
@@ -193,90 +302,115 @@ def send_balance_api(request):
             for s in suppliers:
                 prefix_id = f's_{s.id}'
                 wa_number = format_whatsapp_number(s.country_code, s.wa)
-                accounts_payload.append({
+                mode = account_modes.get(prefix_id, 'text')
+
+                payload = {
                     'name': s.name or 'Unnamed Supplier',
                     'whatsappnumber': wa_number or '',
                     'balance': str(s.balance or '0.0000'),
                     'transactions': [],
+                    'opening_balance': '0.00',
                     'optin_verified': True,
-                    'send_mode': account_modes.get(prefix_id, 'text')
-                })
+                    'send_mode': mode,
+                }
+
+                if mode == 'image':
+                    ledger = get_supplier_ledger(s, client, date_from, date_to)
+                    payload['transactions'] = ledger['transactions']
+                    payload['opening_balance'] = ledger['opening_balance']
+                    payload['balance'] = ledger['closing_balance']
+
+                accounts_payload.append(payload)
 
         if not accounts_payload:
             return JsonResponse({'error': 'No valid accounts found'}, status=400)
 
-        # Send to Node.js (per-account modes embedded in each account object)
-        service = WhatsAppService()
+        service = WhatsAppService(client_id)
         result = service.send_balance_accounts(accounts_payload)
         return JsonResponse(result)
 
     except WhatsAppServiceError as e:
         return JsonResponse({'error': str(e)}, status=503)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
     except Exception as e:
         logger.error(f'send_balance_api error: {e}')
         return JsonResponse({'error': str(e)}, status=500)
 
 
-def send_address_rows_api(request):
+@require_POST
+@client_whatsapp_required
+def send_address_rows_api(request, client_id=None, client=None):
     """
     Sends address view rows to a supplier via WhatsApp.
-    Receives rows + supplier info from the address view page.
+    Each row sent one-by-one as 'description=amount'.
     """
-    if request.method != 'POST':
-        return JsonResponse({'error': 'POST required'}, status=405)
-
     try:
         data = json.loads(request.body)
-        supplier_id = data.get('supplier_id')
         rows = data.get('rows', [])
+        supplier_id = data.get('supplier_id')
+        whatsapp_number = data.get('whatsapp_number')
 
-        if not supplier_id or not rows:
-            return JsonResponse({'error': 'supplier_id and rows are required'}, status=400)
+        if not rows:
+            return JsonResponse({'error': 'No rows to send'}, status=400)
 
-        client = getClient(request.user)
-        supplier = Suppliers.objects.get(id=supplier_id, is_active=True, client=client)
+        # Resolve supplier_id to WhatsApp number if not provided directly
+        supplier_name = ''
+        if not whatsapp_number and supplier_id:
+            try:
+                supplier = Suppliers.objects.get(id=supplier_id, client=client, is_active=True)
+                whatsapp_number = format_whatsapp_number(supplier.country_code, supplier.wa)
+                supplier_name = supplier.name or ''
+            except Suppliers.DoesNotExist:
+                return JsonResponse({'error': 'Supplier not found'}, status=404)
 
-        wa_number = format_whatsapp_number(supplier.country_code, supplier.wa)
-        if not wa_number:
-            return JsonResponse({
-                'error': f'Supplier "{supplier.name}" has no WhatsApp number configured',
-                'skipped': True
-            }, status=400)
+        if not whatsapp_number:
+            return JsonResponse({'error': 'Supplier has no WhatsApp number'}, status=400)
 
-        service = WhatsAppService()
-        result = service.send_address_rows(
-            whatsapp_number=wa_number,
-            rows=rows,
-            supplier_name=supplier.name
-        )
+        service = WhatsAppService(client_id)
+        result = service.send_address_rows(whatsapp_number, rows, supplier_name)
         return JsonResponse(result)
 
-    except Suppliers.DoesNotExist:
-        return JsonResponse({'error': 'Supplier not found'}, status=404)
     except WhatsAppServiceError as e:
         return JsonResponse({'error': str(e)}, status=503)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
     except Exception as e:
         logger.error(f'send_address_rows_api error: {e}')
         return JsonResponse({'error': str(e)}, status=500)
 
 
-def job_status_api(request, job_id):
+@require_GET
+@client_whatsapp_required
+def job_status_api(request, job_id, client_id=None, client=None):
     """Proxy job status from Node.js."""
     try:
-        service = WhatsAppService()
+        service = WhatsAppService(client_id)
         result = service.get_job_status(job_id)
         return JsonResponse(result)
     except WhatsAppServiceError as e:
         return JsonResponse({'error': str(e)}, status=503)
 
 
-def cancel_job_api(request, job_id):
+@require_POST
+@client_whatsapp_required
+def cancel_job_api(request, job_id, client_id=None, client=None):
     """Cancel a running batch job."""
-    if request.method != 'POST':
-        return JsonResponse({'error': 'POST required'}, status=405)
     try:
-        service = WhatsAppService()
+        service = WhatsAppService(client_id)
         result = service.cancel_job(job_id)
+        return JsonResponse(result)
+    except WhatsAppServiceError as e:
+        return JsonResponse({'error': str(e)}, status=503)
+
+
+@require_POST
+@client_whatsapp_required
+def cancel_all_jobs_api(request, client_id=None, client=None):
+    """Cancel ALL running jobs for this client (global stop)."""
+    try:
+        service = WhatsAppService(client_id)
+        result = service.cancel_all_jobs()
         return JsonResponse(result)
     except WhatsAppServiceError as e:
         return JsonResponse({'error': str(e)}, status=503)
