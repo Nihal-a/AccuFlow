@@ -96,7 +96,9 @@
       <div>
         <label class="block text-gray-700">WhatsApp Automation</label>
         <div class="flex items-center space-x-2 mt-3">
-          <input type="checkbox" name="has_whatsapp_access" id="has_whatsapp_access" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" {% if client.has_whatsapp_access %}checked{% endif %}>
+          <input type="checkbox" name="has_whatsapp_access" id="has_whatsapp_access"
+            class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" {% if client.has_whatsapp_access
+            %}checked{% endif %}>
           <label for="has_whatsapp_access" class="text-sm text-gray-700">Enable WhatsApp Automation features</label>
         </div>
       </div>
@@ -137,67 +139,73 @@
 
 {% block externalJS %}
 <script>
-const submitBtn = document.getElementById('submitBtn');
-let isUsernameValid = true; // Initialized as true since it's an existing user
-let isPasswordValid = true; // Initialized as true since it's optional
-let isPasswordMatch = true; // Initialized as true since it's optional
+  const submitBtn = document.getElementById('submitBtn');
+  let isUsernameValid = true; // Initialized as true since it's an existing user
+  let isPasswordValid = true; // Initialized as true since it's optional
+  let isPasswordMatch = true; // Initialized as true since it's optional
 
-function validateForm() {
-submitBtn.disabled = !(isUsernameValid && isPasswordValid && isPasswordMatch);
-}
-
-$(document).ready(function () {
-{% if client.subscription_plan %}
-$('#subscriptionPlan').val('{{ client.subscription_plan.id }}');
-{% endif %}
-validateForm();
-});
-
-function togglePassword(id) {
-const input = document.getElementById(id);
-input.type = input.type === "password" ? "text" : "password";
-}
-
-const passwordInput = document.getElementById("password");
-const confirmPasswordInput = document.getElementById("confirm_password");
-const passwordMatch = document.getElementById("password-match");
-const strengthBar = document.getElementById("password-strength");
-
-function validatePasswords() {
-const pVal = passwordInput.value;
-const cpVal = confirmPasswordInput.value;
-
-if (!pVal && !cpVal) {
-isPasswordValid = true;
-isPasswordMatch = true;
-passwordMatch.textContent = "";
-strengthBar.className = "password-strength";
-} else {
-isPasswordValid = pVal.length >= 6;
-isPasswordMatch = pVal === cpVal;
-
-if (isPasswordMatch) {
-passwordMatch.textContent = "✅ Passwords match";
-passwordMatch.className = "text-green-600 text-sm mt-1";
-} else if (cpVal) {
-passwordMatch.textContent = "❌ Passwords do not match";
-passwordMatch.className = "text-red-600 text-sm mt-1";
-} else {
-passwordMatch.textContent = "";
-}
-
-// Strength logic
-let strength = 0;
-if (pVal.length > 6) strength++;
-if (/[A-Z]/.test(pVal)) strength++;
-if (/[0-9]/.test(pVal)) strength++;
-if (/[^A-Za-z0-9]/.test(pVal)) strength++;
-
-strengthBar.className = "password-strength";
-if (strength <= 1 && pVal) strengthBar.classList.add("strength-weak"); else if (strength===2)
-  strengthBar.classList.add("strength-medium"); else if (strength>= 3) strengthBar.classList.add("strength-strong");
+  function validateForm() {
+    submitBtn.disabled = !(isUsernameValid && isPasswordValid && isPasswordMatch);
   }
-  validateForm();
+
+  $(document).ready(function () {
+    {% if client.subscription_plan %}
+    $('#subscriptionPlan').val('{{ client.subscription_plan.id }}');
+    {% endif %}
+    validateForm();
+  });
+
+  function togglePassword(id) {
+    const input = document.getElementById(id);
+    input.type = input.type === "password" ? "text" : "password";
+  }
+
+  const passwordInput = document.getElementById("password");
+  const confirmPasswordInput = document.getElementById("confirm_password");
+  const passwordMatch = document.getElementById("password-match");
+  const strengthBar = document.getElementById("password-strength");
+
+  function validatePasswords() {
+    const pVal = passwordInput.value;
+    const cpVal = confirmPasswordInput.value;
+
+    if (!pVal && !cpVal) {
+      isPasswordValid = true;
+      isPasswordMatch = true;
+      passwordMatch.textContent = "";
+      strengthBar.className = "password-strength";
+    } else {
+      isPasswordValid = pVal.length >= 8;
+      isPasswordMatch = pVal === cpVal;
+
+      if (isPasswordMatch) {
+        passwordMatch.textContent = "✅ Passwords match";
+        passwordMatch.className = "text-green-600 text-sm mt-1";
+      } else if (cpVal) {
+        passwordMatch.textContent = "❌ Passwords do not match";
+        passwordMatch.className = "text-red-600 text-sm mt-1";
+      } else {
+        passwordMatch.textContent = "";
+      }
+
+      if (pVal && pVal.length < 8) {
+        passwordMatch.textContent = "❌ Too Short (Min 8 characters)";
+        passwordMatch.className = "text-red-600 text-sm mt-1";
+      }
+
+      // Strength logic
+      let strength = 0;
+      if (pVal.length >= 8) strength++;
+      if (/[A-Z]/.test(pVal)) strength++;
+      if (/[0-9]/.test(pVal)) strength++;
+      if (/[^A-Za-z0-9]/.test(pVal)) strength++;
+
+      strengthBar.className = "password-strength";
+      if (strength <= 1 && pVal) strengthBar.classList.add("strength-weak");
+      else if (strength === 2) strengthBar.classList.add("strength-medium");
+      else if (strength >= 3) strengthBar.classList.add("strength-strong");
+    }
+    validateForm();
   }
 
   passwordInput.addEventListener("input", validatePasswords);
@@ -207,17 +215,46 @@ if (strength <= 1 && pVal) strengthBar.classList.add("strength-weak"); else if (
   const usernameStatus = document.getElementById("username-status");
 
   usernameInput.addEventListener("input", async function () {
-  const username = this.value.trim();
-  if (username.length < 3) { usernameStatus.textContent="❌ Min 3 characters" ;
-    usernameStatus.className="text-red-600 text-sm mt-1" ; isUsernameValid=false; validateForm(); return; } // If it's
-    the original username, it's valid if (username==="{{ user.username }}" ) {
-    usernameStatus.textContent="✅ Current username" ; usernameStatus.className="text-blue-600 text-sm mt-1" ;
-    isUsernameValid=true; validateForm(); return; } const response=await fetch("{% url 'check-username' %}", {
-    method: "POST" , headers: { "Content-Type" : "application/json" , "X-CSRFToken" : getCookie('csrftoken'), }, body:
-    JSON.stringify({ username }), }); const data=await response.json(); if (data.exists) {
-    usernameStatus.textContent="❌ Username already taken" ; usernameStatus.className="text-red-600 text-sm mt-1" ;
-    isUsernameValid=false; } else { usernameStatus.textContent="✅ Username available" ;
-    isUsernameValid=true; } validateForm(); }); countryCode();
+    const username = this.value.trim();
+    if (username.length < 3) {
+      usernameStatus.textContent = "❌ Min 3 characters";
+      usernameStatus.className = "text-red-600 text-sm mt-1";
+      isUsernameValid = false;
+      validateForm();
+      return;
+    }
+
+    // If it's the original username, it's valid
+    if (username === "{{ user.username }}") {
+      usernameStatus.textContent = "✅ Current username";
+      usernameStatus.className = "text-blue-600 text-sm mt-1";
+      isUsernameValid = true;
+      validateForm();
+      return;
+    }
+
+    const response = await fetch("{% url 'check-username' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCookie('csrftoken'),
+      },
+      body: JSON.stringify({ username }),
+    });
+
+    const data = await response.json();
+    if (data.exists) {
+      usernameStatus.textContent = "❌ Username already taken";
+      usernameStatus.className = "text-red-600 text-sm mt-1";
+      isUsernameValid = false;
+    } else {
+      usernameStatus.textContent = "✅ Username available";
+      usernameStatus.className = "text-green-600 text-sm mt-1";
+      isUsernameValid = true;
+    }
+    validateForm();
+  });
+
+  countryCode();
 </script>
-    </script>
-    {% endblock %}
+{% endblock %}

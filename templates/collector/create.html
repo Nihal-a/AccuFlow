@@ -10,6 +10,7 @@
 
   input.no-spinners {
     -moz-appearance: textfield;
+    appearance: textfield;
   }
 </style>
 {% endblock %}
@@ -107,8 +108,8 @@
       <div class="mt-4 sm:mt-6 flex flex-wrap gap-2 justify-end">
         <a href="{% url 'collectors'%}"
           class="leading-none inline-flex items-center gap-1.5 bg-red-500 text-white font-medium h-[32px] sm:h-[34px] px-4 sm:px-6 rounded-md shadow-sm hover:bg-red-600 transition-all duration-300 text-xs sm:text-sm">Cancel</a>
-        <button type="submit"
-          class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white font-medium h-[32px] sm:h-[34px] px-4 sm:px-6 rounded-md shadow-sm hover:bg-blue-600 transition-all duration-300 text-xs sm:text-sm">Create
+        <button type="submit" id="submitBtn"
+          class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white font-medium h-[32px] sm:h-[34px] px-4 sm:px-6 rounded-md shadow-sm hover:bg-blue-600 transition-all duration-300 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed">Create
           Collector</button>
       </div>
     </form>
@@ -120,10 +121,25 @@
 <script>
   const usernameInput = document.getElementById('usernameInput');
   const usernameStatus = document.getElementById('usernameStatus');
+  const submitBtn = document.getElementById('submitBtn');
+
+  let isUsernameValid = false;
+  let isPasswordValid = false;
+  let isPasswordMatch = false;
+
+  function validateForm() {
+    submitBtn.disabled = !(isUsernameValid && isPasswordValid && isPasswordMatch);
+  }
 
   usernameInput.addEventListener('input', async () => {
     const username = usernameInput.value.trim();
-    if (username.length < 3) { usernameStatus.textContent = ''; return; }
+    if (username.length < 3) {
+      usernameStatus.textContent = '❌ Min 3 characters';
+      usernameStatus.className = 'absolute right-3 top-2 text-red-600 text-sm';
+      isUsernameValid = false;
+      validateForm();
+      return;
+    }
     const response = await fetch("{% url 'check-username' %}", {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
@@ -133,10 +149,13 @@
     if (data.available) {
       usernameStatus.textContent = '✅ Available';
       usernameStatus.className = 'absolute right-3 top-2 text-green-600 text-sm';
+      isUsernameValid = true;
     } else {
       usernameStatus.textContent = '❌ Taken';
       usernameStatus.className = 'absolute right-3 top-2 text-red-600 text-sm';
+      isUsernameValid = false;
     }
+    validateForm();
   });
 
   const passwordInput = document.getElementById('passwordInput');
@@ -155,24 +174,44 @@
 
   passwordInput.addEventListener('input', () => {
     const val = passwordInput.value;
-    let strength = 'Weak', color = 'text-red-500';
-    if (val.length >= 8 && /[A-Z]/.test(val) && /[a-z]/.test(val) && /\d/.test(val) && /[@$!%*?&#]/.test(val)) {
-      strength = 'Strong'; color = 'text-green-600';
-    } else if (val.length >= 6) { strength = 'Medium'; color = 'text-yellow-500'; }
-    passwordStrength.textContent = strength + ' password';
+    let strength = '', color = 'text-red-500';
+    isPasswordValid = val.length >= 8;
+
+    if (val.length >= 8) {
+      if (/[A-Z]/.test(val) && /[a-z]/.test(val) && /\d/.test(val) && /[@$!%*?&#]/.test(val)) {
+        strength = 'Strong password'; color = 'text-green-600';
+      } else {
+        strength = 'Medium password'; color = 'text-yellow-500';
+      }
+    } else if (val.length > 0) {
+      strength = 'Too Short (Min 8 characters)'; color = 'text-red-500';
+      isPasswordValid = false;
+    }
+
+    passwordStrength.textContent = strength;
     passwordStrength.className = 'text-sm ' + color;
+
+    // Trigger match check
+    isPasswordMatch = confirmPasswordInput.value === val && val.length > 0;
+    validateForm();
   });
 
   confirmPasswordInput.addEventListener('input', () => {
-    if (confirmPasswordInput.value === passwordInput.value) {
+    const val = confirmPasswordInput.value;
+    const pass = passwordInput.value;
+    if (val === pass && pass.length > 0) {
       passwordMatch.textContent = '✅ Passwords match';
       passwordMatch.className = 'text-green-600 text-sm';
+      isPasswordMatch = true;
     } else {
-      passwordMatch.textContent = '❌ Passwords do not match';
+      passwordMatch.textContent = val.length > 0 ? '❌ Passwords do not match' : '';
       passwordMatch.className = 'text-red-600 text-sm';
+      isPasswordMatch = false;
     }
+    validateForm();
   });
 
+  validateForm();
   countryCode();
 </script>
 {% endblock %}

@@ -38,7 +38,7 @@ class WhatsAppService:
         if not client_id:
             raise WhatsAppServiceError("client_id is required for WhatsApp service")
         self.client_id = client_id
-        self.base_url = getattr(settings, 'WHATSAPP_NODE_URL', 'http://localhost:3001')
+        self.base_url = getattr(settings, 'WHATSAPP_NODE_URL', 'http://localhost:3005')
         self.api_key = getattr(settings, 'WHATSAPP_API_KEY', 'accuflow-wa-dev-key-2024')
         self.timeout = getattr(settings, 'WHATSAPP_TIMEOUT', 30)
 

@@ -99,17 +99,17 @@
                                 {% endif %}
                             </td>
                             <td class="px-6 py-4 text-right text-gray-500">
-                                {{ item.amount }}
+                                {{ item.amount|floatformat:2 }}
                             </td>
                             <td class="px-6 py-4 text-right font-medium text-gray-700">
-                                {{ item.collected_amount }}
+                                {{ item.collected_amount|floatformat:2 }}
                             </td>
                             <td class="px-6 py-4 text-left text-gray-600 italic">
                                 {{ item.remark|default:"-" }}
                             </td>
                             <td class="px-6 py-4">
                                 <input type="number" step="0.01" name="amount_{{ item.id }}"
-                                    value="{{ item.collected_amount }}"
+                                    value="{{ item.collected_amount|floatformat:2 }}"
                                     class="approved-input w-full text-right bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium text-emerald-600">
                             </td>
                         </tr>

@@ -153,9 +153,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # --- WhatsApp Integration Settings ---
 WHATSAPP_ENABLED = env('WHATSAPP_ENABLED', default='True') == 'True'
-WHATSAPP_NODE_URL = env('WHATSAPP_NODE_URL', default='http://localhost:3001')
+# WHATSAPP_NODE_URL = env('WHATSAPP_NODE_URL', default='http://localhost:3001')
+WHATSAPP_NODE_URL = env('WHATSAPP_NODE_URL', default='http://localhost:3005')
 WHATSAPP_API_KEY = env('WHATSAPP_API_KEY', default='accuflow-wa-dev-key-2024')
 WHATSAPP_TIMEOUT = int(env('WHATSAPP_TIMEOUT', default='30'))
+ADMIN_ACTION_PASSWORD = env('ADMIN_ACTION_PASSWORD', default='accuflow@2024')
+
 
 # Logging for WhatsApp
 LOGGING = {

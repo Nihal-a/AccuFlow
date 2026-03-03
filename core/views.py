@@ -4,8 +4,10 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
-from .models import Clients, Collection, Collectors
+from .models import Clients, Collection, Collectors, Customers, Expenses, Suppliers
 from decimal import Decimal
+from django.views import View
+from django.utils.decorators import method_decorator
  
 
 
@@ -54,7 +56,7 @@ def user_login(request):
             if user.is_admin:
                 return redirect('clients')
             elif user.is_client:
-                return redirect('customers')
+                return redirect('dashboard')
             elif user.is_collector:
                 return redirect('my_collections')
             else:
@@ -71,6 +73,72 @@ def user_logout(request):
     messages.success(request, "You have been logged out successfully.")
     return redirect('login')
  
+
+@method_decorator(login_required, name='dispatch')
+class ClientDashboardView(View):
+    def get(self, request):
+        if not request.user.is_client:
+            return redirect('login')
+            
+        client = getClient(request.user)
+        if not client:
+            return redirect('login')
+
+        from django.db.models import Sum, Count
+        from django.utils import timezone
+        from .models import Purchases, Sales, NSDs, Cashs, Collection, Customers, Collectors, Suppliers, Expenses
+
+        # Purchase Metrics
+        purchase_stats = Purchases.objects.filter(client=client, is_active=True).aggregate(
+            count=Count('id'), total=Sum('total_amount'))
+        
+        # Sale Metrics
+        sale_stats = Sales.objects.filter(client=client, is_active=True).aggregate(
+            count=Count('id'), total=Sum('total_amount'))
+            
+        # NSD Metrics
+        nsd_stats = NSDs.objects.filter(client=client, is_active=True).aggregate(
+            count=Count('id'), total=Sum('sell_amount'))
+            
+        # Cash/Bank Metrics
+        cash_stats = Cashs.objects.filter(client=client, is_active=True).aggregate(
+            count=Count('id'), total=Sum('amount'))
+
+        # Approved Collections
+        approved_col_stats = Collection.objects.filter(client=client, status='Approved', is_active=True).aggregate(
+            count=Count('id'), total=Sum('total_amount'))
+            
+        # Pending Collections
+        pending_col_stats = Collection.objects.filter(client=client, status='Pending', is_active=True).aggregate(
+            count=Count('id'), total=Sum('total_amount'))
+
+        # Top 5 Outstanding Customers
+        outstanding_customers = Customers.objects.filter(client=client, is_active=True, balance__gt=0).order_by('-balance')[:5]
+
+        # Recent activities
+        recent_collections = Collection.objects.filter(client=client, is_active=True).select_related('collector').order_by('-date', '-id')[:5]
+        
+        # Subscription status
+        days_remaining = 0
+        if client.subscription_end:
+            days_remaining = (client.subscription_end - timezone.now().date()).days
+            if days_remaining < 0: days_remaining = 0
+
+        context = {
+            'purchase_stats': purchase_stats,
+            'sale_stats': sale_stats,
+            'nsd_stats': nsd_stats,
+            'cash_stats': cash_stats,
+            'approved_col_stats': approved_col_stats,
+            'pending_col_stats': pending_col_stats,
+            'outstanding_customers': outstanding_customers,
+            'recent_collections': recent_collections,
+            'client': client,
+            'days_remaining': days_remaining,
+            'total_customers': Customers.objects.filter(client=client, is_active=True).count(),
+        }
+        return render(request, 'dashboard/client_dashboard.html', context)
+
 
 def getClient(user):
     if Clients.objects.filter(user=user,is_active=True).exists():
@@ -146,3 +214,32 @@ def get_plan_details(request, plan_id):
         return JsonResponse({'price': plan.price})
     except SubscriptionPlan.DoesNotExist:
         return JsonResponse({'error': 'Plan not found'}, status=404)
+
+@login_required
+@require_POST
+def verify_admin_action_password(request):
+    import json
+    from django.conf import settings
+    
+    try:
+        data = json.loads(request.body)
+        password = data.get('password')
+        
+        if password == settings.ADMIN_ACTION_PASSWORD:
+            request.session['admin_action_authorized'] = True
+            request.session.modified = True
+            request.session.save()
+            return JsonResponse({'status': 'success'})
+        else:
+            # Simple comment test
+            return JsonResponse({'status': 'error', 'message': 'Invalid secret key'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
+
+@login_required
+@require_POST
+def lock_admin_actions(request):
+    if 'admin_action_authorized' in request.session:
+        del request.session['admin_action_authorized']
+        request.session.modified = True
+    return JsonResponse({'status': 'success'})

@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard | AccuFlow{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <!-- Header Section -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Operational Dashboard</h1>
+            <p class="text-gray-600">Client: <span class="font-semibold text-blue-600">{{ client.name }}</span></p>
+        </div>
+        <div class="bg-blue-50 px-4 py-2 rounded-xl border border-blue-100 flex items-center gap-3">
+            <div class="p-2 bg-blue-100 rounded-lg text-blue-600">
+                <i data-lucide="calendar" class="w-4 h-4"></i>
+            </div>
+            <div>
+                <p class="text-[10px] uppercase font-bold text-blue-400 tracking-wider">Plan Expiry</p>
+                <p class="text-sm font-bold text-blue-700">{{ client.subscription_end|date:"M d, Y" }} ({{
+                    days_remaining }} days)</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metrics Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+        <!-- Purchase -->
+        <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:border-blue-200 transition-all">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="p-2 bg-purple-50 rounded-lg text-purple-600">
+                    <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+                </div>
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Purchase</span>
+            </div>
+            <p class="text-2xl font-bold text-gray-800">{{ purchase_stats.total|default:0|floatformat:2 }}</p>
+            <p class="text-[10px] text-gray-500 font-medium">Count: {{ purchase_stats.count|default:0 }}</p>
+        </div>
+
+        <!-- Sale -->
+        <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:border-blue-200 transition-all">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="p-2 bg-blue-50 rounded-lg text-blue-600">
+                    <i data-lucide="trending-up" class="w-5 h-5"></i>
+                </div>
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Sale</span>
+            </div>
+            <p class="text-2xl font-bold text-gray-800">{{ sale_stats.total|default:0|floatformat:2 }}</p>
+            <p class="text-[10px] text-gray-500 font-medium">Count: {{ sale_stats.count|default:0 }}</p>
+        </div>
+
+        <!-- NSD -->
+        <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:border-blue-200 transition-all">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="p-2 bg-orange-50 rounded-lg text-orange-600">
+                    <i data-lucide="package" class="w-5 h-5"></i>
+                </div>
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">NSD</span>
+            </div>
+            <p class="text-2xl font-bold text-gray-800">{{ nsd_stats.total|default:0|floatformat:2 }}</p>
+            <p class="text-[10px] text-gray-500 font-medium">Count: {{ nsd_stats.count|default:0 }}</p>
+        </div>
+
+        <!-- Cash/Bank -->
+        <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:border-blue-200 transition-all">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="p-2 bg-emerald-50 rounded-lg text-emerald-600">
+                    <i data-lucide="landmark" class="w-5 h-5"></i>
+                </div>
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Cash/Bank</span>
+            </div>
+            <p class="text-2xl font-bold text-gray-800">{{ cash_stats.total|default:0|floatformat:2 }}</p>
+            <p class="text-[10px] text-gray-500 font-medium">Count: {{ cash_stats.count|default:0 }}</p>
+        </div>
+
+        <!-- Approved Collections -->
+        <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:border-blue-200 transition-all">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="p-2 bg-green-50 rounded-lg text-green-600">
+                    <i data-lucide="check-circle" class="w-5 h-5"></i>
+                </div>
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Approved</span>
+            </div>
+            <p class="text-2xl font-bold text-gray-800">{{ approved_col_stats.total|default:0|floatformat:2 }}</p>
+            <p class="text-[10px] text-gray-500 font-medium">Count: {{ approved_col_stats.count|default:0 }}</p>
+        </div>
+
+        <!-- Pending Collections -->
+        <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:border-blue-200 transition-all">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="p-2 bg-amber-50 rounded-lg text-amber-600">
+                    <i data-lucide="clock" class="w-5 h-5"></i>
+                </div>
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Pending</span>
+            </div>
+            <p class="text-2xl font-bold text-gray-800">{{ pending_col_stats.total|default:0|floatformat:2 }}</p>
+            <p
+                class="text-[10px] text-amber-600 font-bold {% if pending_col_stats.count > 0 %}animate-pulse{% endif %}">
+                Count: {{ pending_col_stats.count|default:0 }}</p>
+        </div>
+    </div>
+
+    <!-- Main Content Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Outstanding Now -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden h-fit">
+            <div class="p-5 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="alert-circle" class="w-5 h-5 text-red-500"></i>
+                    <h2 class="text-base font-bold text-gray-800">Outstanding Now</h2>
+                </div>
+                <span class="text-[10px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-full uppercase">Top
+                    5</span>
+            </div>
+            <div class="divide-y divide-gray-50">
+                {% for customer in outstanding_customers %}
+                <div class="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">
+                            {{ customer.name|slice:":1"|upper }}
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-gray-800">{{ customer.name }}</p>
+                            <p class="text-[10px] text-gray-500">ID: {{ customer.customerId }}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-bold text-red-600">{{ customer.balance|floatformat:2 }}</p>
+                        <p class="text-[10px] text-gray-400">Balance</p>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="p-8 text-center text-gray-400 italic text-sm">No outstanding balances found.</div>
+                {% endfor %}
+            </div>
+            <div class="p-4 bg-gray-50/30 border-t border-gray-50 text-center">
+                <a href="{% url 'receivablereport' %}" class="text-xs font-semibold text-blue-600 hover:underline">View
+                    Full Receivable Report →</a>
+            </div>
+        </div>
+
+        <!-- Recent Collections -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden h-fit">
+            <div class="p-5 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="list" class="w-5 h-5 text-emerald-500"></i>
+                    <h2 class="text-base font-bold text-gray-800">Recent Collections</h2>
+                </div>
+                <a href="{% url 'collection_list' %}" class="text-xs text-blue-600 hover:underline">View History</a>
+            </div>
+            <div class="divide-y divide-gray-50">
+                {% for col in recent_collections %}
+                <div class="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-emerald-50 rounded-lg text-emerald-600">
+                            <i data-lucide="receipt" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-gray-800">{{ col.collector.name }}</p>
+                            <p class="text-[10px] text-gray-500">{{ col.date|date:"d M, Y" }}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-bold text-gray-800">{{ col.total_amount|floatformat:2 }}</p>
+                        <span class="text-[9px] font-bold uppercase tracking-wider
+                            {% if col.status == 'Approved' %}text-emerald-500
+                            {% elif col.status == 'Pending' %}text-amber-500
+                            {% elif col.status == 'Rejected' %}text-red-500
+                            {% else %}text-blue-500{% endif %}">
+                            {{ col.status }}
+                        </span>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="p-8 text-center text-gray-400 italic text-sm">No recent collections.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block externalJS %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof navActive === 'function') {
+            navActive('dashboardLink');
+        }
+    });
+</script>
+{% endblock %}

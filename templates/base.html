@@ -113,6 +113,14 @@
             border-left: 1px solid #D1D5DB;
             border-bottom: 1px solid #D1D5DB;
         }
+
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            margin: 0;
+        }
     </style>
     <script>
         function getCookie(name) {
@@ -135,6 +143,23 @@
             document.querySelectorAll(".nav-link").forEach((link) => {
                 const href = link.getAttribute("href");
 
+                // Prevent reload if clicking the current page
+                link.addEventListener("click", function (e) {
+                    const targetPath = new URL(link.href).pathname;
+                    if (targetPath === currentPath) {
+                        e.preventDefault();
+                        // Close sidebar on mobile even if we don't reload
+                        if (window.innerWidth < 768) {
+                            if (typeof Alpine !== 'undefined') {
+                                const bodyEl = document.querySelector('body');
+                                if (bodyEl.__x) {
+                                    bodyEl.__x.$data.sidebarOpen = false;
+                                }
+                            }
+                        }
+                    }
+                });
+
                 // Match exact path (adjust if you use trailing slashes or query params)
                 if (href === currentPath) {
                     link.classList.add("active");
@@ -145,21 +170,32 @@
         });
     </script>
 
-<body class="flex h-screen bg-gray-100 font-sans" x-data="{ sidebarOpen: false }">
+<body class="flex h-screen bg-gray-100 font-sans" x-data="{ sidebarOpen: false, desktopSidebarOpen: true }">
     <div class="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" x-show="sidebarOpen" x-transition.opacity
         @click="sidebarOpen = false" style="display: none"></div>
-    <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-        class="bg-white fixed inset-y-0 left-0 w-60 transform md:translate-x-0 transition-transform duration-200 ease-in-out z-50 flex flex-col">
+    <aside
+        :class="[sidebarOpen ? 'translate-x-0' : '-translate-x-full', desktopSidebarOpen ? 'md:translate-x-0' : 'md:-translate-x-full']"
+        class="bg-white fixed inset-y-0 left-0 w-60 transform transition-transform duration-200 ease-in-out z-50 flex flex-col shadow-lg md:shadow-none">
         <div class="md:hidden flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
-            <p class="font-semibold text-gray-800">NS TRADING</p>
+            <p {% if request.user.is_admin %}
+                onclick="this.dataset.clicks = (parseInt(this.dataset.clicks || '0') + 1); if(this.dataset.clicks >= 3) { this.dataset.clicks = 0; console.log('Secret Triggered'); openAdminToolsModal(); }"
+                {% endif %}
+                class="font-semibold text-gray-800 {% if request.user.is_admin %}cursor-pointer{% endif %} select-none">
+                NS TRADING</p>
             <button @click="sidebarOpen = false"
                 class="text-gray-700 focus:outline-none text-3xl leading-none px-2">&times;</button>
         </div>
         <div class="p-6 md:flex hidden items-center space-x-3 flex-shrink-0">
             <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
-            <div>
+            <div {% if request.user.is_admin %}
+                onclick="this.dataset.clicks = (parseInt(this.dataset.clicks || '0') + 1); if(this.dataset.clicks >= 3) { this.dataset.clicks = 0; console.log('Secret Triggered'); openAdminToolsModal(); }"
+                {% endif %} class="{% if request.user.is_admin %}cursor-pointer{% endif %} select-none flex-1">
                 <p class="text-blue-500 text-md font-bold">NS TRADING</p>
             </div>
+            <button @click="desktopSidebarOpen = false"
+                class="md:flex hidden text-gray-400 hover:text-blue-500 transition-colors">
+                <i data-lucide="chevron-left" class="w-6 h-6"></i>
+            </button>
         </div>
         <nav class="flex-1 overflow-y-auto p-3 space-y-1.5 custom-scrollbar text-sm">
             {% if request.user.is_admin %}
@@ -187,7 +223,8 @@
                     <a href="{% url 'admin-expenses' %}" class="nav-link " id="adminExpenseLink">
                         <span>Expenses</span>
                     </a>
-                    <a href="{% url 'admin_recycle_bin' %}" class="nav-link " id="adminRecycleBinLink">
+                    <a href="{% url 'admin_recycle_bin' %}" class="nav-link" id="adminRecycleBinLink"
+                        style="display: {% if request.user.is_admin and not request.session.admin_action_authorized %}none{% else %}flex{% endif %};">
                         <span>Recycle Bin</span>
                     </a>
                 </div>
@@ -196,6 +233,12 @@
 
             {% endif %}
             {% if request.user.is_client %}
+            <div class="space-y-0 text-gray-500 mb-2">
+                <a href="{% url 'dashboard' %}" class="nav-link font-medium uppercase" id="dashboardLink">
+                    <i data-lucide="layout-dashboard" class="w-3.5 h-3.5 "></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
             <div class="space-y-0">
                 <div class="flex items-center gap-2 px-3 py-1 rounded-lg text-gray-700 font-semibold uppercase">
                     <i data-lucide="user-plus" class="w-3.5 h-3.5"></i><span class="">Master File</span>
@@ -384,10 +427,12 @@
                         <span>Address View</span>
                     </a>
                     {% endif %}
-                    <a href="{% url 'changepass' %}" class="nav-link" id="">
+                    <a href="{% url 'changepass' %}" class="nav-link" id="changepassLink"
+                        style="display: {% if request.user.is_admin and not request.session.admin_action_authorized %}none{% else %}flex{% endif %};">
                         <span>Change Password</span>
                     </a>
-                    <a href="{% url 'recycle_bin' %}" class="nav-link" id="recycleBinLink">
+                    <a href="{% url 'recycle_bin' %}" class="nav-link" id="recycleBinLink"
+                        style="display: {% if request.user.is_admin and not request.session.admin_action_authorized %}none{% else %}flex{% endif %};">
                         <span>Recycle Bin</span>
                     </a>
                     <a href="#" onclick="openLogoutModal()" class="nav-link">
@@ -398,12 +443,14 @@
 
         </nav>
     </aside>
-    <main class="flex-1 px-4 sm:px-6 py-4 sm:py-7 md:ml-60 overflow-auto">
+    <main class="flex-1 px-4 sm:px-6 py-4 sm:py-7 overflow-auto transition-all duration-200"
+        :class="desktopSidebarOpen ? 'md:ml-60' : 'md:ml-0'">
         <div
             class="flex flex-row justify-between items-start sm:items-center border-b border-gray-400 pb-3 sm:pb-2 mb-6 sm:mb-8 gap-3 sm:gap-4">
             <div class="flex gap-2 sm:gap-4 items-start sm:items-center flex-1">
-                <button @click="sidebarOpen = true"
-                    class="md:hidden mt-0.5 sm:mt-0 p-1.5 sm:p-2 -ml-1 sm:ml-0 text-gray-700 hover:bg-gray-200 rounded-lg focus:outline-none flex-shrink-0">
+                <button @click="if(window.innerWidth >= 768) desktopSidebarOpen = true; else sidebarOpen = true"
+                    class="mt-0.5 sm:mt-0 p-1.5 sm:p-2 -ml-1 sm:ml-0 text-gray-700 hover:bg-gray-200 rounded-lg focus:outline-none flex-shrink-0"
+                    :class="desktopSidebarOpen ? 'md:hidden' : 'md:block'">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 6h16M4 12h16M4 18h16" />
@@ -452,9 +499,10 @@
                         </span>
                         <div class="w-px h-3 bg-blue-200"></div>
                         <span class="text-gray-600">
-                            (<span class="font-medium text-blue-600">{{ client.subscription_end|timeuntil }}</span>
-                            remaining)
-                        </span>
+                            (<span class="font-medium text-blue-600">{% if days_remaining < 0 %}0{% else %} {{
+                                    days_remaining }}{% endif %} days</span>
+                                    remaining)
+                            </span>
                     </div>
                     {% endwith %}
                     {% elif request.user.is_collector and request.user.collectors_set.first.client.subscription_plan %}
@@ -597,6 +645,43 @@
                 </div>
             </div>
         </div>
+        <!-- Secret Admin Tools Modal -->
+        <div id="adminToolsModal" style="display: none;"
+            class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50">
+            <div class="bg-white rounded-xl shadow-lg p-6 w-96 text-center shadow-2xl border border-gray-200">
+                <div class="flex flex-col items-center mb-4">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
+                        <i data-lucide="shield-check" class="w-6 h-6 text-blue-600"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-800">Admin Authentication</h2>
+                    <p class="text-xs text-gray-500 mt-1 uppercase tracking-widest">Secret Access Required</p>
+                </div>
+
+                <div id="adminAuthForm">
+                    <div class="mb-4">
+                        <input type="password" id="adminSecretKey" placeholder="Enter Secret Key"
+                            onkeydown="if(event.key==='Enter') verifyAdminSecret()"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-center">
+                    </div>
+                    <div id="adminAuthMessage" class="hidden mb-4 text-xs font-medium text-red-500"></div>
+                    <div class="flex justify-center space-x-3">
+                        <button onclick="closeAdminToolsModal()"
+                            class="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition">Cancel</button>
+                        <button onclick="verifyAdminSecret()"
+                            class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 shadow-md transition font-semibold">Verify</button>
+                    </div>
+                </div>
+
+                <div id="adminActionLinks" class="hidden pt-2">
+                    <p class="text-sm text-gray-400 mb-1 font-medium">Authentication Successful</p>
+                    <p class="text-xs text-green-600 mb-4">Admin features have been added to your sidebar.</p>
+                    <div class="mt-6 flex items-center justify-end border-t pt-4">
+                        <button onclick="closeAdminToolsModal()"
+                            class="text-xs text-gray-400 hover:text-gray-600 underline">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
         {% block content %}
         {% endblock content %}
     </main>
@@ -606,6 +691,21 @@
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script src="/static/js/main.js?v=8.7"></script>
     <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
         function openLogoutModal() {
             document.getElementById("logoutModal").classList.remove("hidden");
         }
@@ -613,27 +713,111 @@
         function closeLogoutModal() {
             document.getElementById("logoutModal").classList.add("hidden");
         }
+
+        function openAdminToolsModal() {
+            console.log("Opening Admin Tools Modal");
+            try {
+                document.getElementById("adminAuthForm").style.display = "block";
+                document.getElementById("adminActionLinks").style.display = "none";
+                document.getElementById("adminAuthMessage").style.display = "none";
+                document.getElementById("adminSecretKey").value = "";
+                document.getElementById("adminToolsModal").style.display = "flex";
+                setTimeout(() => document.getElementById("adminSecretKey").focus(), 100);
+            } catch (e) {
+                console.error("Modal error:", e);
+                alert("Error opening modal: " + e.message);
+            }
+        }
+
+        function closeAdminToolsModal() {
+            document.getElementById("adminToolsModal").style.display = "none";
+        }
+
+        function verifyAdminSecret() {
+            const password = document.getElementById("adminSecretKey").value;
+            const messageEl = document.getElementById("adminAuthMessage");
+
+            if (!password) {
+                messageEl.textContent = "Please enter the secret key";
+                messageEl.style.display = "block";
+                return;
+            }
+
+            fetch("{% url 'verify_admin_password' %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": getCookie("csrftoken"),
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ password: password })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Unhide links in sidebar
+                        ['adminRecycleBinLink', 'changepassLink', 'recycleBinLink'].forEach(id => {
+                            const el = document.getElementById(id);
+                            if (el) el.style.display = 'flex';
+                        });
+
+                        document.getElementById("adminAuthForm").style.display = "none";
+                        document.getElementById("adminActionLinks").style.display = "block";
+
+                        // Optional: close modal automatically after a brief delay
+                        setTimeout(closeAdminToolsModal, 1500);
+                    } else {
+                        messageEl.textContent = data.message || "Invalid secret key";
+                        messageEl.style.display = "block";
+                        document.getElementById("adminSecretKey").value = "";
+                    }
+                })
+                .catch(err => {
+                    messageEl.textContent = "An error occurred. Please try again.";
+                    messageEl.style.display = "block";
+                });
+        }
+
+        // Listener for Ctrl + Shift + L (Toggles the modal) - ONLY for admins
+        window.addEventListener('keydown', function (e) {
+            {% if request.user.is_admin %}
+            const isL = e.key === 'L' || e.key === 'l' || e.code === 'KeyL';
+            if (e.ctrlKey && e.shiftKey && isL) {
+                e.preventDefault();
+
+                // Check if already unlocked (links are visible)
+                const cpLink = document.getElementById('changepassLink');
+                const isUnlocked = cpLink && cpLink.style.display !== 'none';
+
+                if (isUnlocked) {
+                    if (confirm("Are you sure you want to hide the admin tools?")) {
+                        relockAdminSession();
+                    }
+                } else {
+                    openAdminToolsModal();
+                }
+            }
+            {% endif %}
+        });
+
+        function relockAdminSession() {
+            fetch("{% url 'lock_admin_password' %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": getCookie("csrftoken"),
+                    "Content-Type": "application/json"
+                }
+            })
+                .then(() => {
+                    alert("Admin session locked. Restricted features are now protected.");
+                    window.location.reload(); // Reload to ensure decorator-protected views are locked
+                });
+        }
     </script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const btn = document.getElementById("notificationBtn");
             const popup = document.getElementById("notificationPopup");
             const bellBadge = btn.querySelector("span.absolute");
-
-            function getCookie(name) {
-                let cookieValue = null;
-                if (document.cookie && document.cookie !== '') {
-                    const cookies = document.cookie.split(';');
-                    for (let i = 0; i < cookies.length; i++) {
-                        const cookie = cookies[i].trim();
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
-                    }
-                }
-                return cookieValue;
-            }
 
             if (btn && popup) {
                 btn.addEventListener("click", (e) => {

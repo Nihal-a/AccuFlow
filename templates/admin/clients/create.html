@@ -81,7 +81,8 @@
         <div>
           <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">WhatsApp Automation</label>
           <div class="flex items-center space-x-2 mt-2">
-            <input type="checkbox" name="has_whatsapp_access" id="has_whatsapp_access" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+            <input type="checkbox" name="has_whatsapp_access" id="has_whatsapp_access"
+              class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
             <label for="has_whatsapp_access" class="text-sm text-gray-700">Enable WhatsApp Automation features</label>
           </div>
         </div>
@@ -193,14 +194,15 @@
   passwordInput.addEventListener('input', () => {
     const val = passwordInput.value;
     let strength = 'Weak', color = 'text-red-500';
-    isPasswordValid = val.length >= 6;
+    isPasswordValid = val.length >= 8;
 
     if (val.length >= 8 && /[A-Z]/.test(val) && /[a-z]/.test(val) && /\d/.test(val) && /[@$!%*?&#]/.test(val)) {
       strength = 'Strong'; color = 'text-green-600';
-    } else if (val.length >= 6) {
+    } else if (val.length >= 8) {
       strength = 'Medium'; color = 'text-yellow-500';
     } else if (val.length > 0) {
-      strength = 'Too Short'; color = 'text-red-500';
+      strength = 'Too Short (Min 8 characters)'; color = 'text-red-500';
+      isPasswordValid = false;
     } else {
       strength = '';
     }

@@ -31,6 +31,8 @@ def notifications(request):
              if client.subscription_end:
                  today = timezone.now().date()
                  days_remaining = (client.subscription_end - today).days
+                 notifications_data['days_remaining'] = days_remaining
+                 
                  if 0 <= days_remaining <= 7:
                      notifications_data['subscription_alert'] = {
                          'days': days_remaining,

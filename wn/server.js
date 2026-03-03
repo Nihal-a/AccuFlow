@@ -37,7 +37,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // --- CONFIG ---
-const PORT = process.env.NODE_PORT || process.env.PORT || 3001;
+// const PORT = process.env.NODE_PORT || process.env.PORT || 3001;
+const PORT = process.env.NODE_PORT || process.env.PORT || 3005;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const API_KEY = process.env.WA_API_KEY || 'accuflow-wa-dev-key-2024';
 const DJANGO_ORIGIN = process.env.DJANGO_ORIGIN || 'http://localhost:8000';

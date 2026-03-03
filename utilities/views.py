@@ -12,7 +12,9 @@ from django.http import HttpResponse, JsonResponse
 import openpyxl
 from io import BytesIO
 from django.apps import apps
-from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
+from core.decorators import admin_action_required
 
 class AddressView(View):
     def get(self, request):
@@ -129,6 +131,7 @@ class AddressView(View):
             'supplier_wa_number': supplier_wa_number,
         })
 
+@method_decorator([login_required, admin_action_required], name='dispatch')
 class RecycleBinView(View):
     def get(self, request):
         client = getClient(request.user)
@@ -190,6 +193,7 @@ class RecycleBinView(View):
         }
         return icons.get(label, 'trash-2')
 
+@method_decorator([login_required, admin_action_required], name='dispatch')
 class RecycleBinListView(View):
     def get(self, request, model_name):
         client = getClient(request.user)
@@ -239,6 +243,7 @@ class RecycleBinListView(View):
             'model_name': model_name
         })
 
+@method_decorator([login_required, admin_action_required], name='dispatch')
 class RestoreView(View):
     def post(self, request, model_name, pk):
         client = getClient(request.user)
@@ -273,6 +278,7 @@ class RestoreView(View):
         item.save()
         return JsonResponse({'status': 'success', 'message': 'Item restored successfully'})
 
+@method_decorator([login_required, admin_action_required], name='dispatch')
 class PermanentDeleteView(View):
     def post(self, request, model_name, pk):
         client = getClient(request.user)

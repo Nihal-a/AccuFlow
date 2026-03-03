@@ -10,6 +10,7 @@
 
   input.no-spinners {
     -moz-appearance: textfield;
+    appearance: textfield;
   }
 
   .password-strength {
@@ -117,6 +118,7 @@
               <button type="button" id="togglePassword" class="absolute right-3 top-1.5 text-gray-500">👁️</button>
             </div>
             <div id="password-strength" class="password-strength"></div>
+            <small id="passwordStrength" class="text-xs"></small>
           </div>
           <div>
             <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">Confirm Password</label>
@@ -134,8 +136,8 @@
       <div class="mt-4 sm:mt-6 flex flex-wrap gap-2 justify-end">
         <a href="{% url 'collectors'%}"
           class="leading-none inline-flex items-center gap-1.5 bg-red-500 text-white font-medium h-[32px] sm:h-[34px] px-4 sm:px-6 rounded-md shadow-sm hover:bg-red-600 transition-all duration-300 text-xs sm:text-sm">Cancel</a>
-        <button type="submit"
-          class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white font-medium h-[32px] sm:h-[34px] px-4 sm:px-6 rounded-md shadow-sm hover:bg-blue-600 transition-all duration-300 text-xs sm:text-sm">Update
+        <button type="submit" id="submitBtn"
+          class="leading-none inline-flex items-center gap-1.5 bg-blue-500 text-white font-medium h-[32px] sm:h-[34px] px-4 sm:px-6 rounded-md shadow-sm hover:bg-blue-600 transition-all duration-300 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed">Update
           Collector</button>
       </div>
     </form>
@@ -147,13 +149,33 @@
 <script>
   const usernameInput = document.getElementById('usernameInput');
   const usernameStatus = document.getElementById('usernameStatus');
+  const submitBtn = document.getElementById('submitBtn');
   const currentUsername = "{{ collector.user.username|default:'' }}";
+
+  let isUsernameValid = true;
+  let isPasswordValid = true;
+  let isPasswordMatch = true;
+
+  function validateForm() {
+    submitBtn.disabled = !(isUsernameValid && isPasswordValid && isPasswordMatch);
+  }
 
   if (usernameInput) {
     usernameInput.addEventListener('input', async () => {
       const username = usernameInput.value.trim();
-      if (username.length < 3) { usernameStatus.textContent = ''; return; }
-      if (currentUsername && username === currentUsername) { usernameStatus.textContent = ''; return; }
+      if (username.length < 3) {
+        usernameStatus.textContent = '❌ Min 3 characters';
+        usernameStatus.className = 'absolute right-3 top-2 text-red-600 text-sm';
+        isUsernameValid = false;
+        validateForm();
+        return;
+      }
+      if (currentUsername && username === currentUsername) {
+        usernameStatus.textContent = '';
+        isUsernameValid = true;
+        validateForm();
+        return;
+      }
       const response = await fetch("{% url 'check-username' %}", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
@@ -163,16 +185,20 @@
       if (data.available) {
         usernameStatus.textContent = '✅ Available';
         usernameStatus.className = 'absolute right-3 top-2 text-green-600 text-sm';
+        isUsernameValid = true;
       } else {
         usernameStatus.textContent = '❌ Taken';
         usernameStatus.className = 'absolute right-3 top-2 text-red-600 text-sm';
+        isUsernameValid = false;
       }
+      validateForm();
     });
   }
 
   const passwordInput = document.getElementById('passwordInput');
   const confirmPasswordInput = document.getElementById('confirmPasswordInput');
-  const passwordStrength = document.getElementById('password-strength');
+  const passwordBar = document.getElementById('password-strength');
+  const passwordStrength = document.getElementById('passwordStrength');
   const passwordMatch = document.getElementById('passwordMatch');
   const togglePassword = document.getElementById('togglePassword');
   const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
@@ -188,31 +214,81 @@
   if (passwordInput) {
     passwordInput.addEventListener('input', () => {
       const val = passwordInput.value;
-      let strength = 0;
-      if (val.length > 6) strength++;
-      if (/[A-Z]/.test(val)) strength++;
-      if (/[0-9]/.test(val)) strength++;
-      if (/[^A-Za-z0-9]/.test(val)) strength++;
-      passwordStrength.className = "password-strength";
-      if (strength <= 1 && val) passwordStrength.classList.add("strength-weak");
-      else if (strength === 2) passwordStrength.classList.add("strength-medium");
-      else if (strength >= 3) passwordStrength.classList.add("strength-strong");
+      let barClass = 'password-strength';
+
+      if (val.length === 0) {
+        isPasswordValid = true;
+        passwordBar.className = barClass;
+        passwordStrength.textContent = '';
+      } else if (val.length < 8) {
+        isPasswordValid = false;
+        passwordBar.className = barClass + ' strength-weak';
+        passwordStrength.textContent = 'Too Short (Min 8 characters)';
+        passwordStrength.className = 'text-red-500 text-xs';
+      } else {
+        isPasswordValid = true;
+        let score = 0;
+        if (/[A-Z]/.test(val)) score++;
+        if (/[0-9]/.test(val)) score++;
+        if (/[^A-Za-z0-9]/.test(val)) score++;
+
+        if (score <= 1) {
+          passwordBar.className = barClass + ' strength-weak';
+          passwordStrength.textContent = 'Weak password';
+          passwordStrength.className = 'text-red-500 text-xs';
+        } else if (score === 2) {
+          passwordBar.className = barClass + ' strength-medium';
+          passwordStrength.textContent = 'Medium password';
+          passwordStrength.className = 'text-yellow-500 text-xs';
+        } else {
+          passwordBar.className = barClass + ' strength-strong';
+          passwordStrength.textContent = 'Strong password';
+          passwordStrength.className = 'text-green-600 text-xs';
+        }
+      }
+
+      // Check match
+      const confirmVal = confirmPasswordInput.value;
+      if (confirmVal === val) {
+        if (val.length > 0) {
+          passwordMatch.textContent = '✅ Passwords match';
+          passwordMatch.className = 'text-green-600 text-sm';
+        } else {
+          passwordMatch.textContent = '';
+        }
+        isPasswordMatch = true;
+      } else {
+        passwordMatch.textContent = confirmVal.length > 0 ? '❌ Passwords do not match' : '';
+        passwordMatch.className = 'text-red-600 text-sm';
+        isPasswordMatch = false;
+      }
+      validateForm();
     });
   }
 
   if (confirmPasswordInput) {
     confirmPasswordInput.addEventListener('input', () => {
-      if (!passwordInput.value) { passwordMatch.textContent = ''; return; }
-      if (confirmPasswordInput.value === passwordInput.value) {
-        passwordMatch.textContent = '✅ Passwords match';
-        passwordMatch.className = 'text-green-600 text-sm';
+      const val = confirmPasswordInput.value;
+      const pass = passwordInput.value;
+
+      if (val === pass) {
+        if (val.length > 0) {
+          passwordMatch.textContent = '✅ Passwords match';
+          passwordMatch.className = 'text-green-600 text-sm';
+        } else {
+          passwordMatch.textContent = '';
+        }
+        isPasswordMatch = true;
       } else {
         passwordMatch.textContent = '❌ Passwords do not match';
         passwordMatch.className = 'text-red-600 text-sm';
+        isPasswordMatch = false;
       }
+      validateForm();
     });
   }
 
+  validateForm();
   countryCode();
 </script>
 {% endblock %}

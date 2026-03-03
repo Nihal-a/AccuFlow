@@ -32,6 +32,8 @@ class LoginRequiredMiddleware:
                 not any(request.path.startswith(path) for path in exempt_paths)
                 and not request.path.startswith('/admin/')
                 and not request.path.startswith('/api/')
+                and not request.path.startswith('/changepass/')
+                and not request.path.startswith('/recycle-bin/')
             ):
                 return redirect(clients_url)
 

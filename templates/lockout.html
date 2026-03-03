@@ -34,14 +34,54 @@
             </p>
         </div>
 
-        <a href="{% url 'login' %}"
-            class="inline-block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition duration-300 ease-in-out transform hover:-translate-y-1 shadow-lg">
-            Back to Login
-        </a>
+        <div id="countdownContainer" class="hidden">
+            <p class="text-gray-500 mb-4 text-sm">Redirecting to login in <span id="timerText"
+                    class="font-mono font-bold text-blue-600">--:--</span></p>
+        </div>
 
-        <p class="mt-8 text-xs text-gray-400">
-            If you need immediate assistance, please contact your administrator.
-        </p>
+        <div id="loginButtonContainer">
+            <a href="{% url 'login' %}" id="loginBtn"
+                class="inline-block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition duration-300 ease-in-out transform hover:-translate-y-1 shadow-lg pointer-events-none opacity-50">
+                Back to Login
+            </a>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const timerDisplay = document.getElementById('timerText');
+                const loginBtn = document.getElementById('loginBtn');
+                const countdownContainer = document.getElementById('countdownContainer');
+
+                let timeLeft = 15 * 60; // 15 minutes in seconds
+
+                // Show countdown container
+                countdownContainer.classList.remove('hidden');
+
+                function updateTimer() {
+                    let minutes = Math.floor(timeLeft / 60);
+                    let seconds = timeLeft % 60;
+
+                    timerDisplay.textContent =
+                        (minutes < 10 ? "0" + minutes : minutes) + ":" +
+                        (seconds < 10 ? "0" + seconds : seconds);
+
+                    if (timeLeft <= 0) {
+                        clearInterval(interval);
+                        loginBtn.classList.remove('pointer-events-none');
+                        loginBtn.classList.remove('opacity-50');
+                        loginBtn.textContent = "Back to Login Now";
+                        // Auto redirect
+                        window.location.href = "{% url 'login' %}";
+                    } else {
+                        timeLeft--;
+                    }
+                }
+
+                updateTimer();
+                const interval = setInterval(updateTimer, 1000);
+            });
+        </script>
+
     </div>
 </body>
 

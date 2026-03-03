@@ -14,6 +14,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.decorators import method_decorator
 from django.db.models import Sum
+from core.decorators import admin_action_required
 
 logger = logging.getLogger(__name__)
 
@@ -128,6 +129,7 @@ class ClientAddView(View):
         phone = request.POST.get('phone')
         email = request.POST.get('email')
         wa = request.POST.get('wa')
+        country_code = request.POST.get('country_code', '+971')
         has_whatsapp_access = request.POST.get('has_whatsapp_access') == 'on'
         username = request.POST.get('username')
         password = request.POST.get('password')
@@ -156,10 +158,11 @@ class ClientAddView(View):
             phone=phone,
             email=email,
             user=user,
-            wa = wa,
+            wa=wa,
+            country_code=country_code,
             has_whatsapp_access=has_whatsapp_access,
             is_active=True,
-            clientId = last_client_id()
+            clientId=last_client_id()
         )
         
 
@@ -312,7 +315,6 @@ def last_client_id():
 
 
 @login_required
-@staff_member_required
 def check_username_availability(request):
     if request.method == 'POST':
         try:
@@ -519,7 +521,7 @@ class AdminExpenseDeleteView(View):
         return redirect('admin-expenses')
 
 
-@method_decorator([login_required, staff_member_required], name='dispatch')
+@method_decorator([login_required, staff_member_required, admin_action_required], name='dispatch')
 class AdminRecycleBinView(View):
     def get(self, request):
         categories = []
@@ -547,7 +549,7 @@ class AdminRecycleBinView(View):
         return render(request, 'admin/recycle_bin/dashboard.html', {'categories': categories})
 
 
-@method_decorator([login_required, staff_member_required], name='dispatch')
+@method_decorator([login_required, staff_member_required, admin_action_required], name='dispatch')
 class AdminRecycleBinListView(View):
     def get(self, request, model_name):
         from django.apps import apps
@@ -585,7 +587,7 @@ class AdminRecycleBinListView(View):
         })
 
 
-@method_decorator([login_required, staff_member_required], name='dispatch')
+@method_decorator([login_required, staff_member_required, admin_action_required], name='dispatch')
 class AdminRestoreView(View):
     def post(self, request, model_name, pk):
         from django.apps import apps
@@ -604,7 +606,7 @@ class AdminRestoreView(View):
         return JsonResponse({'status': 'success', 'message': 'Item restored successfully'})
 
 
-@method_decorator([login_required, staff_member_required], name='dispatch')
+@method_decorator([login_required, staff_member_required, admin_action_required], name='dispatch')
 class AdminPermanentDeleteView(View):
     def post(self, request, model_name, pk):
         from django.apps import apps
