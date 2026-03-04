@@ -138,7 +138,8 @@ def getLastTransferNo(client):
         return 1
 
 from core.authorization import get_object_for_user
-from core.utils import validate_positive_decimal
+
+from decimal import Decimal
 
 class StockTransferHoldView(View):
     def post(self, request):
@@ -149,7 +150,7 @@ class StockTransferHoldView(View):
             date = data.get('date')
             godown_from_id = data.get('godown_from')
             godown_to_id = data.get('godown_to')
-            qty = data.get('qty')
+            qty = Decimal(str(data.get('qty', 0)))
             description = data.get('description')
             transfer_id = data.get('transfer_id')
 
@@ -159,6 +160,19 @@ class StockTransferHoldView(View):
             if transfer_id:
                 # Update existing hold
                 transfer = get_object_for_user(StockTransfers, request.user, id=transfer_id)
+                
+                # If editing a posted transfer, carefully reverse the old quantities FIRST
+                if not transfer.hold:
+                    # Refresh the old godowns directly from the database to avoid memory overlaps
+                    old_from = get_object_or_404(Godowns, id=transfer.transfer_from.id)
+                    old_to = get_object_or_404(Godowns, id=transfer.transfer_to.id)
+                    
+                    old_from.qty += transfer.qty
+                    old_from.save()
+                    
+                    old_to.qty -= transfer.qty
+                    old_to.save()
+
                 transfer.transfer_no = transfer_no
                 transfer.date = date
                 transfer.transfer_from = godown_from
@@ -166,6 +180,17 @@ class StockTransferHoldView(View):
                 transfer.qty = qty
                 transfer.description = description
                 transfer.save()
+                
+                # Re-apply quantities to the newly selected godowns if it's a posted transfer
+                if not transfer.hold:
+                    godown_from.refresh_from_db()
+                    godown_from.qty -= qty
+                    godown_from.save()
+                    
+                    godown_to.refresh_from_db()
+                    godown_to.qty += qty
+                    godown_to.save()
+                    
                 return JsonResponse({'status': 'success', 'transfer_id': transfer.id, 'hold': transfer.hold})
             
             # Create new hold
@@ -244,3 +269,9 @@ def transfers_by_date(request):
             })
             
     return JsonResponse({'transfers': transfersData})
+
+def godown_balances_api(request):
+    client = getClient(request.user)
+    godowns = Godowns.objects.filter(is_active=True, client=client)
+    data = {str(g.id): str(g.qty) for g in godowns}
+    return JsonResponse(data)

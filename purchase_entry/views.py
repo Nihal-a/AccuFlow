@@ -292,3 +292,15 @@ def delete_purchase(request):
             purchase.godown.save() 
         purchase.save()
     return JsonResponse({'status':'success','message':'Purchase deleted successfully'})
+
+def purchase_balances_api(request):
+    client = getClient(request.user)
+    suppliers = Suppliers.objects.filter(is_active=True, client=client)
+    customers = Customers.objects.filter(is_active=True, client=client)
+    godowns = Godowns.objects.filter(is_active=True, client=client)
+    data = {
+        'suppliers': {str(s.id): str(s.get_balance) for s in suppliers},
+        'customers': {str(c.id): str(c.get_balance) for c in customers},
+        'godowns': {str(g.id): str(g.qty) for g in godowns},
+    }
+    return JsonResponse(data)

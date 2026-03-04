@@ -396,6 +396,48 @@ Purchase Entry
   var all_suppliers_data = {{ suppliers_json| safe }};
   isUpdate = false;
 
+  function refreshBalances() {
+    fetch("{% url 'api-purchase-balances' %}")
+      .then(response => response.json())
+      .then(data => {
+        // Update JS arrays
+        all_suppliers_data.forEach(s => {
+          if (data.suppliers[String(s.id)] !== undefined) {
+            s.balance = data.suppliers[String(s.id)];
+          }
+        });
+        all_customers_data.forEach(c => {
+          if (data.customers[String(c.id)] !== undefined) {
+            c.balance = data.customers[String(c.id)];
+          }
+        });
+        // Update dropdown data-balance attributes
+        $('#supplier option').each(function () {
+          const id = $(this).val();
+          const type = $(this).data('type');
+          if (type === 'suppliers' && data.suppliers[id] !== undefined) {
+            $(this).data('balance', data.suppliers[id]);
+          } else if (type === 'customers' && data.customers[id] !== undefined) {
+            $(this).data('balance', data.customers[id]);
+          }
+        });
+        $('#godown option').each(function () {
+          const id = $(this).val();
+          if (id && data.godowns[id] !== undefined) {
+            $(this).data('balance', data.godowns[id]);
+          }
+        });
+        // Re-trigger change to update displayed balance
+        if ($('#supplier').val()) {
+          $('#supplier').trigger('change');
+        }
+        if ($('#godown').val()) {
+          $('#godown').trigger('change');
+        }
+      })
+      .catch(error => console.error('Error refreshing balances:', error));
+  }
+
   function addLastRow() {
     const tableBody = document.getElementById("purchaseTableBody");
     $('#totalRow').remove();
@@ -742,6 +784,7 @@ Purchase Entry
 
           addLastRow()
         } else {
+          refreshBalances();
           $('#viewPurchaseDiv').removeClass('hidden');
           $('#viewDiv').removeClass('hidden');
           $('#createView').addClass('hidden');
@@ -850,6 +893,7 @@ Purchase Entry
           deleteUrl = "";
           resetSLNo();
           addLastRow();
+          refreshBalances();
 
           $('#purchase_name').val(getLastPurchaseNo()).change();
           closeModal();

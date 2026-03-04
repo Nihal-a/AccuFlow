@@ -11,6 +11,7 @@ from core.views import getClient, update_ledger
 from core.authorization import get_object_for_user
 from decimal import Decimal
 from django.core.exceptions import ValidationError
+from django.db import transaction
 
 class SaleEntryView(View):
     def get(self,request):
@@ -66,6 +67,7 @@ class SaleEntryView(View):
     
 
 class SaleAddView(View):
+    @transaction.atomic
     def post(self,request):
         dates = request.POST.getlist('dates')
         total_amounts = request.POST.getlist('total_amounts')
@@ -76,6 +78,14 @@ class SaleAddView(View):
         godown_ids = request.POST.getlist('godowns')
         sale_ids = request.POST.getlist('sale_ids') 
         types = request.POST.getlist('type')
+        
+        # Validating Array Lengths to prevent index errors and data corruption
+        expected_len = len(sale_ids)
+        if not all(len(lst) == expected_len for lst in [dates, qtys, amounts, customer_ids, godown_ids, types]):
+            # While redirect is the standard here, you could also return a 400 error.
+            # Using redirect to maintain consistent behavior, but skipping the loop.
+            return redirect('sale')
+            
         count = 0
         for id in sale_ids:
             customer = None 
@@ -121,6 +131,7 @@ class SaleAddView(View):
 
 
 class SaleHold(View):
+    @transaction.atomic
     def post(self,request):
         data = json.loads(request.body)
         sale_no = data.get('sale_no')

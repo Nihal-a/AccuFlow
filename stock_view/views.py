@@ -1,22 +1,16 @@
-from django.forms import FloatField
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render
 from django.views import View
-from django.db.models import Sum, Q, Value, CharField, F
-from datetime import datetime
-
-from django.forms import FloatField
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views import View
-from django.db.models import Sum, Q, Value, CharField, F
+from django.db.models import Q
 from datetime import datetime
 from core.views import getClient
-from core.models import Godowns, Purchases, Sales
+from core.models import Godowns, Purchases, Sales, StockTransfers, Commissions
+
 
 class StockView(View):
     def get(self, request):
         godowns = Godowns.objects.filter(is_active=True, client=getClient(request.user))
-        return render(request,'stock_view/stock_view.html',{'godowns':godowns, 'sort': 'Serial'})
-    
+        return render(request, 'stock_view/stock_view.html', {'godowns': godowns, 'sort': 'Serial'})
+
     def parse_date(self, date_str):
         try:
             return datetime.strptime(date_str, "%Y-%m-%d").date()
@@ -37,7 +31,7 @@ class StockView(View):
             'total_amount_all': 0,
             'total_avg_rate_all': 0,
         }
-        
+
         if not date_to_str:
             return render(request, 'stock_view/stock_view.html', context)
 
@@ -51,33 +45,16 @@ class StockView(View):
 
         purchases = Purchases.objects.filter(base_filter, date_filter)
         sales = Sales.objects.filter(base_filter, date_filter)
+        commissions = Commissions.objects.filter(base_filter, date_filter)
+
+        # Stock transfers use same base filters but without godown field
+        transfer_base = Q(is_active=True, hold=False, client=client)
+        transfer_date = date_filter
+        transfers = StockTransfers.objects.filter(transfer_base, transfer_date)
 
         stocks = {}
 
-        for p in purchases:
-            g = p.godown
-            if not g:
-                continue
-
-            if g.id not in stocks:
-                stocks[g.id] = {
-                    'godown': g,
-                    'purchase_qty': 0,    
-                    'purchase_value': 0, 
-                    'balance_qty': 0,    
-                    'avg_rate': 0,
-                    'total_amount': 0,
-                }
-
-            stocks[g.id]['purchase_qty'] += p.qty
-            stocks[g.id]['purchase_value'] += p.qty * p.amount
-            stocks[g.id]['balance_qty'] += p.qty  
-
-        for s in sales:
-            g = s.godown
-            if not g:
-                continue
-
+        def ensure_godown(g):
             if g.id not in stocks:
                 stocks[g.id] = {
                     'godown': g,
@@ -88,7 +65,44 @@ class StockView(View):
                     'total_amount': 0,
                 }
 
+        # Purchases: add qty and value to godown
+        for p in purchases:
+            g = p.godown
+            if not g:
+                continue
+            ensure_godown(g)
+            stocks[g.id]['purchase_qty'] += p.qty
+            stocks[g.id]['purchase_value'] += p.qty * p.amount
+            stocks[g.id]['balance_qty'] += p.qty
+
+        # Sales: subtract qty from godown
+        for s in sales:
+            g = s.godown
+            if not g:
+                continue
+            ensure_godown(g)
             stocks[g.id]['balance_qty'] -= s.qty
+
+        # Commissions: subtract qty from godown (like sales)
+        for c in commissions:
+            g = c.godown
+            if not g:
+                continue
+            ensure_godown(g)
+            stocks[g.id]['balance_qty'] -= c.qty
+
+        # Stock Transfers: subtract from source, add to destination
+        for t in transfers:
+            g_from = t.transfer_from
+            g_to = t.transfer_to
+
+            if g_from:
+                ensure_godown(g_from)
+                stocks[g_from.id]['balance_qty'] -= t.qty
+
+            if g_to:
+                ensure_godown(g_to)
+                stocks[g_to.id]['balance_qty'] += t.qty
 
         total_qty_all = 0
         total_value_all = 0
@@ -103,10 +117,10 @@ class StockView(View):
 
             item['total_amount'] = round(balance_qty * avg, 2)
 
-            item['total_qty'] = round(balance_qty, 3)  
+            item['total_qty'] = round(balance_qty, 3)
 
             total_qty_all += balance_qty
-            total_value_all += balance_qty * avg 
+            total_value_all += balance_qty * avg
 
         total_avg_rate_all = (total_value_all / total_qty_all) if total_qty_all else 0
 
@@ -116,5 +130,3 @@ class StockView(View):
         context['total_avg_rate_all'] = round(total_avg_rate_all, 2)
 
         return render(request, 'stock_view/stock_view.html', context)
-
-

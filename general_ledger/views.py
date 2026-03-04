@@ -1,9 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from django.db.models import Sum, Q
+from django.utils import timezone
 from datetime import datetime
 from decimal import Decimal
-from core.models import Suppliers, Customers, Godowns, Purchases, Sales, NSDs, Cashs, StockTransfers
+from core.models import Suppliers, Customers, Godowns, Purchases, Sales, NSDs, Cashs, StockTransfers, Commissions
 from core.views import getClient
 from core.authorization import get_object_for_user
 
@@ -124,10 +125,11 @@ class GeneralLedgerView(View):
                 'is_ob': True
              })
         
-        ledger_items.sort(key=lambda x: (x['date'], x['created_at']))
+        min_dt = timezone.make_aware(datetime.min) if timezone.get_current_timezone() else datetime.min
+        ledger_items.sort(key=lambda x: (x['date'], x.get('created_at') or min_dt))
 
         if sort == 'Serial':
-             ledger_items.sort(key=lambda x: x['transaction_no'])
+             ledger_items.sort(key=lambda x: (x['date'], x.get('created_at') or min_dt))
 
         running_val = start_balance
         credit_sum = Decimal('0.0000')
@@ -156,6 +158,12 @@ class GeneralLedgerView(View):
             
         if opening_flag == 'on':
             context['open_balance'] = 0
+
+        sno = 1
+        for item in final_ledgers:
+            if item.get('type') != 'OB':
+                item['sno'] = sno
+                sno += 1
 
         context['ledgers'] = final_ledgers
         context['has_transactions'] = len([l for l in final_ledgers if l.get('type') != 'OB']) > 0
@@ -218,15 +226,18 @@ class GeneralLedgerView(View):
             # Transfer To -> In (Debit)
             
             g_filter = base_filter & Q(godown=party)
+            transfer_filter_from = Q(is_active=True, hold=False, client=client, transfer_from=party, date__lt=date_limit)
+            transfer_filter_to = Q(is_active=True, hold=False, client=client, transfer_to=party, date__lt=date_limit)
             
             purchases_qty = Purchases.objects.filter(g_filter).aggregate(s=Sum('qty'))['s'] or Decimal('0.0000')
             sales_qty = Sales.objects.filter(g_filter).aggregate(s=Sum('qty'))['s'] or Decimal('0.0000')
+            commissions_qty = Commissions.objects.filter(g_filter).aggregate(s=Sum('qty'))['s'] or Decimal('0.0000')
             
-            transfers_out = StockTransfers.objects.filter(base_filter, transfer_from=party).aggregate(s=Sum('qty'))['s'] or Decimal('0.0000')
-            transfers_in = StockTransfers.objects.filter(base_filter, transfer_to=party).aggregate(s=Sum('qty'))['s'] or Decimal('0.0000')
+            transfers_out = StockTransfers.objects.filter(transfer_filter_from).aggregate(s=Sum('qty'))['s'] or Decimal('0.0000')
+            transfers_in = StockTransfers.objects.filter(transfer_filter_to).aggregate(s=Sum('qty'))['s'] or Decimal('0.0000')
             
             # Debit (In) - Credit (Out)
-            transaction_balance = (purchases_qty + transfers_in) - (sales_qty + transfers_out)
+            transaction_balance = (purchases_qty + transfers_in) - (sales_qty + transfers_out + commissions_qty)
             static_ob = party.open_debit - party.open_credit
             return static_ob + transaction_balance
             
@@ -275,8 +286,8 @@ class GeneralLedgerView(View):
                 'type': 'NS',
                 'description': desc,
                 'qty': n.qty,
-                'rate': n.sell_rate,
-                'credit': n.sell_amount,
+                'rate': n.purchase_rate,
+                'credit': n.purchase_amount,
                 'debit': 0,
                 'created_at': n.created_at,
                 'original_obj': n
@@ -291,9 +302,9 @@ class GeneralLedgerView(View):
                 'type': 'NS',
                 'description': desc,
                 'qty': n.qty,
-                'rate': n.purchase_rate,
+                'rate': n.sell_rate,
                 'credit': 0,
-                'debit': n.purchase_amount,
+                'debit': n.sell_amount,
                 'created_at': n.created_at,
                 'original_obj': n
             })
@@ -358,8 +369,8 @@ class GeneralLedgerView(View):
                 'type': 'NS',
                 'description': desc,
                 'qty': n.qty,
-                'rate': n.sell_rate,
-                'credit': n.sell_amount,
+                'rate': n.purchase_rate,
+                'credit': n.purchase_amount,
                 'debit': 0,
                 'created_at': n.created_at,
                 'original_obj': n
@@ -374,9 +385,9 @@ class GeneralLedgerView(View):
                 'type': 'NS',
                 'description': desc,
                 'qty': n.qty,
-                'rate': n.purchase_rate,
+                'rate': n.sell_rate,
                 'credit': 0,
-                'debit': n.purchase_amount,
+                'debit': n.sell_amount,
                 'created_at': n.created_at,
                 'original_obj': n
             })
@@ -405,7 +416,8 @@ class GeneralLedgerView(View):
         # Note: In godown_ledger logic it was 'debit': p.qty
         purchases = Purchases.objects.filter(base_filter, date_filter, godown=godown)
         for p in purchases:
-            desc = f"{p.supplier.name}\n{p.description}" if sort != 'Remark' else (p.description or "")
+            supplier_name = p.supplier.name if p.supplier else (p.customer.name if hasattr(p, 'customer') and p.customer else '')
+            desc = f"{supplier_name}\n{p.description}" if sort != 'Remark' else (p.description or "")
             ledger_items.append({
                 'transaction_no': str(p.purchase_no),
                 'date': p.date,
@@ -422,7 +434,8 @@ class GeneralLedgerView(View):
         # Sales (Out -> Credit)
         sales = Sales.objects.filter(base_filter, date_filter, godown=godown)
         for s in sales:
-            desc = f"{s.customer.name}\n{s.description}" if sort != 'Detailed' else (s.description or "")
+            customer_name = s.customer.name if s.customer else (s.supplier.name if hasattr(s, 'supplier') and s.supplier else '')
+            desc = f"{customer_name}\n{s.description}" if sort != 'Detailed' else (s.description or "")
             ledger_items.append({
                 'transaction_no': str(s.sale_no),
                 'date': s.date,
@@ -437,9 +450,10 @@ class GeneralLedgerView(View):
             })
 
         # Stock Transfers FROM this godown (Out -> Credit)
-        transfers_out = StockTransfers.objects.filter(base_filter, date_filter, transfer_from=godown)
+        transfer_base = Q(is_active=True, hold=False, client=godown.client)
+        transfers_out = StockTransfers.objects.filter(transfer_base, date_filter, transfer_from=godown)
         for t in transfers_out:
-            desc = f"To: {t.transfer_to.name}\n{t.description}" if sort != 'Remark' else (t.description or "")
+            desc = f"To: {t.transfer_to.name if t.transfer_to else ''}\n{t.description}" if sort != 'Remark' else (t.description or "")
             ledger_items.append({
                  'transaction_no': str(t.transfer_no),
                  'date': t.date,
@@ -454,9 +468,9 @@ class GeneralLedgerView(View):
             })
 
         # Stock Transfers TO this godown (In -> Debit)
-        transfers_in = StockTransfers.objects.filter(base_filter, date_filter, transfer_to=godown)
+        transfers_in = StockTransfers.objects.filter(transfer_base, date_filter, transfer_to=godown)
         for t in transfers_in:
-            desc = f"From: {t.transfer_from.name}\n{t.description}" if sort != 'Remark' else (t.description or "")
+            desc = f"From: {t.transfer_from.name if t.transfer_from else ''}\n{t.description}" if sort != 'Remark' else (t.description or "")
             ledger_items.append({
                  'transaction_no': str(t.transfer_no),
                  'date': t.date,
@@ -468,4 +482,22 @@ class GeneralLedgerView(View):
                  'debit': t.qty, # In
                  'created_at': t.created_at,
                  'original_obj': t
+            })
+
+        # Commissions (Out -> Credit, like sales)
+        commissions = Commissions.objects.filter(base_filter, date_filter, godown=godown)
+        for c in commissions:
+            expense_name = c.expense.category if c.expense else ''
+            desc = f"{expense_name}\n{c.description}" if sort != 'Remark' else (c.description or "")
+            ledger_items.append({
+                 'transaction_no': str(c.commission_no),
+                 'date': c.date,
+                 'type': 'CM',
+                 'description': desc,
+                 'qty': c.qty,
+                 'rate': c.amount,
+                 'credit': c.qty, # Out
+                 'debit': 0,
+                 'created_at': c.created_at,
+                 'original_obj': c
             })

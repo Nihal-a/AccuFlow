@@ -3,6 +3,116 @@
 Stock Transfer
 {% endblock title %}
 {% block externalCSS %}
+<style>
+  /* ── Hold table: fixed column widths ── */
+  #transferCreateDiv table {
+    table-layout: fixed;
+    min-width: 640px;
+  }
+
+  #transferCreateDiv th:nth-child(1),
+  #transferCreateDiv td:nth-child(1) {
+    width: 84px;
+    white-space: nowrap;
+  }
+
+  /* Actions   */
+  #transferCreateDiv th:nth-child(2),
+  #transferCreateDiv td:nth-child(2) {
+    width: 40px;
+  }
+
+  /* S.No      */
+  #transferCreateDiv th:nth-child(3),
+  #transferCreateDiv td:nth-child(3) {
+    width: 100px;
+  }
+
+  /* Date    */
+  #transferCreateDiv th:nth-child(4),
+  #transferCreateDiv td:nth-child(4) {
+    width: 120px;
+  }
+
+  /* Godown From  */
+  #transferCreateDiv th:nth-child(5),
+  #transferCreateDiv td:nth-child(5) {
+    width: 120px;
+  }
+
+  /* Godown To       */
+  #transferCreateDiv th:nth-child(6),
+  #transferCreateDiv td:nth-child(6) {
+    width: 72px;
+  }
+
+  /* Qty      */
+  /* Col 7 = Description — takes remaining space automatically */
+
+  /* Remove extra border on first row caused by divide-y adding border-top to tbody */
+  #transferCreateDiv table tbody {
+    border-top-width: 0 !important;
+  }
+
+  /* Text cells wrap long content */
+  #transferCreateDiv td:not(:first-child) {
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+  }
+
+  /* ── View table: fixed column widths ── */
+  #viewStockTransferDiv table {
+    table-layout: fixed;
+    min-width: 720px;
+  }
+
+  #viewStockTransferDiv th:nth-child(1),
+  #viewStockTransferDiv td:nth-child(1) {
+    width: 84px;
+    white-space: nowrap;
+  }
+
+  /* Actions    */
+  #viewStockTransferDiv th:nth-child(2),
+  #viewStockTransferDiv td:nth-child(2) {
+    width: 82px;
+  }
+
+  /* Transfer No         */
+  #viewStockTransferDiv th:nth-child(3),
+  #viewStockTransferDiv td:nth-child(3) {
+    width: 90px;
+  }
+
+  /* Date       */
+  #viewStockTransferDiv th:nth-child(4),
+  #viewStockTransferDiv td:nth-child(4) {
+    width: 120px;
+  }
+
+  /* Godown From     */
+  #viewStockTransferDiv th:nth-child(5),
+  #viewStockTransferDiv td:nth-child(5) {
+    width: 120px;
+  }
+
+  /* Godown To          */
+  #viewStockTransferDiv th:nth-child(6),
+  #viewStockTransferDiv td:nth-child(6) {
+    width: 72px;
+  }
+
+  /* Qty         */
+  /* Col 7 = Description — takes remaining space */
+
+  /* Text cells wrap in view table */
+  #viewStockTransferDiv td:not(:first-child) {
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+  }
+</style>
 {% endblock externalCSS %}
 {% block content %}
 <div class="bg-white rounded-xl p-5 mt-3">
@@ -164,7 +274,7 @@ Stock Transfer
       <div
         class="w-full lg:w-5/6 mr-auto xl:max-w-6xl 2xl:max-w-7xl overflow-x-auto shadow-sm rounded-md border border-slate-200 mt-5 mb-5"
         id="transferCreateDiv">
-        <table class="table-auto w-full divide-y divide-slate-200 text-sm">
+        <table class="table-auto w-full text-sm">
           <thead class="sticky top-0 bg-blue-200 text-gray-700 z-10">
             <tr>
               <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">
@@ -194,43 +304,42 @@ Stock Transfer
   <div id="viewDiv" class="hidden">
     <!-- Filter Section -->
     <div class="dateDiv mt-3">
-      <div class="flex justify-center items-end gap-5 mt-4">
+      <div class="flex justify-start items-end gap-5 mt-4 text-sm">
         <div>
-          <label class="block text-gray-700 text-sm">From Date*</label>
+          <label class="block text-gray-700 font-medium whitespace-nowrap">From Date*</label>
           <input type="date" id="from_date"
-            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500"
+            class="w-full mt-1 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
             required />
         </div>
         <div>
-          <label class="block text-gray-700 text-sm">End Date*</label>
+          <label class="block text-gray-700 font-medium whitespace-nowrap">End Date*</label>
           <input type="date" id="to_date"
-            class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500"
+            class="w-full mt-1 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
             required />
         </div>
         <div>
           <button id="dateFilter" type="button"
-            class="bg-blue-600 text-white px-5 py-2 mt-6 rounded-xl hover:bg-blue-700 transition-all">Filter</button>
+            class="bg-blue-600 text-white px-5 py-2 mt-6 rounded-md hover:bg-blue-700 transition-all text-sm font-medium">Filter</button>
         </div>
       </div>
     </div>
 
-    <div id="viewStockTransferDiv">
+    <div id="viewStockTransferDiv" class="hidden">
       <hr class="mt-5">
       <div class="overflow-x-auto mt-5 w-full shadow-sm rounded-md border border-slate-200">
-        <table class="table-auto w-full divide-y divide-slate-200 text-sm" id="viewStockTransferTable">
-          <thead class="bg-blue-200 text-gray-700 uppercase text-xs z-10 sticky top-0">
+        <table class="table-fixed w-full text-sm" id="viewStockTransferTable">
+          <thead class="bg-blue-200 text-gray-700 uppercase text-xs">
             <tr>
-              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">
-                Actions</th>
-              <th class="px-4 py-3 text-left font-medium">Transfer No</th>
-              <th class="px-4 py-3 text-left font-medium">Date</th>
-              <th class="px-4 py-3 text-left font-medium">Godown From</th>
-              <th class="px-4 py-3 text-left font-medium">Godown To</th>
-              <th class="px-4 py-3 text-right font-medium">Qty</th>
-              <th class="px-4 py-3 text-left font-medium">Description</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">Actions</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Transfer No</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Date</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Godown From</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Godown To</th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider">Qty</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Description</th>
             </tr>
           </thead>
-          <tbody class="bg-white divide-y divide-slate-100" id="viewStockTransferTableBody">
+          <tbody class="bg-white" id="viewStockTransferTableBody">
             <tr>
               <td colspan="7" class="px-4 py-3 text-center text-gray-500">No transfers found. Please select dates.</td>
             </tr>
@@ -298,30 +407,27 @@ Stock Transfer
     const transfer = held_transfers[i];
     var tableBody = document.getElementById("stockTransferTableBody");
     var newRow = `
-            <tr class="hover:bg-indigo-50/50 transition-all duration-200" data-editing="false">
-                <td class="px-1.5 py-1.5 text-center w-24 whitespace-nowrap">
-                    <button type="button" class="text-blue-500 hover:text-blue-700 p-1" onclick="editTransferRow(this)" title="Edit">
-                         <i data-lucide="edit-3" class="w-4 h-4 inline"></i>
-                    </button>
-                    <button type="button" class="text-red-500 hover:text-red-700 p-1" onclick="deleteTransferRow(this, '${transfer.id}')" title="Delete">
-                         <i data-lucide="trash-2" class="w-4 h-4 inline"></i>
-                    </button>
+            <tr class="border-b border-[#B0B0B0] odd:bg-white even:bg-[#E5E7EB] hover:bg-[#F0F8FF] transition-all duration-200" data-editing="false">
+                <td class="px-1.5 py-1.5 text-center w-24 whitespace-nowrap border-r border-[#B0B0B0]">
+                    <button type="button" class="text-blue-500 hover:text-blue-700 font-medium text-xs px-1" onclick="editTransferRow(this)" title="Edit">Edit</button>
+                    <span class="text-gray-300">|</span>
+                    <button type="button" class="text-red-500 hover:text-red-700 font-medium text-xs px-1" onclick="deleteTransferRow(this, '${transfer.id}')" title="Delete">Delete</button>
                     <input type="hidden" name="transfer_ids" value="${transfer.id}">
                 </td>
-                <td class="px-1.5 py-1.5 text-center text-sm w-12 sl">${i + 1}</td>
-                <td class="px-1.5 py-1.5 text-left text-sm w-32">
+                <td class="px-1.5 py-1.5 text-center text-sm w-12 sl border-r border-[#B0B0B0]">${i + 1}</td>
+                <td class="px-1.5 py-1.5 text-left text-sm w-32 border-r border-[#B0B0B0]">
                     ${transfer.date.split('T')[0]}
                     <input type="hidden" name="dates" value="${transfer.date.split('T')[0]}">
                 </td>
-                <td class="px-1.5 py-1.5 text-left text-sm w-40">
+                <td class="px-1.5 py-1.5 text-left text-sm w-40 border-r border-[#B0B0B0]">
                     ${transfer.godown_from}
                     <input type="hidden" name="godowns_from" value="${transfer.godown_from_id}">
                 </td>
-                <td class="px-1.5 py-1.5 text-left text-sm w-40">
+                <td class="px-1.5 py-1.5 text-left text-sm w-40 border-r border-[#B0B0B0]">
                     ${transfer.godown_to}
                     <input type="hidden" name="godowns_to" value="${transfer.godown_to_id}">
                 </td>
-                <td class="px-1.5 py-1.5 text-right text-sm w-24">
+                <td class="px-1.5 py-1.5 text-right text-sm w-24 border-r border-[#B0B0B0]">
                     ${transfer.qty}
                     <input type="hidden" name="qtys" value="${transfer.qty}">
                 </td>
@@ -337,6 +443,27 @@ Stock Transfer
   $(document).ready(function () {
     $('#date').val(new Date().toISOString().split('T')[0]);
   });
+
+  function refreshGodownBalances() {
+    fetch("{% url 'api-godown-balances' %}")
+      .then(response => response.json())
+      .then(data => {
+        $('#godownFrom option, #godownTo option').each(function () {
+          const id = $(this).val();
+          if (id && data[id] !== undefined) {
+            $(this).data('qty', parseFloat(data[id]));
+          }
+        });
+        // Re-trigger change to update displayed balance
+        if ($('#godownFrom').val()) {
+          $('#godownFrom').trigger('change');
+        }
+        if ($('#godownTo').val()) {
+          $('#godownTo').trigger('change');
+        }
+      })
+      .catch(error => console.error('Error refreshing godown balances:', error));
+  }
 
   $('#btnNew').on('click', function (e) {
     e.preventDefault();
@@ -420,7 +547,10 @@ Stock Transfer
     var godownId = $('#godownFrom').val();
 
     var qtyInGrid = godownId ? getGridQtyForGodown(godownId, activeEditingTransferId) : 0;
-    var availableQty = rawQty - qtyInGrid;
+    
+    // Allow increasing qty up to the original physical balance if editing a posted transfer
+    var originalQtyToRestore = (isViewUpdate && godownId === activeEditingOriginalGodownFromId) ? activeEditingOriginalQty : 0;
+    var availableQty = rawQty + originalQtyToRestore - qtyInGrid;
 
     if (qty > availableQty) {
       $(this).removeClass('border-gray-200 focus:ring-blue-500').addClass('border-red-500 focus:ring-red-500 focus:border-red-500');
@@ -455,6 +585,8 @@ Stock Transfer
 
 
   let activeEditingTransferId = null;
+  let activeEditingOriginalQty = 0;
+  let activeEditingOriginalGodownFromId = null;
 
   function addToTransferGrid() {
     const transfer_no = document.getElementById("transfer_no").value.trim();
@@ -468,7 +600,11 @@ Stock Transfer
     const description = $('#description').val();
 
     var qtyInGrid = godownFromId ? getGridQtyForGodown(godownFromId, activeEditingTransferId) : 0;
-    var availableQty = rawQty - qtyInGrid;
+    
+    // Allow increasing qty up to the original physical balance if editing a posted transfer
+    var originalQtyToRestore = (isViewUpdate && godownFromId === activeEditingOriginalGodownFromId) ? activeEditingOriginalQty : 0;
+    var availableQty = rawQty + originalQtyToRestore - qtyInGrid;
+
     console.log(date, godownFromId, godownToId, qty)
     if (!date || !godownFromId || !godownToId || !qty || qty <= 0) {
       showErrorModal("Please fill all required fields correctly.");
@@ -488,7 +624,6 @@ Stock Transfer
     const tableBody = $('#stockTransferTableBody');
     const rowCount = tableBody.find('tr').length + 1;
 
-    // Perform AJAX request to save this row incrementally via Hold logic
     fetch("{% url 'api-hold-transfer' %}", {
       method: "POST",
       headers: {
@@ -509,32 +644,46 @@ Stock Transfer
       .then((data) => {
         if (data.status === 'success') {
           const transfer_id = data.transfer_id;
+          const hold = data.hold;
+          
+          if (!hold) {
+            // If it's not a hold transfer, it means we edited a completed view-transfer
+            refreshGodownBalances();
+            clearForm();
+            $('#viewDiv').removeClass('hidden');
+            $('#createView').addClass('hidden');
+            $('#dateFilter').click(); // Refresh the list
+            $('#addToGridText').text('Add to Grid');
+            $('#addToGrid').removeClass('bg-green-500').addClass('bg-blue-500');
+            isViewUpdate = false;
+            activeEditingTransferId = null;
+            activeEditingOriginalQty = 0;
+            activeEditingOriginalGodownFromId = null;
+            return;
+          }
 
           const row = `
-                    <tr class="hover:bg-indigo-50/50 transition-all duration-200" data-editing="false">
-                        <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap">
-                            <button type="button" class="text-blue-500 text-xs hover:underline mr-2" onclick="editTransferRow(this)">
-                                 Edit
-                            </button>
-                            <button type="button" class="text-red-500 text-xs hover:underline" onclick="deleteTransferRow(this, '${transfer_id}')">
-                                 Delete
-                            </button>
+                    <tr class="border-b border-[#B0B0B0] odd:bg-white even:bg-[#E5E7EB] hover:bg-[#F0F8FF] transition-all duration-200" data-editing="false">
+                        <td class="px-1.5 py-1.5 text-center w-24 whitespace-nowrap border-r border-[#B0B0B0]">
+                            <button type="button" class="text-blue-500 font-medium text-xs px-1 hover:text-blue-700 mr-1" onclick="editTransferRow(this)">Edit</button>
+                            <span class="text-gray-300">|</span>
+                            <button type="button" class="text-red-500 font-medium text-xs px-1 hover:text-red-700 ml-1" onclick="deleteTransferRow(this, '${transfer_id}')">Delete</button>
                             <input type="hidden" name="transfer_ids" value="${transfer_id}">
                         </td>
-                        <td class="px-1.5 py-1.5 text-center text-sm w-12 sl">${rowCount}</td>
-                        <td class="px-1.5 py-1.5 text-left text-sm w-32">
+                        <td class="px-1.5 py-1.5 text-center text-sm w-12 sl border-r border-[#B0B0B0]">${rowCount}</td>
+                        <td class="px-1.5 py-1.5 text-left text-sm w-32 border-r border-[#B0B0B0]">
                             ${date}
                             <input type="hidden" name="dates" value="${date}">
                         </td>
-                        <td class="px-1.5 py-1.5 text-left text-sm w-40">
+                        <td class="px-1.5 py-1.5 text-left text-sm w-40 border-r border-[#B0B0B0]">
                             ${godownFromText}
                             <input type="hidden" name="godowns_from" value="${godownFromId}">
                         </td>
-                        <td class="px-1.5 py-1.5 text-left text-sm w-40">
+                        <td class="px-1.5 py-1.5 text-left text-sm w-40 border-r border-[#B0B0B0]">
                             ${godownToText}
                             <input type="hidden" name="godowns_to" value="${godownToId}">
                         </td>
-                        <td class="px-1.5 py-1.5 text-right text-sm w-24">
+                        <td class="px-1.5 py-1.5 text-right text-sm w-24 border-r border-[#B0B0B0]">
                             ${qty}
                             <input type="hidden" name="qtys" value="${qty}">
                         </td>
@@ -557,6 +706,8 @@ Stock Transfer
           $('#addToGridText').text('Add to Grid');
           $('#addToGrid').removeClass('bg-green-500').addClass('bg-blue-500');
           activeEditingTransferId = null;
+          activeEditingOriginalQty = 0;
+          activeEditingOriginalGodownFromId = null;
           updateSl();
 
           // Trigger change to recalculate balances in case the godown is still selected
@@ -627,8 +778,9 @@ Stock Transfer
   }
 
   function confirmDeleteTransfer() {
+    const action = _pendingDeleteAction;
     closeDeleteModal();
-    if (_pendingDeleteAction) _pendingDeleteAction();
+    if (action) action();
   }
 
   function deleteTransferRow(button, transferId) {
@@ -646,9 +798,7 @@ Stock Transfer
           if (data.status === 'success') {
             $(button).closest('tr').remove();
             updateSl();
-            if ($('#godownFrom').val()) {
-              $('#godownFrom').trigger('change');
-            }
+            refreshGodownBalances();
           } else {
             showErrorModal("Delete failed: " + data.message);
           }
@@ -675,6 +825,8 @@ Stock Transfer
         const tableBody = $('#viewStockTransferTableBody');
         tableBody.empty();
 
+        $('#viewStockTransferDiv').removeClass('hidden');
+
         if (!data.transfers || data.transfers.length === 0) {
           tableBody.append(`<tr><td colspan="7" class="px-4 py-3 text-center text-gray-500">No transfers found.</td></tr>`);
           return;
@@ -684,35 +836,32 @@ Stock Transfer
           const newRow = `
             <tr class="border-b border-[#B0B0B0] odd:bg-white even:bg-[#E5E7EB] hover:bg-[#F0F8FF] transition-all duration-200">
               <td class="px-1.5 py-1.5 text-center w-24 whitespace-nowrap border-r border-[#B0B0B0]">
-                <button type="button" class="text-blue-500 hover:text-blue-700 p-1" onclick="onViewUpdate(this)" title="Edit">
-                  <i data-lucide="edit-3" class="w-4 h-4 inline"></i>
-                </button>
-                <button type="button" class="text-red-500 hover:text-red-700 p-1" onclick="onViewDelete(this)" title="Delete">
-                  <i data-lucide="trash-2" class="w-4 h-4 inline"></i>
-                </button>
+                <button type="button" class="text-blue-500 hover:text-blue-700 font-medium text-xs px-1" onclick="onViewUpdate(this)" title="Edit">Edit</button>
+                <span class="text-gray-300">|</span>
+                <button type="button" class="text-red-500 hover:text-red-700 font-medium text-xs px-1" onclick="onViewDelete(this)" title="Delete">Delete</button>
                 <input type="hidden" name="transfer_ids" value="${transfer.id}">
               </td>
-              <td class="px-4 py-2 border-b">
+              <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">
                 ${transfer.transfer_no}
                 <input type="hidden" name="transfer_nos" value="${transfer.transfer_no}">
               </td>
-              <td class="px-4 py-2 border-b">
-                ${transfer.date.split('-').reverse().join('-')}
-                <input type="hidden" name="dates" value="${transfer.date}">
+              <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">
+                ${transfer.date.split('T')[0].split('-').reverse().join('-')}
+                <input type="hidden" name="dates" value="${transfer.date.split('T')[0]}">
               </td>
-              <td class="px-4 py-2 border-b">
+              <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">
                 ${transfer.godown_from}
                 <input type="hidden" name="godowns_from" value="${transfer.godown_from_id}">
               </td>
-              <td class="px-4 py-2 border-b">
+              <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">
                 ${transfer.godown_to}
                 <input type="hidden" name="godowns_to" value="${transfer.godown_to_id}">
               </td>
-              <td class="px-4 py-2 border-b text-right">
+              <td class="px-1.5 py-1.5 text-right text-sm search-area border-r border-[#B0B0B0]">
                 ${parseFloat(transfer.qty).toFixed(2)}
                 <input type="hidden" name="qtys" value="${transfer.qty}">
               </td>
-              <td class="px-4 py-2 border-b text-left">
+              <td class="px-1.5 py-1.5 text-left text-sm search-area">
                 ${transfer.description}
                 <input type="hidden" name="descriptions" value="${transfer.description}">
               </td>
@@ -757,6 +906,8 @@ Stock Transfer
     document.getElementById("description").value = inputs.description;
 
     activeEditingTransferId = inputs.transferId;
+    activeEditingOriginalQty = parseFloat(inputs.qty) || 0;
+    activeEditingOriginalGodownFromId = inputs.godownFromId;
 
     // Update button text
     $('#addToGridText').text('Update Grid');
@@ -780,6 +931,7 @@ Stock Transfer
         .then(data => {
           if (data.status === 'success') {
             selectedRow.remove();
+            refreshGodownBalances();
             if ($('#viewStockTransferTableBody tr').length === 0) {
               $('#viewStockTransferTableBody').append(`<tr><td colspan="7" class="px-4 py-3 text-center text-gray-500">No transfers found.</td></tr>`);
             }

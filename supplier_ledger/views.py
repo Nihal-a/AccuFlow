@@ -105,8 +105,8 @@ class SupplierLedgerView(View):
                 'type': 'NS',
                 'description': desc,
                 'qty': n.qty,
-                'rate': n.sell_rate,
-                'credit': n.sell_amount,
+                'rate': n.purchase_rate,
+                'credit': n.purchase_amount,
                 'debit': 0,
                 'created_at': n.created_at,
                 'original_obj': n
@@ -121,9 +121,9 @@ class SupplierLedgerView(View):
                 'type': 'NS',
                 'description': desc,
                 'qty': n.qty,
-                'rate': n.purchase_rate,
+                'rate': n.sell_rate,
                 'credit': 0,
-                'debit': n.purchase_amount,
+                'debit': n.sell_amount,
                 'created_at': n.created_at,
                 'original_obj': n
             })
@@ -162,10 +162,11 @@ class SupplierLedgerView(View):
                 'is_ob': True
              })
         
-        ledger_items.sort(key=lambda x: (x['date'], x['created_at']))
+        min_dt = timezone.make_aware(datetime.min) if timezone.get_current_timezone() else datetime.min
+        ledger_items.sort(key=lambda x: (x['date'], x.get('created_at') or min_dt))
 
         if sort == 'Serial':
-             ledger_items.sort(key=lambda x: x['transaction_no'])
+             ledger_items.sort(key=lambda x: (x['date'], x.get('created_at') or min_dt))
 
         running_val = start_balance
         credit_sum = Decimal('0.0000')
@@ -191,6 +192,14 @@ class SupplierLedgerView(View):
         if opening_flag == 'on':
             context['open_balance'] = 0
 
+
+
+        sno = 1
+        for item in final_ledgers:
+            if item.get('type') != 'OB':
+                item['sno'] = sno
+                sno += 1
+
         context['ledgers'] = final_ledgers
         context['has_transactions'] = any(item.get('type') != 'OB' for item in final_ledgers)
         context['credit_total'] = credit_sum
@@ -213,14 +222,14 @@ class SupplierLedgerView(View):
         
         purchases_sum = Purchases.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
         sales_sum = Sales.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
-        sender_sum = NSDs.objects.filter(nsd_base, sender_supplier=supplier).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0.0000')
-        receiver_sum = NSDs.objects.filter(nsd_base, receiver_supplier=supplier).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0.0000')
+        sender_sum = NSDs.objects.filter(nsd_base, sender_supplier=supplier).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0.0000')
+        receiver_sum = NSDs.objects.filter(nsd_base, receiver_supplier=supplier).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0.0000')
         
         cash_received = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
         cash_paid = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
         
-        transaction_balance = (sales_sum + receiver_sum + cash_paid) - (purchases_sum + sender_sum + cash_received)
+        transaction_balance = (purchases_sum + sender_sum + cash_received) - (sales_sum + receiver_sum + cash_paid)
         
-        static_ob = supplier.open_debit - supplier.open_credit
+        static_ob = supplier.open_credit - supplier.open_debit
         
         return static_ob + transaction_balance

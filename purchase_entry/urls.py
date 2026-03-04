@@ -8,4 +8,5 @@ urlpatterns = [
     path('api/purchases_by_date/', views.purchases_by_date, name='api-purchases-by-date'),
     path('api/hold_purchase/', views.PurchaseHold.as_view(), name='api-hold-purchase'),
     path('api/delete_purchase/', views.delete_purchase, name='api-delete-purchase'), 
+    path('api/balances/', views.purchase_balances_api, name='api-purchase-balances'),
 ] 

@@ -114,7 +114,7 @@ Customer Ledger
                         {% for ledger in ledgers %}
                         {% if ledger.type != 'OB' %}
                         <tr class="hover:bg-gray-50 divide-y divide-gray-300 odd:bg-white even:bg-gray-100">
-                            <td class="px-2 py-1 text-left font-medium">{% if opening == 'on' %}{{forloop.counter}}{% else %}{{forloop.counter0}}{% endif %}</td>
+                            <td class="px-2 py-1 text-left font-medium">{{ledger.sno}}</td>
                             <td class="px-2 py-1 text-left">{{ledger.date|date:"d-m-Y"}}</td>
                             <td class="px-2 py-1 text-left">{{ledger.transaction_no}}</td>
                             <td class="px-2 py-1 text-left">{{ledger.type}}</td>

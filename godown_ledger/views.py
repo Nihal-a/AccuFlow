@@ -4,7 +4,7 @@ from django.db.models import Sum, Q, Value, CharField, F
 from django.utils import timezone
 from decimal import Decimal
 from datetime import datetime
-from core.models import Customers, Godowns, Purchases, Sales, NSDs, Cashs
+from core.models import Customers, Godowns, Purchases, Sales, NSDs, Cashs, StockTransfers, Commissions
 from core.views import getClient
 from core.authorization import get_object_for_user
 from django.http import JsonResponse
@@ -66,7 +66,8 @@ class GodownLedgerView(View):
 
         purchases = Purchases.objects.filter(base_filter, date_filter, godown=godown)
         for p in purchases:
-            desc = f"{p.supplier.name}\n{p.description}" if sort != 'Remark' else p.description
+            supplier_name = p.supplier.name if p.supplier else (p.customer.name if hasattr(p, 'customer') and p.customer else '')
+            desc = f"{supplier_name}\n{p.description}" if sort != 'Remark' else p.description
             ledger_items.append({
                 'transaction_no': str(p.purchase_no),
                 'date': p.date,
@@ -82,7 +83,8 @@ class GodownLedgerView(View):
 
         sales = Sales.objects.filter(base_filter, date_filter, godown=godown)
         for s in sales:
-            desc = f"{s.customer.name}\n{s.description}" if sort != 'Detailed' else s.description
+            customer_name = s.customer.name if s.customer else (s.supplier.name if hasattr(s, 'supplier') and s.supplier else '')
+            desc = f"{customer_name}\n{s.description}" if sort != 'Detailed' else s.description
             ledger_items.append({
                 'transaction_no': str(s.sale_no),
                 'date': s.date,
@@ -96,6 +98,58 @@ class GodownLedgerView(View):
                 'original_obj': s
             })
 
+        # Stock Transfers OUT (credit = qty out)
+        transfer_base = Q(is_active=True, hold=False, client=client)
+        transfers_out = StockTransfers.objects.filter(transfer_base, date_filter, transfer_from=godown)
+        for t in transfers_out:
+            desc = f"To: {t.transfer_to.name if t.transfer_to else ''}" if sort != 'Remark' else t.description
+            ledger_items.append({
+                'transaction_no': str(t.transfer_no),
+                'date': t.date,
+                'type': 'ST',
+                'description': desc,
+                'qty': t.qty,
+                'rate': '',
+                'credit': t.qty,
+                'debit': 0,
+                'created_at': t.created_at,
+                'original_obj': t
+            })
+
+        # Stock Transfers IN (debit = qty in)
+        transfers_in = StockTransfers.objects.filter(transfer_base, date_filter, transfer_to=godown)
+        for t in transfers_in:
+            desc = f"From: {t.transfer_from.name if t.transfer_from else ''}" if sort != 'Remark' else t.description
+            ledger_items.append({
+                'transaction_no': str(t.transfer_no),
+                'date': t.date,
+                'type': 'ST',
+                'description': desc,
+                'qty': t.qty,
+                'rate': '',
+                'credit': 0,
+                'debit': t.qty,
+                'created_at': t.created_at,
+                'original_obj': t
+            })
+
+        # Commissions (credit = qty out, like sales)
+        commissions = Commissions.objects.filter(base_filter, date_filter, godown=godown)
+        for c in commissions:
+            expense_name = c.expense.category if c.expense else ''
+            desc = f"{expense_name}\n{c.description}" if sort != 'Remark' else c.description
+            ledger_items.append({
+                'transaction_no': str(c.commission_no),
+                'date': c.date,
+                'type': 'CM',
+                'description': desc,
+                'qty': c.qty,
+                'rate': c.amount,
+                'credit': c.qty,
+                'debit': 0,
+                'created_at': c.created_at,
+                'original_obj': c
+            })
         # sender_nsds = NSDs.objects.filter(base_filter, date_filter, sender_customer=customer)
         # for n in sender_nsds:
         #     desc = f"{n.receiver.name}\n{n.description}" if sort != 'Remark' else n.description
@@ -191,6 +245,12 @@ class GodownLedgerView(View):
         if opening_flag == 'on':
             context['open_balance'] = 0
 
+        sno = 1
+        for item in final_ledgers:
+            if item.get('type') != 'OB':
+                item['sno'] = sno
+                sno += 1
+
         context['ledgers'] = final_ledgers
         context['has_transactions'] = len([l for l in final_ledgers if l.get('type') != 'OB']) > 0
         context['credit_total'] = credit_sum
@@ -209,12 +269,17 @@ class GodownLedgerView(View):
 
     def calculate_opening_balance(self, godown, client, date_limit):
         base_filter = Q(is_active=True, hold=False, client=client, godown=godown, date__lt=date_limit)
-        nsd_base = Q(is_active=True, hold=False, client=client, date__lt=date_limit)
+        transfer_filter_from = Q(is_active=True, hold=False, client=client, transfer_from=godown, date__lt=date_limit)
+        transfer_filter_to = Q(is_active=True, hold=False, client=client, transfer_to=godown, date__lt=date_limit)
         
         purchases_sum = Purchases.objects.filter(base_filter).aggregate(s=Sum('qty'))['s'] or Decimal('0.0000')
         sales_sum = Sales.objects.filter(base_filter).aggregate(s=Sum('qty'))['s'] or Decimal('0.0000')
+        commissions_sum = Commissions.objects.filter(base_filter).aggregate(s=Sum('qty'))['s'] or Decimal('0.0000')
         
-        transaction_balance = (sales_sum ) - (purchases_sum )
+        transfers_in_sum = StockTransfers.objects.filter(transfer_filter_to).aggregate(s=Sum('qty'))['s'] or Decimal('0.0000')
+        transfers_out_sum = StockTransfers.objects.filter(transfer_filter_from).aggregate(s=Sum('qty'))['s'] or Decimal('0.0000')
+        
+        transaction_balance = (purchases_sum + transfers_in_sum) - (sales_sum + transfers_out_sum + commissions_sum)
         
         static_ob = (godown.open_debit or Decimal('0.0000')) - (godown.open_credit or Decimal('0.0000'))
         

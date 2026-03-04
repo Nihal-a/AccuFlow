@@ -10,6 +10,7 @@ from django.utils.dateparse import parse_date
 from core.views import getClient, update_ledger
 from core.authorization import get_object_for_user
 from core.utils import validate_positive_decimal
+from django.db import transaction
 
 class CashEntryView(View):
     def get(self,request):
@@ -61,6 +62,7 @@ class CashEntryView(View):
     
 
 class CashAddView(View):
+    @transaction.atomic
     def post(self,request):
         dates = request.POST.getlist('dates')
         amounts = request.POST.getlist('amounts')
@@ -69,6 +71,11 @@ class CashAddView(View):
         cash_ids = request.POST.getlist('cash_ids') 
         types = request.POST.getlist('type')
         transactions = request.POST.getlist('transactions')
+        
+        expected_len = len(cash_ids)
+        if not all(len(lst) == expected_len for lst in [dates, amounts, supplier_ids, cashbanks_ids, types, transactions]):
+            return redirect('cash')
+            
         count = 0
         for id in cash_ids:
             customer = None
@@ -122,6 +129,7 @@ class CashAddView(View):
 
 
 class CashHold(View):
+    @transaction.atomic
     def post(self,request):
         data = json.loads(request.body)
         cash_no = data.get('cash_no')

@@ -336,9 +336,9 @@ class Purchases(SoftDeleteMixin):
     
 class Sales(SoftDeleteMixin):
     sale_no = models.TextField(blank=True,null=True)
-    supplier = models.ForeignKey(Suppliers, on_delete=models.CASCADE, blank=True, null=True)
-    godown = models.ForeignKey(Godowns, on_delete=models.CASCADE, blank=True, null=True)
-    customer = models.ForeignKey(Customers, on_delete=models.CASCADE, blank=True, null=True)
+    supplier = models.ForeignKey(Suppliers, on_delete=models.RESTRICT, blank=True, null=True)
+    godown = models.ForeignKey(Godowns, on_delete=models.RESTRICT, blank=True, null=True)
+    customer = models.ForeignKey(Customers, on_delete=models.RESTRICT, blank=True, null=True)
     date = models.DateField(blank=True,null=True)
     code = models.TextField(blank=True,null=True)
     qty = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
@@ -374,8 +374,8 @@ class Sales(SoftDeleteMixin):
 
 class Commissions(SoftDeleteMixin):
     commission_no = models.TextField(blank=True,null=True)
-    expense = models.ForeignKey(Expenses, on_delete=models.CASCADE, blank=True, null=True)
-    godown = models.ForeignKey(Godowns, on_delete=models.CASCADE, blank=True, null=True)
+    expense = models.ForeignKey(Expenses, on_delete=models.RESTRICT, blank=True, null=True)
+    godown = models.ForeignKey(Godowns, on_delete=models.RESTRICT, blank=True, null=True)
     date = models.DateField(blank=True,null=True)
     code = models.TextField(blank=True,null=True)
     qty = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
@@ -398,10 +398,10 @@ class Commissions(SoftDeleteMixin):
 
 class NSDs(SoftDeleteMixin):
     nsd_no = models.TextField(blank=True,null=True)
-    sender_supplier = models.ForeignKey(Suppliers, on_delete=models.CASCADE, blank=True, null=True,related_name='sender_supplier')
-    sender_customer = models.ForeignKey(Customers, on_delete=models.CASCADE, blank=True, null=True,related_name='sender_customer')
-    receiver_supplier = models.ForeignKey(Suppliers, on_delete=models.CASCADE, blank=True, null=True,related_name='receiver_supplier')
-    receiver_customer = models.ForeignKey(Customers, on_delete=models.CASCADE, blank=True, null=True,related_name='receiver_customer')
+    sender_supplier = models.ForeignKey(Suppliers, on_delete=models.RESTRICT, blank=True, null=True,related_name='sender_supplier')
+    sender_customer = models.ForeignKey(Customers, on_delete=models.RESTRICT, blank=True, null=True,related_name='sender_customer')
+    receiver_supplier = models.ForeignKey(Suppliers, on_delete=models.RESTRICT, blank=True, null=True,related_name='receiver_supplier')
+    receiver_customer = models.ForeignKey(Customers, on_delete=models.RESTRICT, blank=True, null=True,related_name='receiver_customer')
     date = models.DateField(blank=True,null=True)
     code = models.TextField(blank=True,null=True)
     qty = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
@@ -459,9 +459,9 @@ class NSDs(SoftDeleteMixin):
         
 class Cashs(SoftDeleteMixin):
     cash_no = models.TextField(blank=True,null=True)
-    cash_bank = models.ForeignKey(CashBanks, on_delete=models.CASCADE, blank=True, null=True)
-    customer = models.ForeignKey(Customers, on_delete=models.CASCADE, blank=True, null=True)
-    supplier = models.ForeignKey(Suppliers, on_delete=models.CASCADE, blank=True, null=True)
+    cash_bank = models.ForeignKey(CashBanks, on_delete=models.RESTRICT, blank=True, null=True)
+    customer = models.ForeignKey(Customers, on_delete=models.RESTRICT, blank=True, null=True)
+    supplier = models.ForeignKey(Suppliers, on_delete=models.RESTRICT, blank=True, null=True)
     date = models.DateField(blank=True,null=True)
     amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
     created_at = models.DateTimeField(auto_now_add=True,blank=True,null=True)
