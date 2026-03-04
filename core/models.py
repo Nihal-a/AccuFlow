@@ -255,7 +255,7 @@ class Godowns(SoftDeleteMixin):
     client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
     credit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
     debit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
-    qty = models.IntegerField(default=0)
+    qty = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
     open_balance = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
     otc_balance = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
     

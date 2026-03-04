@@ -11,6 +11,7 @@ from django.db.models import F
 from core.views import getClient, update_ledger
 from core.authorization import get_object_for_user
 from core.utils import validate_positive_decimal
+from decimal import Decimal
 
 class PurchaseEntryView(View):
     def get(self,request):
@@ -89,12 +90,12 @@ class PurchaseAddView(View):
                     supplier = get_object_for_user(Suppliers, request.user, id=supplier_ids[count]) if supplier_ids[count] else None
                     seller = supplier
                 godown = get_object_for_user(Godowns, request.user, id=godown_ids[count]) if godown_ids[count] else None
-                purchase = Purchases.objects.get(id=id)
+                purchase = get_object_for_user(Purchases, request.user, id=id)
                 
                 # Validation
-                qty_val = qtys[count]
-                total_amount_val = total_amounts[count]
-                amount_val = amounts[count]
+                qty_val = Decimal(str(qtys[count] or 0))
+                amount_val = Decimal(str(amounts[count] or 0))
+                total_amount_val = qty_val * amount_val
 
                 if purchase.hold:
                     godown.qty = F('qty') + qty_val  
@@ -131,9 +132,9 @@ class PurchaseHold(View):
             supplier = data.get('supplier')
             godown = data.get('godown')
             date = data.get('date')
-            qty =data.get('qty')
-            amount = data.get('amount')
-            total_amount = data.get('total_amount')
+            qty = Decimal(str(data.get('qty', 0)))
+            amount = Decimal(str(data.get('amount', 0)))
+            total_amount = qty * amount
             description = data.get('description')
             type_value = data.get('type')
             customer = None

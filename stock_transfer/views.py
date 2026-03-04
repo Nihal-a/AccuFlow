@@ -138,6 +138,7 @@ def getLastTransferNo(client):
         return 1
 
 from core.authorization import get_object_for_user
+from core.utils import validate_positive_decimal
 
 class StockTransferHoldView(View):
     def post(self, request):

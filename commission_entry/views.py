@@ -64,13 +64,13 @@ class CommissionAddView(View):
             godown = get_object_or_404(Godowns, id=godown_ids[count]) if godown_ids[count] else None
             
             # Validation
-            qty_val = validate_positive_decimal(qtys[count], "Quantity")
-            amount_val = validate_positive_decimal(amounts[count], "Amount")
-            total_amount_val = validate_positive_decimal(total_amounts[count], "Total Amount")
+            qty_val = Decimal(str(qtys[count] or 0))
+            amount_val = Decimal(str(amounts[count] or 0))
+            total_amount_val = qty_val * amount_val
 
             godown.qty -= qty_val
             godown.save()
-            commission = Commissions.objects.get(id=id)
+            commission = get_object_for_user(Commissions, request.user, id=id)
             commission.godown_balance = godown.qty
             commission.expense = expense
             commission.godown = godown
@@ -95,9 +95,9 @@ class CommissionHold(View):
         expense = data.get('expense')
         godown = data.get('godown')
         date = data.get('date')
-        qty = validate_positive_decimal(data.get('qty'), "Quantity")
-        amount = validate_positive_decimal(data.get('amount'), "Amount")
-        total_amount = validate_positive_decimal(data.get('total_amount'), "Total Amount")
+        qty = Decimal(str(data.get('qty', 0)))
+        amount = Decimal(str(data.get('amount', 0)))
+        total_amount = qty * amount
         description = data.get('description')
 
         expense = get_object_or_404(Expenses, id=expense) if expense else None

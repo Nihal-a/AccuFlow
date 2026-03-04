@@ -9,6 +9,8 @@ from django.utils.dateparse import parse_date
 
 from core.views import getClient, update_ledger
 from core.authorization import get_object_for_user
+from decimal import Decimal
+from django.core.exceptions import ValidationError
 
 class SaleEntryView(View):
     def get(self,request):
@@ -90,18 +92,23 @@ class SaleAddView(View):
                 seller = supplier
             # Authorization: Ensure godown belongs to user's client
             godown = get_object_for_user(Godowns, request.user, id=godown_ids[count]) if godown_ids[count] else None
-            sale = Sales.objects.get(id=id)
-            godown.qty -= float(qtys[count])    
+            sale = get_object_for_user(Sales, request.user, id=id)
+            
+            qty_val = Decimal(str(qtys[count] or 0))
+            amount_val = Decimal(str(amounts[count] or 0))
+            total_amount_val = qty_val * amount_val
+            
+            godown.qty = Decimal(str(godown.qty)) - qty_val
             godown.save()
-            update_ledger(where=None,to=seller,new_purchase=total_amounts[count],new_sale=total_amounts[count]) 
+            update_ledger(where=None,to=seller,new_purchase=total_amount_val,new_sale=total_amount_val) 
             sale.seller_balance = seller.balance
             sale.purchaser_balance = godown.get_balance
             sale.supplier = supplier
             sale.godown = godown
             sale.date = dates[count]
-            sale.qty = qtys[count]
-            sale.amount = amounts[count]
-            sale.total_amount = total_amounts[count]    
+            sale.qty = qty_val
+            sale.amount = amount_val
+            sale.total_amount = total_amount_val    
             sale.hold = False
             sale.customer = customer
             sale.client=getClient(request.user)
@@ -120,9 +127,9 @@ class SaleHold(View):
         supplier = data.get('customer')
         godown = data.get('godown')
         date = data.get('date')
-        qty = data.get('qty')
-        amount = data.get('amount')
-        total_amount = data.get('total_amount')
+        qty = Decimal(str(data.get('qty', 0)))
+        amount = Decimal(str(data.get('amount', 0)))
+        total_amount = qty * amount
         description = data.get('description')
         type_value = data.get('type')
         customer = None
