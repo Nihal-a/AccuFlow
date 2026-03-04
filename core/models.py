@@ -275,6 +275,7 @@ class CashBanks(SoftDeleteMixin):
     is_active = models.BooleanField(default=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
     client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
+    balance = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
     
     def __str__(self):
         return self.name
@@ -471,6 +472,7 @@ class Cashs(SoftDeleteMixin):
     transaction = models.TextField(blank=True,null=True)
     client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
     party_balance = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
+    cash_bank_balance = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
      
     
     

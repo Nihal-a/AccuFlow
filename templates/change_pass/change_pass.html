@@ -113,15 +113,24 @@
 
   password2.addEventListener("input", function () {
     const val = this.value;
-    isPValid = val.length >= 8;
-    if (val.length > 0 && val.length < 8) {
+    const commonPasswords = ["12345678", "password", "qwertyui", "123456789", "11223344"];
+
+    isPValid = false;
+    if (val.length === 0) {
+      passwordStrength.textContent = "";
+    } else if (val.length < 8) {
       passwordStrength.textContent = "❌ Too Short (Min 8 characters)";
       passwordStrength.className = "text-red-500 text-xs";
-    } else if (val.length >= 8) {
+    } else if (/^\d+$/.test(val)) {
+      passwordStrength.textContent = "❌ This password is entirely numeric.";
+      passwordStrength.className = "text-red-500 text-xs";
+    } else if (commonPasswords.includes(val.toLowerCase())) {
+      passwordStrength.textContent = "❌ This password is too common.";
+      passwordStrength.className = "text-red-500 text-xs";
+    } else {
       passwordStrength.textContent = "✅ Secure length";
       passwordStrength.className = "text-green-600 text-xs";
-    } else {
-      passwordStrength.textContent = "";
+      isPValid = true;
     }
 
     isPMatch = password3.value === val && val.length > 0;

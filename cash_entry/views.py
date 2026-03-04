@@ -87,14 +87,22 @@ class CashAddView(View):
             # Validation
             amount_val = validate_positive_decimal(amounts[count], "Amount")
 
-            # Updating Ledger (Assuming Active)
+            # Management: Update Party Ledger (moving from hold=True to hold=False)
             if transactions[count] == 'Paid':
-                update_ledger(where=None,to=seller,new_sale=amount_val,old_sale=0)
+                update_ledger(where=None, to=seller, new_sale=amount_val, old_sale=0)
             else: 
-                update_ledger(where=seller,to=None,new_purchase=amount_val,old_purchase=0)
-            
+                update_ledger(where=seller, to=None, new_purchase=amount_val, old_purchase=0)
+
             # Authorization: Ensure cash_bank belongs to user's client
             cash_bank = get_object_for_user(CashBanks, request.user, id=cashbanks_ids[count]) if cashbanks_ids[count] else None
+            
+            # Management: Update CashBank balance now that it's finalized (hold=False)
+            if cash_bank:
+                if transactions[count] == 'Received':
+                    cash_bank.balance += amount_val
+                else:
+                    cash_bank.balance -= amount_val
+                cash_bank.save()
             # Authorization: Ensure cash belongs to user's client
             cash = get_object_for_user(Cashs, request.user, id=id)
             cash.party_balance = seller.balance
@@ -102,6 +110,7 @@ class CashAddView(View):
             cash.supplier = supplier
             cash.customer = customer
             cash.cash_bank = cash_bank
+            cash.cash_bank_balance = cash_bank.balance if cash_bank else 0
             cash.date = dates[count]
             cash.amount = amount_val
             cash.hold = False 
@@ -143,37 +152,44 @@ class CashHold(View):
             # Authorization: Ensure cash belongs to user's client
             cash = get_object_for_user(Cashs, request.user, id=cash_id)
             
-            # 1. Reverse Old if Active
+            cash.party_balance -= cash.amount
+            
+            if cash.cash_bank and not cash.hold:
+                if cash.transaction == 'Received':
+                    cash.cash_bank.balance -= cash.amount
+                else:
+                    cash.cash_bank.balance += cash.amount
+                cash.cash_bank.save()
+
             if not cash.hold:
                 if cash.transaction == 'Paid':
                     update_ledger(where=None, to=cash.party, old_sale=cash.amount)
                 else:
                     update_ledger(where=cash.party, to=None, old_purchase=cash.amount)
             
-            # Update Object
-            cash.party_balance -= cash.amount # Not sure if accurate due to re-calc, but following existing pattern logic? 
-            # Actually, `party_balance` field seems static snapshot? 
-            # I will just update the amount logic.
-            
-            # If we are changing party, party_balance logic is tricky. 
-            # But update_ledger handles the REAL balance on the Party model.
-            
-            cash.party_balance += amount # This simple math is risky if party changed.
-            # But sticking to previous logic style for now, focusing on ledger correctness.
-            
             cash.cash_no = cash_no
             cash.supplier = supplier
             cash.customer = customer
-            # Authorization: Ensure cash_bank belongs to user's client
-            cash.cash_bank = get_object_for_user(CashBanks, request.user, id=cash_bank_id) if cash_bank_id else None
+            cash_bank = get_object_for_user(CashBanks, request.user, id=cash_bank_id) if cash_bank_id else None
+            cash.cash_bank = cash_bank
             cash.date = date
             cash.amount = amount
             cash.description = description
             cash.transaction = transaction
             cash.client=getClient(request.user)
-            cash.save() # Note: cash.hold state is preserved? User code didn't change it explicitly here.
             
-            # 2. Add New if Active (still not hold)
+            cash.party_balance += amount
+            
+            if cash_bank and not cash.hold:
+                if transaction == 'Received':
+                    cash_bank.balance += amount
+                else:
+                    cash_bank.balance -= amount
+                cash_bank.save()
+                cash.cash_bank_balance = cash_bank.balance
+            
+            cash.save()
+            
             if not cash.hold:
                 if transaction == 'Paid':
                     update_ledger(where=None, to=seller, new_sale=amount)
@@ -182,18 +198,21 @@ class CashHold(View):
             
             return JsonResponse({'status':'success','message':'Cash held successfully','cash_id':cash.id,'hold':cash.hold,'cb_id':cash_bank_id}) 
         
+        cash_bank = get_object_for_user(CashBanks, request.user, id=cash_bank_id) if cash_bank_id else None
+        # Note: No ledger or bank update here as hold is always True for new grid entries
         cash = Cashs.objects.create(
             cash_no = cash_no,
             supplier = supplier,
             customer = customer, 
-            # Authorization: Ensure cash_bank belongs to user's client
-            cash_bank = get_object_for_user(CashBanks, request.user, id=cash_bank_id) if cash_bank_id else None,
+            cash_bank = cash_bank,
             date = date,
             amount = amount,
             description = description,
             transaction = transaction,
             hold = True,
-            client=getClient(request.user)
+            client=getClient(request.user),
+            party_balance = amount,
+            cash_bank_balance = cash_bank.balance if cash_bank else 0
         )
         return JsonResponse({'status':'success','message':'Cash held successfully','cash_id':cash.id,'hold':cash.hold,'cb_id':cash_bank_id})
 
@@ -248,16 +267,22 @@ def cashs_by_date(request):
 
 def delete_cash(request):
     pk = request.GET.get('id') 
-    # Authorization: Ensure cash belongs to user's client
     cash = get_object_for_user(Cashs, request.user, id=pk)
-    cash.is_active = False
     
-    # Fix: Only reverse ledger if the cash entry was active (not hold)
+    # Reverse CashBank balance ONLY if finalized (hold=False)
+    if cash.cash_bank and not cash.hold:
+        if cash.transaction == 'Received':
+            cash.cash_bank.balance -= cash.amount
+        else:
+            cash.cash_bank.balance += cash.amount
+        cash.cash_bank.save()
+
     if not cash.hold:
         if cash.transaction == 'Paid':
             update_ledger(where=None, to=cash.party, old_sale=cash.amount, new_sale=0)
         else:
             update_ledger(where=cash.party, to=None, old_purchase=cash.amount, new_purchase=0)
             
+    cash.is_active = False
     cash.save()
     return JsonResponse({'status':'success','message':'Cash deleted successfully'})

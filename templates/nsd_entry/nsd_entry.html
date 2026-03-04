@@ -2,21 +2,77 @@
 {% block externalCSS %}
 <style>
   /* ── Hold table: fixed column widths ── */
-  #nsdCreateDiv table { table-layout: fixed; min-width: 720px; }
+  #nsdCreateDiv table {
+    table-layout: fixed;
+    min-width: 720px;
+  }
 
-  #nsdCreateDiv th:nth-child(1), #nsdCreateDiv td:nth-child(1) { width: 84px;  white-space: nowrap; } /* Actions        */
-  #nsdCreateDiv th:nth-child(2), #nsdCreateDiv td:nth-child(2) { width: 40px;  } /* S.No            */
-  #nsdCreateDiv th:nth-child(3), #nsdCreateDiv td:nth-child(3) { width: 100px; } /* Customer        */
-  #nsdCreateDiv th:nth-child(4), #nsdCreateDiv td:nth-child(4) { width: 180px; } /* Description     */
-  #nsdCreateDiv th:nth-child(5), #nsdCreateDiv td:nth-child(5) { width: 100px; } /* Supplier        */
-  #nsdCreateDiv th:nth-child(6), #nsdCreateDiv td:nth-child(6) { width: 55px;  } /* Qty             */
-  #nsdCreateDiv th:nth-child(7), #nsdCreateDiv td:nth-child(7) { width: 72px;  } /* Sell Rate       */
-  #nsdCreateDiv th:nth-child(8), #nsdCreateDiv td:nth-child(8) { width: 80px;  } /* Sell Amount     */
-  #nsdCreateDiv th:nth-child(9), #nsdCreateDiv td:nth-child(9) { width: 75px;  } /* Purchase Rate   */
-  #nsdCreateDiv th:nth-child(10), #nsdCreateDiv td:nth-child(10) { width: 80px; } /* Purchase Amt   */
+  #nsdCreateDiv th:nth-child(1),
+  #nsdCreateDiv td:nth-child(1) {
+    width: 84px;
+    white-space: nowrap;
+  }
+
+  /* Actions        */
+  #nsdCreateDiv th:nth-child(2),
+  #nsdCreateDiv td:nth-child(2) {
+    width: 40px;
+  }
+
+  /* S.No            */
+  #nsdCreateDiv th:nth-child(3),
+  #nsdCreateDiv td:nth-child(3) {
+    width: 100px;
+  }
+
+  /* Customer        */
+  #nsdCreateDiv th:nth-child(4),
+  #nsdCreateDiv td:nth-child(4) {
+    width: 180px;
+  }
+
+  /* Description     */
+  #nsdCreateDiv th:nth-child(5),
+  #nsdCreateDiv td:nth-child(5) {
+    width: 100px;
+  }
+
+  /* Supplier        */
+  #nsdCreateDiv th:nth-child(6),
+  #nsdCreateDiv td:nth-child(6) {
+    width: 55px;
+  }
+
+  /* Qty             */
+  #nsdCreateDiv th:nth-child(7),
+  #nsdCreateDiv td:nth-child(7) {
+    width: 72px;
+  }
+
+  /* Sell Rate       */
+  #nsdCreateDiv th:nth-child(8),
+  #nsdCreateDiv td:nth-child(8) {
+    width: 80px;
+  }
+
+  /* Sell Amount     */
+  #nsdCreateDiv th:nth-child(9),
+  #nsdCreateDiv td:nth-child(9) {
+    width: 75px;
+  }
+
+  /* Purchase Rate   */
+  #nsdCreateDiv th:nth-child(10),
+  #nsdCreateDiv td:nth-child(10) {
+    width: 80px;
+  }
+
+  /* Purchase Amt   */
 
   /* Remove extra border on first row caused by divide-y */
-  #nsdCreateDiv table tbody { border-top-width: 0 !important; }
+  #nsdCreateDiv table tbody {
+    border-top-width: 0 !important;
+  }
 
   /* Text cells wrap long content */
   #nsdCreateDiv td:not(:first-child) {
@@ -26,19 +82,79 @@
   }
 
   /* ── View table: fixed column widths ── */
-  #viewNSDDiv table { table-layout: fixed; min-width: 720px; }
+  #viewNSDDiv table {
+    table-layout: fixed;
+    min-width: 720px;
+  }
 
-  #viewNSDDiv th:nth-child(1), #viewNSDDiv td:nth-child(1) { width: 84px;  white-space: nowrap; } /* Actions        */
-  #viewNSDDiv th:nth-child(2), #viewNSDDiv td:nth-child(2) { width: 40px;  } /* S.No            */
-  #viewNSDDiv th:nth-child(3), #viewNSDDiv td:nth-child(3) { width: 80px;  white-space: nowrap; } /* Date           */
-  #viewNSDDiv th:nth-child(4), #viewNSDDiv td:nth-child(4) { width: 100px; } /* Customer        */
-  #viewNSDDiv th:nth-child(5), #viewNSDDiv td:nth-child(5) { width: 180px; } /* Description     */
-  #viewNSDDiv th:nth-child(6), #viewNSDDiv td:nth-child(6) { width: 100px; } /* Supplier        */
-  #viewNSDDiv th:nth-child(7), #viewNSDDiv td:nth-child(7) { width: 55px;  } /* Qty             */
-  #viewNSDDiv th:nth-child(8), #viewNSDDiv td:nth-child(8) { width: 72px;  } /* Sell Rate       */
-  #viewNSDDiv th:nth-child(9), #viewNSDDiv td:nth-child(9) { width: 80px;  } /* Sell Amount     */
-  #viewNSDDiv th:nth-child(10), #viewNSDDiv td:nth-child(10) { width: 75px; } /* Purchase Rate  */
-  #viewNSDDiv th:nth-child(11), #viewNSDDiv td:nth-child(11) { width: 80px; } /* Purchase Amt   */
+  #viewNSDDiv th:nth-child(1),
+  #viewNSDDiv td:nth-child(1) {
+    width: 84px;
+    white-space: nowrap;
+  }
+
+  /* Actions        */
+  #viewNSDDiv th:nth-child(2),
+  #viewNSDDiv td:nth-child(2) {
+    width: 40px;
+  }
+
+  /* S.No            */
+  #viewNSDDiv th:nth-child(3),
+  #viewNSDDiv td:nth-child(3) {
+    width: 80px;
+    white-space: nowrap;
+  }
+
+  /* Date           */
+  #viewNSDDiv th:nth-child(4),
+  #viewNSDDiv td:nth-child(4) {
+    width: 100px;
+  }
+
+  /* Customer        */
+  #viewNSDDiv th:nth-child(5),
+  #viewNSDDiv td:nth-child(5) {
+    width: 180px;
+  }
+
+  /* Description     */
+  #viewNSDDiv th:nth-child(6),
+  #viewNSDDiv td:nth-child(6) {
+    width: 100px;
+  }
+
+  /* Supplier        */
+  #viewNSDDiv th:nth-child(7),
+  #viewNSDDiv td:nth-child(7) {
+    width: 55px;
+  }
+
+  /* Qty             */
+  #viewNSDDiv th:nth-child(8),
+  #viewNSDDiv td:nth-child(8) {
+    width: 72px;
+  }
+
+  /* Sell Rate       */
+  #viewNSDDiv th:nth-child(9),
+  #viewNSDDiv td:nth-child(9) {
+    width: 80px;
+  }
+
+  /* Sell Amount     */
+  #viewNSDDiv th:nth-child(10),
+  #viewNSDDiv td:nth-child(10) {
+    width: 75px;
+  }
+
+  /* Purchase Rate  */
+  #viewNSDDiv th:nth-child(11),
+  #viewNSDDiv td:nth-child(11) {
+    width: 80px;
+  }
+
+  /* Purchase Amt   */
 
   /* Text cells wrap in view table */
   #viewNSDDiv td:not(:first-child) {
@@ -77,8 +193,8 @@
         </div>
         <div class="w-[65%] sm:w-[68%] md:w-[45%] flex items-center pr-2 md:pr-0">
           <input type="text" name="" value="{{ last_nsd_no }}" id="nsd_name" placeholder="Enter nsd No"
-            class="w-full px-2.5 py-1.5 border rounded-md focus:ring-1 focus:ring-blue-500 bg-gray-50 bg-opacity-50" disabled
-            required />
+            class="w-full px-2.5 py-1.5 border rounded-md focus:ring-1 focus:ring-blue-500 bg-gray-50 bg-opacity-50"
+            disabled required />
           <input type="hidden" name="" id="nsdId" placeholder="" />
         </div>
       </div>
@@ -90,8 +206,7 @@
         </div>
         <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
           <input type="date" name="" id="date"
-            class="w-full px-2.5 py-1.5 border rounded-md focus:ring-1 focus:ring-blue-500"
-            required />
+            class="w-full px-2.5 py-1.5 border rounded-md focus:ring-1 focus:ring-blue-500" required />
         </div>
       </div>
 
@@ -110,8 +225,8 @@
             class="w-full px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required>
             <option value="" selected>Select Supplier</option>
             {% for supplier in suppliers %}
-            <option value="{{ supplier.id }}" data-code="{{supplier.supplierId}}"
-              data-balance="{{supplier.balance}}" data-type="suppliers">{{ supplier.name }}</option>
+            <option value="{{ supplier.id }}" data-code="{{supplier.supplierId}}" data-balance="{{supplier.balance}}"
+              data-type="suppliers">{{ supplier.name }}</option>
             {% endfor %}
           </select>
         </div>
@@ -126,7 +241,8 @@
         </div>
         <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
           <input type="text" name="" id="supplierID" placeholder="" disabled
-            class="w-full md:w-[70%] px-2.5 py-1.5 border rounded-md bg-gray-50 bg-opacity-50 focus:ring-1 focus:ring-blue-500" required />
+            class="w-full md:w-[70%] px-2.5 py-1.5 border rounded-md bg-gray-50 bg-opacity-50 focus:ring-1 focus:ring-blue-500"
+            required />
         </div>
       </div>
 
@@ -145,8 +261,8 @@
             class="w-full px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required>
             <option value="" selected>Select Customer</option>
             {% for customer in customers %}
-            <option value="{{ customer.id }}" data-code="{{customer.customerId}}"
-              data-balance="{{customer.balance}}" data-type="customers">{{ customer.name }}</option>
+            <option value="{{ customer.id }}" data-code="{{customer.customerId}}" data-balance="{{customer.balance}}"
+              data-type="customers">{{ customer.name }}</option>
             {% endfor %}
           </select>
         </div>
@@ -161,7 +277,8 @@
         </div>
         <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
           <input type="text" name="" id="customerID" placeholder="" disabled
-            class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md bg-gray-50 bg-opacity-50 focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+            class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md bg-gray-50 bg-opacity-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            required />
         </div>
       </div>
 
@@ -172,7 +289,8 @@
         </div>
         <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
           <input type="number" name="" id="qty" placeholder="Enter Quantity"
-            class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+            class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+            required />
         </div>
       </div>
 
@@ -183,7 +301,8 @@
         </div>
         <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
           <input type="number" name="" id="sell_rate" placeholder="Enter Rate"
-            class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+            class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+            required />
         </div>
       </div>
 
@@ -194,7 +313,8 @@
         </div>
         <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
           <input type="number" name="" id="sell_amount" placeholder="" disabled
-            class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md bg-gray-50 bg-opacity-50 focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+            class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md bg-gray-50 bg-opacity-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            required />
         </div>
       </div>
 
@@ -205,7 +325,8 @@
         </div>
         <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
           <input type="number" name="" id="purchase_rate" placeholder="Enter Rate"
-            class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+            class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+            required />
         </div>
       </div>
 
@@ -216,7 +337,8 @@
         </div>
         <div class="w-[65%] sm:w-[68%] md:w-[45%] pr-2 md:pr-0">
           <input type="number" name="" id="purchase_amount" placeholder="" disabled
-            class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md bg-gray-50 bg-opacity-50 focus:outline-none focus:ring-1 focus:ring-blue-500" required />
+            class="w-full md:w-[70%] mt-1 md:mt-0 px-2.5 py-1.5 border rounded-md bg-gray-50 bg-opacity-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            required />
         </div>
       </div>
 
@@ -261,20 +383,32 @@
         </div>
       </div>
 
-      <div class="w-full lg:w-3/4 mr-auto xl:max-w-6xl 2xl:max-w-7xl overflow-x-auto shadow-sm rounded-md border border-slate-200 mt-5 mb-5" id="nsdCreateDiv">
+      <div
+        class="w-full lg:w-3/4 mr-auto xl:max-w-6xl 2xl:max-w-7xl overflow-x-auto shadow-sm rounded-md border border-slate-200 mt-5 mb-5"
+        id="nsdCreateDiv">
         <table class="table-auto w-full text-sm">
           <thead class="sticky top-0 bg-blue-200 text-gray-700 z-10">
             <tr>
-              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">Actions</th>
-              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">S.No</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-40">Customer</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Description</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-40">Supplier</th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Qty</th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-28">Sell Rate</th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Sell Amount</th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-28">Purchase Rate</th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Purchase Amount</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">
+                Actions</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">S.No
+              </th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-40">
+                Customer</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Description
+              </th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-40">
+                Supplier</th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Qty
+              </th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-28">Sell
+                Rate</th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Sell
+                Amount</th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-28">
+                Purchase Rate</th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">
+                Purchase Amount</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 bg-white" id="nsdTableBody">
@@ -339,7 +473,7 @@
         <div class="relative w-full md:w-1/4">
           <input type="text" id="searchInput" placeholder="Search nsd..."
             class="w-full bg-white searchInput rounded-md px-3 py-1.5 pl-9 border focus:border-transparent ring-2 ring-blue-200 focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none" />
-            <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-2 pointer-events-none"></i>
+          <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-2 pointer-events-none"></i>
         </div>
 
       </div>
@@ -352,17 +486,26 @@
         <table class="table-fixed w-full text-sm" id="viewNSDTable">
           <thead class="bg-blue-200 text-gray-700 uppercase text-xs">
             <tr>
-              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">Actions</th>
-              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">S.No</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">
+                Actions</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">S.No
+              </th>
               <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider">Date</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Customer</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Description</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Supplier</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Customer
+              </th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Description
+              </th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Supplier
+              </th>
               <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider">Qty</th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider">Sell Rate</th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider">Sell Amount</th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider">Purchase Rate</th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider">Purchase Amount</th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider">Sell Rate
+              </th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider">Sell Amount
+              </th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider">Purchase
+                Rate</th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider">Purchase
+                Amount</th>
             </tr>
           </thead>
           <tbody class="bg-white" id="nsdTableBody">
@@ -374,7 +517,8 @@
 </div>
 
 <!-- 🟦 Edit Confirmation Modal -->
-<div id="editModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 px-4">
+<div id="editModal"
+  class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 px-4">
   <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center">
     <div class="flex items-center justify-center w-11 h-11 rounded-full bg-blue-50 mx-auto mb-3">
       <i class="fa-solid fa-pen text-blue-500"></i>
@@ -382,12 +526,15 @@
     <h2 class="text-base font-semibold mb-1.5 text-gray-800">Confirm Edit</h2>
     <p class="mb-5 text-sm text-gray-500">Are you sure you want to edit this NSD's details?</p>
     <div class="flex justify-center gap-3">
-      <button onclick="closeEditModal()" class="leading-none inline-flex items-center justify-center h-[32px] sm:h-[34px] px-4 sm:px-5 bg-gray-300 text-gray-800 text-xs sm:text-sm font-medium rounded-md hover:bg-gray-400 transition-all">Cancel</button>
-      <a id="confirmEditBtn" href="#" class="leading-none inline-flex items-center justify-center h-[32px] sm:h-[34px] px-4 sm:px-5 bg-blue-500 text-white text-xs sm:text-sm font-medium rounded-md hover:bg-blue-600 transition-all">Edit</a>
+      <button onclick="closeEditModal()"
+        class="leading-none inline-flex items-center justify-center h-[32px] sm:h-[34px] px-4 sm:px-5 bg-gray-300 text-gray-800 text-xs sm:text-sm font-medium rounded-md hover:bg-gray-400 transition-all">Cancel</button>
+      <a id="confirmEditBtn" href="#"
+        class="leading-none inline-flex items-center justify-center h-[32px] sm:h-[34px] px-4 sm:px-5 bg-blue-500 text-white text-xs sm:text-sm font-medium rounded-md hover:bg-blue-600 transition-all">Edit</a>
     </div>
   </div>
 </div>
-<div id="confirmModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 px-4">
+<div id="confirmModal"
+  class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 px-4">
   <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center">
     <div class="flex items-center justify-center w-11 h-11 rounded-full bg-red-50 mx-auto mb-3">
       <i class="fa-solid fa-trash text-red-500"></i>
@@ -395,8 +542,10 @@
     <h2 class="text-base font-semibold mb-1.5 text-gray-800">Confirm Deletion</h2>
     <p class="mb-5 text-sm text-gray-500">Are you sure you want to delete this NSD?</p>
     <div class="flex justify-center gap-3">
-      <button id="cancelBtn" onclick="closeModal()" class="leading-none inline-flex items-center justify-center h-[32px] sm:h-[34px] px-4 sm:px-5 bg-gray-300 text-gray-800 text-xs sm:text-sm font-medium rounded-md hover:bg-gray-400 transition-all">Cancel</button>
-      <a id="confirmDeleteBtn" href="#" onclick="deleteItem()" class="leading-none inline-flex items-center justify-center h-[32px] sm:h-[34px] px-4 sm:px-5 bg-red-500 text-white text-xs sm:text-sm font-medium rounded-md hover:bg-red-600 transition-all">Delete</a>
+      <button id="cancelBtn" onclick="closeModal()"
+        class="leading-none inline-flex items-center justify-center h-[32px] sm:h-[34px] px-4 sm:px-5 bg-gray-300 text-gray-800 text-xs sm:text-sm font-medium rounded-md hover:bg-gray-400 transition-all">Cancel</button>
+      <a id="confirmDeleteBtn" href="#" onclick="deleteItem()"
+        class="leading-none inline-flex items-center justify-center h-[32px] sm:h-[34px] px-4 sm:px-5 bg-red-500 text-white text-xs sm:text-sm font-medium rounded-md hover:bg-red-600 transition-all">Delete</a>
     </div>
   </div>
 </div>
@@ -1027,7 +1176,7 @@
           const newRow = `
             <tr class="border-b border-[#B0B0B0] odd:bg-white even:bg-[#E5E7EB] hover:bg-[#F0F8FF] transition-all duration-200">
               <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap border-r border-[#B0B0B0]">
-                <a href="#" class="text-blue-500 hover:text-blue-700 font-medium text-xs px-1" onclick="editViewData(this);">Edit</a>
+                <a href="#" class="text-blue-500 hover:text-blue-700 font-medium text-xs px-1" onclick="editViewData(this);">Update</a>
                 <span class="text-gray-300">|</span>
                 <a href="#" class="text-red-500 hover:text-red-700 font-medium text-xs px-1" onclick="deleteNSD(this)">Delete</a>
               </td>

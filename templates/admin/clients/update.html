@@ -97,8 +97,8 @@
         <label class="block text-gray-700">WhatsApp Automation</label>
         <div class="flex items-center space-x-2 mt-3">
           <input type="checkbox" name="has_whatsapp_access" id="has_whatsapp_access"
-            class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" {% if client.has_whatsapp_access
-            %}checked{% endif %}>
+            class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" 
+            {% if client.has_whatsapp_access %}checked{% endif %}>
           <label for="has_whatsapp_access" class="text-sm text-gray-700">Enable WhatsApp Automation features</label>
         </div>
       </div>
@@ -168,6 +168,7 @@
   function validatePasswords() {
     const pVal = passwordInput.value;
     const cpVal = confirmPasswordInput.value;
+    const commonPasswords = ["12345678", "password", "qwertyui", "123456789", "11223344"];
 
     if (!pVal && !cpVal) {
       isPasswordValid = true;
@@ -175,22 +176,29 @@
       passwordMatch.textContent = "";
       strengthBar.className = "password-strength";
     } else {
-      isPasswordValid = pVal.length >= 8;
+      isPasswordValid = false;
       isPasswordMatch = pVal === cpVal;
 
-      if (isPasswordMatch) {
-        passwordMatch.textContent = "✅ Passwords match";
-        passwordMatch.className = "text-green-600 text-sm mt-1";
-      } else if (cpVal) {
-        passwordMatch.textContent = "❌ Passwords do not match";
-        passwordMatch.className = "text-red-600 text-sm mt-1";
-      } else {
-        passwordMatch.textContent = "";
-      }
-
-      if (pVal && pVal.length < 8) {
+      if (pVal.length < 8) {
         passwordMatch.textContent = "❌ Too Short (Min 8 characters)";
         passwordMatch.className = "text-red-600 text-sm mt-1";
+      } else if (/^\d+$/.test(pVal)) {
+        passwordMatch.textContent = "❌ This password is entirely numeric.";
+        passwordMatch.className = "text-red-600 text-sm mt-1";
+      } else if (commonPasswords.includes(pVal.toLowerCase())) {
+        passwordMatch.textContent = "❌ This password is too common.";
+        passwordMatch.className = "text-red-600 text-sm mt-1";
+      } else {
+        isPasswordValid = true;
+        if (isPasswordMatch) {
+          passwordMatch.textContent = "✅ Passwords match";
+          passwordMatch.className = "text-green-600 text-sm mt-1";
+        } else if (cpVal) {
+          passwordMatch.textContent = "❌ Passwords do not match";
+          passwordMatch.className = "text-red-600 text-sm mt-1";
+        } else {
+          passwordMatch.textContent = "";
+        }
       }
 
       // Strength logic

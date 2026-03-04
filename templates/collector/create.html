@@ -174,18 +174,26 @@
 
   passwordInput.addEventListener('input', () => {
     const val = passwordInput.value;
-    let strength = '', color = 'text-red-500';
-    isPasswordValid = val.length >= 8;
+    const commonPasswords = ["12345678", "password", "qwertyui", "123456789", "11223344"];
 
-    if (val.length >= 8) {
+    let strength = '', color = 'text-red-500';
+    isPasswordValid = false;
+
+    if (val.length === 0) {
+      strength = '';
+    } else if (val.length < 8) {
+      strength = 'Too Short (Min 8 characters)'; color = 'text-red-500';
+    } else if (/^\d+$/.test(val)) {
+      strength = 'This password is entirely numeric.'; color = 'text-red-500';
+    } else if (commonPasswords.includes(val.toLowerCase())) {
+      strength = 'This password is too common.'; color = 'text-red-500';
+    } else {
+      isPasswordValid = true;
       if (/[A-Z]/.test(val) && /[a-z]/.test(val) && /\d/.test(val) && /[@$!%*?&#]/.test(val)) {
         strength = 'Strong password'; color = 'text-green-600';
       } else {
         strength = 'Medium password'; color = 'text-yellow-500';
       }
-    } else if (val.length > 0) {
-      strength = 'Too Short (Min 8 characters)'; color = 'text-red-500';
-      isPasswordValid = false;
     }
 
     passwordStrength.textContent = strength;

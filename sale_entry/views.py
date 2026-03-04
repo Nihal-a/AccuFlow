@@ -187,8 +187,8 @@ class SaleHold(View):
                 )
                 godown.qty -= sale.qty
                 godown.save()
-                sale.purchaser_balance += float(qty)
-                sale.seller_balance += float(amount)
+                sale.purchaser_balance = float(sale.purchaser_balance) + float(qty)
+                sale.seller_balance = float(sale.seller_balance) + float(amount)
                 sale.save()
             return JsonResponse({'status':'success','sale_id':sale.id,'hold':sale.hold})
         sale = Sales.objects.create(

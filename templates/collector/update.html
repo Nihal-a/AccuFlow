@@ -214,16 +214,25 @@
   if (passwordInput) {
     passwordInput.addEventListener('input', () => {
       const val = passwordInput.value;
+      const commonPasswords = ["12345678", "password", "qwertyui", "123456789", "11223344"];
       let barClass = 'password-strength';
 
+      isPasswordValid = false;
       if (val.length === 0) {
-        isPasswordValid = true;
-        passwordBar.className = barClass;
+        isPasswordValid = true; // Optional on update
+        passwordBar.className = 'password-strength';
         passwordStrength.textContent = '';
       } else if (val.length < 8) {
-        isPasswordValid = false;
         passwordBar.className = barClass + ' strength-weak';
         passwordStrength.textContent = 'Too Short (Min 8 characters)';
+        passwordStrength.className = 'text-red-500 text-xs';
+      } else if (/^\d+$/.test(val)) {
+        passwordBar.className = barClass + ' strength-weak';
+        passwordStrength.textContent = 'This password is entirely numeric.';
+        passwordStrength.className = 'text-red-500 text-xs';
+      } else if (commonPasswords.includes(val.toLowerCase())) {
+        passwordBar.className = barClass + ' strength-weak';
+        passwordStrength.textContent = 'This password is too common.';
         passwordStrength.className = 'text-red-500 text-xs';
       } else {
         isPasswordValid = true;
