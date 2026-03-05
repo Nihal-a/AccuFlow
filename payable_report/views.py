@@ -7,7 +7,7 @@ from django.db.models import Sum, Q
 from datetime import datetime
 from decimal import Decimal
 from core.models import Customers, Suppliers, Purchases, Sales, NSDs, Cashs
-from core.views import getClient
+from core.views import getClient, calculate_customer_balance, calculate_supplier_balance
 import openpyxl
 from io import BytesIO
 try:
@@ -57,10 +57,7 @@ class PayableReportView(View):
         # 1. Customers
         customers = Customers.objects.filter(is_active=True, client=client)
         for c in customers:
-            if date_limit:
-                balance = self.calculate_balance(c, client, date_limit, is_customer=True)
-            else:
-                balance = c.balance 
+            balance = calculate_customer_balance(c, client, date_limit=date_limit)
 
             abs_balance = abs(balance)
             show_item = False
@@ -85,10 +82,7 @@ class PayableReportView(View):
         # 2. Suppliers
         suppliers = Suppliers.objects.filter(is_active=True, client=client)
         for s in suppliers:
-            if date_limit:
-                balance = self.calculate_balance(s, client, date_limit, is_customer=False)
-            else:
-                balance = s.balance 
+            balance = calculate_supplier_balance(s, client, date_limit=date_limit)
 
             abs_balance = abs(balance)
             show_item = False
@@ -164,25 +158,5 @@ class PayableReportView(View):
         return render(request, 'payable_report/payable_report.html', context)
 
     def calculate_balance(self, entity, client, date_limit, is_customer=True):
-        if is_customer:
-            base_filter = Q(is_active=True, hold=False, client=client, customer=entity, date__lte=date_limit)
-            nsd_sender_filter = Q(is_active=True, hold=False, client=client, sender_customer=entity, date__lte=date_limit)
-            nsd_receiver_filter = Q(is_active=True, hold=False, client=client, receiver_customer=entity, date__lte=date_limit)
-        else:
-            base_filter = Q(is_active=True, hold=False, client=client, supplier=entity, date__lte=date_limit)
-            nsd_sender_filter = Q(is_active=True, hold=False, client=client, sender_supplier=entity, date__lte=date_limit)
-            nsd_receiver_filter = Q(is_active=True, hold=False, client=client, receiver_supplier=entity, date__lte=date_limit)
-
-        purchases = Purchases.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
-        sales = Sales.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
-        nsd_sender_amt = NSDs.objects.filter(nsd_sender_filter).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0.0000')
-        nsd_receiver_amt = NSDs.objects.filter(nsd_receiver_filter).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0.0000')
-        cash_received = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
-        cash_paid = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
-        
-        debit_sum = sales + nsd_receiver_amt + cash_paid
-        credit_sum = purchases + nsd_sender_amt + cash_received
-        
-        static_ob = Decimal(str(entity.open_debit or 0)) - Decimal(str(entity.open_credit or 0))
-        
-        return static_ob + (debit_sum - credit_sum)
+        # Redundant: Refactored to use core.views functions
+        pass

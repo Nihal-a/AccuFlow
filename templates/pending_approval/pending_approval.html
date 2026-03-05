@@ -24,36 +24,35 @@
         </div>
     </div>
 
-    <div class="overflow-x-auto">
-        <table class="w-full text-left">
-            <thead>
-                <tr class="text-gray-500 text-sm border-b border-gray-100">
-                    <th class="pb-3 px-2 font-medium">Date</th>
-                    <th class="pb-3 px-2 font-medium">Collector</th>
-                    <th class="pb-3 px-2 font-medium">Entries</th>
-                    <th class="pb-3 px-2 font-medium text-right">Total Amount</th>
-                    <th class="pb-3 px-2 font-medium text-right">Action</th>
+    <div class="overflow-x-auto mt-5 w-full shadow-sm rounded-md border border-slate-200">
+        <table class="table-fixed w-full text-sm">
+            <thead class="bg-blue-200 text-gray-700 uppercase text-xs">
+                <tr>
+                    <th class="px-1.5 py-1.5 text-center font-bold text-slate-900 tracking-wider w-32 border-[#B0B0B0]">Date</th>
+                    <th class="px-1.5 py-1.5 text-left font-bold text-slate-900 tracking-wider w-[200px] border-[#B0B0B0]">Collector</th>
+                    <th class="px-1.5 py-1.5 text-center font-bold text-slate-900 tracking-wider w-24 border-[#B0B0B0]">Entries</th>
+                    <th class="px-1.5 py-1.5 text-right font-bold text-slate-900 tracking-wider w-32 border-[#B0B0B0]">Total Amount</th>
+                    <th class="px-1.5 py-1.5 text-center font-bold text-slate-900 tracking-wider w-32 border-[#B0B0B0]">Action</th>
                 </tr>
             </thead>
-            <tbody class="text-gray-700">
+            <tbody class="bg-white">
                 {% for collection in collections %}
-                <tr class="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors group">
-                    <td class="py-4 px-2">{{ collection.date }}</td>
-                    <td class="py-4 px-2 font-medium text-gray-900">{{ collection.collector.name }}</td>
-                    <td class="py-4 px-2">
-                        <span class="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-md text-xs font-medium">
+                <tr class="border-b border-[#B0B0B0] odd:bg-white even:bg-[#E5E7EB] hover:bg-[#F0F8FF] transition-all duration-200 group">
+                    <td class="px-1.5 py-1.5 border-r border-[#B0B0B0] text-center w-32">{{ collection.date|date:"Y-m-d" }}</td>
+                    <td class="px-1.5 py-1.5 border-r border-[#B0B0B0] font-medium text-gray-900 w-[200px] truncate">{{ collection.collector.name }}</td>
+                    <td class="px-1.5 py-1.5 border-r border-[#B0B0B0] text-center w-24">
+                        <span class="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
                             {{ collection.items_count }} items
                         </span>
                     </td>
-                    <td class="py-4 px-2 text-right font-bold text-emerald-600">
+                    <td class="px-1.5 py-1.5 border-r border-[#B0B0B0] text-right font-bold text-emerald-600 w-32">
                         {{ collection.pending_total|default:"0"|floatformat:2 }}
                     </td>
-                    <td class="py-4 px-2 text-right">
+                    <td class="px-1.5 py-1.5 border-r border-[#B0B0B0] text-center w-32">
                         <a href="{% url 'pending_approval_detail' collection.id %}"
-                            class="inline-flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm">
+                            class="inline-flex items-center gap-1.5 text-blue-500 hover:text-blue-700 font-medium text-xs px-2 py-1 transition-colors">
                             Review
-                            <i data-lucide="arrow-right"
-                                class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+                            <i data-lucide="arrow-right" class="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform"></i>
                         </a>
                     </td>
                 </tr>

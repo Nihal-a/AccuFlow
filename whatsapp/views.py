@@ -24,7 +24,7 @@ from django.core.exceptions import PermissionDenied
 from django.utils import timezone
 
 from core.models import Customers, Suppliers
-from core.views import getClient
+from core.views import getClient, calculate_customer_balance, calculate_supplier_balance
 from whatsapp.whatsapp_service import WhatsAppService, WhatsAppServiceError, format_whatsapp_number
 from whatsapp.ledger_helper import get_customer_ledger, get_supplier_ledger
 
@@ -137,16 +137,16 @@ class BalanceAccountsView(View):
         # Fetch customers
         customers = Customers.objects.filter(
             client=client, is_active=True
-        ).values('id', 'name', 'customerId', 'balance', 'country_code', 'wa')
+        ).order_by('name')
 
         customer_list = []
         for c in customers:
-            wa_number = format_whatsapp_number(c['country_code'], c['wa'])
+            wa_number = format_whatsapp_number(c.country_code, c.wa)
             customer_list.append({
-                'id': c['id'],
-                'name': c['name'] or 'Unnamed',
-                'account_id': c['customerId'] or '',
-                'balance': str(c['balance'] or '0.0000'),
+                'id': c.id,
+                'name': c.name or 'Unnamed',
+                'account_id': c.customerId or '',
+                'balance': str(calculate_customer_balance(c, client)),
                 'has_wa': bool(wa_number),
                 'type': 'customer',
             })
@@ -154,16 +154,16 @@ class BalanceAccountsView(View):
         # Fetch suppliers
         suppliers = Suppliers.objects.filter(
             client=client, is_active=True
-        ).values('id', 'name', 'supplierId', 'balance', 'country_code', 'wa')
+        ).order_by('name')
 
         supplier_list = []
         for s in suppliers:
-            wa_number = format_whatsapp_number(s['country_code'], s['wa'])
+            wa_number = format_whatsapp_number(s.country_code, s.wa)
             supplier_list.append({
-                'id': s['id'],
-                'name': s['name'] or 'Unnamed',
-                'account_id': s['supplierId'] or '',
-                'balance': str(s['balance'] or '0.0000'),
+                'id': s.id,
+                'name': s.name or 'Unnamed',
+                'account_id': s.supplierId or '',
+                'balance': str(calculate_supplier_balance(s, client)),
                 'has_wa': bool(wa_number),
                 'type': 'supplier',
             })
@@ -276,7 +276,7 @@ def send_balance_api(request, client_id=None, client=None):
                 payload = {
                     'name': c.name or 'Unnamed Customer',
                     'whatsappnumber': wa_number or '',
-                    'balance': str(c.balance or '0.0000'),
+                    'balance': str(calculate_customer_balance(c, client)),
                     'transactions': [],
                     'opening_balance': '0.00',
                     'optin_verified': True,
@@ -307,7 +307,7 @@ def send_balance_api(request, client_id=None, client=None):
                 payload = {
                     'name': s.name or 'Unnamed Supplier',
                     'whatsappnumber': wa_number or '',
-                    'balance': str(s.balance or '0.0000'),
+                    'balance': str(calculate_supplier_balance(s, client)),
                     'transactions': [],
                     'opening_balance': '0.00',
                     'optin_verified': True,

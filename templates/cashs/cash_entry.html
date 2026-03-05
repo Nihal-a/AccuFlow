@@ -184,7 +184,7 @@
             required>
             <option value="" selected>Select Cash/Bank</option>
             {% for cashbank in cashbanks %}
-            <option value="{{ cashbank.id }}" data-code="{{cashbank.cashbankId}}" data-balance="{{ cashbank.balance }}">
+            <option value="{{ cashbank.id }}" data-code="{{cashbank.cashbankId}}" data-balance="{{ cashbank.calculated_balance }}">
               {{ cashbank.name }}</option>
             {% endfor %}
           </select>
@@ -215,11 +215,11 @@
             class="w-full bg-white px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
             required>
             <option value="" selected>Select Party</option>
-            {% for supplier in suppliers %}
+            {% for supplier in suppliers_data %}
             <option value="{{ supplier.id }}" data-code="{{supplier.supplierId}}" data-balance="{{supplier.balance}}"
               data-type="suppliers">{{ supplier.name }} (supplier)</option>
             {% endfor %}
-            {% for customer in customers %}
+            {% for customer in customers_data %}
             <option value="{{ customer.id }}" data-code="{{customer.customerId}}" data-balance="{{customer.balance}}"
               data-type="customers">{{ customer.name }} (customer)</option>
             {% endfor %}
@@ -467,6 +467,48 @@
 <script>
 
   isUpdate = false;
+  var all_customers_data = {{ customers_json| safe }};
+  var all_suppliers_data = {{ suppliers_json| safe }};
+
+  function refreshBalances() {
+    fetch("{% url 'api-cashbank-balances' %}")
+      .then(response => response.json())
+      .then(data => {
+        all_suppliers_data.forEach(s => {
+          if (data.suppliers[String(s.id)] !== undefined) {
+            s.balance = data.suppliers[String(s.id)];
+          }
+        });
+        all_customers_data.forEach(c => {
+          if (data.customers[String(c.id)] !== undefined) {
+            c.balance = data.customers[String(c.id)];
+          }
+        });
+        $('#supplier option').each(function () {
+          const id = $(this).val();
+          const type = $(this).data('type');
+          if (type === 'suppliers' && id && data.suppliers[id] !== undefined) {
+            $(this).data('balance', data.suppliers[id]);
+          } else if (type === 'customers' && id && data.customers[id] !== undefined) {
+            $(this).data('balance', data.customers[id]);
+          }
+        });
+        $('#cash option').each(function () {
+          const id = $(this).val();
+          if (id && data.cashbanks && data.cashbanks[id] !== undefined) {
+            $(this).data('balance', data.cashbanks[id]);
+          }
+        });
+        // trigger change so UI updates
+        if ($('#supplier').val()) {
+          $('#supplier').trigger('change');
+        }
+        if ($('#cash').val()) {
+          $('#cash').trigger('change');
+        }
+      })
+      .catch(error => console.error('Error refreshing balances:', error));
+  }
 
   function addLastRow() {
     const tableBody = document.getElementById("cashTableBody");
@@ -529,7 +571,7 @@
     $('#supplierID').val(code);
     $('#supplierCredit').empty();
     $('#supplierCredit').append(`
-      <p class="font-semibold ${parseFloat(balance).toFixed(2) <= 0 ? `text-red` : ``}">Balance:${parseFloat(balance).toFixed(2)} </p> 
+      <p class="font-semibold ${parseFloat(balance) < 0 ? 'text-red-500' : ''}">Balance: ${parseFloat(balance).toFixed(2)} </p> 
       `);
     $('#cash').prop('disabled', false);
 
@@ -540,7 +582,7 @@
     var balance = selectedOption.data('balance') || '0';
     $('#cashCredit').empty();
     $('#cashCredit').append(`
-      <p class="font-semibold ${parseFloat(balance).toFixed(2) <= 0 ? `text-red` : ``}">Balance:${parseFloat(balance).toFixed(2)} </p> 
+      <p class="font-semibold ${parseFloat(balance) < 0 ? 'text-red-500' : ''}">Balance: ${parseFloat(balance).toFixed(2)} </p> 
       `);
     $('#cashbankId').val(code);
   });
@@ -752,6 +794,7 @@
           addLastRow()
           isUpdate = false
         } else {
+          refreshBalances();
           $('#viewCashDiv').removeClass('hidden');
           $('#viewDiv').removeClass('hidden');
           $('#createView').addClass('hidden');

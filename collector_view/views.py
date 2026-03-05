@@ -9,6 +9,7 @@ from decimal import Decimal, InvalidOperation
 from django.contrib.auth.decorators import login_required
 
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from core.views import calculate_customer_balance, calculate_supplier_balance
 
 class CollectorCollectionsView(LoginRequiredMixin, UserPassesTestMixin, View):
     template_name = 'collector_view/collections.html'
@@ -185,29 +186,33 @@ class CollectorAddItemsView(LoginRequiredMixin, UserPassesTestMixin, View):
         
         receivables = []
         
-        customers = Customers.objects.filter(client=client, is_active=True, balance__gt=0)
+        customers = Customers.objects.filter(client=client, is_active=True)
         for c in customers:
-             key = f"Customer_{c.id}"
-             if key not in existing_keys:
-                receivables.append({
-                    'id': key,
-                    'type': 'Customer',
-                    'name': c.name,
-                    'phone': c.phone,
-                    'balance': c.balance
-                })
+             bal = calculate_customer_balance(c, client)
+             if bal > 0:
+                 key = f"Customer_{c.id}"
+                 if key not in existing_keys:
+                    receivables.append({
+                        'id': key,
+                        'type': 'Customer',
+                        'name': c.name,
+                        'phone': c.phone,
+                        'balance': bal
+                    })
 
-        suppliers = Suppliers.objects.filter(client=client, is_active=True, balance__gt=0)
+        suppliers = Suppliers.objects.filter(client=client, is_active=True)
         for s in suppliers:
-             key = f"Supplier_{s.id}"
-             if key not in existing_keys:
-                receivables.append({
-                    'id': key,
-                    'type': 'Supplier',
-                    'name': s.name,
-                    'phone': s.phone,
-                    'balance': s.balance
-                })
+             bal = calculate_supplier_balance(s, client)
+             if bal > 0:
+                 key = f"Supplier_{s.id}"
+                 if key not in existing_keys:
+                    receivables.append({
+                        'id': key,
+                        'type': 'Supplier',
+                        'name': s.name,
+                        'phone': s.phone,
+                        'balance': bal
+                    })
         
         context = {
             'collection': collection,
@@ -247,10 +252,10 @@ class CollectorAddItemsView(LoginRequiredMixin, UserPassesTestMixin, View):
                     amount = Decimal('0.0000')
                     if type_str == 'Customer':
                         c = Customers.objects.filter(id=id_str).first()
-                        if c: amount = c.balance
+                        if c: amount = calculate_customer_balance(c, collection.client)
                     elif type_str == 'Supplier':
                         s = Suppliers.objects.filter(id=id_str).first()
-                        if s: amount = s.balance
+                        if s: amount = calculate_supplier_balance(s, collection.client)
                     
                     if amount > 0:
                         CollectionItem.objects.create(

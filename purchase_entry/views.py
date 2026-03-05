@@ -8,7 +8,7 @@ from django.db.models import Q
 from django.db import transaction
 from django.db.models import F
 
-from core.views import getClient, update_ledger
+from core.views import getClient, update_ledger, calculate_supplier_balance, calculate_customer_balance
 from core.authorization import get_object_for_user
 from core.utils import validate_positive_decimal
 from decimal import Decimal
@@ -43,7 +43,7 @@ class PurchaseEntryView(View):
                 'id':customer.id,
                 'name':customer.name,
                 'customerId':customer.customerId, 
-                'balance':str(customer.get_balance),
+                'balance':str(calculate_customer_balance(customer, getClient(request.user))),
             })
         suppliersData = []
         for supplier in suppliers:
@@ -51,10 +51,12 @@ class PurchaseEntryView(View):
                 'id':supplier.id,
                 'name':supplier.name,
                 'supplierId':supplier.supplierId,
-                'balance':str(supplier.get_balance),
+                'balance':str(calculate_supplier_balance(supplier, getClient(request.user))),
             })
         context = {
             'purchases':purchaseData,
+            'suppliers_data':suppliersData,
+            'customers_data':customersData,
             'suppliers_json':json.dumps(suppliersData),
             'customers_json':json.dumps(customersData),
             'suppliers': suppliers,
@@ -299,8 +301,8 @@ def purchase_balances_api(request):
     customers = Customers.objects.filter(is_active=True, client=client)
     godowns = Godowns.objects.filter(is_active=True, client=client)
     data = {
-        'suppliers': {str(s.id): str(s.get_balance) for s in suppliers},
-        'customers': {str(c.id): str(c.get_balance) for c in customers},
+        'suppliers': {str(s.id): str(calculate_supplier_balance(s, client)) for s in suppliers},
+        'customers': {str(c.id): str(calculate_customer_balance(c, client)) for c in customers},
         'godowns': {str(g.id): str(g.qty) for g in godowns},
     }
     return JsonResponse(data)

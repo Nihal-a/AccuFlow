@@ -3,54 +3,80 @@
 {% block title %}Collections{% endblock title %}
 
 {% block content %}
-
-<div class="flex justify-end items-center mb-3">
-  <form method="GET" class="flex flex-col md:flex-row gap-2 w-full md:w-auto">
-    <select name="collector" id="filterCollector"
-      class="bg-white rounded-xl px-4 py-2 border border-transparent focus:border-transparent ring-2 ring-blue-200 focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none">
-      <option value="">All Collectors</option>
-      {% for c in collectors %}
-      <option value="{{ c.id }}">{{ c.name }}</option>
-      {% endfor %}
-    </select>
-    <input type="date" name="date" id="filterDate"
-      class="bg-white rounded-xl px-4 py-2 border border-transparent focus:border-transparent ring-2 ring-blue-200 focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none">
-
-    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white rounded-xl px-4 py-2">
-      <i class="fa-solid fa-filter"></i>
-    </button>
-    {% if selected_collector or selected_date %}
-    <a href="{% url 'collection_list' %}"
-      class="bg-gray-500 hover:bg-gray-600 text-white rounded-xl px-4 py-2 flex items-center">
-      <i class="fa-solid fa-times"></i>
+<div class="bg-white rounded-xl p-6 mt-3 shadow-sm border border-gray-100">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-gray-100 pb-4">
+    <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">Collection Management</h1>
+    <a href="{% url 'add_collection' %}"
+        class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 shadow-sm whitespace-nowrap">
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        Add New Collection
     </a>
-    {% endif %}
+</div>
+
+<!-- Filter Section -->
+<div class="mb-6 flex flex-col md:flex-row gap-4 items-end">
+  <form method="GET" action="{% url 'collection_list' %}" class="flex flex-col md:flex-row gap-4 w-full md:w-auto items-end">
+    <div class="flex flex-col w-full md:w-64">
+      <label for="collector" class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Collector</label>
+      <select name="collector" id="collector"
+        class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-blue-500 focus:border-blue-500 block p-2">
+        <option value="">All Collectors</option>
+        {% for collector in collectors %}
+        <option value="{{ collector.id }}" {% if collector.id|stringformat:"s" == filter_collector %}selected{% endif %}>
+          {{ collector.name }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Date Filter -->
+    <div class="flex flex-col w-full md:w-auto mt-4 md:mt-0">
+      <label for="date" class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Date</label>
+      <input type="date" name="date" id="date" value="{{ selected_date }}"
+        class="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-blue-500 focus:border-blue-500 block p-2">
+    </div>
+
+    <div class="flex gap-2 w-full md:w-auto mt-4 md:mt-0">
+      <button type="submit"
+        class="flex-1 md:flex-none text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-md text-sm px-4 py-2 text-center transition-colors shadow-sm">
+        Filter
+      </button>
+
+      {% if filter_collector or selected_date %}
+      <a href="{% url 'collection_list' %}"
+        class="flex-1 md:flex-none text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-md text-sm px-4 py-2 text-center transition-colors shadow-sm">
+        Clear
+      </a>
+      {% endif %}
+    </div>
   </form>
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 mb-3">
-  <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm border-l-4 border-l-blue-500">
+<!-- Summary Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  <div class="bg-white p-3.5 md:p-4 rounded-xl border border-gray-100 shadow-sm border-l-4 border-l-blue-500">
     <div class="flex justify-between items-center">
       <div>
-        <p class="text-xs text-gray-500 uppercase font-medium mb-1">Total Assigned</p>
-        <p class="text-2xl font-bold text-gray-800">{{ total_assigned|floatformat:2 }}</p>
+        <p class="text-[11px] md:text-xs text-gray-500 uppercase font-medium mb-0.5 md:mb-1">Total Assigned</p>
+        <p class="text-xl md:text-2xl font-bold text-gray-800">{{ total_assigned|floatformat:2 }}</p>
       </div>
-      <div class="p-2 bg-blue-50 rounded-lg text-blue-600">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div class="p-1.5 md:p-2 bg-blue-50 rounded-lg text-blue-600">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
         </svg>
       </div>
     </div>
   </div>
-  <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm border-l-4 border-l-green-500">
+  <div class="bg-white p-3.5 md:p-4 rounded-xl border border-gray-100 shadow-sm border-l-4 border-l-green-500">
     <div class="flex justify-between items-center">
       <div>
-        <p class="text-xs text-gray-500 uppercase font-medium mb-1">Total Collected</p>
-        <p class="text-2xl font-bold text-gray-800">{{ total_collected|floatformat:2 }}</p>
+        <p class="text-[11px] md:text-xs text-gray-500 uppercase font-medium mb-0.5 md:mb-1">Total Collected</p>
+        <p class="text-xl md:text-2xl font-bold text-gray-800">{{ total_collected|floatformat:2 }}</p>
       </div>
-      <div class="p-2 bg-green-50 rounded-lg text-green-600">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div class="p-1.5 md:p-2 bg-green-50 rounded-lg text-green-600">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
@@ -59,59 +85,39 @@
   </div>
 </div>
 
-<div class="bg-white rounded-xl p-6 mt-3">
-  <div class="flex justify-between items-center">
-    <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">Collection Management</h1>
-    <a href="{% url 'add_collection' %}"
-      class="leading-none float-end inline-flex items-center gap-1.5 bg-blue-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-300">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-        stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-      </svg>
-      <span class="">Add New Collection</span>
-    </a>
-  </div>
-
-  <div class="overflow-x-auto mt-5 w-full">
-    <table class="min-w-full rounded-t-lg overflow-hidden">
-      <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
+  <div class="overflow-x-auto mt-5 w-full shadow-sm rounded-md border border-slate-200">
+    <table class="table-fixed w-full text-sm">
+      <thead class="bg-blue-200 text-gray-700 uppercase text-xs">
         <tr>
-          <th class="px-4 py-3 text-left font-medium w-1">Actions</th>
-          <th class="px-4 py-3 text-left font-medium">#</th>
-          <th class="px-4 py-3 text-left font-medium">Date</th>
-          <th class="px-4 py-3 text-left font-medium">Collector</th>
-
-          <th class="px-4 py-3 text-right font-medium">Assigned Amt</th>
-          <th class="px-4 py-3 text-right font-medium">Collected Amt</th>
-          <th class="px-4 py-3 text-right font-medium">Created At</th>
+          <th class="px-1.5 py-1.5 text-center font-semibold text-slate-900 tracking-wider w-16">Actions</th>
+          <th class="px-1.5 py-1.5 text-center font-bold text-slate-900 tracking-wider w-12">#</th>
+          <th class="px-1.5 py-1.5 text-center font-bold text-slate-900 tracking-wider w-24">Date</th>
+          <th class="px-1.5 py-1.5 text-left font-bold text-slate-900 tracking-wider w-[200px]">Collector</th>
+          <th class="px-1.5 py-1.5 text-right font-bold text-slate-900 tracking-wider w-32">Assigned Amt</th>
+          <th class="px-1.5 py-1.5 text-right font-bold text-slate-900 tracking-wider w-32">Collected Amt</th>
+          <th class="px-1.5 py-1.5 text-center font-bold text-slate-900 tracking-wider w-40">Created At</th>
         </tr>
       </thead>
-      <tbody class="bg-gray-100">
+      <tbody class="bg-white">
         {% if collections %}
         {% for c in collections %}
-        <tr class="hover:bg-gray-50 divide-x divide-y divide-gray-300 odd:bg-white even:bg-gray-100">
-          <td class="px-4 py-2 w-1">
-            <div class="flex gap-2">
-              <a href="{% url 'collection_detail' id=c.id %}"
-                class="bg-green-500 text-white px-2 py-1.5 rounded hover:bg-green-600 text-xs" title="View Details">
-                <i class="fa-solid fa-eye"></i>
-              </a>
-
-            </div>
+        <tr class="border-b border-[#B0B0B0] odd:bg-white even:bg-[#E5E7EB] hover:bg-[#F0F8FF] transition-all duration-200">
+          <td class="px-1.5 py-1.5 text-center w-16 whitespace-nowrap border-r border-[#B0B0B0]">
+            <a href="{% url 'collection_detail' id=c.id %}" class="text-blue-500 hover:text-blue-700 font-medium text-xs px-1" title="View Details">View</a>
           </td>
-          <td class="px-4 py-2 w-1">
+          <td class="px-1.5 py-1.5 text-center text-sm w-12 border-r border-[#B0B0B0]">
             {{ forloop.counter }}
           </td>
-          <td class="px-4 py-2 font-semibold text-gray-700">{{ c.date|date:"Y-m-d" }}</td>
-          <td class="px-4 py-2 text-gray-700">{{ c.collector.name }}</td>
-          <td class="px-4 py-2 text-gray-700 text-right font-bold">{{ c.total_amount|floatformat:2 }}</td>
-          <td class="px-4 py-2 text-green-600 text-right font-bold">{{ c.collected_total|default:0|floatformat:2 }}</td>
-          <td class="px-4 py-2 text-gray-700 text-right">{{ c.created_at|date:"M d, Y h:i A" }}</td>
+          <td class="px-1.5 py-1.5 text-center text-sm w-24 border-r border-[#B0B0B0]">{{ c.date|date:"Y-m-d" }}</td>
+          <td class="px-1.5 py-1.5 text-left text-sm w-[200px] border-r border-[#B0B0B0] truncate">{{ c.collector.name }}</td>
+          <td class="px-1.5 py-1.5 text-right text-sm w-32 font-bold border-r border-[#B0B0B0]">{{ c.total_amount|floatformat:2 }}</td>
+          <td class="px-1.5 py-1.5 text-right text-sm w-32 font-bold text-green-600 border-r border-[#B0B0B0]">{{ c.collected_total|default:0|floatformat:2 }}</td>
+          <td class="px-1.5 py-1.5 text-center text-sm w-40 truncate">{{ c.created_at|date:"M d, Y h:i A" }}</td>
         </tr>
         {% endfor %}
         {% else %}
         <tr>
-          <td colspan="6" class="text-center py-2 text-gray-500">
+          <td colspan="7" class="text-center py-2 text-gray-500">
             {% if not selected_date %}
             Please select a date to view collections.
             {% else %}

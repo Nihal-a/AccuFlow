@@ -145,22 +145,27 @@ class ClientDashboardView(View):
 
         # Date filter kwargs for transactions
         date_filter = {'date__gte': month_start, 'date__lte': month_end}
+        base_kwargs = {'client': client, 'is_active': True, 'hold': False}
 
         # Purchase Metrics
-        purchase_stats = Purchases.objects.filter(client=client, is_active=True, **date_filter).aggregate(
+        purchase_stats = Purchases.objects.filter(**base_kwargs, **date_filter).aggregate(
             count=Count('id'), total=Sum('total_amount'))
         
         # Sale Metrics
-        sale_stats = Sales.objects.filter(client=client, is_active=True, **date_filter).aggregate(
+        sale_stats = Sales.objects.filter(**base_kwargs, **date_filter).aggregate(
             count=Count('id'), total=Sum('total_amount'))
             
         # NSD Metrics
-        nsd_stats = NSDs.objects.filter(client=client, is_active=True, **date_filter).aggregate(
+        nsd_stats = NSDs.objects.filter(**base_kwargs, **date_filter).aggregate(
             count=Count('id'), total=Sum('sell_amount'))
             
-        # Cash/Bank Metrics
-        cash_stats = Cashs.objects.filter(client=client, is_active=True, **date_filter).aggregate(
-            count=Count('id'), total=Sum('amount'))
+        # Cash/Bank Metrics (Net Cash Flow)
+        c_rcv = Cashs.objects.filter(transaction='Received', **base_kwargs, **date_filter).aggregate(c=Count('id'), t=Sum('amount'))
+        c_paid = Cashs.objects.filter(transaction='Paid', **base_kwargs, **date_filter).aggregate(c=Count('id'), t=Sum('amount'))
+        cash_stats = {
+            'count': (c_rcv['c'] or 0) + (c_paid['c'] or 0),
+            'total': (c_rcv['t'] or Decimal('0')) - (c_paid['t'] or Decimal('0'))
+        }
 
         # Approved Collections
         approved_col_stats = Collection.objects.filter(client=client, status='Approved', is_active=True, **date_filter).aggregate(
@@ -202,20 +207,25 @@ class ClientDashboardView(View):
                 mo_filter = {'date__gte': mo_start, 'date__lte': mo_end}
                 chart_labels.append(mo_start.strftime('%b'))
 
-                p = Purchases.objects.filter(client=client, is_active=True, **mo_filter).aggregate(t=Sum('total_amount'))
+                p = Purchases.objects.filter(client=client, is_active=True, hold=False, **mo_filter).aggregate(t=Sum('total_amount'))
                 chart_purchase.append(float(p['t'] or 0))
-                s = Sales.objects.filter(client=client, is_active=True, **mo_filter).aggregate(t=Sum('total_amount'))
+                s = Sales.objects.filter(client=client, is_active=True, hold=False, **mo_filter).aggregate(t=Sum('total_amount'))
                 chart_sale.append(float(s['t'] or 0))
-                n = NSDs.objects.filter(client=client, is_active=True, **mo_filter).aggregate(t=Sum('sell_amount'))
+                n = NSDs.objects.filter(client=client, is_active=True, hold=False, **mo_filter).aggregate(t=Sum('sell_amount'))
                 chart_nsd.append(float(n['t'] or 0))
-                c_val = Cashs.objects.filter(client=client, is_active=True, **mo_filter).aggregate(t=Sum('amount'))
-                chart_cash.append(float(c_val['t'] or 0))
+                
+                c_in = Cashs.objects.filter(client=client, is_active=True, hold=False, transaction='Received', **mo_filter).aggregate(t=Sum('amount'))
+                c_out = Cashs.objects.filter(client=client, is_active=True, hold=False, transaction='Paid', **mo_filter).aggregate(t=Sum('amount'))
+                net_cash = float((c_in['t'] or Decimal('0')) - (c_out['t'] or Decimal('0')))
+                chart_cash.append(net_cash)
         else:
             # Month view: daily totals for each day
-            def daily_totals(model, value_field):
+            def daily_totals(model, value_field, extra_filter=None):
+                q = model.objects.filter(client=client, is_active=True, hold=False, **date_filter)
+                if extra_filter:
+                    q = q.filter(**extra_filter)
                 rows = (
-                    model.objects.filter(client=client, is_active=True, **date_filter)
-                    .values('date')
+                    q.values('date')
                     .annotate(total=Sum(value_field))
                     .order_by('date')
                 )
@@ -230,7 +240,9 @@ class ClientDashboardView(View):
             p_daily = daily_totals(Purchases, 'total_amount')
             s_daily = daily_totals(Sales, 'total_amount')
             n_daily = daily_totals(NSDs, 'sell_amount')
-            c_daily = daily_totals(Cashs, 'amount')
+            
+            c_in_daily = daily_totals(Cashs, 'amount', {'transaction': 'Received'})
+            c_out_daily = daily_totals(Cashs, 'amount', {'transaction': 'Paid'})
 
             current_day = month_start
             while current_day <= month_end:
@@ -238,7 +250,9 @@ class ClientDashboardView(View):
                 chart_purchase.append(p_daily.get(current_day, 0))
                 chart_sale.append(s_daily.get(current_day, 0))
                 chart_nsd.append(n_daily.get(current_day, 0))
-                chart_cash.append(c_daily.get(current_day, 0))
+                
+                net_day_cash = c_in_daily.get(current_day, 0) - c_out_daily.get(current_day, 0)
+                chart_cash.append(net_day_cash)
                 current_day += timedelta(days=1)
 
         chart_data = {
@@ -283,6 +297,69 @@ def update_party(party):
         party.credit -= cancel
     
     party.balance = party.debit - party.credit
+
+
+def calculate_supplier_balance(supplier, client, date_limit=None):
+    from core.models import Purchases, Sales, NSDs, Cashs
+    from django.db.models import Sum, Q
+
+    base_filter = Q(is_active=True, hold=False, client=client, supplier=supplier)
+    nsd_base = Q(is_active=True, hold=False, client=client)
+    
+    if date_limit:
+        base_filter &= Q(date__lte=date_limit)
+        nsd_base &= Q(date__lte=date_limit)
+    
+    purchases_sum = Purchases.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+    sales_sum = Sales.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+    sender_sum = NSDs.objects.filter(nsd_base, sender_supplier=supplier).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0.0000')
+    receiver_sum = NSDs.objects.filter(nsd_base, receiver_supplier=supplier).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0.0000')
+    
+    cash_received = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
+    cash_paid = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
+    
+    transaction_balance = (sales_sum + receiver_sum + cash_paid) - (purchases_sum + sender_sum + cash_received)
+    static_ob = supplier.open_debit - supplier.open_credit
+    
+    return static_ob + transaction_balance
+
+def calculate_customer_balance(customer, client, date_limit=None):
+    from core.models import Purchases, Sales, NSDs, Cashs
+    from django.db.models import Sum, Q
+
+    base_filter = Q(is_active=True, hold=False, client=client, customer=customer)
+    nsd_base = Q(is_active=True, hold=False, client=client)
+    
+    if date_limit:
+        base_filter &= Q(date__lte=date_limit)
+        nsd_base &= Q(date__lte=date_limit)
+    
+    purchases_sum = Purchases.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+    sales_sum = Sales.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+    sender_sum = NSDs.objects.filter(nsd_base, sender_customer=customer).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0.0000')
+    receiver_sum = NSDs.objects.filter(nsd_base, receiver_customer=customer).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0.0000')
+    
+    cash_received = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
+    cash_paid = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
+    
+    transaction_balance = (sales_sum + receiver_sum + cash_paid) - (purchases_sum + sender_sum + cash_received)
+    static_ob = customer.open_debit - customer.open_credit
+    
+    return static_ob + transaction_balance
+
+def calculate_cashbank_balance(cashbank, client, date_limit=None):
+    from core.models import Cashs
+    from django.db.models import Sum, Q
+    from decimal import Decimal
+
+    base_filter = Q(is_active=True, hold=False, client=client, cash_bank=cashbank)
+    if date_limit:
+        base_filter &= Q(date__lte=date_limit)
+        
+    received_sum = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
+    paid_sum = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
+    
+    return received_sum - paid_sum
 
 
 def update_ledger(where, to=None, old_purchase=0, new_purchase=0, old_sale=0, new_sale=0):

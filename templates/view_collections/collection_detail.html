@@ -23,50 +23,50 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-            <p class="text-xs text-blue-600 uppercase font-medium mb-1">Total Assigned Amount</p>
-            <p class="text-2xl font-bold text-gray-800">{{ collection.total_amount }}</p>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-6 mb-8 mt-3">
+        <div class="bg-blue-50 p-3.5 md:p-4 rounded-xl border border-blue-100">
+            <p class="text-[11px] md:text-xs text-blue-600 uppercase font-medium mb-0.5 md:mb-1">Total Assigned Amount</p>
+            <p class="text-xl md:text-2xl font-bold text-gray-800">{{ collection.total_amount }}</p>
         </div>
-        <div class="bg-green-50 p-4 rounded-xl border border-green-100">
-            <p class="text-xs text-green-600 uppercase font-medium mb-1">Total Collected Amount</p>
-            <p class="text-2xl font-bold text-gray-800">{{ total_collected }}</p>
+        <div class="bg-green-50 p-3.5 md:p-4 rounded-xl border border-green-100">
+            <p class="text-[11px] md:text-xs text-green-600 uppercase font-medium mb-0.5 md:mb-1">Total Collected Amount</p>
+            <p class="text-xl md:text-2xl font-bold text-gray-800">{{ total_collected }}</p>
         </div>
-        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
-            <p class="text-xs text-gray-500 uppercase font-medium mb-1">Items Count</p>
-            <p class="text-2xl font-bold text-gray-800">{{ items.count }}</p>
+        <div class="bg-gray-50 p-3.5 md:p-4 rounded-xl border border-gray-100">
+            <p class="text-[11px] md:text-xs text-gray-500 uppercase font-medium mb-0.5 md:mb-1">Items Count</p>
+            <p class="text-xl md:text-2xl font-bold text-gray-800">{{ items.count }}</p>
         </div>
-        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
-            <p class="text-xs text-gray-500 uppercase font-medium mb-1">Created At</p>
-            <p class="text-lg font-medium text-gray-800">{{ collection.created_at|date:"M d, Y h:i A" }}</p>
+        <div class="bg-gray-50 p-3.5 md:p-4 rounded-xl border border-gray-100">
+            <p class="text-[11px] md:text-xs text-gray-500 uppercase font-medium mb-0.5 md:mb-1">Created At</p>
+            <p class="text-sm md:text-lg font-medium text-gray-800">{{ collection.created_at|date:"M d, Y h:i A" }}</p>
         </div>
     </div>
 
-    <h2 class="text-lg font-medium text-gray-700 mb-4">Collection Entries</h2>
-    <div class="overflow-x-auto w-full">
-        <table class="w-full min-w-max rounded-t-lg overflow-hidden border border-gray-200">
-            <thead class="bg-blue-50 text-gray-700 uppercase text-xs">
+    <h2 class="text-lg font-medium text-gray-700 mb-4 mt-8">Collection Entries</h2>
+    <div class="overflow-x-auto mt-3 w-full shadow-sm rounded-md border border-slate-200">
+        <table class="table-fixed w-full text-sm">
+            <thead class="bg-blue-200 text-gray-700 uppercase text-xs">
                 <tr>
-                    <th class="px-4 py-3 text-left font-medium">Ref ID</th>
-                    <th class="px-4 py-3 text-left font-medium">Partner</th>
-                    <th class="px-4 py-3 text-left font-medium">Contact</th>
-                    <th class="px-4 py-3 text-left font-medium">Type</th>
-                    <th class="px-4 py-3 text-right font-medium">Assigned Amount</th>
-                    <th class="px-4 py-3 text-right font-medium">Collected Amount</th>
+                    <th class="px-1.5 py-1.5 text-left font-bold text-slate-900 tracking-wider w-32">Ref ID</th>
+                    <th class="px-1.5 py-1.5 text-left font-bold text-slate-900 tracking-wider w-[200px]">Partner</th>
+                    <th class="px-1.5 py-1.5 text-left font-bold text-slate-900 tracking-wider w-32">Contact</th>
+                    <th class="px-1.5 py-1.5 text-center font-bold text-slate-900 tracking-wider w-24">Type</th>
+                    <th class="px-1.5 py-1.5 text-right font-bold text-slate-900 tracking-wider w-32">Assigned Amt</th>
+                    <th class="px-1.5 py-1.5 text-right font-bold text-slate-900 tracking-wider w-32">Collected Amt</th>
                 </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-gray-200 text-sm">
+            <tbody class="bg-white">
                 {% for item in items %}
-                <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="px-4 py-3 text-gray-800 font-medium">{{ item.transaction_id }}</td>
-                    <td class="px-4 py-3 text-gray-600">{{ item.partner_name }}</td>
-                    <td class="px-4 py-3">
-                        <div class="flex items-center gap-3">
+                <tr class="border-b border-[#B0B0B0] odd:bg-white even:bg-[#E5E7EB] hover:bg-[#F0F8FF] transition-all duration-200">
+                    <td class="px-1.5 py-1.5 border-r border-[#B0B0B0] text-gray-800 font-medium truncate w-32">{{ item.transaction_id }}</td>
+                    <td class="px-1.5 py-1.5 border-r border-[#B0B0B0] text-gray-600 truncate w-[200px]">{{ item.partner_name }}</td>
+                    <td class="px-1.5 py-1.5 border-r border-[#B0B0B0] w-32">
+                        <div class="flex items-center gap-1.5 truncate">
                             {% if item.partner_phone and item.partner_phone != '-' %}
                             <a href="tel:{{ item.partner_phone }}"
-                                class="text-gray-500 hover:text-blue-600 transition-colors"
+                                class="text-blue-500 hover:text-blue-700 transition-colors"
                                 title="Call {{ item.partner_phone }}">
-                                <i data-lucide="phone" class="w-4 h-4"></i>
+                                <i data-lucide="phone" class="w-3.5 h-3.5 inline"></i>
                                 {{ item.partner_phone }}
                             </a>
                             {% else %}
@@ -74,13 +74,13 @@
                             {% endif %}
                         </div>
                     </td>
-                    <td class="px-4 py-3 text-gray-600">{{ item.transaction_type }}</td>
-                    <td class="px-4 py-3 text-right font-medium text-gray-800">{{ item.amount }}</td>
-                    <td class="px-4 py-3 text-right font-medium text-green-600">{{ item.collected_amount }}</td>
+                    <td class="px-1.5 py-1.5 border-r border-[#B0B0B0] text-center text-gray-600 w-24">{{ item.transaction_type }}</td>
+                    <td class="px-1.5 py-1.5 border-r border-[#B0B0B0] text-right font-bold text-gray-800 w-32">{{ item.amount }}</td>
+                    <td class="px-1.5 py-1.5 border-r border-[#B0B0B0] text-right font-bold text-green-600 w-32">{{ item.collected_amount }}</td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="4" class="px-4 py-8 text-center text-gray-500">
+                    <td colspan="6" class="px-1.5 py-8 text-center text-gray-500">
                         No transactions found in this collection.
                     </td>
                 </tr>

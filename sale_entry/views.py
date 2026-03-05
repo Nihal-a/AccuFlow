@@ -7,7 +7,7 @@ from django.views.generic.edit import DeleteView
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 
-from core.views import getClient, update_ledger
+from core.views import getClient, update_ledger, calculate_customer_balance, calculate_supplier_balance
 from core.authorization import get_object_for_user
 from decimal import Decimal
 from django.core.exceptions import ValidationError
@@ -43,7 +43,7 @@ class SaleEntryView(View):
                 'id':customer.id,
                 'name':customer.name,
                 'customerId':customer.customerId, 
-                'balance':str(customer.get_balance),
+                'balance':str(calculate_customer_balance(customer, getClient(request.user))),
             })
         suppliersData = []
         for supplier in suppliers:
@@ -51,10 +51,12 @@ class SaleEntryView(View):
                 'id':supplier.id,
                 'name':supplier.name,
                 'supplierId':supplier.supplierId,
-                'balance':str(supplier.get_balance),
+                'balance':str(calculate_supplier_balance(supplier, getClient(request.user))),
             })
         context = {
             'sales':saleData,
+            'suppliers_data':suppliersData,
+            'customers_data':customersData,
             'suppliers_json':json.dumps(suppliersData),
             'customers_json':json.dumps(customersData),
             'suppliers': suppliers,
@@ -306,3 +308,16 @@ def delete_sale(request):
         sale.godown.save()
     sale.save()
     return JsonResponse({'status':'success','message':'sale deleted successfully'})
+
+
+def sale_balances_api(request):
+    client = getClient(request.user)
+    suppliers = Suppliers.objects.filter(is_active=True, client=client)
+    customers = Customers.objects.filter(is_active=True, client=client)
+    godowns = Godowns.objects.filter(is_active=True, client=client)
+    data = {
+        'suppliers': {str(s.id): str(calculate_supplier_balance(s, client)) for s in suppliers},
+        'customers': {str(c.id): str(calculate_customer_balance(c, client)) for c in customers},
+        'godowns': {str(g.id): str(g.qty) for g in godowns},
+    }
+    return JsonResponse(data)

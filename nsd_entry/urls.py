@@ -8,4 +8,5 @@ urlpatterns = [
     path('api/nsds_by_date/', views.nsds_by_date, name='api-nsds-by-date'),
     path('api/hold_nsd/', views.NSDHold.as_view(), name='api-hold-nsd'),
     path('api/delete_nsd/', views.delete_nsd, name='api-delete-nsd'), 
+    path('api/balances/', views.nsd_balances_api, name='api-nsd-balances'),
 ] 

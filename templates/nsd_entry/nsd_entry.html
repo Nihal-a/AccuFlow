@@ -224,7 +224,7 @@
           <select name="" id="supplier"
             class="w-full px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required>
             <option value="" selected>Select Supplier</option>
-            {% for supplier in suppliers %}
+            {% for supplier in suppliers_data %}
             <option value="{{ supplier.id }}" data-code="{{supplier.supplierId}}" data-balance="{{supplier.balance}}"
               data-type="suppliers">{{ supplier.name }}</option>
             {% endfor %}
@@ -260,7 +260,7 @@
           <select name="" id="customer"
             class="w-full px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required>
             <option value="" selected>Select Customer</option>
-            {% for customer in customers %}
+            {% for customer in customers_data %}
             <option value="{{ customer.id }}" data-code="{{customer.customerId}}" data-balance="{{customer.balance}}"
               data-type="customers">{{ customer.name }}</option>
             {% endfor %}
@@ -556,6 +556,45 @@
   var all_suppliers_data = {{ suppliers_json| safe }};
   var isUpdate = false;
 
+  function refreshBalances() {
+    fetch("{% url 'api-nsd-balances' %}")
+      .then(response => response.json())
+      .then(data => {
+        // Update JS arrays
+        all_suppliers_data.forEach(s => {
+          if (data.suppliers[String(s.id)] !== undefined) {
+            s.balance = data.suppliers[String(s.id)];
+          }
+        });
+        all_customers_data.forEach(c => {
+          if (data.customers[String(c.id)] !== undefined) {
+            c.balance = data.customers[String(c.id)];
+          }
+        });
+        // Update dropdown data-balance attributes
+        $('#supplier option').each(function () {
+          const id = $(this).val();
+          if (id && data.suppliers[id] !== undefined) {
+            $(this).data('balance', data.suppliers[id]);
+          }
+        });
+        $('#customer option').each(function () {
+          const id = $(this).val();
+          if (id && data.customers[id] !== undefined) {
+            $(this).data('balance', data.customers[id]);
+          }
+        });
+        
+        if ($('#supplier').val()) {
+          $('#supplier').trigger('change');
+        }
+        if ($('#customer').val()) {
+          $('#customer').trigger('change');
+        }
+      })
+      .catch(error => console.error('Error refreshing balances:', error));
+  }
+
   function addLastRow() {
     const tableBody = document.getElementById("nsdTableBody");
     $('#totalRow').remove();
@@ -632,7 +671,7 @@
     $('#supplierID').val(code);
     $('#supplierCredit').empty();
     $('#supplierCredit').append(`
-      <p class="font-semibold ${balance <= 0 ? 'text-red' : ''}">Balance:${balance.toFixed(2)} </p> 
+      <p class="font-semibold ${balance < 0 ? 'text-red-500' : ''}">Balance: ${balance.toFixed(2)} </p> 
       `);
     $('#customer option').each(function () {
       if ($(this).data('type') == supplierType && $(this).val() == $('#supplier').val()) {
@@ -970,6 +1009,7 @@
           addLastRow()
           isUpdate = false
         } else {
+          refreshBalances();
           $('#viewNSDDiv').removeClass('hidden');
           $('#viewDiv').removeClass('hidden');
           $('#createView').addClass('hidden');

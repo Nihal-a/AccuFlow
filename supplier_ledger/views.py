@@ -228,8 +228,8 @@ class SupplierLedgerView(View):
         cash_received = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
         cash_paid = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
         
-        transaction_balance = (purchases_sum + sender_sum + cash_received) - (sales_sum + receiver_sum + cash_paid)
+        transaction_balance = (sales_sum + receiver_sum + cash_paid) - (purchases_sum + sender_sum + cash_received)
         
-        static_ob = supplier.open_credit - supplier.open_debit
+        static_ob = supplier.open_debit - supplier.open_credit
         
         return static_ob + transaction_balance

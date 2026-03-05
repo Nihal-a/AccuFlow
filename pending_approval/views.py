@@ -7,6 +7,7 @@ from core.models import Collection, Cashs, CashBanks, Sales, Customers, Supplier
 from core.views import getClient, update_ledger
 from cash_entry.views import getLastCashNo
 from django.db.models import Sum, Count
+from decimal import Decimal, InvalidOperation
 
 class PendingApprovalView(LoginRequiredMixin, View):
     def get(self, request):

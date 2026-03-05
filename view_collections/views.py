@@ -6,7 +6,7 @@ from decimal import Decimal
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from core.models import Collectors, Sales, Purchases, NSDs, Collection, CollectionItem, Customers, Suppliers
-from core.views import getClient
+from core.views import getClient, calculate_customer_balance, calculate_supplier_balance
 from core.authorization import get_object_for_user
 from django.contrib import messages
 from django.urls import reverse
@@ -55,32 +55,36 @@ class AddCollectionView(View):
             selected_collector = get_object_for_user(Collectors, request.user, id=collector_id)
             
 
-            customers = Customers.objects.filter(client=client, is_active=True, balance__gt=0)
+            customers = Customers.objects.filter(client=client, is_active=True)
             for c in customers:
-                receivables.append({
-                    'id': f"Customer_{c.id}",
-                    'type': 'Customer',
-                    'obj_id': c.id,
-                    'name': c.name,
-                    'phone': c.phone,
-                    'balance': c.balance,
-                    'collected_amount': Decimal('0.0000'),
-                    'is_selected': False
-                })
+                bal = calculate_customer_balance(c, client)
+                if bal > 0:
+                    receivables.append({
+                        'id': f"Customer_{c.id}",
+                        'type': 'Customer',
+                        'obj_id': c.id,
+                        'name': c.name,
+                        'phone': c.phone,
+                        'balance': bal,
+                        'collected_amount': Decimal('0.0000'),
+                        'is_selected': False
+                    })
 
 
-            suppliers = Suppliers.objects.filter(client=client, is_active=True, balance__gt=0)
+            suppliers = Suppliers.objects.filter(client=client, is_active=True)
             for s in suppliers:
-                 receivables.append({
-                    'id': f"Supplier_{s.id}",
-                    'type': 'Supplier',
-                    'obj_id': s.id,
-                    'name': s.name,
-                    'phone': s.phone,
-                    'balance': s.balance,
-                    'collected_amount': Decimal('0.0000'),
-                    'is_selected': False
-                })
+                 bal = calculate_supplier_balance(s, client)
+                 if bal > 0:
+                     receivables.append({
+                        'id': f"Supplier_{s.id}",
+                        'type': 'Supplier',
+                        'obj_id': s.id,
+                        'name': s.name,
+                        'phone': s.phone,
+                        'balance': bal,
+                        'collected_amount': Decimal('0.0000'),
+                        'is_selected': False
+                    })
             
             if instance:
                 existing_items = {f"{item.transaction_type}_{item.transaction_id}": item.amount for item in instance.items.all()}
@@ -104,7 +108,7 @@ class AddCollectionView(View):
                             'obj_id': c.id,
                             'name': c.name,
                             'phone': c.phone,
-                            'balance': c.balance,
+                            'balance': calculate_customer_balance(c, client),
                             'collected_amount': amount,
                             'is_selected': True
                         })
@@ -116,7 +120,7 @@ class AddCollectionView(View):
                             'obj_id': s.id,
                             'name': s.name,
                             'phone': s.phone,
-                            'balance': s.balance,
+                            'balance': calculate_supplier_balance(s, client),
                             'collected_amount': amount,
                             'is_selected': True
                         })

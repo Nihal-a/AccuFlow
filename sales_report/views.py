@@ -4,9 +4,10 @@ from django.http import HttpResponse
 from django.views import View
 from django.core.paginator import Paginator
 from django.db.models import Sum, Q
+from django.utils import timezone
 from datetime import datetime
 from decimal import Decimal
-from core.models import Customers, Sales, Suppliers 
+from core.models import Customers, Sales, Suppliers, NSDs
 from core.views import getClient
 import openpyxl
 from io import BytesIO
@@ -35,6 +36,7 @@ class SalesReportView(View):
             'trade_partners': combined_partners,
             'date_from': '',
             'date_to': '',
+            'report_type': 'all',
         }
         return render(request, 'sales_report/sales_report.html', context)
 
@@ -44,6 +46,7 @@ class SalesReportView(View):
         date_from_str = request.POST.get("dateFrom")
         date_to_str = request.POST.get("dateTo")
         sort = request.POST.get('sort')
+        report_type = request.POST.get('report_type', 'all') # all, regular, nsd
 
         suppliers = list(Suppliers.objects.filter(is_active=True, client=client))
         customers = list(Customers.objects.filter(is_active=True, client=client))
@@ -60,6 +63,12 @@ class SalesReportView(View):
             'is_active': True,
             'hold': False
         }
+        
+        nsd_filter_kwargs = {
+            'client': client,
+            'is_active': True,
+            'hold': False
+        }
 
         selected_id = None
         selected_type = None
@@ -69,8 +78,10 @@ class SalesReportView(View):
                 p_type, p_id = filter_value.split('_')
                 if p_type == 'supplier':
                     filter_kwargs['supplier_id'] = p_id
+                    nsd_filter_kwargs['receiver_supplier_id'] = p_id
                 elif p_type == 'customer':
                     filter_kwargs['customer_id'] = p_id
+                    nsd_filter_kwargs['receiver_customer_id'] = p_id
                 
                 selected_id = p_id
                 selected_type = p_type
@@ -79,9 +90,11 @@ class SalesReportView(View):
         
         if date_from_str:
             filter_kwargs['date__gte'] = date_from_str
+            nsd_filter_kwargs['date__gte'] = date_from_str
         
         if date_to_str:
             filter_kwargs['date__lte'] = date_to_str
+            nsd_filter_kwargs['date__lte'] = date_to_str
             
         # Optimization: If no date filter is applied, do not show any data initially
         min_amount_str = request.POST.get('min_amount')
@@ -96,7 +109,8 @@ class SalesReportView(View):
                 'date_from': '',
                 'date_to': '',
                 'selected_filter_value': '',
-                'min_amount': min_amount_str or ''
+                'min_amount': min_amount_str or '',
+                'report_type': report_type
             })
             
         if min_amount_str:
@@ -110,46 +124,81 @@ class SalesReportView(View):
         date_from = date_from_str
         date_to = date_to_str
 
-        sales = Sales.objects.filter(**filter_kwargs)
-        
+        combined_sales = []
+
+        if report_type in ['all', 'regular']:
+            sales = Sales.objects.filter(**filter_kwargs)
+            for s in sales:
+                if s.supplier:
+                    partner_name = s.supplier.name
+                elif s.customer:
+                    partner_name = s.customer.name
+                else:
+                    partner_name = "Unknown"
+                
+                combined_sales.append({
+                    'type': 'SL',
+                    'trade_partner': partner_name,
+                    'date': s.date,
+                    'transaction_no': str(s.sale_no),
+                    'description': s.description or '',
+                    'qty': s.qty,
+                    'rate': s.amount,
+                    'total_amount': s.total_amount,
+                    'created_at': s.created_at,
+                    'original_obj': s
+                })
+
+        if report_type in ['all', 'nsd']:
+            nsds = NSDs.objects.filter(**nsd_filter_kwargs)
+            # Apply min_amount to NSDs based on sell_amount
+            for n in nsds:
+                if min_amount_str:
+                    try:
+                        if n.sell_amount < Decimal(str(min_amount_str)):
+                            continue
+                    except:
+                        pass
+                
+                if n.receiver:
+                    partner_name = n.receiver.name
+                else:
+                    partner_name = "Unknown"
+                    
+                combined_sales.append({
+                    'type': 'NS',
+                    'trade_partner': partner_name,
+                    'date': n.date,
+                    'transaction_no': str(n.nsd_no),
+                    'description': n.description or '',
+                    'qty': n.qty,
+                    'rate': n.sell_rate,
+                    'total_amount': n.sell_amount,
+                    'created_at': n.created_at,
+                    'original_obj': n
+                })
+
         # Sorting
+        min_dt = timezone.make_aware(datetime.min) if timezone.get_current_timezone() else datetime.min
         if sort == 'Serial':
-            sales = sales.order_by('sale_no')
+            # Serial sort fallback to date
+            combined_sales.sort(key=lambda x: (x['date'], x.get('created_at') or min_dt))
         else:
-            # Default sort by date
-            sales = sales.order_by('date', 'created_at')
+            combined_sales.sort(key=lambda x: (x['date'], x.get('created_at') or min_dt))
 
         # Calculate totals
-        total_qty = sales.aggregate(Sum('qty'))['qty__sum'] or Decimal('0.0000')
-        total_amount = sales.aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0.0000')
+        total_qty = sum((item['qty'] or Decimal('0')) for item in combined_sales)
+        total_amount = sum((item['total_amount'] or Decimal('0')) for item in combined_sales)
 
         # Pagination
-        paginator = Paginator(sales, 50)
+        paginator = Paginator(combined_sales, 50)
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
         
         # Prepare list for display 
         report_data = []
-        for s in page_obj.object_list:
-            # Determine Trade Partner Name
-            if s.supplier:
-                partner_name = s.supplier.name
-            elif s.customer:
-                partner_name = s.customer.name
-            else:
-                partner_name = "Unknown"
-            
-            description = s.description
-
-            report_data.append({
-                'trade_partner': partner_name,
-                'date': s.date,
-                'transaction_no': s.sale_no,
-                'description': description,
-                'qty': s.qty,
-                'rate': s.amount,
-                'total_amount': s.total_amount
-            })
+        for item in page_obj.object_list:
+            report_data.append(item)
 
         context = {
             'trade_partners': combined_partners,
@@ -161,7 +210,8 @@ class SalesReportView(View):
             'date_to': date_to,
             'selected_filter_value': filter_value if filter_value else '',
             'min_amount': min_amount_str or '',
-            'sort': sort
+            'sort': sort,
+            'report_type': report_type
         }
 
         export_type = request.POST.get('export')
@@ -188,7 +238,7 @@ class SalesReportView(View):
             ws.title = "Sales Report"
             
             # Header
-            headers = ["#", "Trade Partner", "Date", "Transaction No", "Description", "Qty", "Rate", "Amount"]
+            headers = ["#", "Type", "Trade Partner", "Date", "Transaction No", "Description", "Qty", "Rate", "Amount"]
             ws.append(headers)
             
             for index, item in enumerate(report_data, 1):
@@ -196,6 +246,7 @@ class SalesReportView(View):
                 d_str = item['date'].strftime("%d-%m-%Y") if item['date'] else ""
                 row = [
                     index,
+                    item['type'],
                     item['trade_partner'],
                     d_str,
                     item['transaction_no'],
@@ -207,7 +258,7 @@ class SalesReportView(View):
                 ws.append(row)
             
             # Totals
-            ws.append(["", "", "", "", "TOTAL", total_qty, "", total_amount])
+            ws.append(["", "", "", "", "", "TOTAL", total_qty, "", total_amount])
             
             output = BytesIO()
             wb.save(output)

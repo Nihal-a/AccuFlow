@@ -3,14 +3,11 @@
 {% block title %}Balance Accounts - WhatsApp - AccuFlow{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto">
+<div class="bg-white rounded-xl p-6 mt-3 shadow-sm border border-gray-100">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-gray-100 pb-4">
         <div>
-            <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-                <i data-lucide="send" class="w-5 h-5 text-blue-500"></i>
-                Send Balance via WhatsApp
-            </h2>
+            <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">Send Balance</h1>
             <p class="text-sm text-gray-500 mt-1">Select accounts and send their current balance via WhatsApp.</p>
         </div>
         <a href="{% url 'whatsapp:whatsapp_scan' %}"
@@ -185,12 +182,63 @@
         });
         renderAccounts();
 
-        // Default dates: yesterday → today
+        // Default dates: yesterday → today (1-day gap)
         const today = new Date();
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
         document.getElementById('dateTo').value = today.toISOString().split('T')[0];
         document.getElementById('dateFrom').value = yesterday.toISOString().split('T')[0];
+
+        // 1-day gap auto-sync
+        const dateFromEl = document.getElementById('dateFrom');
+        const dateToEl = document.getElementById('dateTo');
+
+        dateFromEl.addEventListener('change', () => {
+            if (dateFromEl.value) {
+                const fromDate = new Date(dateFromEl.value);
+                fromDate.setDate(fromDate.getDate() + 1);
+                dateToEl.value = fromDate.toISOString().split('T')[0];
+                validateDateGap();
+            }
+        });
+
+        dateToEl.addEventListener('change', () => {
+            if (dateToEl.value) {
+                const toDate = new Date(dateToEl.value);
+                toDate.setDate(toDate.getDate() - 1);
+                dateFromEl.value = toDate.toISOString().split('T')[0];
+                validateDateGap();
+            }
+        });
+    }
+
+    function validateDateGap() {
+        const dateFromEl = document.getElementById('dateFrom');
+        const dateToEl = document.getElementById('dateTo');
+        const fromVal = dateFromEl.value;
+        const toVal = dateToEl.value;
+
+        if (fromVal && toVal) {
+            const from = new Date(fromVal);
+            const to = new Date(toVal);
+            const diffMs = to - from;
+            const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+            if (diffDays === 1) {
+                dateFromEl.classList.remove('border-red-400');
+                dateFromEl.classList.add('border-green-400');
+                dateToEl.classList.remove('border-red-400');
+                dateToEl.classList.add('border-green-400');
+                return true;
+            } else {
+                dateFromEl.classList.remove('border-green-400');
+                dateFromEl.classList.add('border-red-400');
+                dateToEl.classList.remove('border-green-400');
+                dateToEl.classList.add('border-red-400');
+                return false;
+            }
+        }
+        return false;
     }
 
     // --- RENDER ---
@@ -240,7 +288,7 @@
                             data-account="${a.prefixedId}" data-mode="text"
                             class="image-toggle w-7 h-7 rounded-md border border-gray-200 flex items-center justify-center transition-all text-gray-300 hover:text-gray-500 hover:border-gray-300" 
                             title="Click to send as image">
-                            <i data-lucide="camera" class="w-3.5 h-3.5"></i>
+                            <i data-lucide="file-image" class="w-3.5 h-3.5"></i>
                         </button>
                     </td>
                 </tr>
@@ -321,6 +369,12 @@
             alert('Please select both From and To dates before sending.');
             document.getElementById('dateFrom').classList.toggle('border-red-400', !dateFrom);
             document.getElementById('dateTo').classList.toggle('border-red-400', !dateTo);
+            return;
+        }
+
+        // Validate 1-day gap
+        if (!validateDateGap()) {
+            alert('Date range must be exactly 1 day gap (e.g., From: March 5 → To: March 6).');
             return;
         }
         // Clear red borders

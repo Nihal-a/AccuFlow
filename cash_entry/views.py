@@ -7,7 +7,7 @@ from django.views.generic.edit import DeleteView
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 
-from core.views import getClient, update_ledger
+from core.views import getClient, update_ledger, calculate_customer_balance, calculate_supplier_balance, calculate_cashbank_balance
 from core.authorization import get_object_for_user
 from core.utils import validate_positive_decimal
 from django.db import transaction
@@ -50,10 +50,35 @@ class CashEntryView(View):
         suppliers = Suppliers.objects.filter(is_active=True,client=getClient(request.user))
         customers = Customers.objects.filter(is_active=True,client=getClient(request.user))
         cashbanks = CashBanks.objects.filter(is_active=True,client=getClient(request.user))
+        
+        customersData = []
+        for customer in customers:
+            customersData.append({
+                'id':customer.id,
+                'name':customer.name,
+                'customerId':customer.customerId, 
+                'balance':str(calculate_customer_balance(customer, getClient(request.user))),
+            })
+            
+        suppliersData = []
+        for supplier in suppliers:
+            suppliersData.append({
+                'id':supplier.id,
+                'name':supplier.name,
+                'supplierId':supplier.supplierId,
+                'balance':str(calculate_supplier_balance(supplier, getClient(request.user))),
+            })
+            
+        # Add dynamic calculated balance to CashBanks
+        for cb in cashbanks:
+            cb.calculated_balance = calculate_cashbank_balance(cb, getClient(request.user))
+
         context = {
             'cashs':cashData,
-            'suppliers':suppliers,
-            'customers':customers,
+            'suppliers_data':suppliersData,
+            'customers_data':customersData,
+            'suppliers_json': json.dumps(suppliersData),
+            'customers_json': json.dumps(customersData),
             'last_cash_no':getLastCashNo(client=getClient(request.user)),
             'cashbanks':cashbanks,
             'cb_id':cb_id
@@ -294,3 +319,15 @@ def delete_cash(request):
     cash.is_active = False
     cash.save()
     return JsonResponse({'status':'success','message':'Cash deleted successfully'})
+
+def cash_balances_api(request):
+    client = getClient(request.user)
+    suppliers = Suppliers.objects.filter(is_active=True, client=client)
+    customers = Customers.objects.filter(is_active=True, client=client)
+    cashbanks = CashBanks.objects.filter(is_active=True, client=client)
+    data = {
+        'suppliers': {str(s.id): str(calculate_supplier_balance(s, client)) for s in suppliers},
+        'customers': {str(c.id): str(calculate_customer_balance(c, client)) for c in customers},
+        'cashbanks': {str(cb.id): str(calculate_cashbank_balance(cb, client)) for cb in cashbanks},
+    }
+    return JsonResponse(data)

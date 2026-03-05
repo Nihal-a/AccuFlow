@@ -32,7 +32,7 @@
                     <td class="px-4 py-3 text-left">{{ s.code }}</td>
                     <td class="px-4 py-3 text-left font-semibold text-gray-700">{{ s.name }}</td>
                     <td class="px-4 py-3 text-left">{{ s.phone }}</td>
-                    <td class="px-4 py-3 text-right">{{ s.balance|floatformat:2 }}</td>
+                    <td class="px-4 py-3 text-right {% if s.balance < 0 %}text-red-600{% endif %}">{{ s.balance|floatformat:2 }}</td>
                     <td class="px-4 py-3 text-right font-bold text-blue-600">{{ s.total_trade|floatformat:2 }}</td>
                 </tr>
                 {% empty %}

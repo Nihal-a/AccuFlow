@@ -120,7 +120,7 @@ Purchase Entry
           <select name="" id="supplier"
             class="w-full px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" required>
             <option value="" selected>Select Supplier</option>
-            {% for supplier in suppliers %}
+            {% for supplier in suppliers_data %}
             <option value="{{ supplier.id }}" data-code="{{ supplier.supplierId }}"
               data-balance="{{ supplier.balance }}" data-type="suppliers">{{ supplier.name }}</option>
             {% endfor %}
@@ -504,7 +504,7 @@ Purchase Entry
     $('#supplierID').val(code);
     $('#supplierCredit').empty();
     $('#supplierCredit').append(`
-      <p class="font-semibold ${parseFloat(balance).toFixed(2) <= 0 ? `text-red` : ``}">Balance:${parseFloat(balance).toFixed(2)} </p> 
+      <p class="font-semibold ${parseFloat(balance) < 0 ? 'text-red-500' : ''}">Balance: ${parseFloat(balance).toFixed(2)} </p> 
       `);
   });
   $('#allSuppliers').on('change', function () {

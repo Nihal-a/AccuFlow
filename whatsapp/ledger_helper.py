@@ -42,7 +42,7 @@ def get_customer_ledger(customer, client, date_from=None, date_to=None):
 
     ledger_items = []
 
-    # Purchases (credit to customer)
+    # Purchases (credit to customer) — matches CustomerLedgerView
     for p in Purchases.objects.filter(base_filter, date_filter, customer=customer):
         ledger_items.append({
             'date': p.date,
@@ -55,7 +55,7 @@ def get_customer_ledger(customer, client, date_from=None, date_to=None):
             'created_at': p.created_at,
         })
 
-    # Sales (debit to customer)
+    # Sales (debit to customer) — matches CustomerLedgerView
     for s in Sales.objects.filter(base_filter, date_filter, customer=customer):
         ledger_items.append({
             'date': s.date,
@@ -68,33 +68,35 @@ def get_customer_ledger(customer, client, date_from=None, date_to=None):
             'created_at': s.created_at,
         })
 
-    # NSDs — sender (credit)
+    # NSDs — sender (credit to customer) — matches CustomerLedgerView
+    # rate=purchase_rate, credit=purchase_amount
     for n in NSDs.objects.filter(base_filter, date_filter, sender_customer=customer):
         ledger_items.append({
             'date': n.date,
             'type': 'NS',
             'details': n.description or '',
             'qty': str(n.qty or ''),
-            'rate': str(n.sell_rate or ''),
-            'credit': n.sell_amount or Decimal('0'),
+            'rate': str(n.purchase_rate or ''),
+            'credit': n.purchase_amount or Decimal('0'),
             'debit': Decimal('0'),
             'created_at': n.created_at,
         })
 
-    # NSDs — receiver (debit)
+    # NSDs — receiver (debit to customer) — matches CustomerLedgerView
+    # rate=sell_rate, debit=sell_amount
     for n in NSDs.objects.filter(base_filter, date_filter, receiver_customer=customer):
         ledger_items.append({
             'date': n.date,
             'type': 'NS',
             'details': n.description or '',
             'qty': str(n.qty or ''),
-            'rate': str(n.purchase_rate or ''),
+            'rate': str(n.sell_rate or ''),
             'credit': Decimal('0'),
-            'debit': n.purchase_amount or Decimal('0'),
+            'debit': n.sell_amount or Decimal('0'),
             'created_at': n.created_at,
         })
 
-    # Cash entries
+    # Cash entries — matches CustomerLedgerView
     for c in Cashs.objects.filter(base_filter, date_filter, customer=customer):
         is_received = (c.transaction == 'Received')
         ledger_items.append({
@@ -153,7 +155,7 @@ def get_supplier_ledger(supplier, client, date_from=None, date_to=None):
 
     ledger_items = []
 
-    # Purchases (debit to supplier)
+    # Purchases (credit to supplier) — matches SupplierLedgerView
     for p in Purchases.objects.filter(base_filter, date_filter, supplier=supplier):
         ledger_items.append({
             'date': p.date,
@@ -161,12 +163,12 @@ def get_supplier_ledger(supplier, client, date_from=None, date_to=None):
             'details': p.description or '',
             'qty': str(p.qty or ''),
             'rate': str(p.amount or ''),
-            'credit': Decimal('0'),
-            'debit': p.total_amount or Decimal('0'),
+            'credit': p.total_amount or Decimal('0'),
+            'debit': Decimal('0'),
             'created_at': p.created_at,
         })
 
-    # Sales (credit to supplier)
+    # Sales (debit to supplier) — matches SupplierLedgerView
     for s in Sales.objects.filter(base_filter, date_filter, supplier=supplier):
         ledger_items.append({
             'date': s.date,
@@ -174,26 +176,14 @@ def get_supplier_ledger(supplier, client, date_from=None, date_to=None):
             'details': s.description or '',
             'qty': str(s.qty or ''),
             'rate': str(s.amount or ''),
-            'credit': s.total_amount or Decimal('0'),
-            'debit': Decimal('0'),
+            'credit': Decimal('0'),
+            'debit': s.total_amount or Decimal('0'),
             'created_at': s.created_at,
         })
 
-    # NSDs — sender (debit to supplier)
+    # NSDs — sender (credit to supplier) — matches SupplierLedgerView
+    # rate=purchase_rate, credit=purchase_amount
     for n in NSDs.objects.filter(base_filter, date_filter, sender_supplier=supplier):
-        ledger_items.append({
-            'date': n.date,
-            'type': 'NS',
-            'details': n.description or '',
-            'qty': str(n.qty or ''),
-            'rate': str(n.sell_rate or ''),
-            'credit': Decimal('0'),
-            'debit': n.sell_amount or Decimal('0'),
-            'created_at': n.created_at,
-        })
-
-    # NSDs — receiver (credit to supplier)
-    for n in NSDs.objects.filter(base_filter, date_filter, receiver_supplier=supplier):
         ledger_items.append({
             'date': n.date,
             'type': 'NS',
@@ -205,17 +195,31 @@ def get_supplier_ledger(supplier, client, date_from=None, date_to=None):
             'created_at': n.created_at,
         })
 
-    # Cash entries
+    # NSDs — receiver (debit to supplier) — matches SupplierLedgerView
+    # rate=sell_rate, debit=sell_amount
+    for n in NSDs.objects.filter(base_filter, date_filter, receiver_supplier=supplier):
+        ledger_items.append({
+            'date': n.date,
+            'type': 'NS',
+            'details': n.description or '',
+            'qty': str(n.qty or ''),
+            'rate': str(n.sell_rate or ''),
+            'credit': Decimal('0'),
+            'debit': n.sell_amount or Decimal('0'),
+            'created_at': n.created_at,
+        })
+
+    # Cash entries — matches SupplierLedgerView
     for c in Cashs.objects.filter(base_filter, date_filter, supplier=supplier):
-        is_paid = (c.transaction == 'Paid')
+        is_received = (c.transaction == 'Received')
         ledger_items.append({
             'date': c.date,
             'type': 'JL',
             'details': c.description or (c.cash_bank.name if c.cash_bank else ''),
             'qty': '',
             'rate': str(c.amount or ''),
-            'credit': c.amount if is_paid else Decimal('0'),
-            'debit': c.amount if not is_paid else Decimal('0'),
+            'credit': c.amount if is_received else Decimal('0'),
+            'debit': c.amount if not is_received else Decimal('0'),
             'created_at': c.created_at,
         })
 
@@ -251,13 +255,14 @@ def _parse_date(date_str):
 
 
 def _calc_customer_opening(customer, client, date_limit):
+    """Matches CustomerLedgerView.calculate_opening_balance exactly."""
     base_filter = Q(is_active=True, hold=False, client=client, customer=customer, date__lt=date_limit)
     nsd_base = Q(is_active=True, hold=False, client=client, date__lt=date_limit)
 
     purchases_sum = Purchases.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0')
     sales_sum = Sales.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0')
-    sender_sum = NSDs.objects.filter(nsd_base, sender_customer=customer).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0')
-    receiver_sum = NSDs.objects.filter(nsd_base, receiver_customer=customer).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0')
+    sender_sum = NSDs.objects.filter(nsd_base, sender_customer=customer).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0')
+    receiver_sum = NSDs.objects.filter(nsd_base, receiver_customer=customer).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0')
     cash_received = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0')
     cash_paid = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0')
 
@@ -267,16 +272,17 @@ def _calc_customer_opening(customer, client, date_limit):
 
 
 def _calc_supplier_opening(supplier, client, date_limit):
+    """Matches SupplierLedgerView.calculate_opening_balance exactly."""
     base_filter = Q(is_active=True, hold=False, client=client, supplier=supplier, date__lt=date_limit)
     nsd_base = Q(is_active=True, hold=False, client=client, date__lt=date_limit)
 
     purchases_sum = Purchases.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0')
     sales_sum = Sales.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0')
-    sender_sum = NSDs.objects.filter(nsd_base, sender_supplier=supplier).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0')
-    receiver_sum = NSDs.objects.filter(nsd_base, receiver_supplier=supplier).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0')
+    sender_sum = NSDs.objects.filter(nsd_base, sender_supplier=supplier).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0')
+    receiver_sum = NSDs.objects.filter(nsd_base, receiver_supplier=supplier).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0')
     cash_received = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0')
     cash_paid = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0')
 
-    transaction_balance = (purchases_sum + sender_sum + cash_received) - (sales_sum + receiver_sum + cash_paid)
+    transaction_balance = (sales_sum + receiver_sum + cash_paid) - (purchases_sum + sender_sum + cash_received)
     static_ob = supplier.open_debit - supplier.open_credit
     return static_ob + transaction_balance
