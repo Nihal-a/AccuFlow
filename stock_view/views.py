@@ -56,14 +56,20 @@ class StockView(View):
 
         def ensure_godown(g):
             if g.id not in stocks:
+                # Start with the godown's opening balance (open + otc)
+                initial_qty = (g.open_balance or 0) + (g.otc_balance or 0)
                 stocks[g.id] = {
                     'godown': g,
                     'purchase_qty': 0,
                     'purchase_value': 0,
-                    'balance_qty': 0,
+                    'balance_qty': initial_qty,
                     'avg_rate': 0,
                     'total_amount': 0,
                 }
+
+        # Pre-populate ALL active godowns so they appear even without transactions
+        for g in godowns:
+            ensure_godown(g)
 
         # Purchases: add qty and value to godown
         for p in purchases:

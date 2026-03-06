@@ -81,7 +81,7 @@ General Ledger
                 <div class="col-span-12 w-full flex items-center mt-2 lg:mt-0 pb-1 sm:pb-0">
                     <div class="w-full flex flex-row items-center gap-4 sm:gap-5 flex-nowrap">
                         <div class="flex items-center shrink-0">
-                            <input type="checkbox" id="noOpeningBalance" name="opening" checked class="h-4 w-4 text-blue-600 rounded shrink-0">
+                            <input type="checkbox" id="noOpeningBalance" name="opening" class="h-4 w-4 text-blue-600 rounded shrink-0">
                             <label for="noOpeningBalance" class="ml-1.5 text-[0.65rem] xs:text-xs sm:text-sm text-gray-700 font-medium cursor-pointer leading-tight">Without Opening Balance</label>
                         </div>
 
@@ -191,6 +191,10 @@ General Ledger
 
     if (initialOpening === 'on') {
         noOpeningBalance.prop('checked', true);
+    } else if (initialOpening === '') {
+        noOpeningBalance.prop('checked', false);
+    } else {
+        noOpeningBalance.prop('checked', true); // Default state
     }
 
 </script>

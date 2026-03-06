@@ -55,6 +55,7 @@ class AddGodownView(View):
             open_balance = open_balance,
             otc_balance = otc_balance,
             balance = balance,
+            qty = balance,
             credit = credit,
             debit = debit
         )
@@ -90,6 +91,7 @@ class UpdateGodownView(View):
         wa = request.POST.get('whatsapp_number')
         godown.client = getClient(request.user)
         godown.balance -= (godown.otc_balance + godown.open_balance)
+        godown.qty -= (godown.otc_balance + godown.open_balance)
         godown.credit = Decimal('0.0000')
         godown.debit = Decimal('0.0000')
         open_balance = Decimal(str(request.POST.get('open_debit', 0))) - Decimal(str(request.POST.get('open_credit', 0)))
@@ -97,6 +99,7 @@ class UpdateGodownView(View):
         godown.open_balance = open_balance
         godown.otc_balance = otc_balance
         godown.balance += (otc_balance + open_balance)
+        godown.qty += (otc_balance + open_balance)
         total_bal = otc_balance + open_balance
         if total_bal > 0:
             godown.debit = total_bal
