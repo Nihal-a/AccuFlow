@@ -19,12 +19,13 @@ class OutstandingCustomerView(View):
             balance = calculate_customer_balance(c, client)
             
             total_sales = Sales.objects.filter(is_active=True, client=client, customer=c).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+            total_purchases = Purchases.objects.filter(is_active=True, client=client, customer=c).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
             
-            # NSD logic: Sender (Customer) = sell_amount, Receiver (Customer) = purchase_amount
-            total_nsd_sender = NSDs.objects.filter(is_active=True, client=client, sender_customer=c).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0.0000')
-            total_nsd_receiver = NSDs.objects.filter(is_active=True, client=client, receiver_customer=c).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0.0000')
+            # NSD logic: Sender (Customer) = purchase_amount (credit), Receiver (Customer) = sell_amount (debit)
+            total_nsd_sender = NSDs.objects.filter(is_active=True, client=client, sender_customer=c).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0.0000')
+            total_nsd_receiver = NSDs.objects.filter(is_active=True, client=client, receiver_customer=c).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0.0000')
             
-            total_trade = total_sales + total_nsd_sender + total_nsd_receiver
+            total_trade = total_sales + total_purchases + total_nsd_sender + total_nsd_receiver
             
             data.append({
                 'code': c.customerId,
@@ -56,12 +57,13 @@ class OutstandingSupplierView(View):
             balance = calculate_supplier_balance(s, client)
             
             total_purchase = Purchases.objects.filter(is_active=True, client=client, supplier=s).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+            total_sales = Sales.objects.filter(is_active=True, client=client, supplier=s).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
             
             # NSD logic: Sender (Supplier) = purchase_amount, Receiver (Supplier) = sell_amount
             total_nsd_sender = NSDs.objects.filter(is_active=True, client=client, sender_supplier=s).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0.0000')
             total_nsd_receiver = NSDs.objects.filter(is_active=True, client=client, receiver_supplier=s).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0.0000')
             
-            total_trade = total_purchase + total_nsd_sender + total_nsd_receiver
+            total_trade = total_purchase + total_sales + total_nsd_sender + total_nsd_receiver
             
             data.append({
                 'code': s.supplierId,
