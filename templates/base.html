@@ -314,6 +314,9 @@
                     <a href="{% url 'cashbankledger' %}" class="nav-link" id="cashbankLedgerLink">
                         <span>Cash/Bank Ledger</span>
                     </a>
+                    <a href="{% url 'expenseledger' %}" class="nav-link" id="expenseLedgerLink">
+                        <span>Expense Ledger</span>
+                    </a>
                     <a href="{% url 'general_ledger' %}" class="nav-link" id="generalLedgerLink">
                         <span>General Ledger</span>
                     </a>
@@ -417,19 +420,21 @@
                     <i data-lucide="settings" class="w-3.5 h-3.5 "></i><span class="">Utilities</span>
                 </div>
                 <div class="pl-6 space-y-0 text-gray-500 ">
-                    {% if not request.user.is_admin %}
-                    <a href="{% url 'address_view' %}" class="nav-link" id="addressViewLink">
-                        <span>Address View</span>
-                    </a>
+                    {% if not request.user.is_collector %}
+                      {% if not request.user.is_admin %}
+                      <a href="{% url 'address_view' %}" class="nav-link" id="addressViewLink">
+                          <span>Address View</span>
+                      </a>
+                      {% endif %}
+                      <a href="{% url 'changepass' %}" class="nav-link" id="changepassLink"
+                          style="display: {% if request.user.is_admin and not request.session.admin_action_authorized %}none{% else %}flex{% endif %};">
+                          <span>Change Password</span>
+                      </a>
+                      <a href="{% url 'recycle_bin' %}" class="nav-link" id="recycleBinLink"
+                          style="display: {% if request.user.is_admin and not request.session.admin_action_authorized %}none{% else %}flex{% endif %};">
+                          <span>Recycle Bin</span>
+                      </a>
                     {% endif %}
-                    <a href="{% url 'changepass' %}" class="nav-link" id="changepassLink"
-                        style="display: {% if request.user.is_admin and not request.session.admin_action_authorized %}none{% else %}flex{% endif %};">
-                        <span>Change Password</span>
-                    </a>
-                    <a href="{% url 'recycle_bin' %}" class="nav-link" id="recycleBinLink"
-                        style="display: {% if request.user.is_admin and not request.session.admin_action_authorized %}none{% else %}flex{% endif %};">
-                        <span>Recycle Bin</span>
-                    </a>
                     <a href="#" onclick="openLogoutModal()" class="nav-link">
                         <span>Logout</span>
                     </a>
@@ -641,7 +646,8 @@
 
                 <button @click="headerOpen = !headerOpen"
                     class="p-2 text-gray-500 hover:text-blue-500 transition-colors" title="Toggle Header">
-                    <i :data-lucide="headerOpen ? 'chevron-up' : 'chevron-down'" class="w-5 h-5"></i>
+                    <i x-show="headerOpen" data-lucide="chevron-up" class="w-5 h-5"></i>
+                    <i x-show="!headerOpen" data-lucide="chevron-down" class="w-5 h-5" style="display: none;"></i>
                 </button>
             </div>
         </div>

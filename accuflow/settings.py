@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'balance_sheet',
     'axes',
     'whatsapp',
+    'expense_ledger',
 ]
 
 MIDDLEWARE = [

@@ -64,7 +64,7 @@ class AddCollectionView(View):
                         'type': 'Customer',
                         'obj_id': c.id,
                         'name': c.name,
-                        'phone': c.phone,
+                        'phone': c.phone or c.wa or '-',
                         'balance': bal,
                         'collected_amount': Decimal('0.0000'),
                         'is_selected': False
@@ -80,7 +80,7 @@ class AddCollectionView(View):
                         'type': 'Supplier',
                         'obj_id': s.id,
                         'name': s.name,
-                        'phone': s.phone,
+                        'phone': s.phone or s.wa or '-',
                         'balance': bal,
                         'collected_amount': Decimal('0.0000'),
                         'is_selected': False
@@ -107,7 +107,7 @@ class AddCollectionView(View):
                             'type': 'Customer',
                             'obj_id': c.id,
                             'name': c.name,
-                            'phone': c.phone,
+                            'phone': c.phone or c.wa or '-',
                             'balance': calculate_customer_balance(c, client),
                             'collected_amount': amount,
                             'is_selected': True
@@ -119,7 +119,7 @@ class AddCollectionView(View):
                             'type': 'Supplier',
                             'obj_id': s.id,
                             'name': s.name,
-                            'phone': s.phone,
+                            'phone': s.phone or s.wa or '-',
                             'balance': calculate_supplier_balance(s, client),
                             'collected_amount': amount,
                             'is_selected': True
@@ -201,7 +201,7 @@ class AddCollectionView(View):
                         transaction_id=id_str,
                         transaction_type=type_str,
                         amount=amt,
-                        collected_amount=amt,
+                        collected_amount=Decimal('0.0000'),
                         is_credit=False,
                         remark=remark_val
                     )
@@ -211,7 +211,11 @@ class AddCollectionView(View):
             collection.save()
             
             messages.success(request, f"Collection {action_msg} successfully.")
-            return redirect('add_collection')
+            
+            source_date = request.GET.get('source_date', '')
+            if source_date:
+                return redirect(f"/collection-list/?date={source_date}")
+            return redirect('collection_list')
             
         except Exception as e:
             logger.exception("Error saving collection")
@@ -236,7 +240,8 @@ class CollectionListView(View):
         total_collected = Decimal('0.0000')
 
         if date_str:
-            collections = Collection.objects.filter(client=client, status='Approved').order_by('-date')
+            # Show all collections for the day so admins can see New, Pending, Approved, Rejected
+            collections = Collection.objects.filter(client=client).order_by('-date')
             
             if collector_id:
                 collections = collections.filter(collector_id=collector_id)
@@ -277,19 +282,19 @@ class CollectionDetailView(View):
                 c = Customers.objects.filter(id=item.transaction_id).first()
                 if c:
                     item.partner_name = c.name
-                    item.partner_phone = c.phone
+                    item.partner_phone = c.phone or c.wa or "-"
             elif item.transaction_type == 'Supplier':
                 s = Suppliers.objects.filter(id=item.transaction_id).first()
                 if s:
                     item.partner_name = s.name
-                    item.partner_phone = s.phone
+                    item.partner_phone = s.phone or s.wa or "-"
             
 
             elif item.transaction_type == 'Sale':
                 sale = Sales.objects.filter(sale_no=item.transaction_id, client=client).first()
                 if sale and sale.customer:
                     item.partner_name = sale.customer.name
-                    item.partner_phone = sale.customer.phone
+                    item.partner_phone = sale.customer.phone or sale.customer.wa or "-"
         
         total_collected = sum((item.collected_amount for item in items), Decimal('0.0000'))
         
@@ -307,4 +312,8 @@ def delete_collection(request, id):
     collection = get_object_or_404(Collection, id=id, client=client)
     collection.delete()
     messages.success(request, "Collection deleted successfully.")
+    
+    source_date = request.GET.get('source_date', '')
+    if source_date:
+        return redirect(f"/collection-list/?date={source_date}")
     return redirect('collection_list')

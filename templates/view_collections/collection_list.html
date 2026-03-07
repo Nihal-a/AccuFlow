@@ -89,7 +89,7 @@
     <table class="table-fixed w-full text-sm">
       <thead class="bg-blue-200 text-gray-700 uppercase text-xs">
         <tr>
-          <th class="px-1.5 py-1.5 text-center font-semibold text-slate-900 tracking-wider w-16">Actions</th>
+          <th class="px-1.5 py-1.5 text-center font-semibold text-slate-900 tracking-wider w-32">Actions</th>
           <th class="px-1.5 py-1.5 text-center font-bold text-slate-900 tracking-wider w-12">#</th>
           <th class="px-1.5 py-1.5 text-center font-bold text-slate-900 tracking-wider w-24">Date</th>
           <th class="px-1.5 py-1.5 text-left font-bold text-slate-900 tracking-wider w-[200px]">Collector</th>
@@ -101,9 +101,25 @@
       <tbody class="bg-white">
         {% if collections %}
         {% for c in collections %}
-        <tr class="border-b border-[#B0B0B0] odd:bg-white even:bg-[#E5E7EB] hover:bg-[#F0F8FF] transition-all duration-200">
-          <td class="px-1.5 py-1.5 text-center w-16 whitespace-nowrap border-r border-[#B0B0B0]">
-            <a href="{% url 'collection_detail' id=c.id %}" class="text-blue-500 hover:text-blue-700 font-medium text-xs px-1" title="View Details">View</a>
+        <tr class="border-b border-[#B0B0B0] odd:bg-white even:bg-[#E5E7EB] hover:bg-gray-50 transition-all duration-200">
+          <td class="px-1.5 py-1.5 text-center w-auto whitespace-nowrap border-r border-[#B0B0B0]">
+            <div class="flex items-center justify-center gap-2">
+              <a href="{% url 'collection_detail' id=c.id %}" class="bg-gray-100 text-gray-600 px-2 py-1.5 rounded border border-transparent focus:ring-2 focus:outline-none hover:bg-gray-200 hover:text-gray-800 text-xs transition-colors flex items-center justify-center shadow-sm" title="View Details">
+                <i class="fa-solid fa-eye"></i>
+              </a>
+              {% if c.status == 'New' or c.status == 'Rejected' %}
+              <a href="{% url 'update_collection' id=c.id %}" class="bg-blue-500 text-white px-2 py-1.5 rounded border border-transparent focus:ring-2 focus:outline-none hover:bg-blue-600 text-xs transition-colors flex items-center justify-center shadow-sm" title="Edit Collection">
+                <i class="fa-solid fa-pen"></i>
+              </a>
+              <button onclick="openDeleteModal('{{ c.id }}', '{{ selected_date|default:'' }}')" class="bg-red-500 text-white px-2 py-1.5 rounded border border-transparent focus:ring-2 focus:outline-none hover:bg-red-600 text-xs transition-colors flex items-center justify-center shadow-sm" title="Delete Collection">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+              {% else %}
+              <button disabled class="bg-gray-300 text-gray-500 px-2 py-1.5 rounded border border-transparent cursor-not-allowed text-xs flex items-center justify-center shadow-sm" title="Locked (Collector Submitted)">
+                <i class="fa-solid fa-lock"></i>
+              </button>
+              {% endif %}
+            </div>
           </td>
           <td class="px-1.5 py-1.5 text-center text-sm w-12 border-r border-[#B0B0B0]">
             {{ forloop.counter }}

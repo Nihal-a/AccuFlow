@@ -24,6 +24,7 @@
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider">
+                        <th class="px-6 py-4 font-semibold w-10"></th>
                         <th class="px-6 py-4 font-semibold">ID / No</th>
                         <th class="px-6 py-4 font-semibold">Name / Description</th>
                         <th class="px-6 py-4 font-semibold">Deleted At</th>
@@ -32,11 +33,14 @@
                 </thead>
                 <tbody class="divide-y divide-gray-100 text-sm">
                     {% for item in items %}
-                    <tr class="hover:bg-gray-50 transition-colors">
+                    <tr class="hover:bg-gray-50 transition-colors cursor-pointer" onclick="toggleDetail('detail-{{ item.id }}', this)">
+                        <td class="px-6 py-4 text-gray-400">
+                            <i data-lucide="chevron-right" class="w-4 h-4 transition-transform duration-200 detail-chevron"></i>
+                        </td>
                         <td class="px-6 py-4 font-medium text-gray-900">{{ item.display_id }}</td>
                         <td class="px-6 py-4 text-gray-600">{{ item.name }}</td>
                         <td class="px-6 py-4 text-gray-500">{{ item.deleted_at|date:"M d, Y h:i A" }}</td>
-                        <td class="px-6 py-4">
+                        <td class="px-6 py-4" onclick="event.stopPropagation()">
                             <div class="flex justify-center gap-4">
                                 <button
                                     onclick="confirmRestore('{{ model_name }}', '{{ item.id }}', '{{ item.display_id }}')"
@@ -55,9 +59,27 @@
                             </div>
                         </td>
                     </tr>
+                    <!-- Detail Row -->
+                    <tr id="detail-{{ item.id }}" class="hidden">
+                        <td colspan="5" class="px-6 py-0">
+                            <div class="bg-blue-50/60 border border-blue-100 rounded-lg px-4 py-2.5 my-2">
+                                <div class="flex flex-wrap items-center gap-x-1 gap-y-1">
+                                    {% for label, value in item.details %}
+                                    {% if not forloop.first %}
+                                    <span class="text-gray-300 text-xs hidden sm:inline">•</span>
+                                    {% endif %}
+                                    <span class="inline-flex items-center gap-1 text-xs whitespace-nowrap">
+                                        <span class="uppercase tracking-wider text-gray-400 font-semibold text-[10px]">{{ label }}:</span>
+                                        <span class="font-medium text-gray-800">{{ value }}</span>
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="4" class="px-6 py-12 text-center text-gray-500">
+                        <td colspan="5" class="px-6 py-12 text-center text-gray-500">
                             <div class="flex flex-col items-center">
                                 <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
                                     <i data-lucide="check-circle" class="w-8 h-8 text-green-300"></i>
@@ -132,6 +154,20 @@
 <script>
     let currentModel = '';
     let currentPk = '';
+
+    function toggleDetail(detailId, triggerRow) {
+        const detailRow = document.getElementById(detailId);
+        const chevron = triggerRow.querySelector('.detail-chevron');
+        if (detailRow.classList.contains('hidden')) {
+            detailRow.classList.remove('hidden');
+            if (chevron) chevron.style.transform = 'rotate(90deg)';
+        } else {
+            detailRow.classList.add('hidden');
+            if (chevron) chevron.style.transform = 'rotate(0deg)';
+        }
+        // Re-render lucide icons for the detail row
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
 
     function confirmRestore(model, pk, name) {
         currentModel = model;

@@ -6,8 +6,11 @@ from core.models import (
     Godowns, Sales, Suppliers, NSDs, Customers, Expenses, CashBanks, 
     Collectors, Purchases, Commissions, Cashs, StockTransfers, Collection
 )
-from core.views import getClient
+from core.views import getClient, update_ledger
 from core.utils import get_next_id_generic
+from decimal import Decimal
+from django.db import transaction
+from django.db.models import F
 from django.http import HttpResponse, JsonResponse
 import openpyxl
 from io import BytesIO
@@ -235,6 +238,7 @@ class RecycleBinListView(View):
                 'display_id': getattr(item, id_field) if id_field != 'id' else f"COL-{item.id}",
                 'name': item.name if hasattr(item, 'name') else (item.category if hasattr(item, 'category') else label),
                 'deleted_at': item.deleted_at,
+                'details': self.get_item_details(model_name, item),
             })
             
         return render(request, 'recycle_bin/list.html', {
@@ -242,6 +246,120 @@ class RecycleBinListView(View):
             'label': label,
             'model_name': model_name
         })
+
+    def get_item_details(self, model_name, item):
+        """Return a list of (label, value) tuples with model-specific details."""
+        details = []
+
+        def fmt_date(d):
+            return d.strftime('%d-%m-%Y') if d else '-'
+
+        def fmt_decimal(v):
+            try:
+                return f'{float(v):,.2f}' if v else '-'
+            except (TypeError, ValueError):
+                return '-'
+
+        def safe_name(obj):
+            return obj.name if obj else '-'
+
+        if model_name == 'Purchases':
+            details = [
+                ('Date', fmt_date(item.date)),
+                ('Description', item.description or '-'),
+                ('Qty', fmt_decimal(item.qty)),
+                ('Rate', fmt_decimal(item.amount)),
+                ('Total Amount', fmt_decimal(item.total_amount)),
+                ('Godown', safe_name(item.godown)),
+                ('Party', safe_name(item.supplier) if item.supplier else safe_name(item.customer)),
+            ]
+        elif model_name == 'Sales':
+            details = [
+                ('Date', fmt_date(item.date)),
+                ('Description', item.description or '-'),
+                ('Qty', fmt_decimal(item.qty)),
+                ('Rate', fmt_decimal(item.amount)),
+                ('Total Amount', fmt_decimal(item.total_amount)),
+                ('Godown', safe_name(item.godown)),
+                ('Party', safe_name(item.customer) if item.customer else safe_name(item.supplier)),
+            ]
+        elif model_name == 'Commissions':
+            details = [
+                ('Date', fmt_date(item.date)),
+                ('Description', item.description or '-'),
+                ('Qty', fmt_decimal(item.qty)),
+                ('Rate', fmt_decimal(item.amount)),
+                ('Total Amount', fmt_decimal(item.total_amount)),
+                ('Godown', safe_name(item.godown)),
+            ]
+        elif model_name == 'NSDs':
+            details = [
+                ('Date', fmt_date(item.date)),
+                ('Description', item.description or '-'),
+                ('Qty', fmt_decimal(item.qty)),
+                ('Sell Rate', fmt_decimal(item.sell_rate)),
+                ('Sell Amount', fmt_decimal(item.sell_amount)),
+                ('Purchase Rate', fmt_decimal(item.purchase_rate)),
+                ('Purchase Amount', fmt_decimal(item.purchase_amount)),
+                ('Sender', safe_name(item.sender)),
+                ('Receiver', safe_name(item.receiver)),
+            ]
+        elif model_name == 'Cashs':
+            details = [
+                ('Date', fmt_date(item.date)),
+                ('Transaction', item.transaction or '-'),
+                ('Amount', fmt_decimal(item.amount)),
+                ('Party', safe_name(item.customer) if item.customer else safe_name(item.supplier)),
+                ('Cash/Bank', safe_name(item.cash_bank)),
+                ('Description', item.description or '-'),
+            ]
+        elif model_name == 'StockTransfers':
+            details = [
+                ('Date', fmt_date(item.date)),
+                ('Qty', fmt_decimal(item.qty)),
+                ('From Godown', safe_name(item.transfer_from)),
+                ('To Godown', safe_name(item.transfer_to)),
+                ('Description', item.description or '-'),
+            ]
+        elif model_name == 'Expenses':
+            details = [
+                ('Category', item.category or '-'),
+                ('Amount', fmt_decimal(item.amount)),
+                ('Description', item.description or '-'),
+            ]
+        elif model_name == 'Collection':
+            details = [
+                ('Date', fmt_date(item.date)),
+                ('Total Amount', fmt_decimal(item.total_amount)),
+                ('Collector', safe_name(item.collector)),
+                ('Status', item.status or '-'),
+            ]
+        elif model_name == 'Customers':
+            details = [
+                ('Phone', item.phone or '-'),
+                ('Address', item.address or '-'),
+            ]
+        elif model_name == 'Suppliers':
+            details = [
+                ('Phone', item.phone or '-'),
+                ('Address', item.address or '-'),
+            ]
+        elif model_name == 'Godowns':
+            details = [
+                ('Phone', item.phone or '-'),
+                ('Address', item.address or '-'),
+            ]
+        elif model_name == 'CashBanks':
+            details = [
+                ('Description', item.description or '-'),
+            ]
+        elif model_name == 'Collectors':
+            details = [
+                ('Phone', item.phone or '-'),
+                ('Address', item.address or '-'),
+            ]
+
+        return details
 
 @method_decorator([login_required, admin_action_required], name='dispatch')
 class RestoreView(View):
@@ -263,20 +381,98 @@ class RestoreView(View):
             'NSDs': 'nsd_no',
             'Cashs': 'cash_no',
             'StockTransfers': 'transfer_no',
+            'Collection': 'id',
         }
         
-        id_field = id_field_map.get(model_name)
-        if id_field:
-            current_id = getattr(item, id_field)
-            if model.objects.filter(is_active=True, client=client, **{id_field: current_id}).exists():
-                new_id = get_next_id_generic(model_name, client)
-                if new_id:
-                    setattr(item, id_field, new_id)
+        with transaction.atomic():
+            # Handle ID conflict: assign new ID if original is already taken
+            id_field = id_field_map.get(model_name)
+            if id_field and id_field != 'id':
+                current_id = getattr(item, id_field)
+                if model.objects.filter(is_active=True, client=client, **{id_field: current_id}).exists():
+                    new_id = get_next_id_generic(model_name, client)
+                    if new_id:
+                        setattr(item, id_field, new_id)
+            
+            # Re-apply side-effects that were reversed on delete
+            self._reapply_side_effects(model_name, item)
+            
+            item.is_active = True
+            item.deleted_at = None
+            item.save()
         
-        item.is_active = True
-        item.deleted_at = None
-        item.save()
         return JsonResponse({'status': 'success', 'message': 'Item restored successfully'})
+
+    def _reapply_side_effects(self, model_name, item):
+        """Re-apply ledger, godown, and cashbank side-effects on restore.
+        This mirrors the reverse of each model's delete function.
+        Uses refresh_from_db() + direct arithmetic (NOT F expressions)
+        to avoid stale in-memory state on cached FK objects."""
+        is_hold = getattr(item, 'hold', False)
+        if is_hold:
+            return  # Held items never had side-effects applied
+
+        if model_name == 'Purchases':
+            party = item.supplier if item.supplier else item.customer
+            update_ledger(
+                where=party, to=None,
+                old_purchase=0, new_purchase=item.total_amount,
+                old_sale=0, new_sale=0
+            )
+            if item.godown:
+                item.godown.refresh_from_db()
+                item.godown.qty += item.qty
+                item.godown.save()
+
+        elif model_name == 'Sales':
+            party = item.customer if item.customer else item.supplier
+            update_ledger(
+                where=None, to=party,
+                old_purchase=0, new_purchase=0,
+                old_sale=0, new_sale=item.total_amount
+            )
+            if item.godown:
+                item.godown.refresh_from_db()
+                item.godown.qty -= item.qty
+                item.godown.save()
+
+        elif model_name == 'Cashs':
+            if item.cash_bank:
+                item.cash_bank.refresh_from_db()
+                if item.transaction == 'Received':
+                    item.cash_bank.balance += item.amount
+                else:
+                    item.cash_bank.balance -= item.amount
+                item.cash_bank.save()
+
+            party = item.customer if item.customer else item.supplier
+            if item.transaction == 'Paid':
+                update_ledger(where=None, to=party, old_sale=0, new_sale=item.amount)
+            else:
+                update_ledger(where=party, to=None, old_purchase=0, new_purchase=item.amount)
+
+        elif model_name == 'NSDs':
+            update_ledger(
+                where=item.sender, to=item.receiver,
+                old_purchase=0, new_purchase=item.purchase_amount,
+                old_sale=0, new_sale=item.sell_amount
+            )
+
+        elif model_name == 'Commissions':
+            if item.godown:
+                item.godown.refresh_from_db()
+                item.godown.qty -= item.qty
+                item.godown.save()
+
+        elif model_name == 'StockTransfers':
+            if item.transfer_from:
+                item.transfer_from.refresh_from_db()
+                item.transfer_from.qty -= item.qty
+                item.transfer_from.save()
+            if item.transfer_to:
+                item.transfer_to.refresh_from_db()
+                item.transfer_to.qty += item.qty
+                item.transfer_to.save()
 
 @method_decorator([login_required, admin_action_required], name='dispatch')
 class PermanentDeleteView(View):

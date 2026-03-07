@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}
+Expense Ledger
+{% endblock title %}
+
+{% block content %}
+<div class="bg-white sm:rounded-xl p-4 sm:p-6 mt-3 -mx-4 sm:mx-0 w-[calc(100%+2rem)] sm:w-full shadow-sm sm:shadow-none">
+    <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">
+        Expense Ledger
+    </h1>
+
+    <hr class="mt-5">
+
+    <div id="createView" class="mt-5 w-full">
+        <div class="grid w-full">
+            <form method="post" action="{% url 'expenseledger' %}"
+                class="flex flex-col gap-3 sm:gap-4 ignore-unsaved-changes">
+                {% csrf_token %}
+                <div class="grid grid-cols-5 w-full lg:w-5/12 xl:w-1/3 gap-4 sm:gap-4 items-end">
+                    <div class="col-span-3 sm:col-span-3">
+                        <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">Select Expense*</label>
+                        <select id="expense" name="expense"
+                            class="w-full bg-white px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
+                            required>
+                            <option value="" selected>-- Select Expense --</option>
+                            {% for e in expenses %}
+                            <option value="{{ e.id }}" data-code="{{ e.expenseId }}">
+                                {{ e.category }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-span-2 sm:col-span-2">
+                        <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">Expense ID</label>
+                        <input type="text" id="expenseID" disabled
+                            class="w-full bg-gray-50 px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm">
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row w-full lg:w-8/12 xl:w-1/2 gap-4 sm:gap-4 sm:items-end">
+                    <div class="grid grid-cols-2 w-full sm:w-2/3 gap-3 sm:gap-4">
+                        <div class="col-span-1">
+                            <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">From*</label>
+                            <input type="date" id="dateFrom" name="dateFrom" value="{{date_from}}" required
+                                class="w-full bg-white px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm">
+                        </div>
+                        <div class="col-span-1">
+                            <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">To*</label>
+                            <input type="date" id="dateTo" name="dateTo" value="{{date_to}}" required
+                                class="w-full bg-white px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm">
+                        </div>
+                    </div>
+
+                    <div class="w-1/2 sm:w-1/3">
+                        <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">Sort Order*</label>
+                        <select id="sortOrder" name="sort" disabled
+                            class="w-full bg-gray-50 px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm">
+                            <option value="Serial" selected>Chronological</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-span-12 w-full flex items-center mt-2 lg:mt-0 pb-1 sm:pb-0">
+                    <div class="w-full flex flex-row items-center gap-4 sm:gap-5 flex-nowrap">
+                        <div class="flex items-center shrink-0">
+                            <input type="checkbox" id="noOpeningBalance" name="opening" checked class="h-4 w-4 text-blue-600 rounded shrink-0">
+                            <label for="noOpeningBalance" class="ml-1.5 text-[0.65rem] xs:text-xs sm:text-sm text-gray-700 font-medium cursor-pointer leading-tight">Without Opening Balance</label>
+                        </div>
+
+                        <div class="flex gap-2 shrink-0">
+                            <a id="btnClear" href="{% url 'expenseledger' %}"
+                                class="leading-none inline-flex items-center justify-center gap-1 bg-gray-500 text-white text-xs sm:text-sm font-medium px-3 py-1.5 sm:py-2 rounded-md shadow-sm hover:bg-gray-600 transition-all duration-300">
+                                <span>Clear<span class="hidden sm:inline"> Details</span></span>
+                            </a>
+
+                            <button id="btnView" type="submit"
+                                class="leading-none inline-flex items-center justify-center gap-1 bg-blue-500 text-white text-xs sm:text-sm font-medium px-3 py-1.5 sm:py-2 rounded-md shadow-sm hover:bg-blue-600 transition-all duration-300">
+                               <span>View<span class="hidden sm:inline"> Results</span></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            {% if expense %}
+            <div class="overflow-x-auto mt-5 w-full border border-gray-200 rounded-lg">
+                <table id="viewPurchaseTable" class="w-full min-w-[800px] md:min-w-full text-xs sm:text-sm rounded-t-sm overflow-hidden whitespace-nowrap">
+                    <thead class="bg-blue-200 text-gray-700 uppercase text-xs">
+                        <tr>
+                            <th colspan="6"></th>
+                            <th class="px-2 py-1 text-left font-semibold tracking-wide w-1">Open Balance</th>
+                            <th class="px-2 py-1 text-left font-semibold tracking-wide w-1">{{open_balance}}</th>
+                        </tr>
+                        <tr>
+                            <!-- <th class="px-2 py-1 text-left font-semibold tracking-wide w-1">Actions</th> -->
+                            <th class="px-2 py-1 text-left font-semibold tracking-wide w-1">#</th>
+                            <th class="px-2 py-1 text-left font-semibold tracking-wide">Tran.Date</th>
+                            <th class="px-2 py-1 text-left font-semibold tracking-wide">T.No</th>
+                            <th class="px-2 py-1 text-left font-semibold tracking-wide">Godown</th>
+                            <th class="px-2 py-1 text-left font-semibold tracking-wide">Description</th>
+                            <th class="px-2 py-1 text-right font-semibold tracking-wide">Qty</th>
+                            <th class="px-2 py-1 text-right font-semibold tracking-wide">Amount/Rate</th>
+                            <th class="px-2 py-1 text-right font-semibold tracking-wide">Total Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="purchaseTableBody" class="bg-gray-100">
+                        {% for ledger in ledgers %}
+                        {% if ledger.type != 'OB' %}
+                        <tr class="hover:bg-gray-50 divide-y divide-gray-300 odd:bg-white even:bg-gray-100">
+                            <td class="px-2 py-1 text-left font-medium">{{ledger.sno}}</td>
+                            <td class="px-2 py-1 text-left">{{ledger.date|date:"d-m-Y"}}</td>
+                            <td class="px-2 py-1 text-left">{{ledger.transaction_no}}</td>
+                            <td class="px-2 py-1 text-left">{{ledger.godown}}</td>
+                            <td class="px-2 py-1 text-left">{{ledger.description}}</td>
+                            <td class="px-2 py-1 text-right">{{ledger.qty}}</td>
+                            <td class="px-2 py-1 text-right">{{ledger.rate}}</td>
+                            <td class="px-2 py-1 text-right font-medium">{{ledger.amount}}</td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                        {% if not has_transactions %}
+                        <tr>
+                            <td colspan="8" class="px-2 py-4 text-center text-gray-500 font-medium">No expenses found for this period.</td>
+                        </tr>
+                        {% endif %}
+                        <tr class="bg-blue-200 text-gray-700 uppercase divide-y divide-blue-300 text-xs">
+                            <td colspan="4"></td>
+                            <td class="px-2 py-1 text-right font-bold tracking-wide">Totals :</td>
+                            <td class="px-2 py-1 text-right font-bold">{{total_qty|default:'0.00'}}</td>
+                            <td class="px-2 py-1 text-right font-bold"></td>
+                            <td class="px-2 py-1 text-right font-bold">{{total_amount|default:'0.00'}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block externalJS %}
+<script>
+    navActive("expenseLedgerLink");
+
+    $('#expense').on('change', function () {
+        var selectedOption = $(this).find('option:selected');
+        var code = selectedOption.data('code') || '';
+        $('#expenseID').val(code);
+    });
+    
+    {% if expense %}
+    $('#expense').val('{{expense.id}}').change()
+    {% endif %}
+
+    {% if opening == 'on' %}
+    $('#noOpeningBalance').prop('checked', true).change();
+    {% else %}
+    $('#noOpeningBalance').prop('checked', false).change();
+    {% endif %}
+</script>
+{% endblock externalJS %}

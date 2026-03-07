@@ -220,7 +220,9 @@ function countryCode() {
 }
 
 if ($('#date').length) {
-  $('#date').val(new Date().toISOString().split('T')[0]);
+  if (!$('#date').val()) {
+    $('#date').val(new Date().toISOString().split('T')[0]);
+  }
 }
 
 // Global Input Validation

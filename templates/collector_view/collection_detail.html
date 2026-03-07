@@ -10,7 +10,7 @@
                 Collection #{{ collection.id }}
             </h1>
             <p class="text-sm text-gray-500 mt-1">
-                Date: <span class="font-semibold text-gray-800">{{ collection.date|date:"Y-m-d" }}</span>
+                Date: <span class="font-semibold text-gray-800">{{ collection.date|date:"d-m-Y" }}</span>
             </p>
         </div>
         <div class="flex gap-2 mt-3 md:mt-0">
@@ -43,7 +43,7 @@
     </div>
 
     <h2 class="text-lg font-medium text-gray-700 mb-4">Assigned Transactions</h2>
-    <form method="POST" id="collectionForm">
+    <form method="POST" id="collectionForm" class="ignore-unsaved-changes">
         {% csrf_token %}
         <div class="overflow-x-auto w-full pb-{{ read_only|yesno:'4,20' }}">
             <table class="w-full min-w-max rounded-t-lg overflow-hidden border border-gray-200">
@@ -73,7 +73,7 @@
                                 {{ item.status_label|slice:":1" }}
                             </span>
                             {% else %}
-                            <input type="checkbox" data-id="{{ item.id }}" data-amount="{{ item.amount }}" {% if read_only %}disabled{% endif %}>
+                            <input type="checkbox" class="row-cb rounded text-blue-600 focus:ring-0 cursor-pointer w-4 h-4" data-id="{{ item.id }}" data-amount="{{ item.amount }}" {% if item.collected_amount > 0 %}checked{% endif %} {% if read_only %}disabled{% endif %}>
                             {% endif %}
                         </td>
                         <td class="px-4 py-3">
@@ -98,10 +98,10 @@
                         <td class="px-4 py-3 text-gray-800 font-medium">{{ item.customer_name }}</td>
                         <td class="px-4 py-3 text-right text-gray-800 font-medium"><span class="total-amount">{{ item.amount|floatformat:2 }}</span></td>
                         <td class="px-4 py-3 text-right">
-                            <input type="number" name="collected_amount_{{ item.id }}"
+                            <input type="text" inputmode="decimal" name="collected_amount_{{ item.id }}"
                                 value="{% if item.collected_amount > 0 %}{{ item.collected_amount|floatformat:2 }}{% endif %}"
                                 class="collected-input w-32 p-2 border rounded-lg text-right focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 disabled:bg-gray-100 disabled:text-gray-500"
-                                placeholder="0" data-max="{{ item.amount }}" {% if read_only or item.is_submitted %}disabled{% endif %}>
+                                placeholder="0" data-max="{{ item.amount }}" {% if read_only or item.is_submitted %}disabled{% endif %} oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');">
                             {% if item.is_submitted %}
                             <div class="text-[10px] text-blue-600 font-medium mt-1 uppercase tracking-wide">Submitted
                             </div>

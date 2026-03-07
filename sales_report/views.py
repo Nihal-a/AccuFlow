@@ -99,15 +99,16 @@ class SalesReportView(View):
         # Optimization: If no date filter is applied, do not show any data initially
         min_amount_str = request.POST.get('min_amount')
         
-        # Optimization: If no date filter is applied, do not show any data initially
-        if not date_from_str and not date_to_str and not filter_value:
+        # Optimization/Requirement: Both Date From and Date To are mandatory
+        if not date_from_str or not date_to_str:
              return render(request, 'sales_report/sales_report.html', {
                 'trade_partners': combined_partners,
                 'sales': [],
                 'total_qty': Decimal('0.0000'),
+                'avg_rate': Decimal('0.0000'),
                 'total_amount': Decimal('0.0000'),
-                'date_from': '',
-                'date_to': '',
+                'date_from': date_from_str or '',
+                'date_to': date_to_str or '',
                 'selected_filter_value': '',
                 'min_amount': min_amount_str or '',
                 'report_type': report_type
@@ -189,6 +190,10 @@ class SalesReportView(View):
         # Calculate totals
         total_qty = sum((item['qty'] or Decimal('0')) for item in combined_sales)
         total_amount = sum((item['total_amount'] or Decimal('0')) for item in combined_sales)
+        
+        avg_rate = Decimal('0.00')
+        if total_qty > 0:
+            avg_rate = total_amount / total_qty
 
         # Pagination
         paginator = Paginator(combined_sales, 50)
@@ -205,6 +210,7 @@ class SalesReportView(View):
             'sales': report_data,
             'page_obj': page_obj,
             'total_qty': total_qty,
+            'avg_rate': avg_rate,
             'total_amount': total_amount,
             'date_from': date_from,
             'date_to': date_to,
@@ -258,7 +264,7 @@ class SalesReportView(View):
                 ws.append(row)
             
             # Totals
-            ws.append(["", "", "", "", "", "TOTAL", total_qty, "", total_amount])
+            ws.append(["", "", "", "", "", "TOTAL", total_qty, avg_rate, total_amount])
             
             output = BytesIO()
             wb.save(output)

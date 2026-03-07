@@ -66,7 +66,7 @@
                                 <div class="text-xs text-gray-500 mt-1 pl-1">Ref: {{ t.transaction_id }}</div>
                             </td>
                             <td class="p-4 text-right font-medium text-gray-700">{{ t.amount|floatformat:2 }}</td>
-                            <td class="p-4 text-right text-gray-500 text-sm">{{ t.date|date:"Y-m-d" }}</td>
+                            <td class="p-4 text-right text-gray-500 text-sm">{{ t.date|date:"d-m-Y" }}</td>
                              <td class="p-4 text-right font-bold {% if t.balance > 0 %}text-red-500{% else %}text-green-500{% endif %}">
                                 {{ t.balance|floatformat:2 }}
                             </td>

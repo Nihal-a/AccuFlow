@@ -5,27 +5,37 @@
 {% block content %}
 
 <div class="bg-white rounded-xl p-6 mt-3">
-  <div class="flex justify-between items-center mb-6">
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-gray-100 pb-4 md:border-b-0 md:pb-0">
     <div>
       <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">My Collections</h1>
       <p class="text-sm text-gray-500 mt-1">Logged in as: <span class="font-semibold text-gray-800">{{ collector.name      }}</span></p>
     </div>
 
-    <div class="flex justify-end items-center">
-      <form method="GET" class="flex flex-col md:flex-row gap-2 w-full md:w-auto">
-        <input type="date" name="date" id="filterDate" value="{{ selected_date }}"
-          class="bg-white rounded-xl px-4 py-2 border border-transparent focus:border-transparent ring-2 ring-blue-200 focus:ring-2 focus:ring-blue-300 transition-all duration-200 outline-none shadow-sm">
+    <div class="flex flex-col w-full md:w-auto md:flex-row md:justify-end md:items-center">
+      <form method="GET" class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+        <div class="flex gap-2 w-full md:w-auto">
+          <input type="date" name="date" id="filterDate" value="{{ selected_date }}"
+            class="w-1/2 md:w-auto bg-white border border-gray-300 hover:border-blue-400 text-gray-700 font-medium rounded-xl px-2 md:px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 cursor-pointer text-sm md:text-base">
 
-        <button type="submit"
-          class="bg-blue-500 hover:bg-blue-600 text-white rounded-xl px-4 py-2 shadow-sm transition-colors">
-          <i class="fa-solid fa-filter"></i>
-        </button>
-        {% if selected_date %}
-        <a href="{% url 'my_collections' %}"
-          class="bg-gray-500 hover:bg-gray-600 text-white rounded-xl px-4 py-2 flex items-center shadow-sm transition-colors">
-          <i class="fa-solid fa-times"></i>
-        </a>
-        {% endif %}
+          <select name="status" class="w-1/2 md:w-auto bg-white border border-gray-300 hover:border-blue-400 text-gray-700 font-medium rounded-xl px-2 md:px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 cursor-pointer text-sm md:text-base">
+            <option value="">All Statuses</option>
+            <option value="submitted" {% if status_filter == 'submitted' %}selected{% endif %}>Submitted</option>
+            <option value="unsubmitted" {% if status_filter == 'unsubmitted' %}selected{% endif %}>Not Submitted</option>
+          </select>
+        </div>
+
+        <div class="flex gap-2 w-full md:w-auto">
+          <button type="submit"
+            class="flex-1 md:flex-none justify-center bg-blue-500 hover:bg-blue-600 text-white rounded-xl px-4 py-2 shadow-sm transition-colors flex items-center gap-2">
+            <i class="fa-solid fa-filter"></i> <span class="md:hidden">Filter</span>
+          </button>
+          {% if selected_date or status_filter %}
+          <a href="{% url 'my_collections' %}"
+            class="flex-1 md:flex-none justify-center bg-gray-500 hover:bg-gray-600 text-white rounded-xl px-4 py-2 flex items-center shadow-sm transition-colors gap-2" title="Clear Filters">
+            <i class="fa-solid fa-times"></i> <span class="md:hidden">Clear</span>
+          </a>
+          {% endif %}
+        </div>
       </form>
     </div>
   </div>
@@ -34,18 +44,19 @@
     <table class="min-w-full rounded-t-lg overflow-hidden">
       <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
         <tr>
-          <th class="px-4 py-3 text-left font-medium w-1">Actions</th>
-          <th class="px-4 py-3 text-left font-medium">#</th>
-          <th class="px-4 py-3 text-left font-medium">Date</th>
-          <th class="px-4 py-3 text-right font-medium">Total Amount</th>
-          <th class="px-4 py-3 text-right font-medium">Created At</th>
+          <th class="px-4 py-3 text-left font-medium min-w-[80px] whitespace-nowrap">Actions</th>
+          <th class="px-4 py-3 text-left font-medium min-w-[50px] whitespace-nowrap">#</th>
+          <th class="px-4 py-3 text-left font-medium min-w-[120px] whitespace-nowrap">Date</th>
+          <th class="px-4 py-3 text-center font-medium min-w-[150px] whitespace-nowrap">Status</th>
+          <th class="px-4 py-3 text-right font-medium min-w-[150px] whitespace-nowrap">Total Amount</th>
+          <th class="px-4 py-3 text-right font-medium min-w-[180px] whitespace-nowrap">Created At</th>
         </tr>
       </thead>
       <tbody class="bg-gray-100">
         {% if collections %}
         {% for c in collections %}
         <tr class="hover:bg-gray-50 divide-x divide-y divide-gray-300 odd:bg-white even:bg-gray-100">
-          <td class="px-4 py-2 w-1">
+          <td class="px-4 py-2 w-1 whitespace-nowrap">
             <div class="flex gap-2">
               <a href="{% url 'my_collection_detail' id=c.id %}"
                 class="bg-green-500 text-white px-2 py-1.5 rounded hover:bg-green-600 text-xs flex items-center gap-1"
@@ -54,17 +65,24 @@
               </a>
             </div>
           </td>
-          <td class="px-4 py-2 w-1">
+          <td class="px-4 py-2 w-1 whitespace-nowrap">
             {{ forloop.counter }}
           </td>
-          <td class="px-4 py-2 font-semibold text-gray-700">{{ c.date|date:"Y-m-d" }}</td>
-          <td class="px-4 py-2 text-gray-700 text-right font-bold">{{ c.total_amount }}</td>
-          <td class="px-4 py-2 text-gray-700 text-right">{{ c.created_at|date:"M d, Y h:i A" }}</td>
+          <td class="px-4 py-2 font-semibold text-gray-700 whitespace-nowrap">{{ c.date|date:"d-m-Y" }}</td>
+          <td class="px-4 py-2 text-center text-sm whitespace-nowrap">
+            {% if c.status == 'New' or c.status == 'Rejected' %}
+              <span class="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap shadow-sm"><i class="fa-solid fa-hourglass-start mr-1"></i> Not Submitted</span>
+            {% else %}
+              <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap shadow-sm border border-blue-200"><i class="fa-solid fa-check-circle mr-1"></i> Submitted</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-2 text-gray-700 text-right font-bold whitespace-nowrap">{{ c.total_amount }}</td>
+          <td class="px-4 py-2 text-gray-700 text-right whitespace-nowrap">{{ c.created_at|date:"M d, Y h:i A" }}</td>
         </tr>
         {% endfor %}
         {% else %}
         <tr>
-          <td colspan="5" class="text-center py-8 text-gray-500">
+          <td colspan="6" class="text-center py-8 text-gray-500">
             {% if not collector %}
             <p class="text-red-500 font-medium">Access Denied: You are not registered as a collector.</p>
             {% elif not selected_date %}

@@ -22,6 +22,7 @@ class CollectorCollectionsView(LoginRequiredMixin, UserPassesTestMixin, View):
             collector = Collectors.objects.get(user=request.user, is_active=True)
             
             date_str = request.GET.get('date')
+            status_filter = request.GET.get('status')
             
             if not date_str:
                 date_obj = datetime.date.today()
@@ -33,18 +34,27 @@ class CollectorCollectionsView(LoginRequiredMixin, UserPassesTestMixin, View):
                     date_obj = datetime.date.today()
                     date_str = date_obj.strftime('%Y-%m-%d')
 
-            collections = Collection.objects.filter(collector=collector, date=date_obj).order_by('-date')
+            collections = Collection.objects.filter(collector=collector, date=date_obj)
+            
+            if status_filter == 'submitted':
+                collections = collections.filter(status__in=['Pending', 'Approved'])
+            elif status_filter == 'unsubmitted':
+                collections = collections.filter(status__in=['New', 'Rejected'])
+                
+            collections = collections.order_by('-date')
 
         except Collectors.DoesNotExist:
             collector = None
             collections = []
             date_str = None
+            status_filter = None
 
         context = {
             'collections': collections,
             'collector': collector,
             'is_collector_view': True,
-            'selected_date': date_str 
+            'selected_date': date_str,
+            'status_filter': status_filter
         }
         return render(request, self.template_name, context)
 
@@ -141,26 +151,11 @@ class CollectorCollectionDetailView(LoginRequiredMixin, UserPassesTestMixin, Vie
             messages.success(request, "Collection re-submitted for approval.")
             return redirect('my_collection_detail', id=collection.id)
 
-        if len(filled_items) < len(items):
-            new_collection = Collection.objects.create(
-                collector=collector,
-                client=collection.client,
-                date=collection.date,
-                status='Pending',
-            )
-            
-            for item in filled_items:
-                item.collection = new_collection
-                item.save()
-            
-            messages.success(request, f"Submitted {len(filled_items)} items for approval. Remaining items are kept here.")
-            return redirect('my_collection_detail', id=collection.id)
-        
-        else:
-            collection.status = 'Pending'
-            collection.save()
-            messages.success(request, "Collection submitted for approval.")
-            return redirect('my_collection_detail', id=collection.id)
+        # The user requested that the entire underlying list is submitted together regardless of unchecked items.
+        collection.status = 'Pending'
+        collection.save()
+        messages.success(request, "Collection submitted for approval.")
+        return redirect('my_collection_detail', id=collection.id)
 
 class CollectorAddItemsView(LoginRequiredMixin, UserPassesTestMixin, View):
     template_name = 'collector_view/add_items.html'
