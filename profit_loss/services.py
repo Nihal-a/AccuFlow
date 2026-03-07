@@ -1,6 +1,7 @@
 from django.db.models import Sum, Q, F
 from decimal import Decimal
 from core.models import Godowns, Purchases, Sales, Expenses, Commissions, NSDs, Cashs, Customers, Suppliers
+from core.views import calculate_customer_balance, calculate_supplier_balance
 import datetime
 
 class StockService:
@@ -76,11 +77,15 @@ class PandLService:
 
         # 3. Sales (Income)
         # Sales Model has 'date' field
-        sales_total = Sales.objects.filter(base_filter, date_filter_range).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+        base_sales = Sales.objects.filter(base_filter, date_filter_range).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+        nsd_sales = NSDs.objects.filter(base_filter, date_filter_range).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0.0000')
+        sales_total = base_sales + nsd_sales
 
         # 4. Purchases (Expense)
         # Purchases Model has 'date' field
-        purchases_total = Purchases.objects.filter(base_filter, date_filter_range).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+        base_purchases = Purchases.objects.filter(base_filter, date_filter_range).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+        nsd_purchases = NSDs.objects.filter(base_filter, date_filter_range).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0.0000')
+        purchases_total = base_purchases + nsd_purchases
 
         # 5. Expenses (Indirect Expense)
         # Expenses Model has 'created_at' field, NO 'date' field
@@ -130,27 +135,9 @@ class TrialBalanceService:
     @staticmethod
     def calculate_party_balance(entity, client, date_limit, is_customer=True):
         if is_customer:
-            base_filter = Q(is_active=True, hold=False, client=client, customer=entity, date__lte=date_limit)
-            nsd_sender_filter = Q(is_active=True, hold=False, client=client, sender_customer=entity, date__lte=date_limit)
-            nsd_receiver_filter = Q(is_active=True, hold=False, client=client, receiver_customer=entity, date__lte=date_limit)
+            return calculate_customer_balance(entity, client, date_limit)
         else:
-            base_filter = Q(is_active=True, hold=False, client=client, supplier=entity, date__lte=date_limit)
-            nsd_sender_filter = Q(is_active=True, hold=False, client=client, sender_supplier=entity, date__lte=date_limit)
-            nsd_receiver_filter = Q(is_active=True, hold=False, client=client, receiver_supplier=entity, date__lte=date_limit)
-            
-        purchases = Purchases.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
-        sales = Sales.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
-        nsd_sender_amt = NSDs.objects.filter(nsd_sender_filter).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0.0000')
-        nsd_receiver_amt = NSDs.objects.filter(nsd_receiver_filter).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0.0000')
-        cash_received = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
-        cash_paid = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
-        
-        debit_sum = sales + nsd_receiver_amt + cash_paid
-        credit_sum = purchases + nsd_sender_amt + cash_received
-        
-        static_ob = Decimal(str(entity.open_debit or 0)) - Decimal(str(entity.open_credit or 0))
-        
-        return static_ob + (debit_sum - credit_sum)
+            return calculate_supplier_balance(entity, client, date_limit)
 
     @staticmethod
     def get_trial_balance(client, date_limit):
@@ -233,7 +220,9 @@ class TrialBalanceService:
             })
 
         # 5. SALES (Nominal - Periodic)
-        total_sales = Sales.objects.filter(base_filter_active, date_filter_periodic).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+        base_sales = Sales.objects.filter(base_filter_active, date_filter_periodic).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+        nsd_sales = NSDs.objects.filter(base_filter_active, date_filter_periodic).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0.0000')
+        total_sales = base_sales + nsd_sales
         if total_sales > 0:
              accounts.append({
                 'code': '41000001',
@@ -243,7 +232,9 @@ class TrialBalanceService:
             })
 
         # 6. PURCHASES (Nominal - Periodic)
-        total_purchases = Purchases.objects.filter(base_filter_active, date_filter_periodic).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+        base_purchases = Purchases.objects.filter(base_filter_active, date_filter_periodic).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+        nsd_purchases = NSDs.objects.filter(base_filter_active, date_filter_periodic).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0.0000')
+        total_purchases = base_purchases + nsd_purchases
         if total_purchases > 0:
              accounts.append({
                 'code': '51000001',

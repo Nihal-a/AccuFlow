@@ -81,7 +81,7 @@ class BalanceSheetService:
 
         # --- LIABILITIES SECTION ---
         accounts.append({'code': '2100', 'name': 'LIABILITIES **', 'is_header': True})
-        accounts.append({'code': '2200', 'name': 'OTHER LIABILITIES **', 'is_header': True})
+        accounts.append({'code': '2200', 'name': 'CURRENT LIABILITIES **', 'is_header': True})
         
         accounts.append({
             'code': '2205', 'name': 'SUPPLIER CONTROL A/C', 
