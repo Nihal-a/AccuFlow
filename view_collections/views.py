@@ -170,6 +170,7 @@ class AddCollectionView(View):
                 collection.collector = collector
                 collection.date = date_obj
                 collection.status = 'New'
+                collection.is_viewed = False
                 collection.save()
                 collection.items.all().delete()
                 action_msg = "updated"

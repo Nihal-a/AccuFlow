@@ -1,4 +1,4 @@
-from core.models import Collection
+from core.models import Collection, Clients
 
 
 from core.views import getClient
@@ -9,7 +9,8 @@ from datetime import timedelta
 def notifications(request):
     notifications_data = {
         'pending_notifs': [],
-        'subscription_alert': None
+        'subscription_alert': None,
+        'admin_subscription_alerts': []
     }
     
     if not request.user.is_authenticated:
@@ -24,8 +25,14 @@ def notifications(request):
 
         if client:
              # Pending approvals
-             pending = Collection.objects.filter(client=client, status='Pending', is_viewed=False).order_by('-date')
-             notifications_data['pending_notifs'] = list(pending)
+             if request.user.is_collector:
+                 collector = request.user.collectors_set.first()
+                 if collector:
+                     pending = Collection.objects.filter(collector=collector, status__in=['New', 'Approved', 'Rejected'], is_viewed=False).order_by('-date')
+                     notifications_data['pending_notifs'] = list(pending)
+             else:
+                 pending = Collection.objects.filter(client=client, status='Pending', is_viewed=False).order_by('-date')
+                 notifications_data['pending_notifs'] = list(pending)
              
              # Subscription alert (if within 7 days)
              if client.subscription_end:
@@ -48,6 +55,25 @@ def notifications(request):
         elif request.user.is_superuser:
              pending = Collection.objects.filter(status='Pending', is_viewed=False).order_by('-date')
              notifications_data['pending_notifs'] = list(pending)
+             
+             today = timezone.now().date()
+             threshold_date = today + timedelta(days=7)
+             expiring_clients = Clients.objects.filter(
+                 is_active=True,
+                 subscription_end__lte=threshold_date,
+                 subscription_end__gte=today - timedelta(days=30)
+             ).order_by('subscription_end')
+             
+             admin_alerts = []
+             for c in expiring_clients:
+                 days_remaining = (c.subscription_end - today).days
+                 admin_alerts.append({
+                     'client': c,
+                     'days': days_remaining,
+                     'end_date': c.subscription_end,
+                     'is_expired': days_remaining < 0
+                 })
+             notifications_data['admin_subscription_alerts'] = admin_alerts
              
     except Exception as e:
         pass

@@ -144,15 +144,16 @@ class CollectorCollectionDetailView(LoginRequiredMixin, UserPassesTestMixin, Vie
             messages.warning(request, "No collected amounts entered.")
             return redirect('my_collection_detail', id=id)
             
-        # If specifically Rejected, we reuse the SAME collection ID for re-approval
         if collection.status == 'Rejected':
             collection.status = 'Pending'
+            collection.is_viewed = False
             collection.save()
             messages.success(request, "Collection re-submitted for approval.")
             return redirect('my_collection_detail', id=collection.id)
 
         # The user requested that the entire underlying list is submitted together regardless of unchecked items.
         collection.status = 'Pending'
+        collection.is_viewed = False
         collection.save()
         messages.success(request, "Collection submitted for approval.")
         return redirect('my_collection_detail', id=collection.id)
@@ -237,6 +238,7 @@ class CollectorAddItemsView(LoginRequiredMixin, UserPassesTestMixin, View):
             # If it was Pending, reset to New so it can be edited
             elif collection.status == 'Pending':
                  collection.status = 'New'
+                 collection.is_viewed = False
                  collection.save()
 
             for item_key in selected_ids:

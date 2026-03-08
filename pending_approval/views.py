@@ -72,6 +72,7 @@ class PendingApprovalDetailView(LoginRequiredMixin, View):
         
         if action == 'reject':
             collection.status = 'Rejected'
+            collection.is_viewed = False
             collection.approved_by = request.user
             collection.approval_date = timezone.now()
             collection.save()
@@ -136,6 +137,7 @@ class PendingApprovalDetailView(LoginRequiredMixin, View):
                         )
 
             collection.status = 'Approved'
+            collection.is_viewed = False
             collection.approved_by = request.user
             collection.approval_date = timezone.now()
             collection.save()

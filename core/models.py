@@ -117,7 +117,7 @@ class SubscriptionPlan(models.Model):
     def __str__(self):
         return self.name
 
-class Clients(models.Model):
+class Clients(SoftDeleteMixin):
     name = models.TextField(blank=True,null=True)
     user = models.ForeignKey(UserAccount,on_delete=models.CASCADE,blank=True,null=True)
     email = models.TextField(blank=True,null=True)
@@ -126,7 +126,6 @@ class Clients(models.Model):
     wa = models.TextField(blank=True,null=True)
     country_code = models.TextField(blank=True,null=True)
     clientId = models.TextField(blank=True,null=True)
-    deleted_at = models.DateTimeField(null=True, blank=True)
     
     # Subscription Fields
     subscription_plan = models.ForeignKey(SubscriptionPlan, on_delete=models.SET_NULL, null=True, blank=True)

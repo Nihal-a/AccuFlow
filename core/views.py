@@ -400,7 +400,12 @@ def update_ledger(where, to=None, old_purchase=0, new_purchase=0, old_sale=0, ne
 def mark_notifications_read(request):
     client = getClient(request.user)
     if client:
-        Collection.objects.filter(client=client, status='Pending', is_viewed=False).update(is_viewed=True)
+        if request.user.is_collector:
+            collector = getattr(request.user, 'collectors_set').first()
+            if collector:
+                Collection.objects.filter(collector=collector, status__in=['New', 'Approved', 'Rejected'], is_viewed=False).update(is_viewed=True)
+        else:
+            Collection.objects.filter(client=client, status='Pending', is_viewed=False).update(is_viewed=True)
     elif request.user.is_superuser:
         Collection.objects.filter(status='Pending', is_viewed=False).update(is_viewed=True)
         

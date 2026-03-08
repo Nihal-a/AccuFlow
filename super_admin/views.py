@@ -289,11 +289,15 @@ class DeleteClientView(View):
             raise PermissionDenied("Only superusers can delete clients")
         
         client = get_object_or_404(Clients, id=client_id)
-        client.is_active = False
-        client.deleted_at = timezone.now()
-        client.user.is_active = False
-        client.user.save()
-        client.save()
+        
+        # Soft delete the client using the mixin's method
+        client.soft_delete()
+        
+        # Also disable their user account so they can't log in
+        if hasattr(client, 'user') and client.user:
+            client.user.is_active = False
+            client.user.save()
+            
         messages.success(request, f"Client '{client.name}' moved to recycle bin.")
         return redirect('clients')
 
