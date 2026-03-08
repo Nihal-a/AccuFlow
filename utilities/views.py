@@ -108,19 +108,30 @@ class AddressView(View):
             response['Content-Disposition'] = 'attachment; filename="address_view_report.xlsx"'
             return response
 
-        # Prepare WhatsApp data for NSD supplier
+        # Prepare WhatsApp data for NSD supplier or Godown
         supplier_name = ''
         supplier_wa_number = ''
-        if is_nsd and party_id and transactions:
-            try:
-                supplier_obj = Suppliers.objects.get(id=party_id, is_active=True, client=client)
-                supplier_name = supplier_obj.name or ''
-                if supplier_obj.country_code and supplier_obj.wa:
-                    cc = str(supplier_obj.country_code).strip().replace('+', '')
-                    num = str(supplier_obj.wa).strip().replace(' ', '').replace('-', '')
-                    supplier_wa_number = f'{cc}{num}'
-            except Suppliers.DoesNotExist:
-                pass
+        if party_id and transactions:
+            if is_nsd:
+                try:
+                    supplier_obj = Suppliers.objects.get(id=party_id, is_active=True, client=client)
+                    supplier_name = supplier_obj.name or ''
+                    if supplier_obj.country_code and supplier_obj.wa:
+                        cc = str(supplier_obj.country_code).strip().replace('+', '')
+                        num = str(supplier_obj.wa).strip().replace(' ', '').replace('-', '')
+                        supplier_wa_number = f'{cc}{num}'
+                except Suppliers.DoesNotExist:
+                    pass
+            else:
+                try:
+                    godown_obj = Godowns.objects.get(id=party_id, is_active=True, client=client)
+                    supplier_name = godown_obj.name or ''
+                    if godown_obj.country_code and godown_obj.wa:
+                        cc = str(godown_obj.country_code).strip().replace('+', '')
+                        num = str(godown_obj.wa).strip().replace(' ', '').replace('-', '')
+                        supplier_wa_number = f'{cc}{num}'
+                except Godowns.DoesNotExist:
+                    pass
 
         return render(request, 'stock_view/address_view.html', {
             'godowns': godowns,

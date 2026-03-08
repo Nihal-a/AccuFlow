@@ -23,7 +23,7 @@ from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.utils import timezone
 
-from core.models import Customers, Suppliers
+from core.models import Customers, Suppliers, Godowns
 from core.views import getClient, calculate_customer_balance, calculate_supplier_balance
 from whatsapp.whatsapp_service import WhatsAppService, WhatsAppServiceError, format_whatsapp_number
 from whatsapp.ledger_helper import get_customer_ledger, get_supplier_ledger
@@ -350,6 +350,7 @@ def send_address_rows_api(request, client_id=None, client=None):
         rows = data.get('rows', [])
         supplier_id = data.get('supplier_id')
         whatsapp_number = data.get('whatsapp_number')
+        is_nsd = data.get('is_nsd', True)
 
         if not rows:
             return JsonResponse({'error': 'No rows to send'}, status=400)
@@ -358,14 +359,17 @@ def send_address_rows_api(request, client_id=None, client=None):
         supplier_name = ''
         if not whatsapp_number and supplier_id:
             try:
-                supplier = Suppliers.objects.get(id=supplier_id, client=client, is_active=True)
-                whatsapp_number = format_whatsapp_number(supplier.country_code, supplier.wa)
-                supplier_name = supplier.name or ''
-            except Suppliers.DoesNotExist:
-                return JsonResponse({'error': 'Supplier not found'}, status=404)
+                if is_nsd:
+                    party = Suppliers.objects.get(id=supplier_id, client=client, is_active=True)
+                else:
+                    party = Godowns.objects.get(id=supplier_id, client=client, is_active=True)
+                whatsapp_number = format_whatsapp_number(party.country_code, party.wa)
+                supplier_name = party.name or ''
+            except Exception:
+                return JsonResponse({'error': 'Party not found'}, status=404)
 
         if not whatsapp_number:
-            return JsonResponse({'error': 'Supplier has no WhatsApp number'}, status=400)
+            return JsonResponse({'error': 'Party has no WhatsApp number'}, status=400)
 
         service = WhatsAppService(client_id)
         result = service.send_address_rows(whatsapp_number, rows, supplier_name)

@@ -33,7 +33,7 @@ Address View
                 </div>
                 <div class="flex flex-row gap-3 sm:gap-4 w-full items-end">
                     <div class="pb-1.5 sm:pb-2 flex items-center h-full pl-1">
-                        <input type="checkbox" name="is_nsd" id="nsdCheck" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 border-gray-300" {% if is_nsd %}checked{% endif %}>
+                        <input type="checkbox" name="is_nsd" id="nsdCheck" autocomplete="off" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 border-gray-300" {% if is_nsd %}checked{% endif %}>
                         <label for="nsdCheck" class="ml-1.5 text-gray-700 text-xs sm:text-sm font-medium cursor-pointer">NSD</label>
                     </div>
                     <div class="flex-grow">
@@ -102,7 +102,7 @@ Address View
 </div>
 
 <!-- WhatsApp Send Modal -->
-{% if transactions and is_nsd and selected_party %}
+{% if transactions and selected_party %}
 <div id="waModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50">
     <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md mx-4">
         <!-- Confirmation State -->
@@ -113,7 +113,7 @@ Address View
                 </div>
                 <div>
                     <h3 class="text-lg font-bold text-gray-800">Send to WhatsApp</h3>
-                    <p class="text-xs text-gray-500">{{ transactions|length }} items will be sent to supplier</p>
+                    <p class="text-xs text-gray-500">{{ transactions|length }} items will be sent to {% if is_nsd %}supplier{% else %}godown{% endif %}</p>
                 </div>
             </div>
 
@@ -121,7 +121,7 @@ Address View
             <div class="bg-gray-50 rounded-lg p-3 mb-4">
                 <div class="flex items-center gap-2 text-sm">
                     <i data-lucide="user" class="w-4 h-4 text-gray-400"></i>
-                    <span class="text-gray-600">Supplier:</span>
+                    <span class="text-gray-600">{% if is_nsd %}Supplier{% else %}Godown{% endif %}:</span>
                     <span class="font-medium text-gray-800">{{ supplier_name }}</span>
                 </div>
                 <div class="flex items-center gap-2 text-sm mt-1">
@@ -147,7 +147,7 @@ Address View
                     <i data-lucide="alert-circle" class="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5"></i>
                     <div>
                         <p class="text-sm font-medium text-orange-700">No WhatsApp number</p>
-                        <p class="text-xs text-orange-600 mt-1">This supplier doesn't have a WhatsApp number configured. Update it in Supplier Master first.</p>
+                        <p class="text-xs text-orange-600 mt-1">This {% if is_nsd %}supplier{% else %}godown{% endif %} doesn't have a WhatsApp number configured. Update it in {% if is_nsd %}Supplier{% else %}Godown{% endif %} Master first.</p>
                     </div>
                 </div>
             </div>
@@ -294,6 +294,7 @@ Address View
                 },
                 body: JSON.stringify({
                     supplier_id: "{{ selected_party }}",
+                    is_nsd: {% if is_nsd %}true{% else %}false{% endif %},
                     rows: rows
                 })
             });
