@@ -545,8 +545,12 @@ class CollectionItem(models.Model):
     amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
     collected_amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
     is_credit = models.BooleanField(default=False) 
-    remark = models.TextField(blank=True, null=True) 
+    remark = models.TextField(blank=True, null=True)
+    order = models.PositiveIntegerField(default=0)
     
+    class Meta:
+        ordering = ['order']
+        
     def __str__(self):
         return f"{self.transaction_type} - {self.transaction_id}"
 

@@ -177,6 +177,23 @@
         });
     });
 
+    // Add row-click toggling
+    document.querySelectorAll('.partner-row').forEach(row => {
+        row.addEventListener('click', function(e) {
+            // Don't toggle if clicking on an input, textarea, or the checkbox itself
+            if (['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON'].includes(e.target.tagName)) {
+               return;
+            }
+            
+            const checkbox = this.querySelector('.partner-checkbox');
+            if (checkbox) {
+                checkbox.checked = !checkbox.checked;
+                // Manually trigger the 'change' event to run toggleRow logic
+                checkbox.dispatchEvent(new Event('change'));
+            }
+        });
+    });
+
     function toggleRow(checkbox) {
         const row = checkbox.closest('tr');
         const input = row.querySelector('.amount-input');

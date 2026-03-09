@@ -56,3 +56,35 @@ class CollectorUpdateItemView(LoginRequiredMixin, UserPassesTestMixin, View):
         except Exception as e:
             logger.error(f"Error updating collection item: {e}", exc_info=True)
             return JsonResponse({'status': 'error', 'message': 'An unexpected error occurred'}, status=500)
+
+
+class CollectorReorderItemsView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+         return self.request.user.is_authenticated and self.request.user.is_collector
+
+    def post(self, request, id):
+        try:
+            collection = get_object_or_404(Collection, id=id)
+            # Verify collector owns this collection
+            if collection.collector.user != request.user:
+                 return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+            
+            if collection.status not in ['New', 'Rejected']:
+                 return JsonResponse({'status': 'error', 'message': 'Collection is not editable'}, status=400)
+
+            data = json.loads(request.body)
+            item_orders = data.get('orders', [])
+            
+            # orders should be a list of dicts: [{'id': 1, 'order': 0}, {'id': 2, 'order': 1}]
+            for item_data in item_orders:
+                item_id = item_data.get('id')
+                order_index = item_data.get('order')
+                
+                if item_id is not None and order_index is not None:
+                    # Update item order, checking it belongs to this collection
+                    CollectionItem.objects.filter(id=item_id, collection=collection).update(order=order_index)
+            
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            logger.error(f"Error reordering collection items: {e}", exc_info=True)
+            return JsonResponse({'status': 'error', 'message': 'An unexpected error occurred'}, status=500)

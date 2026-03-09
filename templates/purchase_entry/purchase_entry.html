@@ -61,6 +61,22 @@ Purchase Entry
     overflow-wrap: break-word;
     white-space: normal;
   }
+
+  /* ── View table: cap text-heavy column widths ── */
+  /* Supplier Name */
+  #viewPurchaseDiv table th:nth-child(3),
+  #viewPurchaseDiv table td:nth-child(3),
+  /* Description */
+  #viewPurchaseDiv table th:nth-child(4),
+  #viewPurchaseDiv table td:nth-child(4),
+  /* Godown */
+  #viewPurchaseDiv table th:nth-child(5),
+  #viewPurchaseDiv table td:nth-child(5) {
+    max-width: 200px;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
 </style>
 {% endblock externalCSS %}
 {% block content %}
@@ -776,7 +792,7 @@ Purchase Entry
             lucide.createIcons();
 
           }
-          $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-green-500 text-white');
+          $('#addGrid').removeClass('bg-green-500 hover:bg-green-600').addClass('bg-blue-500 hover:bg-blue-600');
           $('#addToGridText').text('Add to Grid');
           isUpdate = false
 
@@ -864,7 +880,7 @@ Purchase Entry
     document.getElementById("supplier").value = inputs.supplier;
 
     $('#addToGridText').text('Update Grid');
-    $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-blue-500 text-white');
+    $('#addGrid').removeClass('bg-blue-500 hover:bg-blue-600').addClass('bg-green-500 hover:bg-green-600');
 
     $('#supplier, #godown').change()
     resetSLNo()
@@ -929,6 +945,7 @@ Purchase Entry
     $('#godownCredit').empty()
     $('#purchase_name').val(getLastPurchaseNo()).change();
     $('#purchaseId').val('');
+    $('#supplier').focus();
   }
 
   function makeRowHighlight(tr) {
@@ -1084,13 +1101,36 @@ Purchase Entry
 
     }
     isUpdate = false;
+    $('#addGrid').removeClass('bg-green-500 hover:bg-green-600').addClass('bg-blue-500 hover:bg-blue-600');
     $('#addToGridText').text('Add to Grid');
     if (selectedTR) {
         $(selectedTR).removeClass('bg-blue-300');
         $(selectedTR).find('button').removeAttr('disabled');
         selectedTR = '';
     }
+    $('#supplier').focus();
   }
+
+  $('#btnCancel').on('keydown', function (e) {
+    if (e.key === 'Tab' && !e.shiftKey) {
+      e.preventDefault();
+      $('#supplier').focus();
+    }
+  });
+
+  $('form').on('submit', function() {
+    let targetDate;
+    if (typeof isUpdate !== 'undefined' && isUpdate) {
+      targetDate = $('#date').val();
+    } else {
+      targetDate = new Date().toLocaleDateString('en-CA');
+      $('#date').val(targetDate);
+    }
+    
+    if (targetDate) {
+      $(this).find('input[name="dates"]').val(targetDate);
+    }
+  });
 
 </script>
 {% endblock externalJS %}

@@ -66,8 +66,8 @@
 
   /* ── View table: fixed column widths ── */
   #viewCashDiv table {
-    table-layout: fixed;
-    min-width: 640px;
+    table-layout: auto;
+    min-width: 800px;
   }
 
   #viewCashDiv th:nth-child(1),
@@ -89,19 +89,9 @@
   }
 
   /* Date          */
-  #viewCashDiv th:nth-child(4),
-  #viewCashDiv td:nth-child(4) {
-    width: 120px;
-  }
-
-  /* Party         */
+  /* Col 4 = Party — takes remaining space */
   /* Col 5 = Description — takes remaining space */
-  #viewCashDiv th:nth-child(6),
-  #viewCashDiv td:nth-child(6) {
-    width: 110px;
-  }
-
-  /* Cash/Bank     */
+  /* Col 6 = Cash/Bank — takes remaining space */
   #viewCashDiv th:nth-child(7),
   #viewCashDiv td:nth-child(7) {
     width: 82px;
@@ -115,11 +105,17 @@
 
   /* Amount        */
 
-  /* Text cells wrap in view table */
-  #viewCashDiv td:not(:first-child) {
+   /* Text cells wrap in view table removed to match purchase entry's scrollable/expanded behavior */
+  #viewCashDiv table th:nth-child(4),
+  #viewCashDiv table td:nth-child(4),
+  #viewCashDiv table th:nth-child(5),
+  #viewCashDiv table td:nth-child(5),
+  #viewCashDiv table th:nth-child(6),
+  #viewCashDiv table td:nth-child(6) {
+    max-width: 200px;
+    white-space: normal;
     word-break: break-word;
     overflow-wrap: break-word;
-    white-space: normal;
   }
 </style>
 {% endblock %} {% block content %}
@@ -306,25 +302,17 @@
       <div
         class="w-full lg:w-3/4 mr-auto xl:max-w-6xl 2xl:max-w-7xl overflow-x-auto shadow-sm rounded-md border border-slate-200 mt-5 mb-5"
         id="cashCreateDiv">
-        <table class="table-auto w-full text-sm">
+        <table class="table-fixed w-full min-w-[640px] whitespace-nowrap text-sm">
           <thead class="sticky top-0 bg-blue-200 text-gray-700 z-10">
             <tr>
-              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">
-                Actions</th>
-              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">S.No
-              </th>
-              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Date
-              </th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[200px]">
-                Party</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[250px]">
-                Description</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[200px]">
-                Cash/Bank</th>
-              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-24">
-                Transaction</th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Amount
-              </th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20"> Actions</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">S.No</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Date</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Party</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[200px]">Description</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Cash/Bank</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Transaction</th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Amount</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 bg-white" id="cashTableBody">
@@ -399,7 +387,7 @@
       <!-- Zebra: odd=white(#FFF), even=light-gray(#E5E7EB) -->
       <!-- All functionality preserved -->
       <div class="overflow-x-auto mt-5 w-full shadow-sm rounded-md border border-slate-200">
-        <table class="table-fixed w-full text-sm" id="viewCashTable">
+        <table class="table-auto w-full min-w-[800px] whitespace-nowrap text-sm" id="viewCashTable">
           <thead class="bg-blue-200 text-gray-700 uppercase text-xs">
             <tr>
               <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">
@@ -523,7 +511,7 @@
     rateAvg = rateSum / count || 0;
     const lastRow = `
       <tr class="bg-blue-200 font-bold text-sm" id="totalRow">
-        <td class="px-1.5 py-1.5 text-left border-r border-[#B0B0B0]" colspan="7">Totals:</td>
+        <td class="px-1.5 py-1.5 text-left" colspan="7">Totals:</td>
         <td class="px-1.5 py-1.5 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
       </tr>`;
     tableBody.insertAdjacentHTML('beforeend', lastRow);
@@ -584,6 +572,16 @@
       `);
     $('#cashbankId').val(code);
   });
+
+  $('#transaction').on('change', function () {
+    const val = $(this).val();
+    $(this).removeClass('text-red-600 text-emerald-600 font-bold');
+    if (val === 'Paid') {
+      $(this).addClass('text-red-600 font-bold');
+    } else if (val === 'Received') {
+      $(this).addClass('text-emerald-600 font-bold');
+    }
+  }).trigger('change');
 </script>
 <script>
   var cashs = [];
@@ -617,21 +615,21 @@
         </td>
         <td class="px-1.5 py-1.5 text-center text-sm w-12 sl border-r border-[#B0B0B0]">${i + 1}</td>
         <td class="px-1.5 py-1.5 text-center text-sm w-24 border-r border-[#B0B0B0]">${cash.date.split('T')[0].split('-').reverse().join('-')}</td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-[200px] search-area border-r border-[#B0B0B0]">
+        <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">
           ${cash.type === 'suppliers' ? cash.supplier : cash.customer}
           <input type="hidden" name="dates" value="${cash.date.split('T')[0]}">
           <input type="hidden" name="suppliers" value="${cash.type === 'suppliers' ? cash.supplier_id : cash.customer_id}">
           <input type="hidden" name="cash_nos" value="${cash.cash_no || ''}">
         </td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-[250px] search-area border-r border-[#B0B0B0]">
+        <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">
           ${cash.description}
           <input type="hidden" name="descriptions" value="${cash.description}">
         </td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-[200px] search-area border-r border-[#B0B0B0]">
+        <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">
           ${cash.cashbank}
           <input type="hidden" name="cashs" value="${cash.cashbank_id}">
         </td>
-        <td class="px-1.5 py-1.5 text-center text-sm w-24 search-area border-r border-[#B0B0B0]">
+        <td class="px-1.5 py-1.5 text-center text-sm w-24 search-area border-r border-[#B0B0B0] ${cash.transaction === 'Paid' ? 'text-red-600' : 'text-emerald-600'}">
           ${cash.transaction}
           <input type="hidden" name="transactions" value="${cash.transaction}">
         </td>
@@ -715,14 +713,14 @@
             $(selectedTR).removeClass('bg-blue-300');
             $(selectedTR).addClass('border-b border-[#B0B0B0]');
             $(selectedTR).append(`
-             <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap border-r border-[#B0B0B0]">
-          <button type='button' class="text-blue-500 hover:text-blue-700 font-medium text-xs px-1" onclick="updateCash(this)">Edit</button>
+        <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap border-r border-[#B0B0B0]">
+          <button type='button' class="text-blue-500 hover:text-blue-700 font-medium text-xs px-1" onclick="updateCash(this)" title="Edit">Edit</button>
           <span class="text-gray-300">|</span>
-          <button type='button' class="text-red-500 hover:text-red-700 font-medium text-xs px-1" onclick="deleteCash(this)">Delete</button>
+          <button type='button' class="text-red-500 hover:text-red-700 font-medium text-xs px-1" onclick="deleteCash(this)" title="Delete">Delete</button>
         </td>
         <td class="px-1.5 py-1.5 text-center text-sm w-12 sl border-r border-[#B0B0B0]"></td>
         <td class="px-1.5 py-1.5 text-center text-sm w-24 border-r border-[#B0B0B0]">${date.split('-').reverse().join('-')}</td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-[200px] search-area border-r border-[#B0B0B0]">
+        <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">
           ${supplier}
           <input type="hidden" name="suppliers" value="${supplierSelect}">
           <input type="hidden" name="dates" value="${date}">
@@ -732,11 +730,11 @@
           ${description}
           <input type="hidden" name="descriptions" value="${description}">
         </td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-[200px] search-area border-r border-[#B0B0B0]">
+        <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">
           ${cash}
           <input type="hidden" name="cashs" value="${cashSelect}">
         </td>
-        <td class="px-1.5 py-1.5 text-center text-sm w-24 search-area border-r border-[#B0B0B0]">
+        <td class="px-1.5 py-1.5 text-center text-sm w-24 search-area border-r border-[#B0B0B0] ${transaction === 'Paid' ? 'text-red-600' : 'text-emerald-600'}">
           ${transaction}
           <input type="hidden" name="transactions" value="${transaction}">
         </td>
@@ -752,12 +750,13 @@
             const newRow = `
       <tr class="border-b border-[#B0B0B0] odd:bg-white even:bg-[#E5E7EB] hover:bg-[#F0F8FF] transition-all duration-200">
         <td class="px-1.5 py-1.5 text-center w-20 whitespace-nowrap border-r border-[#B0B0B0]">
-          <button type='button' class="text-blue-500 hover:underline text-xs mr-2" onclick="updateCash(this)">Edit</button>
-          <button type='button' class="text-red-500 hover:underline text-xs" onclick="deleteCash(this)">Delete</button>
+          <button type='button' class="text-blue-500 hover:text-blue-700 font-medium text-xs px-1" onclick="updateCash(this)" title="Edit">Edit</button>
+          <span class="text-gray-300">|</span>
+          <button type='button' class="text-red-500 hover:text-red-700 font-medium text-xs px-1" onclick="deleteCash(this)" title="Delete">Delete</button>
         </td>
         <td class="px-1.5 py-1.5 text-center text-sm w-12 sl border-r border-[#B0B0B0]"></td>
         <td class="px-1.5 py-1.5 text-center text-sm w-24 border-r border-[#B0B0B0]">${date.split('-').reverse().join('-')}</td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-[200px] search-area border-r border-[#B0B0B0]">
+        <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">
           ${supplier}
           <input type="hidden" name="suppliers" value="${supplierSelect}">
           <input type="hidden" name="dates" value="${date}">
@@ -767,11 +766,11 @@
           ${description}
           <input type="hidden" name="descriptions" value="${description}">
         </td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-[200px] search-area border-r border-[#B0B0B0]">
+        <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">
           ${cash}
           <input type="hidden" name="cashs" value="${cashSelect}">
         </td>
-         <td class="px-1.5 py-1.5 text-center text-sm w-24 search-area border-r border-[#B0B0B0]">
+         <td class="px-1.5 py-1.5 text-center text-sm w-24 search-area border-r border-[#B0B0B0] ${transaction === 'Paid' ? 'text-red-600' : 'text-emerald-600'}">
           ${transaction}
           <input type="hidden" name="transactions" value="${transaction}">
         </td>
@@ -786,7 +785,7 @@
             tableBody.insertAdjacentHTML('beforeend', newRow);
 
           }
-          $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-green-500 text-white');
+          $('#addGrid').removeClass('bg-green-500 hover:bg-green-600').addClass('bg-blue-500 hover:bg-blue-600');
           $('#addToGridText').text('Add to Grid');
 
           addLastRow()
@@ -854,7 +853,7 @@
     }
 
     $('#addToGridText').text('Update Grid');
-    $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-blue-500 text-white');
+    $('#addGrid').removeClass('bg-blue-500 hover:bg-blue-600').addClass('bg-green-500 hover:bg-green-600');
 
     $('#supplier, #cash').change()
     resetSLNo()
@@ -927,6 +926,7 @@
     // Restore Party and Transaction selections
     $('#supplier').val(currentSupplier).change();
     $('#transaction').val(currentTransaction);
+    $('#supplier').focus();
   }
 
   function makeRowHighlight(tr) {
@@ -991,11 +991,11 @@
                 ${cash.cashbank}
                 <input type="hidden" name="cashs" value="${cash.cashbank_id}">
               </td>
-              <td class="px-1.5 py-1.5 text-center text-sm w-24 search-area border-r border-[#B0B0B0]">
+              <td class="px-1.5 py-1.5 text-center text-sm w-24 search-area border-r border-[#B0B0B0] ${cash.transaction === 'Paid' ? 'text-red-600' : 'text-emerald-600'}">
                 ${cash.transaction}
                 <input type="hidden" name="transactions" value="${cash.transaction}">
               </td>
-              <td class="px-1.5 py-1.5 text-right text-sm w-32 font-bold search-area">
+              <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
                 ${parseFloat(cash.amount).toFixed(2)}
                 <input type="hidden" name="amounts" value="${cash.amount}">
                 <input type="hidden" name="cash_ids" id="cash_id" value="${cash.id}"> 
@@ -1006,7 +1006,7 @@
         });
         tableBody.append(`
           <tr class="bg-blue-200 font-bold text-sm" id="totalRow">
-            <td class="px-1.5 py-1.5 text-left border-r border-[#B0B0B0]" colspan="7">Totals:</td>
+            <td class="px-1.5 py-1.5 text-left" colspan="7">Totals:</td>
             <td class="px-1.5 py-1.5 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
           </tr>
         `);
@@ -1066,12 +1066,35 @@
 
     }
     isUpdate = false;
+    $('#addGrid').removeClass('bg-green-500 hover:bg-green-600').addClass('bg-blue-500 hover:bg-blue-600');
     $('#addToGridText').text('Add to Grid');
     $(selectedTR).removeClass('bg-blue-300');
     $(selectedTR).find('button').removeAttr('disabled');
     selectedTR = '';
-
+    $('#supplier').focus();
   }
+
+  $('#btnCancel').on('keydown', function (e) {
+    if (e.key === 'Tab' && !e.shiftKey) {
+      e.preventDefault();
+      $('#supplier').focus();
+  }
+  });
+
+  $('form').on('submit', function() {
+    let targetDate;
+    if (typeof isUpdate !== 'undefined' && isUpdate) {
+      targetDate = $('#date').val();
+    } else {
+      targetDate = new Date().toLocaleDateString('en-CA');
+      $('#date').val(targetDate);
+    }
+    
+    if (targetDate) {
+      $(this).find('input[name="dates"]').val(targetDate);
+    }
+  });
+
   $('#cash').val('{{ cb_id|default_if_none:"" }}').change()
 
 </script>

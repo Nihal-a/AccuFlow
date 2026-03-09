@@ -89,6 +89,20 @@
         });
     });
 
+    // Add row-click toggling
+    document.querySelectorAll('.partner-row').forEach(row => {
+        row.addEventListener('click', function(e) {
+            if (e.target.tagName === 'INPUT' && e.target.type === 'checkbox') {
+                return;
+            }
+            const checkbox = this.querySelector('.partner-checkbox');
+            if (checkbox) {
+                checkbox.checked = !checkbox.checked;
+                checkbox.dispatchEvent(new Event('change'));
+            }
+        });
+    });
+
     function toggleRow(checkbox) {
         const row = checkbox.closest('tr');
         if (checkbox.checked) {

@@ -8,7 +8,7 @@ from core.models import Godowns, Purchases, Sales, StockTransfers, Commissions
 
 class StockView(View):
     def get(self, request):
-        godowns = Godowns.objects.filter(is_active=True, client=getClient(request.user))
+        godowns = Godowns.objects.filter(is_active=True, client=getClient(request.user)).order_by('name')
         return render(request, 'stock_view/stock_view.html', {'godowns': godowns, 'sort': 'Serial'})
 
     def parse_date(self, date_str):
@@ -21,7 +21,7 @@ class StockView(View):
         date_to_str = request.POST.get("dateTo")
         client = getClient(request.user)
 
-        godowns = Godowns.objects.filter(is_active=True, client=client)
+        godowns = Godowns.objects.filter(is_active=True, client=client).order_by('name')
 
         context = {
             'godowns': godowns,
@@ -130,7 +130,7 @@ class StockView(View):
 
         total_avg_rate_all = (total_value_all / total_qty_all) if total_qty_all else 0
 
-        context['stocks'] = list(stocks.values())
+        context['stocks'] = sorted(list(stocks.values()), key=lambda x: x['godown'].name)
         context['total_qty_all'] = round(total_qty_all, 3)
         context['total_amount_all'] = round(total_value_all, 3)
         context['total_avg_rate_all'] = round(total_avg_rate_all, 2)

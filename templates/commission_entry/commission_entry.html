@@ -3,9 +3,9 @@
 {% block externalCSS %}
 <style>
   /* ── Hold table: fixed column widths ── */
-  #commissionCreateDiv table { table-layout: fixed; min-width: 720px; }
+  #commissionCreateDiv table { table-layout: fixed; min-width: 640px; }
 
-  #commissionCreateDiv th:nth-child(1), #commissionCreateDiv td:nth-child(1) { width: 84px;  white-space: nowrap; } /* Actions     */
+  #commissionCreateDiv th:nth-child(1), #commissionCreateDiv td:nth-child(1) { width: 84px;  white-space: nowrap; } 
   #commissionCreateDiv th:nth-child(2), #commissionCreateDiv td:nth-child(2) { width: 40px;  } /* S.No        */
   #commissionCreateDiv th:nth-child(3), #commissionCreateDiv td:nth-child(3) { width: 82px;  } /* Date        */
   #commissionCreateDiv th:nth-child(4), #commissionCreateDiv td:nth-child(4) { width: 90px;  } /* Godown      */
@@ -26,23 +26,29 @@
   }
 
   /* ── View table: fixed column widths ── */
-  #viewCommissionDiv table { table-layout: fixed; min-width: 720px; }
+  #viewCommissionDiv table { table-layout: auto; min-width: 800px; }
 
   #viewCommissionDiv th:nth-child(1), #viewCommissionDiv td:nth-child(1) { width: 84px;  white-space: nowrap; } /* Actions     */
   #viewCommissionDiv th:nth-child(2), #viewCommissionDiv td:nth-child(2) { width: 40px;  } /* S.No        */
   #viewCommissionDiv th:nth-child(3), #viewCommissionDiv td:nth-child(3) { width: 82px;  } /* Date        */
-  #viewCommissionDiv th:nth-child(4), #viewCommissionDiv td:nth-child(4) { width: 90px;  } /* Godown      */
+  /* Col 4 = Godown — takes remaining space */
   /* Col 5 = Description — takes remaining space */
-  #viewCommissionDiv th:nth-child(6), #viewCommissionDiv td:nth-child(6) { width: 100px; } /* Expense     */
+  /* Col 6 = Expense — takes remaining space */
   #viewCommissionDiv th:nth-child(7), #viewCommissionDiv td:nth-child(7) { width: 60px;  } /* Qty         */
   #viewCommissionDiv th:nth-child(8), #viewCommissionDiv td:nth-child(8) { width: 72px;  } /* Rate        */
   #viewCommissionDiv th:nth-child(9), #viewCommissionDiv td:nth-child(9) { width: 80px;  } /* Amount      */
 
-  /* Text cells wrap in view table */
-  #viewCommissionDiv td:not(:first-child) {
+   /* Text cells wrap in view table removed to match purchase entry's scrollable/expanded behavior */
+  #viewCommissionDiv table th:nth-child(4),
+  #viewCommissionDiv table td:nth-child(4),
+  #viewCommissionDiv table th:nth-child(5),
+  #viewCommissionDiv table td:nth-child(5),
+  #viewCommissionDiv table th:nth-child(6),
+  #viewCommissionDiv table td:nth-child(6) {
+    max-width: 200px;
+    white-space: normal;
     word-break: break-word;
     overflow-wrap: break-word;
-    white-space: normal;
   }
 </style>
 {% endblock externalCSS %}
@@ -227,15 +233,15 @@
       <div
         class="w-full lg:w-3/4 mr-auto xl:max-w-6xl 2xl:max-w-7xl overflow-x-auto shadow-sm rounded-md border border-slate-200 mt-5 mb-5"
         id="commissionCreateDiv">
-        <table class="table-auto w-full min-w-[800px] whitespace-nowrap text-sm">
+        <table class="table-fixed w-full min-w-[640px] whitespace-nowrap text-sm">
           <thead class="sticky top-0 bg-blue-200 text-gray-700 z-10">
             <tr>
               <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">Actions</th>
               <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">S.No</th>
               <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Date</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Godown</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[250px]">Description</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-40">Expense</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Godown</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[200px]">Description</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Expense</th>
               <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Qty</th>
               <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-28">Rate</th>
               <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Amount</th>
@@ -297,15 +303,15 @@
         </div>
       </div>
       <div class="overflow-x-auto mt-5 w-full shadow-sm rounded-md border border-slate-200">
-        <table class="table-fixed w-full min-w-[800px] whitespace-nowrap text-sm" id="viewCommissionTable">
+        <table class="table-auto w-full min-w-[800px] whitespace-nowrap text-sm" id="viewCommissionTable">
           <thead class="bg-blue-200 text-gray-700 uppercase text-xs">
             <tr>
               <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">Actions</th>
               <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">SNo</th>
               <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Date</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Godown</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Godown</th>
               <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[250px]">Description</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-40">Expense</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Expense</th>
               <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Qty</th>
               <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-28">Rate</th>
               <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Amount</th>
@@ -370,9 +376,9 @@
     rateAvg = count > 0 ? (rateSum / count) : 0;
     const lastRow = `
       <tr class="bg-blue-200 font-bold text-sm" id="totalRow">
-        <td class="px-1.5 py-1.5 text-left border-r border-[#B0B0B0]" colspan="6">Totals:</td>
-        <td class="px-1.5 py-1.5 text-right border-r border-[#B0B0B0]">${parseFloat(totalQty).toFixed(2)}</td>
-        <td class="px-1.5 py-1.5 text-right border-r border-[#B0B0B0]">${parseFloat(rateAvg).toFixed(2)}</td>
+        <td class="px-1.5 py-1.5 text-left" colspan="6">Totals:</td>
+        <td class="px-1.5 py-1.5 text-right">${parseFloat(totalQty).toFixed(2)}</td>
+        <td class="px-1.5 py-1.5 text-right">${parseFloat(rateAvg).toFixed(2)}</td>
         <td class="px-1.5 py-1.5 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
       </tr>`;
     tableBody.insertAdjacentHTML('beforeend', lastRow);
@@ -455,17 +461,17 @@
         </td>
         <td class="px-1.5 py-1.5 text-center text-sm w-12 sl border-r border-[#B0B0B0]">${i + 1}</td>
         <td class="px-1.5 py-1.5 text-center text-sm w-24 border-r border-[#B0B0B0]">${commission.date.split('T')[0].split('-').reverse().join('-')}</td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-32 search-area border-r border-[#B0B0B0]">
+        <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">
           ${commission.godown}
           <input type="hidden" name="godowns" value="${commission.godown_id}">
           <input type="hidden" name="dates" value="${commission.date.split('T')[0]}">
           <input type="hidden" name="commission_nos" value="${commission.commission_no}">
         </td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-[250px] search-area border-r border-[#B0B0B0]">
+        <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">
           ${commission.description}
           <input type="hidden" name="descriptions" value="${commission.description}">
         </td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-40 search-area border-r border-[#B0B0B0]">
+        <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">
           ${commission.expense}
           <input type="hidden" name="expenses" value="${commission.expense_id}">
         </td>
@@ -569,17 +575,17 @@
         </td>
         <td class="px-1.5 py-1.5 text-center text-sm w-12 sl border-r border-[#B0B0B0]"></td>
         <td class="px-1.5 py-1.5 text-center text-sm w-24 border-r border-[#B0B0B0]">${date.split('-').reverse().join('-')}</td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-32 search-area border-r border-[#B0B0B0]">
+        <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">
           ${godown}
           <input type="hidden" name="godowns" value="${godownSelect}">
           <input type="hidden" name="dates" value="${date}">
           <input type="hidden" name="commission_nos" value="${commission_no}">
         </td>
-         <td class="px-1.5 py-1.5 text-left text-sm w-[250px] search-area border-r border-[#B0B0B0]">
+         <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">
           ${description}
           <input type="hidden" name="descriptions" value="${description}">
         </td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-40 search-area border-r border-[#B0B0B0]">
+        <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">
           ${expense}
           <input type="hidden" name="expenses" value="${expenseSelect}">
         </td>
@@ -609,17 +615,17 @@
         </td>
         <td class="px-1.5 py-1.5 text-center text-sm w-12 sl border-r border-[#B0B0B0]"></td>
         <td class="px-1.5 py-1.5 text-center text-sm w-24 border-r border-[#B0B0B0]">${date.split('-').reverse().join('-')}</td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-32 search-area border-r border-[#B0B0B0]">
+        <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">
           ${godown}
           <input type="hidden" name="godowns" value="${godownSelect}">
           <input type="hidden" name="dates" value="${date}">
           <input type="hidden" name="commission_nos" value="${commission_no}">
         </td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-[250px] search-area border-r border-[#B0B0B0]">
+        <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">
           ${description}
           <input type="hidden" name="descriptions" value="${description}">
         </td>
-        <td class="px-1.5 py-1.5 text-left text-sm w-40 search-area border-r border-[#B0B0B0]">
+        <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">
           ${expense}
           <input type="hidden" name="expenses" value="${expenseSelect}">
         </td>
@@ -642,7 +648,7 @@
             tableBody.insertAdjacentHTML('beforeend', newRow);
           }
 
-          $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-green-500 text-white');
+          $('#addGrid').removeClass('bg-green-500 hover:bg-green-600').addClass('bg-blue-500 hover:bg-blue-600');
           $('#addToGridText').text('Add to Grid');
           $('#commission_name').val(getLastCommissionNo());
           resetSLNo()
@@ -703,7 +709,7 @@
 
     // selectedRow.remove();
     $('#addToGridText').text('Update Grid');
-    $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-blue-500 text-white');
+    $('#addGrid').removeClass('bg-blue-500 hover:bg-blue-600').addClass('bg-green-500 hover:bg-green-600');
 
     $('#expense, #godown').change()
     resetSLNo()
@@ -772,6 +778,7 @@
     $('#allExpenses').prop('checked', false);
     $('#godownCredit').empty()
     $('#commission_name').val(getLastCommissionNo());
+    $('#expense').focus();
   }
 
 </script>
@@ -816,25 +823,25 @@
               </td>
               <td class="px-1.5 py-1.5 text-center text-sm w-12 sl border-r border-[#B0B0B0]">${index + 1}</td>
               <td class="px-1.5 py-1.5 text-center text-sm w-24 border-r border-[#B0B0B0]">${commission.date.split('T')[0].split('-').reverse().join('-')}</td>
-              <td class="px-1.5 py-1.5 text-left text-sm w-32 search-area border-r border-[#B0B0B0]">${commission.godown}
+              <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">${commission.godown}
                 <input type="hidden" name="godowns" value="${commission.godown_id}">
                 <input type="hidden" name="commission_nos" value="${commission.commission_no}">
                 <input type="hidden" name="dates" value="${commission.date.split('T')[0]}">
                 </td>
-              <td class="px-1.5 py-1.5 text-left text-sm w-[250px] search-area border-r border-[#B0B0B0]">${commission.description}
+              <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">${commission.description}
                 <input type="hidden" name="descriptions" value="${commission.description}">
                 </td>
-              <td class="px-1.5 py-1.5 text-left text-sm w-40 search-area border-r border-[#B0B0B0]">
+              <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">
         ${commission.expense} 
         <input type="hidden" name="expenses" value="${commission.expense_id || commission.expense}">
                 </td>
-              <td class="px-1.5 py-1.5 text-right text-sm w-24 font-bold border-r border-[#B0B0B0]">${parseFloat(commission.qty).toFixed(2)}
+              <td class="px-1.5 py-1.5 text-right text-sm w-24 border-r border-[#B0B0B0]">${parseFloat(commission.qty).toFixed(2)}
                 <input type="hidden" name="qtys" value="${commission.qty}">
                 </td>
-              <td class="px-1.5 py-1.5 text-right text-sm w-28 font-bold border-r border-[#B0B0B0]">${parseFloat(commission.amount).toFixed(2)}
+              <td class="px-1.5 py-1.5 text-right text-sm w-28 border-r border-[#B0B0B0]">${parseFloat(commission.amount).toFixed(2)}
                 <input type="hidden" name="amounts" value="${commission.amount}">
                 </td>
-              <td class="px-1.5 py-1.5 text-right text-sm w-32 font-bold">${parseFloat(commission.total_amount).toFixed(2)}
+              <td class="px-1.5 py-1.5 text-right text-sm w-32">${parseFloat(commission.total_amount).toFixed(2)}
                 <input type="hidden" name="total_amounts" value="${parseFloat(commission.total_amount).toFixed(2)}">
                 <input type="hidden" name="commission_ids" id="commission_id" value="${commission.id}"> 
                 <input type="hidden" name="type" id="type" value="${commission.type}">
@@ -844,9 +851,9 @@
         });
         tableBody.append(`
           <tr class="bg-blue-200 font-bold text-sm" id="totalRow">
-            <td class="px-1.5 py-1.5 text-left border-r border-[#B0B0B0]" colspan="6">Totals:</td>
-            <td class="px-1.5 py-1.5 text-right border-r border-[#B0B0B0]">${parseFloat(totalQty).toFixed(2)}</td>
-            <td class="px-1.5 py-1.5 text-right border-r border-[#B0B0B0]">${parseFloat(rateAvg).toFixed(2)}</td>
+            <td class="px-1.5 py-1.5 text-left" colspan="6">Totals:</td>
+            <td class="px-1.5 py-1.5 text-right">${parseFloat(totalQty).toFixed(2)}</td>
+            <td class="px-1.5 py-1.5 text-right">${parseFloat(rateAvg).toFixed(2)}</td>
             <td class="px-1.5 py-1.5 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
           </tr>
         `);
@@ -902,11 +909,34 @@
       $('#commissionTableBody').removeClass('hidden')
     }
     isUpdate = false;
+    $('#addGrid').removeClass('bg-green-500 hover:bg-green-600').addClass('bg-blue-500 hover:bg-blue-600');
     $('#addToGridText').text('Add to Grid');
     $(selectedTR).removeClass('bg-blue-300');
     $(selectedTR).find('button').removeAttr('disabled');
     selectedTR = '';
+    $('#expense').focus();
   }
+
+  $('#btnCancel').on('keydown', function (e) {
+    if (e.key === 'Tab' && !e.shiftKey) {
+      e.preventDefault();
+      $('#expense').focus();
+    }
+  });
+
+  $('form').on('submit', function() {
+    let targetDate;
+    if (typeof isUpdate !== 'undefined' && isUpdate) {
+      targetDate = $('#date').val();
+    } else {
+      targetDate = new Date().toLocaleDateString('en-CA');
+      $('#date').val(targetDate);
+    }
+    
+    if (targetDate) {
+      $(this).find('input[name="dates"]').val(targetDate);
+    }
+  });
 
 </script>
 {% endblock externalJS %}

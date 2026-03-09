@@ -83,8 +83,8 @@
 
   /* ── View table: fixed column widths ── */
   #viewNSDDiv table {
-    table-layout: fixed;
-    min-width: 720px;
+    table-layout: auto;
+    min-width: 800px;
   }
 
   #viewNSDDiv th:nth-child(1),
@@ -156,11 +156,17 @@
 
   /* Purchase Amt   */
 
-  /* Text cells wrap in view table */
-  #viewNSDDiv td:not(:first-child) {
+   /* Text cells wrap in view table removed to match purchase entry's scrollable/expanded behavior */
+  #viewNSDDiv table th:nth-child(4),
+  #viewNSDDiv table td:nth-child(4),
+  #viewNSDDiv table th:nth-child(5),
+  #viewNSDDiv table td:nth-child(5),
+  #viewNSDDiv table th:nth-child(6),
+  #viewNSDDiv table td:nth-child(6) {
+    max-width: 200px;
+    white-space: normal;
     word-break: break-word;
     overflow-wrap: break-word;
-    white-space: normal;
   }
 </style>
 {% endblock %} {% block content %}
@@ -481,7 +487,7 @@
       <!-- Zebra: odd=white(#FFF), even=light-gray(#E5E7EB) -->
       <!-- All functionality preserved -->
       <div class="overflow-x-auto mt-5 w-full shadow-sm rounded-md border border-slate-200">
-        <table class="table-auto w-full min-w-[1000px] text-sm md:min-w-full" id="viewNSDTable">
+        <table class="table-auto w-full min-w-[800px] whitespace-nowrap text-sm" id="viewNSDTable">
           <thead class="bg-blue-200 text-gray-700 uppercase text-xs">
             <tr>
               <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">
@@ -1000,7 +1006,7 @@
             tableBody.insertAdjacentHTML('beforeend', newRow);
 
           }
-          $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-green-500 text-white');
+          $('#addGrid').removeClass('bg-green-500 hover:bg-green-600').addClass('bg-blue-500 hover:bg-blue-600');
           $('#addToGridText').text('Add to Grid');
           $('#nsd_name').val(getLastNSDNo());
           resetSLNo()
@@ -1106,7 +1112,7 @@
     }
 
     $('#addToGridText').text('Update Grid');
-    $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-blue-500 text-white');
+    $('#addGrid').removeClass('bg-blue-500 hover:bg-blue-600').addClass('bg-green-500 hover:bg-green-600');
 
     $('#supplier, #customer').change()
     resetSLNo()
@@ -1173,6 +1179,7 @@
     $('#supplierCredit').empty();
     $('#customerCredit').empty(1)
     $('#nsd_no').val(getLastNSDNo());
+    $('#supplier').focus();
   }
 
   function makeRowHighlight(tr) {
@@ -1244,19 +1251,19 @@
                 ${nsd.which_sender_type === 'suppliers' ? nsd.sender_supplier : nsd.sender_customer} 
                 <input type="hidden" name="suppliers" value="${nsd.which_sender_type === 'suppliers' ? nsd.sender_supplier_id : nsd.sender_customer_id}">
               </td>
-              <td class="px-1.5 py-1.5 text-right text-sm font-semibold border-r border-[#B0B0B0]">${parseFloat(nsd.qty).toFixed(2)}
+              <td class="px-1.5 py-1.5 text-right text-sm border-r border-[#B0B0B0]">${parseFloat(nsd.qty).toFixed(2)}
                 <input type="hidden" name="qtys" value="${nsd.qty}">
               </td>
-              <td class="px-1.5 py-1.5 text-right text-sm font-semibold border-r border-[#B0B0B0]">${parseFloat(nsd.sell_rate).toFixed(2)}
+              <td class="px-1.5 py-1.5 text-right text-sm border-r border-[#B0B0B0]">${parseFloat(nsd.sell_rate).toFixed(2)}
                 <input type="hidden" name="sell_rates" value="${nsd.sell_rate}">
               </td>
-              <td class="px-1.5 py-1.5 text-right text-sm font-semibold border-r border-[#B0B0B0]">${parseFloat(nsd.sell_amount).toFixed(2)}
+              <td class="px-1.5 py-1.5 text-right text-sm border-r border-[#B0B0B0]">${parseFloat(nsd.sell_amount).toFixed(2)}
                 <input type="hidden" name="sell_amount" value="${nsd.sell_amount}">
               </td>
-              <td class="px-1.5 py-1.5 text-right text-sm font-semibold border-r border-[#B0B0B0]">${parseFloat(nsd.purchase_rate).toFixed(2)}
+              <td class="px-1.5 py-1.5 text-right text-sm border-r border-[#B0B0B0]">${parseFloat(nsd.purchase_rate).toFixed(2)}
                 <input type="hidden" name="purchase_rates" value="${nsd.purchase_rate}">
               </td>
-              <td class="px-1.5 py-1.5 text-right text-sm font-semibold">${parseFloat(nsd.purchase_amount).toFixed(2)}
+              <td class="px-1.5 py-1.5 text-right text-sm">${parseFloat(nsd.purchase_amount).toFixed(2)}
                 <input type="hidden" name="purchase_amounts" value="${parseFloat(nsd.purchase_amount).toFixed(2)}">
               </td>
             </tr>`;
@@ -1324,11 +1331,34 @@
       $('#nsdTableBody').removeClass('hidden')
     }
     isUpdate = false;
+    $('#addGrid').removeClass('bg-green-500 hover:bg-green-600').addClass('bg-blue-500 hover:bg-blue-600');
     $('#addToGridText').text('Add to Grid');
     $(selectedTR).removeClass('bg-blue-300');
     $(selectedTR).find('button').removeAttr('disabled');
     selectedTR = '';
+    $('#supplier').focus();
   }
+
+  $('#btnCancel').on('keydown', function (e) {
+    if (e.key === 'Tab' && !e.shiftKey) {
+      e.preventDefault();
+      $('#supplier').focus();
+    }
+  });
+
+  $('form').on('submit', function() {
+    let targetDate;
+    if (typeof isUpdate !== 'undefined' && isUpdate) {
+      targetDate = $('#date').val();
+    } else {
+      targetDate = new Date().toLocaleDateString('en-CA');
+      $('#date').val(targetDate);
+    }
+    
+    if (targetDate) {
+      $(this).find('input[name="dates"]').val(targetDate);
+    }
+  });
 
 </script>
 {% endblock %}

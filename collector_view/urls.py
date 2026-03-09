@@ -6,4 +6,5 @@ urlpatterns = [
     path('detail/<int:id>/', views.CollectorCollectionDetailView.as_view(), name='my_collection_detail'),
     path('add-items/<int:id>/', views.CollectorAddItemsView.as_view(), name='collector_add_items'),
     path('update-item/<int:id>/', api_views.CollectorUpdateItemView.as_view(), name='collector_update_item'),
+    path('update-item-order/<int:id>/', api_views.CollectorReorderItemsView.as_view(), name='collector_update_item_order'),
 ]

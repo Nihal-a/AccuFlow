@@ -304,22 +304,24 @@ Stock Transfer
   <div id="viewDiv" class="hidden">
     <!-- Filter Section -->
     <div class="dateDiv mt-3">
-      <div class="flex justify-start items-end gap-5 mt-4 text-sm">
+      <div class="flex justify-start items-end gap-3 mt-4 text-sm">
         <div>
-          <label class="block text-gray-700 font-medium whitespace-nowrap">From Date*</label>
+          <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium whitespace-nowrap">From Date*</label>
           <input type="date" id="from_date"
-            class="w-full mt-1 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+            class="w-full bg-white px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
             required />
         </div>
         <div>
-          <label class="block text-gray-700 font-medium whitespace-nowrap">End Date*</label>
+          <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium whitespace-nowrap">End Date*</label>
           <input type="date" id="to_date"
-            class="w-full mt-1 px-2.5 py-1.5 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+            class="w-full bg-white px-2 sm:px-2.5 h-[32px] sm:h-[34px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
             required />
         </div>
-        <div>
+        <div class="flex gap-2">
           <button id="dateFilter" type="button"
-            class="bg-blue-600 text-white px-5 py-2 mt-6 rounded-md hover:bg-blue-700 transition-all text-sm font-medium">Filter</button>
+            class="leading-none inline-flex items-center justify-center gap-1 bg-blue-500 text-white text-xs sm:text-sm font-medium px-4 h-[32px] sm:h-[34px] rounded-md shadow-sm hover:bg-blue-600 transition-all duration-300">
+            Filter
+          </button>
         </div>
       </div>
     </div>
@@ -409,10 +411,12 @@ Stock Transfer
     var newRow = `
             <tr class="border-b border-[#B0B0B0] odd:bg-white even:bg-[#E5E7EB] hover:bg-[#F0F8FF] transition-all duration-200" data-editing="false">
                 <td class="px-1.5 py-1.5 text-center w-24 whitespace-nowrap border-r border-[#B0B0B0]">
-                    <button type="button" class="text-blue-500 hover:text-blue-700 font-medium text-xs px-1" onclick="editTransferRow(this)" title="Edit">Edit</button>
-                    <span class="text-gray-300">|</span>
-                    <button type="button" class="text-red-500 hover:text-red-700 font-medium text-xs px-1" onclick="deleteTransferRow(this, '${transfer.id}')" title="Delete">Delete</button>
-                    <input type="hidden" name="transfer_ids" value="${transfer.id}">
+                    <div class="flex items-center justify-center gap-1">
+                        <button type="button" class="text-blue-500 hover:text-blue-700 font-medium text-xs" onclick="editTransferRow(this)" title="Edit">Edit</button>
+                        <span class="text-gray-300">|</span>
+                        <button type="button" class="text-red-500 hover:text-red-700 font-medium text-xs" onclick="deleteTransferRow(this, '${transfer.id}')" title="Delete">Delete</button>
+                        <input type="hidden" name="transfer_ids" value="${transfer.id}">
+                    </div>
                 </td>
                 <td class="px-1.5 py-1.5 text-center text-sm w-12 sl border-r border-[#B0B0B0]">${i + 1}</td>
                 <td class="px-1.5 py-1.5 text-left text-sm w-32 border-r border-[#B0B0B0]">
@@ -665,10 +669,12 @@ Stock Transfer
           const row = `
                     <tr class="border-b border-[#B0B0B0] odd:bg-white even:bg-[#E5E7EB] hover:bg-[#F0F8FF] transition-all duration-200" data-editing="false">
                         <td class="px-1.5 py-1.5 text-center w-24 whitespace-nowrap border-r border-[#B0B0B0]">
-                            <button type="button" class="text-blue-500 font-medium text-xs px-1 hover:text-blue-700 mr-1" onclick="editTransferRow(this)">Edit</button>
-                            <span class="text-gray-300">|</span>
-                            <button type="button" class="text-red-500 font-medium text-xs px-1 hover:text-red-700 ml-1" onclick="deleteTransferRow(this, '${transfer_id}')">Delete</button>
-                            <input type="hidden" name="transfer_ids" value="${transfer_id}">
+                            <div class="flex items-center justify-center gap-1">
+                                <button type="button" class="text-blue-500 font-medium text-xs hover:text-blue-700" onclick="editTransferRow(this)">Edit</button>
+                                <span class="text-gray-300">|</span>
+                                <button type="button" class="text-red-500 font-medium text-xs hover:text-red-700" onclick="deleteTransferRow(this, '${transfer_id}')">Delete</button>
+                                <input type="hidden" name="transfer_ids" value="${transfer_id}">
+                            </div>
                         </td>
                         <td class="px-1.5 py-1.5 text-center text-sm w-12 sl border-r border-[#B0B0B0]">${rowCount}</td>
                         <td class="px-1.5 py-1.5 text-left text-sm w-32 border-r border-[#B0B0B0]">
@@ -836,10 +842,12 @@ Stock Transfer
           const newRow = `
             <tr class="border-b border-[#B0B0B0] odd:bg-white even:bg-[#E5E7EB] hover:bg-[#F0F8FF] transition-all duration-200">
               <td class="px-1.5 py-1.5 text-center w-24 whitespace-nowrap border-r border-[#B0B0B0]">
-                <button type="button" class="text-blue-500 hover:text-blue-700 font-medium text-xs px-1" onclick="onViewUpdate(this)" title="Edit">Edit</button>
-                <span class="text-gray-300">|</span>
-                <button type="button" class="text-red-500 hover:text-red-700 font-medium text-xs px-1" onclick="onViewDelete(this)" title="Delete">Delete</button>
-                <input type="hidden" name="transfer_ids" value="${transfer.id}">
+                <div class="flex items-center justify-center gap-1">
+                  <button type="button" class="text-blue-500 hover:text-blue-700 font-medium text-xs" onclick="onViewUpdate(this)" title="Edit">Edit</button>
+                  <span class="text-gray-300">|</span>
+                  <button type="button" class="text-red-500 hover:text-red-700 font-medium text-xs" onclick="onViewDelete(this)" title="Delete">Delete</button>
+                  <input type="hidden" name="transfer_ids" value="${transfer.id}">
+                </div>
               </td>
               <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">
                 ${transfer.transfer_no}

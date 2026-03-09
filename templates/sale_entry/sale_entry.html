@@ -67,11 +67,17 @@ Sales Entry
     white-space: normal;
   }
 
-  /* Text cells wrap in view table */
-  #viewSaleDiv td:not(:first-child) {
+   /* Text cells wrap in view table removed to match purchase entry's scrollable/expanded behavior */
+  #viewSaleDiv table th:nth-child(3),
+  #viewSaleDiv table td:nth-child(3),
+  #viewSaleDiv table th:nth-child(4),
+  #viewSaleDiv table td:nth-child(4),
+  #viewSaleDiv table th:nth-child(5),
+  #viewSaleDiv table td:nth-child(5) {
+    max-width: 200px;
+    white-space: normal;
     word-break: break-word;
     overflow-wrap: break-word;
-    white-space: normal;
   }
 </style>
 {% endblock externalCSS %}
@@ -799,7 +805,7 @@ Sales Entry
             tableBody.insertAdjacentHTML('beforeend', newRow);
           }
 
-          $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-green-500 text-white');
+          $('#addGrid').removeClass('bg-green-500 hover:bg-green-600').addClass('bg-blue-500 hover:bg-blue-600');
           $('#addToGridText').text('Add to Grid');
           $('#sale_name').val(getLastSaleNo());
           isUpdate = false
@@ -882,7 +888,7 @@ Sales Entry
     }
     document.getElementById("customer").value = inputs.customer;
     $('#addToGridText').text('Update Grid');
-    $('#addToGrid').addClass('bg-green-500 text-white').removeClass('bg-blue-500 text-white');
+    $('#addGrid').removeClass('bg-blue-500 hover:bg-blue-600').addClass('bg-green-500 hover:bg-green-600');
 
     $('#customer, #godown').change()
     resetSLNo()
@@ -959,6 +965,7 @@ Sales Entry
     $('#customerCredit').empty();
     $('#godownCredit').empty()
     $('#sale_name').val(getLastSaleNo());
+    $('#customer').focus();
   }
 
 </script>
@@ -1107,11 +1114,34 @@ Sales Entry
       $('#holdSaleTableBody').removeClass('hidden')
     }
     isUpdate = false;
+    $('#addGrid').removeClass('bg-green-500 hover:bg-green-600').addClass('bg-blue-500 hover:bg-blue-600');
     $('#addToGridText').text('Add to Grid');
     $(selectedTR).removeClass('bg-blue-300');
     $(selectedTR).find('button').removeAttr('disabled');
     selectedTR = '';
+    $('#customer').focus();
   }
+
+  $('#btnCancel').on('keydown', function (e) {
+    if (e.key === 'Tab' && !e.shiftKey) {
+      e.preventDefault();
+      $('#customer').focus();
+    }
+  });
+
+  $('form').on('submit', function() {
+    let targetDate;
+    if (typeof isUpdate !== 'undefined' && isUpdate) {
+      targetDate = $('#date').val();
+    } else {
+      targetDate = new Date().toLocaleDateString('en-CA');
+      $('#date').val(targetDate);
+    }
+    
+    if (targetDate) {
+      $(this).find('input[name="dates"]').val(targetDate);
+    }
+  });
 
 </script>
 {% endblock externalJS %}

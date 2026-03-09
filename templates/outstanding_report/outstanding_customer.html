@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block title %}
     Outstanding Customer
@@ -15,7 +16,7 @@
 
     <div class="overflow-x-auto mt-5 w-full">
         <table class="w-full min-w-max rounded-t-lg overflow-hidden">
-            <thead class="bg-blue-200 text-gray-700 uppercase text-sm">
+            <thead class="bg-blue-200 text-gray-700 uppercase text-xs">
                 <tr>
                     <th class="px-4 py-3 text-left font-medium w-1">#</th>
                     <th class="px-4 py-3 text-left font-medium">Code</th>
@@ -25,15 +26,15 @@
                     <th class="px-4 py-3 text-right font-medium">Total Trade Volume</th>
                 </tr>
             </thead>
-            <tbody class="bg-gray-100">
+            <tbody class="bg-gray-100 text-sm">
                 {% for c in customers %}
                 <tr class="border-b border-gray-200 hover:bg-gray-50">
                     <td class="px-4 py-3 text-left">{{ forloop.counter }}</td>
                     <td class="px-4 py-3 text-left">{{ c.code }}</td>
-                    <td class="px-4 py-3 text-left font-semibold text-gray-700">{{ c.name }}</td>
+                    <td class="px-4 py-3 text-left text-gray-700">{{ c.name|upper }}</td>
                     <td class="px-4 py-3 text-left">{{ c.phone }}</td>
-                    <td class="px-4 py-3 text-right {% if c.balance < 0 %}text-red-600{% endif %}">{{ c.balance|floatformat:2 }}</td>
-                    <td class="px-4 py-3 text-right font-bold text-blue-600">{{ c.total_trade|floatformat:2 }}</td>
+                    <td class="px-4 py-3 text-right {% if c.balance < 0 %}text-red-600{% endif %}">{{ c.balance|floatformat:2|intcomma }}</td>
+                    <td class="px-4 py-3 text-right text-blue-600">{{ c.total_trade|floatformat:2|intcomma }}</td>
                 </tr>
                 {% empty %}
                 <tr>
