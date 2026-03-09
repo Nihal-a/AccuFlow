@@ -3,20 +3,65 @@
 {% block externalCSS %}
 <style>
   /* ── Hold table: fixed column widths ── */
-  #commissionCreateDiv table { table-layout: fixed; min-width: 640px; }
+  #commissionCreateDiv table {
+    table-layout: fixed;
+    min-width: 640px;
+  }
 
-  #commissionCreateDiv th:nth-child(1), #commissionCreateDiv td:nth-child(1) { width: 84px;  white-space: nowrap; } 
-  #commissionCreateDiv th:nth-child(2), #commissionCreateDiv td:nth-child(2) { width: 40px;  } /* S.No        */
-  #commissionCreateDiv th:nth-child(3), #commissionCreateDiv td:nth-child(3) { width: 82px;  } /* Date        */
-  #commissionCreateDiv th:nth-child(4), #commissionCreateDiv td:nth-child(4) { width: 90px;  } /* Godown      */
+  #commissionCreateDiv th:nth-child(1),
+  #commissionCreateDiv td:nth-child(1) {
+    width: 84px;
+    white-space: nowrap;
+  }
+
+  #commissionCreateDiv th:nth-child(2),
+  #commissionCreateDiv td:nth-child(2) {
+    width: 40px;
+  }
+
+  /* S.No        */
+  #commissionCreateDiv th:nth-child(3),
+  #commissionCreateDiv td:nth-child(3) {
+    width: 82px;
+  }
+
+  /* Date        */
+  #commissionCreateDiv th:nth-child(4),
+  #commissionCreateDiv td:nth-child(4) {
+    width: 90px;
+  }
+
+  /* Godown      */
   /* Col 5 = Description — takes remaining space */
-  #commissionCreateDiv th:nth-child(6), #commissionCreateDiv td:nth-child(6) { width: 100px; } /* Expense     */
-  #commissionCreateDiv th:nth-child(7), #commissionCreateDiv td:nth-child(7) { width: 60px;  } /* Qty         */
-  #commissionCreateDiv th:nth-child(8), #commissionCreateDiv td:nth-child(8) { width: 72px;  } /* Rate        */
-  #commissionCreateDiv th:nth-child(9), #commissionCreateDiv td:nth-child(9) { width: 80px;  } /* Amount      */
+  #commissionCreateDiv th:nth-child(6),
+  #commissionCreateDiv td:nth-child(6) {
+    width: 100px;
+  }
+
+  /* Expense     */
+  #commissionCreateDiv th:nth-child(7),
+  #commissionCreateDiv td:nth-child(7) {
+    width: 60px;
+  }
+
+  /* Qty         */
+  #commissionCreateDiv th:nth-child(8),
+  #commissionCreateDiv td:nth-child(8) {
+    width: 72px;
+  }
+
+  /* Rate        */
+  #commissionCreateDiv th:nth-child(9),
+  #commissionCreateDiv td:nth-child(9) {
+    width: 80px;
+  }
+
+  /* Amount      */
 
   /* Remove extra border on first row caused by divide-y */
-  #commissionCreateDiv table tbody { border-top-width: 0 !important; }
+  #commissionCreateDiv table tbody {
+    border-top-width: 0 !important;
+  }
 
   /* Text cells wrap long content */
   #commissionCreateDiv td:not(:first-child) {
@@ -26,19 +71,53 @@
   }
 
   /* ── View table: fixed column widths ── */
-  #viewCommissionDiv table { table-layout: auto; min-width: 800px; }
+  #viewCommissionDiv table {
+    table-layout: auto;
+    min-width: 800px;
+  }
 
-  #viewCommissionDiv th:nth-child(1), #viewCommissionDiv td:nth-child(1) { width: 84px;  white-space: nowrap; } /* Actions     */
-  #viewCommissionDiv th:nth-child(2), #viewCommissionDiv td:nth-child(2) { width: 40px;  } /* S.No        */
-  #viewCommissionDiv th:nth-child(3), #viewCommissionDiv td:nth-child(3) { width: 82px;  } /* Date        */
+  #viewCommissionDiv th:nth-child(1),
+  #viewCommissionDiv td:nth-child(1) {
+    width: 84px;
+    white-space: nowrap;
+  }
+
+  /* Actions     */
+  #viewCommissionDiv th:nth-child(2),
+  #viewCommissionDiv td:nth-child(2) {
+    width: 40px;
+  }
+
+  /* S.No        */
+  #viewCommissionDiv th:nth-child(3),
+  #viewCommissionDiv td:nth-child(3) {
+    width: 82px;
+  }
+
+  /* Date        */
   /* Col 4 = Godown — takes remaining space */
   /* Col 5 = Description — takes remaining space */
   /* Col 6 = Expense — takes remaining space */
-  #viewCommissionDiv th:nth-child(7), #viewCommissionDiv td:nth-child(7) { width: 60px;  } /* Qty         */
-  #viewCommissionDiv th:nth-child(8), #viewCommissionDiv td:nth-child(8) { width: 72px;  } /* Rate        */
-  #viewCommissionDiv th:nth-child(9), #viewCommissionDiv td:nth-child(9) { width: 80px;  } /* Amount      */
+  #viewCommissionDiv th:nth-child(7),
+  #viewCommissionDiv td:nth-child(7) {
+    width: 60px;
+  }
 
-   /* Text cells wrap in view table removed to match purchase entry's scrollable/expanded behavior */
+  /* Qty         */
+  #viewCommissionDiv th:nth-child(8),
+  #viewCommissionDiv td:nth-child(8) {
+    width: 72px;
+  }
+
+  /* Rate        */
+  #viewCommissionDiv th:nth-child(9),
+  #viewCommissionDiv td:nth-child(9) {
+    width: 80px;
+  }
+
+  /* Amount      */
+
+  /* Text cells wrap in view table removed to match purchase entry's scrollable/expanded behavior */
   #viewCommissionDiv table th:nth-child(4),
   #viewCommissionDiv table td:nth-child(4),
   #viewCommissionDiv table th:nth-child(5),
@@ -138,7 +217,8 @@
             required>
             <option value="" selected>Select Godown</option>
             {% for godown in godowns %}
-            <option value="{{ godown.id }}" data-code="{{ godown.godownId }}" data-balance="{{ godown.get_balance }}">{{ godown.name }}</option>
+            <option value="{{ godown.id }}" data-code="{{ godown.godownId }}" data-balance="{{ godown.get_balance }}">{{
+              godown.name }}</option>
             {% endfor %}
           </select>
           <div id="godownCredit" class="hidden md:block text-xs font-semibold text-gray-700 shrink-0"></div>
@@ -236,15 +316,22 @@
         <table class="table-fixed w-full min-w-[640px] whitespace-nowrap text-sm">
           <thead class="sticky top-0 bg-blue-200 text-gray-700 z-10">
             <tr>
-              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">Actions</th>
-              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">S.No</th>
-              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Date</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">
+                Actions</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">S.No
+              </th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Date
+              </th>
               <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Godown</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[200px]">Description</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[200px]">
+                Description</th>
               <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Expense</th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Qty</th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-28">Rate</th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Amount</th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Qty
+              </th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-28">Rate
+              </th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Amount
+              </th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 bg-white" id="commissionTableBody">
@@ -306,15 +393,22 @@
         <table class="table-auto w-full min-w-[800px] whitespace-nowrap text-sm" id="viewCommissionTable">
           <thead class="bg-blue-200 text-gray-700 uppercase text-xs">
             <tr>
-              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">Actions</th>
-              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">SNo</th>
-              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Date</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">
+                Actions</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">SNo
+              </th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Date
+              </th>
               <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Godown</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[250px]">Description</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[250px]">
+                Description</th>
               <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Expense</th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Qty</th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-28">Rate</th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Amount</th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Qty
+              </th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-28">Rate
+              </th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Amount
+              </th>
             </tr>
           </thead>
           <tbody class="bg-white" id="commissionTableBody">
@@ -325,7 +419,8 @@
   </div>
 </div>
 <!-- 🟦 Edit Confirmation Modal -->
-<div id="editModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 px-4">
+<div id="editModal"
+  class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 px-4">
   <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center">
     <div class="flex items-center justify-center w-11 h-11 rounded-full bg-blue-50 mx-auto mb-3">
       <i class="fa-solid fa-pen text-blue-500"></i>
@@ -333,12 +428,15 @@
     <h2 class="text-base font-semibold mb-1.5 text-gray-800">Confirm Edit</h2>
     <p class="mb-5 text-sm text-gray-500">Are you sure you want to edit this commission's details?</p>
     <div class="flex justify-center gap-3">
-      <button onclick="closeEditModal()" class="leading-none inline-flex items-center justify-center h-[32px] sm:h-[34px] px-4 sm:px-5 bg-gray-300 text-gray-800 text-xs sm:text-sm font-medium rounded-md hover:bg-gray-400 transition-all">Cancel</button>
-      <a id="confirmEditBtn" href="#" class="leading-none inline-flex items-center justify-center h-[32px] sm:h-[34px] px-4 sm:px-5 bg-blue-500 text-white text-xs sm:text-sm font-medium rounded-md hover:bg-blue-600 transition-all">Edit</a>
+      <button onclick="closeEditModal()"
+        class="leading-none inline-flex items-center justify-center h-[32px] sm:h-[34px] px-4 sm:px-5 bg-gray-300 text-gray-800 text-xs sm:text-sm font-medium rounded-md hover:bg-gray-400 transition-all">Cancel</button>
+      <a id="confirmEditBtn" href="#"
+        class="leading-none inline-flex items-center justify-center h-[32px] sm:h-[34px] px-4 sm:px-5 bg-blue-500 text-white text-xs sm:text-sm font-medium rounded-md hover:bg-blue-600 transition-all">Edit</a>
     </div>
   </div>
 </div>
-<div id="confirmModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 px-4">
+<div id="confirmModal"
+  class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 px-4">
   <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm text-center">
     <div class="flex items-center justify-center w-11 h-11 rounded-full bg-red-50 mx-auto mb-3">
       <i class="fa-solid fa-trash text-red-500"></i>
@@ -346,8 +444,10 @@
     <h2 class="text-base font-semibold mb-1.5 text-gray-800">Confirm Deletion</h2>
     <p class="mb-5 text-sm text-gray-500">Are you sure you want to delete this commission?</p>
     <div class="flex justify-center gap-3">
-      <button id="cancelBtn" onclick="closeModal()" class="leading-none inline-flex items-center justify-center h-[32px] sm:h-[34px] px-4 sm:px-5 bg-gray-300 text-gray-800 text-xs sm:text-sm font-medium rounded-md hover:bg-gray-400 transition-all">Cancel</button>
-      <a id="confirmDeleteBtn" href="#" onclick="deleteItem()" class="leading-none inline-flex items-center justify-center h-[32px] sm:h-[34px] px-4 sm:px-5 bg-red-500 text-white text-xs sm:text-sm font-medium rounded-md hover:bg-red-600 transition-all">Delete</a>
+      <button id="cancelBtn" onclick="closeModal()"
+        class="leading-none inline-flex items-center justify-center h-[32px] sm:h-[34px] px-4 sm:px-5 bg-gray-300 text-gray-800 text-xs sm:text-sm font-medium rounded-md hover:bg-gray-400 transition-all">Cancel</button>
+      <a id="confirmDeleteBtn" href="#" onclick="deleteItem()"
+        class="leading-none inline-flex items-center justify-center h-[32px] sm:h-[34px] px-4 sm:px-5 bg-red-500 text-white text-xs sm:text-sm font-medium rounded-md hover:bg-red-600 transition-all">Delete</a>
     </div>
   </div>
 </div>
@@ -365,9 +465,9 @@
     count = 0;
     tableBody.querySelectorAll("tr").forEach(function (row) {
       if (row.id === 'totalRow') return;
-      const qty = parseFloat(row.cells[6].innerText) || 0;
-      const amount = parseFloat(row.cells[7].innerText) || 0;
-      const total = parseFloat(row.cells[8].innerText) || 0;
+      const qty = parseComma(row.cells[6].innerText);
+      const amount = parseComma(row.cells[7].innerText);
+      const total = parseComma(row.cells[8].innerText);
       totalQty += qty;
       rateSum += amount;
       totalAmount += total;
@@ -377,9 +477,9 @@
     const lastRow = `
       <tr class="bg-blue-200 font-bold text-sm" id="totalRow">
         <td class="px-1.5 py-1.5 text-left" colspan="6">Totals:</td>
-        <td class="px-1.5 py-1.5 text-right">${parseFloat(totalQty).toFixed(2)}</td>
-        <td class="px-1.5 py-1.5 text-right">${parseFloat(rateAvg).toFixed(2)}</td>
-        <td class="px-1.5 py-1.5 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
+        <td class="px-1.5 py-1.5 text-right">${formatComma(totalQty)}</td>
+        <td class="px-1.5 py-1.5 text-right">${formatComma(rateAvg)}</td>
+        <td class="px-1.5 py-1.5 text-right">${formatComma(totalAmount)}</td>
       </tr>`;
     tableBody.insertAdjacentHTML('beforeend', lastRow);
 
@@ -426,15 +526,16 @@
     var balance = selectedOption.data('balance') || '0';
     $('#godownCredit').empty();
     $('#godownCredit').append(`
-      <p class="font-semibold ${parseFloat(balance).toFixed(2) <= 0 ? `text-red` : ``}">Balance:${parseFloat(balance).toFixed(2)} </p> 
+      <p class="font-semibold ${parseFloat(balance).toFixed(2) <= 0 ? `text-red` : ``}">Balance:${formatComma(balance)} </p> 
       `);
     $('#godownID').val(code);
   });
 </script>
-<script>
-  var commissions = [];
+</script>
+<script id="commissions-data" type="application/json">
+[
   {% for c in commissions %}
-  commissions.push({
+  {
     "id": "{{ c.id }}",
     "commission_no": "{{ c.commission_no|escapejs }}",
     "expense": "{{ c.expense|escapejs }}",
@@ -442,12 +543,16 @@
     "godown": "{{ c.godown|escapejs }}",
     "godown_id": "{{ c.godown_id }}",
     "date": "{{ c.date|escapejs }}",
-    "qty": parseFloat("{{ c.qty|default:'0' }}"),
-    "amount": parseFloat("{{ c.amount|default:'0' }}"),
-    "total_amount": parseFloat("{{ c.total_amount|default:'0' }}"),
+    "qty": {{ c.qty|default:'0' }},
+    "amount": {{ c.amount|default:'0' }},
+    "total_amount": {{ c.total_amount|default:'0' }},
     "description": "{{ c.description|escapejs }}"
-  });
+  }{% if not forloop.last %},{% endif %}
   {% endfor %}
+]
+</script>
+<script>
+  var commissions = JSON.parse(document.getElementById('commissions-data').textContent);
 
   for (let i = 0; i < commissions.length; i++) {
     const commission = commissions[i];
@@ -476,15 +581,15 @@
           <input type="hidden" name="expenses" value="${commission.expense_id}">
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-24 search-area border-r border-[#B0B0B0]">
-          ${parseFloat(commission.qty).toFixed(2)}
+          ${formatComma(commission.qty)}
           <input type="hidden" name="qtys" value="${commission.qty}">
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-28 search-area border-r border-[#B0B0B0]">
-          ${parseFloat(commission.amount).toFixed(2)}
+          ${formatComma(commission.amount)}
           <input type="hidden" name="amounts" value="${commission.amount}">   
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
-          ${parseFloat(commission.total_amount).toFixed(2)}
+          ${formatComma(commission.total_amount)}
           <input type="hidden" name="total_amounts" value="${parseFloat(commission.total_amount).toFixed(2)}">
           <input type="hidden" name="commission_ids" id="commission_id" value="${commission.id}"> 
         </td>
@@ -598,7 +703,7 @@
           <input type="hidden" name="amounts" value="${amount}">
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
-          ${parseFloat(total_amount).toFixed(2)}
+          ${formatComma(total_amount)}
           <input type="hidden" name="total_amounts" value="${total_amount.toFixed(2)}">
           <input type="hidden" name="commission_ids" id="commission_id" value="${commission_id}"> 
           <input type="hidden" name="type" id="type" value="${type_value}"> 
@@ -638,7 +743,7 @@
           <input type="hidden" name="amounts" value="${amount}">
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
-          ${parseFloat(total_amount).toFixed(2)}
+          ${formatComma(total_amount)}
           <input type="hidden" name="total_amounts" value="${total_amount.toFixed(2)}">
           <input type="hidden" name="commission_ids" id="commission_id" value="${commission_id}"> 
           <input type="hidden" name="type" id="type" value="${type_value}"> 
@@ -692,7 +797,7 @@
     $('#viewDiv').addClass('hidden');
     const selectedRow = link.closest('tr');
     selectedTR = selectedRow;
-    
+
     document.getElementById("commission_name").value = selectedRow.querySelector('input[name="commission_nos"]')?.value || "";
     document.getElementById("date").value = selectedRow.querySelector('input[name="dates"]')?.value || "";
     document.getElementById("godown").value = selectedRow.querySelector('input[name="godowns"]')?.value || "";
@@ -749,11 +854,11 @@
           resetSLNo();
           getLastCommissionNo();
           closeModal();
-          
+
           if (!$('#viewDiv').hasClass('hidden')) {
-              $('#dateFilter').click();
+            $('#dateFilter').click();
           } else {
-              addLastRow();
+            addLastRow();
           }
         } else {
           console.error('Delete failed:', data.message);
@@ -835,13 +940,13 @@
         ${commission.expense} 
         <input type="hidden" name="expenses" value="${commission.expense_id || commission.expense}">
                 </td>
-              <td class="px-1.5 py-1.5 text-right text-sm w-24 border-r border-[#B0B0B0]">${parseFloat(commission.qty).toFixed(2)}
+              <td class="px-1.5 py-1.5 text-right text-sm w-24 border-r border-[#B0B0B0]">${formatComma(commission.qty)}
                 <input type="hidden" name="qtys" value="${commission.qty}">
                 </td>
-              <td class="px-1.5 py-1.5 text-right text-sm w-28 border-r border-[#B0B0B0]">${parseFloat(commission.amount).toFixed(2)}
+              <td class="px-1.5 py-1.5 text-right text-sm w-28 border-r border-[#B0B0B0]">${formatComma(commission.amount)}
                 <input type="hidden" name="amounts" value="${commission.amount}">
                 </td>
-              <td class="px-1.5 py-1.5 text-right text-sm w-32">${parseFloat(commission.total_amount).toFixed(2)}
+              <td class="px-1.5 py-1.5 text-right text-sm w-32">${formatComma(commission.total_amount)}
                 <input type="hidden" name="total_amounts" value="${parseFloat(commission.total_amount).toFixed(2)}">
                 <input type="hidden" name="commission_ids" id="commission_id" value="${commission.id}"> 
                 <input type="hidden" name="type" id="type" value="${commission.type}">
@@ -852,9 +957,9 @@
         tableBody.append(`
           <tr class="bg-blue-200 font-bold text-sm" id="totalRow">
             <td class="px-1.5 py-1.5 text-left" colspan="6">Totals:</td>
-            <td class="px-1.5 py-1.5 text-right">${parseFloat(totalQty).toFixed(2)}</td>
-            <td class="px-1.5 py-1.5 text-right">${parseFloat(rateAvg).toFixed(2)}</td>
-            <td class="px-1.5 py-1.5 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
+            <td class="px-1.5 py-1.5 text-right">${formatComma(totalQty)}</td>
+            <td class="px-1.5 py-1.5 text-right">${formatComma(rateAvg)}</td>
+            <td class="px-1.5 py-1.5 text-right">${formatComma(totalAmount)}</td>
           </tr>
         `);
 
@@ -924,7 +1029,7 @@
     }
   });
 
-  $('form').on('submit', function() {
+  $('form').on('submit', function () {
     let targetDate;
     if (typeof isUpdate !== 'undefined' && isUpdate) {
       targetDate = $('#date').val();
@@ -932,7 +1037,7 @@
       targetDate = new Date().toLocaleDateString('en-CA');
       $('#date').val(targetDate);
     }
-    
+
     if (targetDate) {
       $(this).find('input[name="dates"]').val(targetDate);
     }

@@ -1,14 +1,18 @@
 {% extends "base.html" %}
+{% load humanize %}
+
 
 {% block title %}My Collections{% endblock title %}
 
 {% block content %}
 
 <div class="bg-white rounded-xl p-6 mt-3">
-  <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-gray-100 pb-4 md:border-b-0 md:pb-0">
+  <div
+    class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-gray-100 pb-4 md:border-b-0 md:pb-0">
     <div>
       <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">My Collections</h1>
-      <p class="text-sm text-gray-500 mt-1">Logged in as: <span class="font-semibold text-gray-800">{{ collector.name      }}</span></p>
+      <p class="text-sm text-gray-500 mt-1">Logged in as: <span class="font-semibold text-gray-800">{{ collector.name
+          }}</span></p>
     </div>
 
     <div class="flex flex-col w-full md:w-auto md:flex-row md:justify-end md:items-center">
@@ -17,10 +21,11 @@
           <input type="date" name="date" id="filterDate" value="{{ selected_date }}"
             class="w-1/2 md:w-auto bg-white border border-gray-300 hover:border-blue-400 text-gray-700 font-medium rounded-xl px-2 md:px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 cursor-pointer text-sm md:text-base">
 
-          <select name="status" class="w-1/2 md:w-auto bg-white border border-gray-300 hover:border-blue-400 text-gray-700 font-medium rounded-xl px-2 md:px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 cursor-pointer text-sm md:text-base">
+          <select name="status"
+            class="w-1/2 md:w-auto bg-white border border-gray-300 hover:border-blue-400 text-gray-700 font-medium rounded-xl px-2 md:px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 cursor-pointer text-sm md:text-base">
             <option value="">All Statuses</option>
-            <option value="submitted" {% if status_filter == 'submitted' %}selected{% endif %}>Submitted</option>
-            <option value="unsubmitted" {% if status_filter == 'unsubmitted' %}selected{% endif %}>Not Submitted</option>
+            <option value="submitted" {% if status_filter=='submitted' %}selected{% endif %}>Submitted</option>
+            <option value="unsubmitted" {% if status_filter=='unsubmitted' %}selected{% endif %}>Not Submitted</option>
           </select>
         </div>
 
@@ -31,7 +36,8 @@
           </button>
           {% if selected_date or status_filter %}
           <a href="{% url 'my_collections' %}"
-            class="flex-1 md:flex-none justify-center bg-gray-500 hover:bg-gray-600 text-white rounded-xl px-4 py-2 flex items-center shadow-sm transition-colors gap-2" title="Clear Filters">
+            class="flex-1 md:flex-none justify-center bg-gray-500 hover:bg-gray-600 text-white rounded-xl px-4 py-2 flex items-center shadow-sm transition-colors gap-2"
+            title="Clear Filters">
             <i class="fa-solid fa-times"></i> <span class="md:hidden">Clear</span>
           </a>
           {% endif %}
@@ -71,12 +77,17 @@
           <td class="px-4 py-2 font-semibold text-gray-700 whitespace-nowrap">{{ c.date|date:"d-m-Y" }}</td>
           <td class="px-4 py-2 text-center text-sm whitespace-nowrap">
             {% if c.status == 'New' or c.status == 'Rejected' %}
-              <span class="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap shadow-sm"><i class="fa-solid fa-hourglass-start mr-1"></i> Not Submitted</span>
+            <span
+              class="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap shadow-sm"><i
+                class="fa-solid fa-hourglass-start mr-1"></i> Not Submitted</span>
             {% else %}
-              <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap shadow-sm border border-blue-200"><i class="fa-solid fa-check-circle mr-1"></i> Submitted</span>
+            <span
+              class="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap shadow-sm border border-blue-200"><i
+                class="fa-solid fa-check-circle mr-1"></i> Submitted</span>
             {% endif %}
           </td>
-          <td class="px-4 py-2 text-gray-700 text-right font-bold whitespace-nowrap">{{ c.total_amount }}</td>
+          <td class="px-4 py-2 text-gray-700 text-right font-bold whitespace-nowrap">{{
+            c.total_amount|floatformat:2|intcomma }}</td>
           <td class="px-4 py-2 text-gray-700 text-right whitespace-nowrap">{{ c.created_at|date:"M d, Y h:i A" }}</td>
         </tr>
         {% endfor %}

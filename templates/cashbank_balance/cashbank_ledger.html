@@ -1,9 +1,11 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block title %} CashBank Ledger | NS TRADING {% endblock title %}
 
 {% block content %}
-<div class="bg-white sm:rounded-xl p-4 sm:p-6 mt-3 -mx-4 sm:mx-0 w-[calc(100%+2rem)] sm:w-full shadow-sm sm:shadow-none">
+<div
+    class="bg-white sm:rounded-xl p-4 sm:p-6 mt-3 -mx-4 sm:mx-0 w-[calc(100%+2rem)] sm:w-full shadow-sm sm:shadow-none">
     <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">
         CASH / BANK LEDGER
     </h1>
@@ -24,7 +26,7 @@
                             required>
                             <option value="">-- Select Cash/Bank --</option>
                             {% for cb in cashbanks %}
-                            <option value="{{ cb.id }}" {% if cashbank and cashbank.id == cb.id %}selected{% endif %}>
+                            <option value="{{ cb.id }}" {% if cashbank and cashbank.id==cb.id %}selected{% endif %}>
                                 {{ cb.name }}
                             </option>
                             {% endfor %}
@@ -65,8 +67,11 @@
                 <div class="col-span-12 w-full flex items-center mt-2 lg:mt-0 pb-1 sm:pb-0">
                     <div class="w-full flex flex-row items-center gap-4 sm:gap-5 flex-nowrap">
                         <div class="flex items-center shrink-0">
-                            <input type="checkbox" id="noOpeningBalance" name="opening" checked class="h-4 w-4 text-blue-600 rounded shrink-0">
-                            <label for="noOpeningBalance" class="ml-1.5 text-[0.65rem] xs:text-xs sm:text-sm text-gray-700 font-medium cursor-pointer leading-tight">Without Opening Balance</label>
+                            <input type="checkbox" id="noOpeningBalance" name="opening" checked
+                                class="h-4 w-4 text-blue-600 rounded shrink-0">
+                            <label for="noOpeningBalance"
+                                class="ml-1.5 text-[0.65rem] xs:text-xs sm:text-sm text-gray-700 font-medium cursor-pointer leading-tight">Without
+                                Opening Balance</label>
                         </div>
 
                         <div class="flex gap-2 shrink-0">
@@ -77,7 +82,7 @@
 
                             <button id="btnView" type="submit"
                                 class="leading-none inline-flex items-center justify-center gap-1 bg-blue-500 text-white text-xs sm:text-sm font-medium px-3 py-1.5 sm:py-2 rounded-md shadow-sm hover:bg-blue-600 transition-all duration-300">
-                               <span>View<span class="hidden sm:inline"> Results</span></span>
+                                <span>View<span class="hidden sm:inline"> Results</span></span>
                             </button>
                         </div>
                     </div>
@@ -86,12 +91,15 @@
 
             {% if cashbank %}
             <div class="overflow-x-auto mt-5 w-full border border-gray-200 rounded-lg">
-                <table id="viewPurchaseTable" class="w-full min-w-[800px] md:min-w-full text-xs sm:text-sm rounded-t-sm overflow-hidden whitespace-nowrap">
+                <table id="viewPurchaseTable"
+                    class="w-full min-w-[800px] md:min-w-full text-xs sm:text-sm rounded-t-sm overflow-hidden whitespace-nowrap">
                     <thead class="bg-blue-200 text-gray-700 uppercase text-xs">
                         <tr>
                             <th colspan="7"></th>
-                            <th class="px-2 py-1 text-left font-semibold tracking-wide w-1" colspan="2">Open Balance</th>
-                            <th class="px-2 py-1 text-left font-semibold tracking-wide w-1">{{open_balance}}</th>
+                            <th class="px-2 py-1 text-left font-semibold tracking-wide w-1" colspan="2">Open Balance
+                            </th>
+                            <th class="px-2 py-1 text-left font-semibold tracking-wide w-1">{{open_balance|intcomma}}
+                            </th>
                         </tr>
                         <tr>
                             <!-- <th class="px-2 py-1 text-left font-semibold tracking-wide w-1">Actions</th> -->
@@ -111,16 +119,17 @@
                         {% for ledger in ledgers %}
                         {% if ledger.type != 'OB' %}
                         <tr class="hover:bg-gray-50 divide-y divide-gray-300 odd:bg-white even:bg-gray-100">
-                            <td class="px-2 py-1 text-left font-medium">{% if opening == 'on' %}{{forloop.counter}}{% else %}{{forloop.counter0}}{% endif %}</td>
+                            <td class="px-2 py-1 text-left font-medium">{% if opening == 'on' %}{{forloop.counter}}{%
+                                else %}{{forloop.counter0}}{% endif %}</td>
                             <td class="px-2 py-1 text-left">{{ledger.date|date:"d-m-Y"}}</td>
                             <td class="px-2 py-1 text-left">{{ledger.transaction_no}}</td>
                             <td class="px-2 py-1 text-left">{{ledger.type}}</td>
                             <td class="px-2 py-1 text-left">{{ledger.description}}</td>
                             <td class="px-2 py-1 text-right">{{ledger.qty}}</td>
-                            <td class="px-2 py-1 text-right">{{ledger.rate}}</td>
-                            <td class="px-2 py-1 text-right">{{ledger.recep}}</td>
-                            <td class="px-2 py-1 text-right">{{ledger.pay}}</td>
-                            <td class="px-2 py-1 text-right font-medium">{{ledger.balance}}</td>
+                            <td class="px-2 py-1 text-right">{{ledger.rate|intcomma}}</td>
+                            <td class="px-2 py-1 text-right">{{ledger.recep|intcomma}}</td>
+                            <td class="px-2 py-1 text-right">{{ledger.pay|intcomma}}</td>
+                            <td class="px-2 py-1 text-right font-medium">{{ledger.balance|intcomma}}</td>
                         </tr>
                         {% endif %}
                         {% endfor %}
@@ -132,9 +141,9 @@
                         <tr class="bg-blue-200 text-gray-700 uppercase divide-y divide-blue-300 text-xs">
                             <td colspan="6"></td>
                             <td class="px-2 py-1 text-right font-bold tracking-wide">Total :</td>
-                            <td class="px-2 py-1 text-right font-bold">{{recep_total|default:'0.00'}}</td>
-                            <td class="px-2 py-1 text-right font-bold">{{pay_total|default:'0.00'}}</td>
-                            <td class="px-2 py-1 text-right font-bold">{{total_balance|default:'0.00'}}</td>
+                            <td class="px-2 py-1 text-right font-bold">{{recep_total|default:'0.00'|intcomma}}</td>
+                            <td class="px-2 py-1 text-right font-bold">{{pay_total|default:'0.00'|intcomma}}</td>
+                            <td class="px-2 py-1 text-right font-bold">{{total_balance|default:'0.00'|intcomma}}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -144,6 +153,8 @@
         </div>
     </div>
 </div>
+<div id="ledger-config" class="hidden" data-cashbank-id="{{ cashbank.id }}" data-opening="{{ opening }}"
+    data-sort="{{ sort }}"></div>
 {% endblock content %}
 
 {% block externalJS %}
@@ -160,16 +171,19 @@
         }
     });
 
-    {% if cashbank %}
-    $('#cashbank').val('{{ cashbank.id }}').change();
-    {% endif %}
+    const config = document.getElementById('ledger-config').dataset;
+    if (config.cashbankId) {
+        $('#cashbank').val(config.cashbankId).change();
+    }
 
-    {% if opening == 'on' %}
-    $('#noOpeningBalance').prop('checked', true).change();
-    {% else %}
-    $('#noOpeningBalance').prop('checked', false).change();
-    {% endif %}
+    if (config.opening === 'on') {
+        $('#noOpeningBalance').prop('checked', true).change();
+    } else {
+        $('#noOpeningBalance').prop('checked', false).change();
+    }
 
-    $('#sortOrder').val('{{ sort }}').change();  
+    if (config.sort) {
+        $('#sortOrder').val(config.sort).change();
+    }
 </script>
 {% endblock externalJS %}

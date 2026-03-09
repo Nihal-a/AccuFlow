@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block title %}
 Transaction View
@@ -17,9 +18,9 @@ Transaction View
             <form method="post" action="{% url 'transaction_report' %}"
                 class="flex flex-col gap-3 sm:gap-4 ignore-unsaved-changes">
                 {% csrf_token %}
-                
+
                 <div class="flex flex-col gap-3 sm:gap-4 w-full md:w-5/12 lg:w-4/12">
-                     <div class="flex flex-row gap-3 sm:gap-4 w-full">
+                    <div class="flex flex-row gap-3 sm:gap-4 w-full">
                         <div class="w-1/2">
                             <label class="block text-gray-700 mb-1 text-xs sm:text-sm font-medium">From</label>
                             <input type="date" id="dateFrom" name="dateFrom" value="{{date_from}}" required
@@ -45,7 +46,7 @@ Transaction View
                             View Results
                         </button>
                     </div>
-                    
+
                     <div class="flex gap-2 ml-auto">
                         <button type="submit" name="export" value="pdf"
                             class="leading-none inline-flex items-center gap-1.5 bg-gray-700 text-white font-medium h-[32px] sm:h-[34px] px-4 sm:px-6 rounded-md shadow-sm hover:bg-gray-800 transition-all duration-300 text-xs sm:text-sm">
@@ -64,13 +65,27 @@ Transaction View
                 <table class="table-auto w-full text-sm">
                     <thead class="bg-blue-200 text-gray-700 uppercase text-xs">
                         <tr>
-                            <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Account Name</th>
-                            <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Date</th>
-                            <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">TranNo</th>
-                            <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Description</th>
-                            <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Type</th>
-                            <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider">Debit</th>
-                            <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider">Credit</th>
+                            <th
+                                class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">
+                                Account Name</th>
+                            <th
+                                class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">
+                                Date</th>
+                            <th
+                                class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">
+                                TranNo</th>
+                            <th
+                                class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">
+                                Description</th>
+                            <th
+                                class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">
+                                Type</th>
+                            <th
+                                class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider">
+                                Debit</th>
+                            <th
+                                class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider">
+                                Credit</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 bg-white">
@@ -81,20 +96,23 @@ Transaction View
                             <td class="px-1.5 py-1.5 text-left text-sm">{{ item.tran_no }}</td>
                             <td class="px-1.5 py-1.5 text-left text-sm">{{ item.description }}</td>
                             <td class="px-1.5 py-1.5 text-left text-sm">{{ item.type }}</td>
-                            <td class="px-1.5 py-1.5 text-right text-sm">{{ item.debit|floatformat:2 }}</td>
-                            <td class="px-1.5 py-1.5 text-right text-sm">{{ item.credit|floatformat:2 }}</td>
+                            <td class="px-1.5 py-1.5 text-right text-sm">{{ item.debit|floatformat:2|intcomma }}</td>
+                            <td class="px-1.5 py-1.5 text-right text-sm">{{ item.credit|floatformat:2|intcomma }}</td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="7" class="px-1.5 py-4 text-center text-gray-500 font-medium">No transactions found.</td>
+                            <td colspan="7" class="px-1.5 py-4 text-center text-gray-500 font-medium">No transactions
+                                found.</td>
                         </tr>
                         {% endfor %}
 
                         <!-- Totals Row -->
                         <tr class="bg-blue-200 text-gray-700 uppercase divide-y divide-blue-300 text-xs font-bold">
                             <td colspan="5" class="px-1.5 py-2 text-right tracking-wide">Total:</td>
-                            <td class="px-1.5 py-2 text-right">{{ total_debit|floatformat:2|default:"0.00" }}</td>
-                            <td class="px-1.5 py-2 text-right">{{ total_credit|floatformat:2|default:"0.00" }}</td>
+                            <td class="px-1.5 py-2 text-right">{{ total_debit|floatformat:2|intcomma|default:"0.00" }}
+                            </td>
+                            <td class="px-1.5 py-2 text-right">{{ total_credit|floatformat:2|intcomma|default:"0.00" }}
+                            </td>
                         </tr>
                     </tbody>
                 </table>

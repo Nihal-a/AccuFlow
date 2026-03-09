@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
 {% block title %}
 Profit / Loss Analysis
 {% endblock title %}
@@ -41,7 +42,8 @@ Profit / Loss Analysis
             <table class="table-auto w-full min-w-[800px] whitespace-nowrap text-sm" id="reportTable">
                 <thead class="bg-blue-200 text-gray-700 uppercase text-xs">
                     <tr>
-                        <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-32">
+                        <th
+                            class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-32">
                             Code
                         </th>
                         <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">
@@ -61,14 +63,14 @@ Profit / Loss Analysis
                         <td class="px-1.5 py-1.5 text-left text-sm">52000001</td>
                         <td class="px-1.5 py-1.5 text-left text-sm font-medium">STOCK OPEN.BALANCE (P&L)</td>
                         <td class="px-1.5 py-1.5 text-right text-sm font-bold text-gray-700">
-                            {{ data.opening_stock }}</td>
+                            {{ data.opening_stock|floatformat:2|intcomma }}</td>
                         <td class="px-1.5 py-1.5 text-right text-sm"></td>
                     </tr>
                     <tr class="hover:bg-indigo-50/50 transition-all duration-200">
                         <td class="px-1.5 py-1.5 text-left text-sm">51000001</td>
                         <td class="px-1.5 py-1.5 text-left text-sm font-medium">PURCHASE A/C</td>
                         <td class="px-1.5 py-1.5 text-right text-sm font-bold text-gray-700">
-                            {{ data.purchases }}</td>
+                            {{ data.purchases|floatformat:2|intcomma }}</td>
                         <td class="px-1.5 py-1.5 text-right text-sm"></td>
                     </tr>
                     <tr class="hover:bg-indigo-50/50 transition-all duration-200">
@@ -76,21 +78,21 @@ Profit / Loss Analysis
                         <td class="px-1.5 py-1.5 text-left text-sm font-medium">SALES A/C</td>
                         <td class="px-1.5 py-1.5 text-right text-sm"></td>
                         <td class="px-1.5 py-1.5 text-right text-sm font-bold text-gray-700" id="val-sales">
-                            {{ data.sales }}</td>
+                            {{ data.sales|floatformat:2|intcomma }}</td>
                     </tr>
                     <tr class="hover:bg-indigo-50/50 transition-all duration-200">
                         <td class="px-1.5 py-1.5 text-left text-sm">42000001</td>
                         <td class="px-1.5 py-1.5 text-left text-sm font-medium">STOCK CLOSING BALANCE (P&L)</td>
                         <td class="px-1.5 py-1.5 text-right text-sm"></td>
-                        <td class="px-1.5 py-1.5 text-right text-sm font-bold text-gray-700"
-                            id="val-closing">{{ data.closing_stock }}</td>
+                        <td class="px-1.5 py-1.5 text-right text-sm font-bold text-gray-700" id="val-closing">
+                            {{ data.closing_stock|floatformat:2|intcomma }}</td>
                     </tr>
 
                     <!-- GROSS PROFIT ROW -->
                     <tr class="bg-yellow-100 text-yellow-800 uppercase divide-y divide-yellow-300 text-xs font-bold">
                         <td class="px-1.5 py-2 text-left">60000001</td>
                         <td class="px-1.5 py-2 text-left tracking-wide">GROSS INCOME</td>
-                        <td class="px-1.5 py-2 text-right">{{ data.gross_income }}</td>
+                        <td class="px-1.5 py-2 text-right">{{ data.gross_income|floatformat:2|intcomma }}</td>
                         <td class="px-1.5 py-2 text-right"></td>
                     </tr>
 
@@ -107,7 +109,8 @@ Profit / Loss Analysis
                     <tr class="hover:bg-indigo-50/50 transition-all duration-200">
                         <td class="px-1.5 py-1.5 text-left text-sm">6100000{{ forloop.counter }}</td>
                         <td class="px-1.5 py-1.5 text-left text-sm font-medium">{{ exp.name }}</td>
-                        <td class="px-1.5 py-1.5 text-right text-sm font-bold text-gray-700">{{ exp.amount }}
+                        <td class="px-1.5 py-1.5 text-right text-sm font-bold text-gray-700">
+                            {{ exp.amount|floatformat:2|intcomma }}
                         </td>
                         <td class="px-1.5 py-1.5 text-right text-sm"></td>
                     </tr>
@@ -117,7 +120,8 @@ Profit / Loss Analysis
                     <tr class="bg-green-100 text-green-800 uppercase divide-y divide-green-300 text-xs font-bold">
                         <td class="px-1.5 py-2 text-left border-t border-green-300">99000001</td>
                         <td class="px-1.5 py-2 text-left tracking-wide border-t border-green-300">NET INCOME/LOSS</td>
-                        <td class="px-1.5 py-2 text-right border-t border-green-300">{{ data.net_income }}</td>
+                        <td class="px-1.5 py-2 text-right border-t border-green-300">
+                            {{ data.net_income|floatformat:2|intcomma }}</td>
                         <td class="px-1.5 py-2 text-right border-t border-green-300"></td>
                     </tr>
 

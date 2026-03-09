@@ -67,7 +67,7 @@ Sales Entry
     white-space: normal;
   }
 
-   /* Text cells wrap in view table removed to match purchase entry's scrollable/expanded behavior */
+  /* Text cells wrap in view table removed to match purchase entry's scrollable/expanded behavior */
   #viewSaleDiv table th:nth-child(3),
   #viewSaleDiv table td:nth-child(3),
   #viewSaleDiv table th:nth-child(4),
@@ -122,8 +122,8 @@ Sales Entry
           <label class="text-gray-700 font-medium">Date*</label>
         </div>
         <div class="w-[70%] sm:w-[75%] md:w-[50%] pr-2 md:pr-0">
-          <input type="date" id="date" class="w-full md:w-[60%] px-2.5 py-1 border rounded-md focus:ring-1 focus:ring-blue-500"
-            required />
+          <input type="date" id="date"
+            class="w-full md:w-[60%] px-2.5 py-1 border rounded-md focus:ring-1 focus:ring-blue-500" required />
         </div>
       </div>
 
@@ -139,7 +139,8 @@ Sales Entry
         </div>
         <div class="w-[70%] sm:w-[75%] md:w-[50%] flex items-center gap-3 pr-2 md:pr-0">
           <select name="" id="customer"
-            class="w-full md:w-[60%] px-2.5 py-1 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 uppercase" required>
+            class="w-full md:w-[60%] px-2.5 py-1 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 uppercase"
+            required>
             <option value="" selected>Select Customer</option>
             {% for customer in customers_data %}
             <option value="{{ customer.id }}" data-code="{{ customer.customerId }}"
@@ -173,7 +174,8 @@ Sales Entry
             required>
             <option value="" selected>Select Godown</option>
             {% for godown in godowns %}
-            <option value="{{ godown.id }}" data-code="{{ godown.godownId }}" data-balance="{{ godown.get_balance }}">{{ godown.name }}</option>
+            <option value="{{ godown.id }}" data-code="{{ godown.godownId }}" data-balance="{{ godown.get_balance }}">
+              {{ godown.name }}</option>
             {% endfor %}
           </select>
           <div id="godownCredit" class="hidden md:block text-xs font-semibold text-gray-700 shrink-0"></div>
@@ -414,9 +416,11 @@ Sales Entry
 </div>
 {% endblock content %}
 {% block externalJS %}
+<script id="customers-data" type="application/json">{{ customers_json|safe }}</script>
+<script id="suppliers-data" type="application/json">{{ suppliers_json|safe }}</script>
 <script>
-  var all_customers_data = {{ customers_json| safe }};
-  var all_suppliers_data = {{ suppliers_json| safe }};
+  var all_customers_data = JSON.parse(document.getElementById('customers-data').textContent);
+  var all_suppliers_data = JSON.parse(document.getElementById('suppliers-data').textContent);
   isUpdate = false;
 
   function refreshBalances() {
@@ -469,9 +473,10 @@ Sales Entry
     var rateSum = 0;
     count = 0;
     tableBody.querySelectorAll("tr").forEach(function (row) {
-      const qty = parseFloat(row.cells[5].innerText) || 0;
-      const amount = parseFloat(row.cells[6].innerText) || 0;
-      const total = parseFloat(row.cells[7].innerText) || 0;
+      if (row.id === 'totalRow') return;
+      const qty = parseComma(row.cells[5].innerText);
+      const amount = parseComma(row.cells[6].innerText);
+      const total = parseComma(row.cells[7].innerText);
       totalQty += qty;
       rateSum += amount;
       totalAmount += total;
@@ -481,9 +486,9 @@ Sales Entry
     const lastRow = `
       <tr class="bg-blue-200 font-semibold text-gray-800 border-t-2 border-blue-300" id="totalRow">
         <td class="px-2 py-2 text-left text-sm" colspan="5">Totals:</td>
-        <td class="px-2 py-2 text-right text-sm">${parseFloat(totalQty).toFixed(2)}</td>
-        <td class="px-2 py-2 text-right text-sm">${parseFloat(rateAvg).toFixed(2)}</td>
-        <td class="px-2 py-2 text-right text-sm">${parseFloat(totalAmount).toFixed(2)}</td>
+        <td class="px-2 py-2 text-right text-sm">${formatComma(totalQty)}</td>
+        <td class="px-2 py-2 text-right text-sm">${formatComma(rateAvg)}</td>
+        <td class="px-2 py-2 text-right text-sm">${formatComma(totalAmount)}</td>
       </tr>`;
     tableBody.insertAdjacentHTML('beforeend', lastRow);
 
@@ -527,7 +532,7 @@ Sales Entry
     $('#customerID').val(code);
     $('#customerCredit').empty();
     $('#customerCredit').append(`
-      <p class="font-semibold ${parseFloat(balance) < 0 ? 'text-red-500' : ''}">Balance: ${parseFloat(balance).toFixed(2)} </p> 
+      <p class="font-semibold ${parseFloat(balance) < 0 ? 'text-red-500' : ''}">Balance: ${formatComma(balance)} </p> 
       `);
   });
   $('#allCustomers').on('change', function () {
@@ -579,15 +584,16 @@ Sales Entry
     var balance = selectedOption.data('balance') || '0';
     $('#godownCredit').empty();
     $('#godownCredit').append(`
-      <p class="font-semibold ${parseFloat(balance).toFixed(2) <= 0 ? `text-red` : ``}">Balance:${parseFloat(balance).toFixed(2)} </p> 
+      <p class="font-semibold ${parseFloat(balance) <= 0 ? `text-red` : ``}">Balance:${formatComma(balance)} </p> 
       `);
     $('#godownID').val(code);
   });
 </script>
-<script>
-  var sales = [];
+</script>
+<script id="sales-data" type="application/json">
+[
   {% for s in sales %}
-  sales.push({
+  {
     "id": "{{ s.id }}",
     "sale_no": "{{ s.sale_no|escapejs }}",
     "godown": "{{ s.godown|escapejs }}",
@@ -598,12 +604,16 @@ Sales Entry
     "supplier": "{{ s.supplier|escapejs }}",
     "supplier_id": "{{ s.supplier_id }}",
     "date": "{{ s.date|escapejs }}",
-    "qty": parseFloat("{{ s.qty|default:'0' }}"),
-    "amount": parseFloat("{{ s.amount|default:'0' }}"),
-    "total_amount": parseFloat("{{ s.total_amount|default:'0' }}"),
+    "qty": {{ s.qty|default:'0' }},
+    "amount": {{ s.amount|default:'0' }},
+    "total_amount": {{ s.total_amount|default:'0' }},
     "type": "{{ s.type|escapejs }}"
-  });
+  }{% if not forloop.last %},{% endif %}
   {% endfor %}
+]
+</script>
+<script>
+  var sales = JSON.parse(document.getElementById('sales-data').textContent);
 
   for (let i = 0; i < sales.length; i++) {
     const sale = sales[i];
@@ -633,11 +643,11 @@ Sales Entry
           <input type="hidden" name="qtys" value="${sale.qty}">
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-28 search-area border-r border-[#B0B0B0]">
-          ${parseFloat(sale.amount).toFixed(2)}
+          ${formatComma(sale.amount)}
           <input type="hidden" name="amounts" value="${sale.amount}">   
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
-          ${parseFloat(sale.total_amount).toFixed(2)}
+          ${formatComma(sale.total_amount)}
           <input type="hidden" name="total_amounts" value="${parseFloat(sale.total_amount).toFixed(2)}">
           <input type="hidden" name="sale_ids" class="sale-id" value="${sale.id}"> 
           <input type="hidden" name="type" id="type" value="${sale.type}"> 
@@ -749,11 +759,11 @@ Sales Entry
           <input type="hidden" name="qtys" value="${qty}">
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-28 search-area border-r border-[#B0B0B0]">
-          ${amount.toFixed(2)}
+          ${formatComma(amount)}
           <input type="hidden" name="amounts" value="${amount}">
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
-          ${total_amount.toFixed(2)}
+          ${formatComma(total_amount)}
           <input type="hidden" name="total_amounts" value="${total_amount.toFixed(2)}">
           <input type="hidden" name="sale_ids" class="sale-id" value="${sale_id}"> 
           <input type="hidden" name="type" id="type" value="${type_value}"> 
@@ -790,11 +800,11 @@ Sales Entry
           <input type="hidden" name="qtys" value="${qty}">
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-28 search-area border-r border-[#B0B0B0]">
-          ${amount.toFixed(2)}
+          ${formatComma(amount)}
           <input type="hidden" name="amounts" value="${amount}">
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
-          ${total_amount.toFixed(2)}
+          ${formatComma(total_amount)}
           <input type="hidden" name="total_amounts" value="${total_amount.toFixed(2)}">
           <input type="hidden" name="sale_ids" class="sale-id" value="${sale_id}"> 
           <input type="hidden" name="type" id="type" value="${type_value}"> 
@@ -934,11 +944,11 @@ Sales Entry
           resetSLNo();
           addLastRow();
           refreshBalances();
-          
+
           if (!$('#viewSaleDiv').hasClass('hidden')) {
-              $('#dateFilter').click();
+            $('#dateFilter').click();
           }
-          
+
           getLastSaleNo();
           closeModal();
         } else {
@@ -1032,15 +1042,15 @@ Sales Entry
                 <input type="hidden" name="customers" value="${sale.type === 'customers' ? sale.customer_id : sale.supplier_id}">
               </td>
               <td class="px-1.5 py-1.5 text-right text-sm search-area border-r border-[#B0B0B0]">
-                ${parseFloat(sale.qty).toFixed(2)}
+                ${formatComma(sale.qty)}
                 <input type="hidden" name="qtys" value="${sale.qty}">
               </td>
               <td class="px-1.5 py-1.5 text-right text-sm search-area border-r border-[#B0B0B0]">
-                ${parseFloat(sale.amount).toFixed(2)}
+                ${formatComma(sale.amount)}
                 <input type="hidden" name="amounts" value="${sale.amount}">
               </td>
               <td class="px-1.5 py-1.5 text-right text-sm search-area border-r border-[#B0B0B0]">
-                ${parseFloat(sale.total_amount).toFixed(2)}
+                ${formatComma(sale.total_amount)}
                 <input type="hidden" name="total_amounts" value="${parseFloat(sale.total_amount).toFixed(2)}">
               </td>
               <td class="px-1.5 py-1.5 text-left text-sm search-area">
@@ -1054,9 +1064,9 @@ Sales Entry
         tableBody.append(`
           <tr class="bg-blue-200 font-bold text-sm">
             <td class="px-1.5 py-1.5 text-left" colspan="5">Totals:</td>
-            <td class="px-1.5 py-1.5 text-right">${parseFloat(totalQty).toFixed(2)}</td>
-            <td class="px-1.5 py-1.5 text-right">${parseFloat(rateAvg).toFixed(2)}</td>
-            <td class="px-1.5 py-1.5 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
+            <td class="px-1.5 py-1.5 text-right">${formatComma(totalQty)}</td>
+            <td class="px-1.5 py-1.5 text-right">${formatComma(rateAvg)}</td>
+            <td class="px-1.5 py-1.5 text-right">${formatComma(totalAmount)}</td>
             <td class="px-1.5 py-1.5 text-right"></td>
           </tr>
         `);
@@ -1129,7 +1139,7 @@ Sales Entry
     }
   });
 
-  $('form').on('submit', function() {
+  $('form').on('submit', function () {
     let targetDate;
     if (typeof isUpdate !== 'undefined' && isUpdate) {
       targetDate = $('#date').val();
@@ -1137,7 +1147,7 @@ Sales Entry
       targetDate = new Date().toLocaleDateString('en-CA');
       $('#date').val(targetDate);
     }
-    
+
     if (targetDate) {
       $(this).find('input[name="dates"]').val(targetDate);
     }

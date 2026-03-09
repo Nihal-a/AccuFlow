@@ -134,7 +134,8 @@ Purchase Entry
         </div>
         <div class="w-[70%] sm:w-[75%] md:w-[50%] flex items-center gap-3 pr-2 md:pr-0">
           <select name="" id="supplier"
-            class="w-full md:w-[60%] px-2.5 py-1 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 uppercase" required>
+            class="w-full md:w-[60%] px-2.5 py-1 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 uppercase"
+            required>
             <option value="" selected>Select Supplier</option>
             {% for supplier in suppliers_data %}
             <option value="{{ supplier.id }}" data-code="{{ supplier.supplierId }}"
@@ -405,9 +406,11 @@ Purchase Entry
 </div>
 {% endblock content %}
 {% block externalJS %}
+<script id="customers-data" type="application/json">{{ customers_json|safe }}</script>
+<script id="suppliers-data" type="application/json">{{ suppliers_json|safe }}</script>
 <script>
-  var all_customers_data = {{ customers_json| safe }};
-  var all_suppliers_data = {{ suppliers_json| safe }};
+  var all_customers_data = JSON.parse(document.getElementById('customers-data').textContent);
+  var all_suppliers_data = JSON.parse(document.getElementById('suppliers-data').textContent);
   isUpdate = false;
 
   function refreshBalances() {
@@ -460,9 +463,10 @@ Purchase Entry
     var rateSum = 0;
     count = 0;
     tableBody.querySelectorAll("tr").forEach(function (row) {
-      const qty = parseFloat(row.cells[5].innerText) || 0;
-      const amount = parseFloat(row.cells[6].innerText) || 0;
-      const total = parseFloat(row.cells[7].innerText) || 0;
+      if (row.id === 'totalRow') return;
+      const qty = parseComma(row.cells[5].innerText);
+      const amount = parseComma(row.cells[6].innerText);
+      const total = parseComma(row.cells[7].innerText);
       totalQty += qty;
       rateSum += amount;
       totalAmount += total;
@@ -472,9 +476,9 @@ Purchase Entry
     const lastRow = `
       <tr class="bg-blue-200 font-bold text-sm" id="totalRow">
         <td class="px-1.5 py-1.5 text-left" colspan="5">Totals:</td>
-        <td class="px-1.5 py-1.5 text-right">${parseFloat(totalQty).toFixed(2)}</td>
-        <td class="px-1.5 py-1.5 text-right">${parseFloat(rateAvg).toFixed(2)}</td>
-        <td class="px-1.5 py-1.5 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
+        <td class="px-1.5 py-1.5 text-right">${formatComma(totalQty)}</td>
+        <td class="px-1.5 py-1.5 text-right">${formatComma(rateAvg)}</td>
+        <td class="px-1.5 py-1.5 text-right">${formatComma(totalAmount)}</td>
       </tr>`;
     tableBody.insertAdjacentHTML('beforeend', lastRow);
 
@@ -518,7 +522,7 @@ Purchase Entry
     $('#supplierID').val(code);
     $('#supplierCredit').empty();
     $('#supplierCredit').append(`
-      <p class="font-semibold ${parseFloat(balance) < 0 ? 'text-red-500' : ''}">Balance: ${parseFloat(balance).toFixed(2)} </p> 
+      <p class="font-semibold ${parseFloat(balance) < 0 ? 'text-red-500' : ''}">Balance: ${formatComma(balance)} </p> 
       `);
   });
   $('#allSuppliers').on('change', function () {
@@ -570,15 +574,16 @@ Purchase Entry
     var balance = selectedOption.data('balance') || '0';
     $('#godownCredit').empty();
     $('#godownCredit').append(`
-      <p class="font-semibold ${parseFloat(balance).toFixed(2) <= 0 ? `text-red` : ``}">Balance:${parseFloat(balance).toFixed(2)} </p> 
+      <p class="font-semibold ${parseFloat(balance) <= 0 ? `text-red` : ``}">Balance:${formatComma(balance)} </p> 
       `);
     $('#godownID').val(code);
   });
 </script>
-<script>
-  var purchases = [];
+</script>
+<script id="purchases-data" type="application/json">
+[
   {% for p in purchases %}
-  purchases.push({
+  {
     "id": "{{ p.id }}",
     "purchase_no": "{{ p.purchase_no|escapejs }}",
     "godown": "{{ p.godown|escapejs }}",
@@ -589,12 +594,16 @@ Purchase Entry
     "supplier": "{{ p.supplier|escapejs }}",
     "supplier_id": "{{ p.supplier_id }}",
     "date": "{{ p.date|escapejs }}",
-    "qty": parseFloat("{{ p.qty|default:'0' }}"),
-    "amount": parseFloat("{{ p.amount|default:'0' }}"),
-    "total_amount": parseFloat("{{ p.total_amount|default:'0' }}"),
+    "qty": {{ p.qty|default:'0' }},
+    "amount": {{ p.amount|default:'0' }},
+    "total_amount": {{ p.total_amount|default:'0' }},
     "type": "{{ p.type|escapejs }}"
-  });
+  }{% if not forloop.last %},{% endif %}
   {% endfor %}
+]
+</script>
+<script>
+  var purchases = JSON.parse(document.getElementById('purchases-data').textContent);
 
   for (let i = 0; i < purchases.length; i++) {
     const purchase = purchases[i];
@@ -627,11 +636,11 @@ Purchase Entry
           <input type="hidden" name="qtys" value="${purchase.qty}">
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-28 search-area border-r border-[#B0B0B0]">
-          ${parseFloat(purchase.amount).toFixed(2)}
+          ${formatComma(purchase.amount)}
           <input type="hidden" name="amounts" value="${purchase.amount}">   
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
-          ${parseFloat(purchase.total_amount).toFixed(2)}
+          ${formatComma(purchase.total_amount)}
           <input type="hidden" name="total_amounts" value="${parseFloat(purchase.total_amount).toFixed(2)}">
         </td>
       </tr>`;
@@ -741,11 +750,11 @@ Purchase Entry
           <input type="hidden" name="qtys" value="${qty}">
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-28 search-area border-r border-[#B0B0B0]">
-          ${amount.toFixed(2)}
+          ${formatComma(amount)}
           <input type="hidden" name="amounts" value="${amount}">
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
-          ${total_amount.toFixed(2)}
+          ${formatComma(total_amount)}
           <input type="hidden" name="total_amounts" value="${total_amount.toFixed(2)}">
         </td>
         `);
@@ -779,11 +788,11 @@ Purchase Entry
           <input type="hidden" name="qtys" value="${qty}">
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-28 search-area border-r border-[#B0B0B0]">
-          ${amount.toFixed(2)} 
+          ${formatComma(amount)} 
           <input type="hidden" name="amounts" value="${amount}">
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
-          ${total_amount.toFixed(2)}
+          ${formatComma(total_amount)}
           <input type="hidden" name="total_amounts" value="${total_amount.toFixed(2)}">
         </td>
       </tr>`;
@@ -806,9 +815,9 @@ Purchase Entry
           $('#purchaseTableBody').removeClass('hidden')
           $('#addToGridText').text('Add to Grid');
           isUpdate = false
-          
+
           if (!$('#viewPurchaseDiv').hasClass('hidden')) {
-              $('#dateFilter').click();
+            $('#dateFilter').click();
           }
         }
         resetSLNo()
@@ -916,7 +925,7 @@ Purchase Entry
           $('#purchase_name').val(getLastPurchaseNo()).change();
 
           if (!$('#viewPurchaseDiv').hasClass('hidden')) {
-              $('#dateFilter').click();
+            $('#dateFilter').click();
           }
 
           closeModal();
@@ -1019,15 +1028,15 @@ Purchase Entry
                 <input type="hidden" name="purchase_nos" value="${purchase.purchase_no}">
               </td>
               <td class="px-1.5 py-1.5 text-right text-sm search-area border-r border-[#B0B0B0]">
-                ${parseFloat(purchase.qty).toFixed(2)}
+                ${formatComma(purchase.qty)}
                 <input type="hidden" name="qtys" value="${purchase.qty}">
               </td>
               <td class="px-1.5 py-1.5 text-right text-sm search-area border-r border-[#B0B0B0]">
-                ${parseFloat(purchase.amount).toFixed(2)}
+                ${formatComma(purchase.amount)}
                 <input type="hidden" name="amounts" value="${purchase.amount}">
               </td>
               <td class="px-1.5 py-1.5 text-right text-sm search-area border-r border-[#B0B0B0]">
-                ${parseFloat(purchase.total_amount).toFixed(2)}
+                ${formatComma(purchase.total_amount)}
                 <input type="hidden" name="total_amounts" value="${parseFloat(purchase.total_amount).toFixed(2)}">
               </td>
               <td class="px-1.5 py-1.5 text-left text-sm search-area">
@@ -1040,9 +1049,9 @@ Purchase Entry
         tableBody.append(`
           <tr class="bg-blue-200 font-bold">
             <td class="px-1.5 py-1.5 text-left" colspan="5">Totals:</td>
-            <td class="px-1.5 py-1.5 text-right">${parseFloat(totalQty).toFixed(2)}</td>
-            <td class="px-1.5 py-1.5 text-right">${parseFloat(rateAvg).toFixed(2)}</td>
-            <td class="px-1.5 py-1.5 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
+            <td class="px-1.5 py-1.5 text-right">${formatComma(totalQty)}</td>
+            <td class="px-1.5 py-1.5 text-right">${formatComma(rateAvg)}</td>
+            <td class="px-1.5 py-1.5 text-right">${formatComma(totalAmount)}</td>
             <td class="px-1.5 py-1.5 text-right"></td>
           </tr>
         `);
@@ -1104,9 +1113,9 @@ Purchase Entry
     $('#addGrid').removeClass('bg-green-500 hover:bg-green-600').addClass('bg-blue-500 hover:bg-blue-600');
     $('#addToGridText').text('Add to Grid');
     if (selectedTR) {
-        $(selectedTR).removeClass('bg-blue-300');
-        $(selectedTR).find('button').removeAttr('disabled');
-        selectedTR = '';
+      $(selectedTR).removeClass('bg-blue-300');
+      $(selectedTR).find('button').removeAttr('disabled');
+      selectedTR = '';
     }
     $('#supplier').focus();
   }
@@ -1118,7 +1127,7 @@ Purchase Entry
     }
   });
 
-  $('form').on('submit', function() {
+  $('form').on('submit', function () {
     let targetDate;
     if (typeof isUpdate !== 'undefined' && isUpdate) {
       targetDate = $('#date').val();
@@ -1126,7 +1135,7 @@ Purchase Entry
       targetDate = new Date().toLocaleDateString('en-CA');
       $('#date').val(targetDate);
     }
-    
+
     if (targetDate) {
       $(this).find('input[name="dates"]').val(targetDate);
     }

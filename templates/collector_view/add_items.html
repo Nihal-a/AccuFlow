@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block title %}Add to Collection #{{ collection.id }}{% endblock title %}
 
@@ -6,24 +7,26 @@
 <div class="bg-white rounded-xl p-6 mt-3">
     <div class="flex items-center justify-between mb-6">
         <div>
-             <h1 class="text-2xl font-medium text-gray-700 uppercase">
+            <h1 class="text-2xl font-medium text-gray-700 uppercase">
                 Add Partners to Collection #{{ collection.id }}
             </h1>
             <p class="text-sm text-gray-500 mt-1">
                 Date: <span class="font-semibold text-gray-800">{{ collection.date|date:"d-m-Y" }}</span>
             </p>
         </div>
-         <a href="{% url 'my_collection_detail' id=collection.id %}" class="text-gray-500 hover:text-gray-700 flex items-center gap-1">
+        <a href="{% url 'my_collection_detail' id=collection.id %}"
+            class="text-gray-500 hover:text-gray-700 flex items-center gap-1">
             <i data-lucide="arrow-left" class="w-4 h-4"></i> Back
         </a>
     </div>
 
     <form method="POST">
         {% csrf_token %}
-        
+
         <div class="flex justify-between items-center mb-4">
-             <h2 class="text-lg font-medium text-gray-700">Select Partners to Add</h2>
-             <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-2 rounded-xl transition-all shadow-lg hover:shadow-xl">
+            <h2 class="text-lg font-medium text-gray-700">Select Partners to Add</h2>
+            <button type="submit"
+                class="bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-2 rounded-xl transition-all shadow-lg hover:shadow-xl">
                 Add Selected
             </button>
         </div>
@@ -34,7 +37,8 @@
                 <thead class="bg-blue-50 text-gray-700 uppercase text-xs">
                     <tr>
                         <th class="px-4 py-3 text-left font-medium w-1">
-                            <input type="checkbox" id="selectAll" class="rounded text-blue-600 focus:ring-0 cursor-pointer">
+                            <input type="checkbox" id="selectAll"
+                                class="rounded text-blue-600 focus:ring-0 cursor-pointer">
                         </th>
                         <th class="px-4 py-3 text-left font-medium">Partner Name</th>
                         <th class="px-4 py-3 text-left font-medium">Type</th>
@@ -46,16 +50,19 @@
                     {% for r in receivables %}
                     <tr class="hover:bg-gray-50 transition-colors cursor-pointer partner-row">
                         <td class="px-4 py-3">
-                            <input type="checkbox" name="selected_receivables" value="{{ r.id }}" class="partner-checkbox rounded text-blue-600 focus:ring-0 cursor-pointer">
+                            <input type="checkbox" name="selected_receivables" value="{{ r.id }}"
+                                class="partner-checkbox rounded text-blue-600 focus:ring-0 cursor-pointer">
                         </td>
                         <td class="px-4 py-3 text-gray-800 font-medium">{{ r.name }}</td>
-                         <td class="px-4 py-3 text-gray-600">
-                            <span class="px-2 py-1 rounded text-xs font-semibold {% if r.type == 'Customer' %}bg-blue-100 text-blue-800{% else %}bg-purple-100 text-purple-800{% endif %}">
+                        <td class="px-4 py-3 text-gray-600">
+                            <span
+                                class="px-2 py-1 rounded text-xs font-semibold {% if r.type == 'Customer' %}bg-blue-100 text-blue-800{% else %}bg-purple-100 text-purple-800{% endif %}">
                                 {{ r.type }}
                             </span>
                         </td>
                         <td class="px-4 py-3 text-gray-500">{{ r.phone }}</td>
-                        <td class="px-4 py-3 text-right font-medium text-red-600">{{ r.balance|floatformat:2 }}</td>
+                        <td class="px-4 py-3 text-right font-medium text-red-600">{{ r.balance|floatformat:2|intcomma }}
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -73,8 +80,8 @@
 {% block externalJS %}
 <script>
     const selectAll = document.getElementById('selectAll');
-    if(selectAll){
-        selectAll.addEventListener('change', function(e) {
+    if (selectAll) {
+        selectAll.addEventListener('change', function (e) {
             const checkboxes = document.querySelectorAll('.partner-checkbox');
             checkboxes.forEach(checkbox => {
                 checkbox.checked = this.checked;
@@ -84,14 +91,14 @@
     }
 
     document.querySelectorAll('.partner-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
+        checkbox.addEventListener('change', function () {
             toggleRow(this);
         });
     });
 
     // Add row-click toggling
     document.querySelectorAll('.partner-row').forEach(row => {
-        row.addEventListener('click', function(e) {
+        row.addEventListener('click', function (e) {
             if (e.target.tagName === 'INPUT' && e.target.type === 'checkbox') {
                 return;
             }

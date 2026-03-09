@@ -105,7 +105,7 @@
 
   /* Amount        */
 
-   /* Text cells wrap in view table removed to match purchase entry's scrollable/expanded behavior */
+  /* Text cells wrap in view table removed to match purchase entry's scrollable/expanded behavior */
   #viewCashDiv table th:nth-child(4),
   #viewCashDiv table td:nth-child(4),
   #viewCashDiv table th:nth-child(5),
@@ -180,7 +180,8 @@
             required>
             <option value="" selected>Select Cash/Bank</option>
             {% for cashbank in cashbanks %}
-            <option value="{{ cashbank.id }}" data-code="{{cashbank.cashbankId}}" data-balance="{{ cashbank.calculated_balance }}">
+            <option value="{{ cashbank.id }}" data-code="{{cashbank.cashbankId}}"
+              data-balance="{{ cashbank.calculated_balance }}">
               {{ cashbank.name }}</option>
             {% endfor %}
           </select>
@@ -305,14 +306,21 @@
         <table class="table-fixed w-full min-w-[640px] whitespace-nowrap text-sm">
           <thead class="sticky top-0 bg-blue-200 text-gray-700 z-10">
             <tr>
-              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20"> Actions</th>
-              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">S.No</th>
-              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Date</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider w-20">
+                Actions</th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-12">S.No
+              </th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Date
+              </th>
               <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Party</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[200px]">Description</th>
-              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Cash/Bank</th>
-              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-24">Transaction</th>
-              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Amount</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-[200px]">
+                Description</th>
+              <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">Cash/Bank
+              </th>
+              <th class="px-1.5 py-1.5 text-center text-xs font-bold text-slate-900 uppercase tracking-wider w-24">
+                Transaction</th>
+              <th class="px-1.5 py-1.5 text-right text-xs font-bold text-slate-900 uppercase tracking-wider w-32">Amount
+              </th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 bg-white" id="cashTableBody">
@@ -512,7 +520,7 @@
     const lastRow = `
       <tr class="bg-blue-200 font-bold text-sm" id="totalRow">
         <td class="px-1.5 py-1.5 text-left" colspan="7">Totals:</td>
-        <td class="px-1.5 py-1.5 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
+        <td class="px-1.5 py-1.5 text-right">${formatComma(totalAmount)}</td>
       </tr>`;
     tableBody.insertAdjacentHTML('beforeend', lastRow);
 
@@ -557,7 +565,7 @@
     $('#supplierID').val(code);
     $('#supplierCredit').empty();
     $('#supplierCredit').append(`
-      <p class="font-semibold ${parseFloat(balance) < 0 ? 'text-red-500' : ''}">Balance: ${parseFloat(balance).toFixed(2)} </p> 
+      <p class="font-semibold ${parseFloat(balance) < 0 ? 'text-red-500' : ''}">Balance: ${formatComma(balance)} </p> 
       `);
     $('#cash').prop('disabled', false);
 
@@ -568,7 +576,7 @@
     var balance = selectedOption.data('balance') || '0';
     $('#cashCredit').empty();
     $('#cashCredit').append(`
-      <p class="font-semibold ${parseFloat(balance) < 0 ? 'text-red-500' : ''}">Balance: ${parseFloat(balance).toFixed(2)} </p> 
+      <p class="font-semibold ${parseFloat(balance) < 0 ? 'text-red-500' : ''}">Balance: ${formatComma(balance)} </p> 
       `);
     $('#cashbankId').val(code);
   });
@@ -634,7 +642,7 @@
           <input type="hidden" name="transactions" value="${cash.transaction}">
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
-          ${parseFloat(cash.amount).toFixed(2)}
+          ${formatComma(cash.amount)}
           <input type="hidden" name="amounts" value="${cash.amount}">   
           <input type="hidden" name="cash_ids" id="cash_id" value="${cash.id}"> 
           <input type="hidden" name="type" id="type" value="${cash.type}"> 
@@ -739,7 +747,7 @@
           <input type="hidden" name="transactions" value="${transaction}">
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
-          ${amount.toFixed(2)}
+          ${formatComma(amount)}
           <input type="hidden" name="amounts" value="${amount}">
           <input type="hidden" name="cash_ids" id="cash_id" value="${cash_id}"> 
           <input type="hidden" name="type" id="type" value="${type_value}"> 
@@ -775,7 +783,7 @@
           <input type="hidden" name="transactions" value="${transaction}">
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
-          ${amount.toFixed(2)}
+          ${formatComma(amount)}
           <input type="hidden" name="amounts" value="${amount}">
           <input type="hidden" name="cash_ids" id="cash_id" value="${cash_id}"> 
           <input type="hidden" name="type" id="type" value="${type_value}"> 
@@ -828,29 +836,35 @@
     $('#createView').removeClass('hidden');
     $('#viewDiv').addClass('hidden');
     const selectedRow = link.closest('tr');
+
+    const inputs = {
+      date: selectedRow.querySelector('input[name="dates"]')?.value || '',
+      cashbank: selectedRow.querySelector('input[name="cashs"]')?.value || '',
+      amount: selectedRow.querySelector('input[name="amounts"]')?.value || '',
+      description: selectedRow.querySelector('input[name="descriptions"]')?.value || '',
+      cashId: selectedRow.querySelector('input[name="cash_ids"]')?.value || selectedRow.querySelector('#cash_id')?.value || '',
+      transaction: selectedRow.querySelector('input[name="transactions"]')?.value || selectedRow.cells[6].innerText.trim() || '',
+      type: selectedRow.querySelector('input[name="type"]')?.value || selectedRow.querySelector('#type')?.value || 'suppliers',
+      supplier: selectedRow.querySelector('input[name="suppliers"]')?.value || '',
+      cash_nos: selectedRow.querySelector('input[name="cash_nos"]')?.value || ''
+    };
+
     if (isUpdate) {
-      document.getElementById("cash_name").value = selectedRow.cells[3].querySelector('input[name="cash_nos"]')?.value || getLastCashNo();
-      document.getElementById("date").value = selectedRow.cells[3].querySelector('input[name="dates"]').value;
-      document.getElementById("cash").value = selectedRow.cells[5].querySelector('input[name="cashs"]').value;
-      document.getElementById("amount").value = selectedRow.cells[7].innerText.trim();
-      document.getElementById("description").value = selectedRow.cells[4].innerText.trim();
-      document.getElementById("cashId").value = selectedRow.querySelector('#cash_id').value;
-      document.getElementById("transaction").value = selectedRow.cells[6].innerText.trim();
-      var type = selectedRow.querySelector('#type') ? selectedRow.querySelector('#type').value : 'suppliers';
-      document.getElementById("supplier").value = selectedRow.cells[3].querySelector('input[name="suppliers"]').value;
+      document.getElementById("cash_name").value = inputs.cash_nos || getLastCashNo();
     } else {
       selectedTR = selectedRow;
       makeRowHighlight(selectedRow);
-      document.getElementById("cash_name").value = selectedRow.cells[3].querySelector('input[name="cash_nos"]')?.value || getLastCashNo();
-      document.getElementById("date").value = selectedRow.cells[3].querySelector('input[name="dates"]').value;
-      document.getElementById("cash").value = selectedRow.cells[5].querySelector('input[name="cashs"]').value;
-      document.getElementById("amount").value = selectedRow.cells[7].innerText.trim();
-      document.getElementById("description").value = selectedRow.cells[4].innerText.trim();
-      document.getElementById("transaction").value = selectedRow.cells[6].innerText.trim();
-      document.getElementById("cashId").value = selectedRow.querySelector('#cash_id').value;
-      var type = selectedRow.querySelector('#type') ? selectedRow.querySelector('#type').value : 'suppliers';
-      document.getElementById("supplier").value = selectedRow.cells[3].querySelector('input[name="suppliers"]').value;
+      document.getElementById("cash_name").value = inputs.cash_nos || getLastCashNo();
     }
+
+    document.getElementById("date").value = inputs.date;
+    document.getElementById("cash").value = inputs.cashbank;
+    document.getElementById("amount").value = inputs.amount;
+    document.getElementById("description").value = inputs.description;
+    document.getElementById("cashId").value = inputs.cashId;
+    document.getElementById("transaction").value = inputs.transaction;
+    document.getElementById("supplier").value = inputs.supplier;
+
 
     $('#addToGridText').text('Update Grid');
     $('#addGrid').removeClass('bg-blue-500 hover:bg-blue-600').addClass('bg-green-500 hover:bg-green-600');
@@ -887,11 +901,11 @@
           resetSLNo();
           addLastRow();
           refreshBalances();
-          
+
           if (!$('#viewCashDiv').hasClass('hidden')) {
-              $('#dateFilter').click();
+            $('#dateFilter').click();
           }
-          
+
           console.log(getLastCashNo())
           $('#cash_name').val(getLastCashNo()).change();
           closeModal();
@@ -996,7 +1010,7 @@
                 <input type="hidden" name="transactions" value="${cash.transaction}">
               </td>
               <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
-                ${parseFloat(cash.amount).toFixed(2)}
+                ${formatComma(cash.amount)}
                 <input type="hidden" name="amounts" value="${cash.amount}">
                 <input type="hidden" name="cash_ids" id="cash_id" value="${cash.id}"> 
                 <input type="hidden" name="type" id="type" value="${cash.type}">
@@ -1007,7 +1021,7 @@
         tableBody.append(`
           <tr class="bg-blue-200 font-bold text-sm" id="totalRow">
             <td class="px-1.5 py-1.5 text-left" colspan="7">Totals:</td>
-            <td class="px-1.5 py-1.5 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
+            <td class="px-1.5 py-1.5 text-right">${formatComma(totalAmount)}</td>
           </tr>
         `);
 
@@ -1078,10 +1092,10 @@
     if (e.key === 'Tab' && !e.shiftKey) {
       e.preventDefault();
       $('#supplier').focus();
-  }
+    }
   });
 
-  $('form').on('submit', function() {
+  $('form').on('submit', function () {
     let targetDate;
     if (typeof isUpdate !== 'undefined' && isUpdate) {
       targetDate = $('#date').val();
@@ -1089,7 +1103,7 @@
       targetDate = new Date().toLocaleDateString('en-CA');
       $('#date').val(targetDate);
     }
-    
+
     if (targetDate) {
       $(this).find('input[name="dates"]').val(targetDate);
     }

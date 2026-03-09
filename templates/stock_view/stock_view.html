@@ -1,11 +1,13 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block title %}
 Stock View
 {% endblock title %}
 
 {% block content %}
-<div class="bg-white sm:rounded-xl p-4 sm:p-6 mt-3 -mx-4 sm:mx-0 w-[calc(100%+2rem)] sm:w-full shadow-sm sm:shadow-none">
+<div
+    class="bg-white sm:rounded-xl p-4 sm:p-6 mt-3 -mx-4 sm:mx-0 w-[calc(100%+2rem)] sm:w-full shadow-sm sm:shadow-none">
 
     <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">
         Stock Balance View
@@ -41,20 +43,31 @@ Stock View
 
         {% if stocks %}
         <!-- Summary Block (matches reference image: stacked colored rows) -->
-        <div class="mt-5 w-full sm:w-auto inline-block border border-gray-300 rounded overflow-hidden text-sm sm:text-base">
+        <div
+            class="mt-5 w-full sm:w-auto inline-block border border-gray-300 rounded overflow-hidden text-sm sm:text-base">
             <table class="border-collapse">
                 <tbody>
                     <tr>
-                        <td class="px-4 py-1.5 font-semibold text-gray-700 bg-gray-100 border border-gray-300 whitespace-nowrap">Total Qty</td>
-                        <td class="px-5 py-1.5 font-bold text-gray-800 bg-yellow-200 border border-gray-300 min-w-[180px] text-right">{{ total_qty_all }}</td>
+                        <td
+                            class="px-4 py-1.5 font-semibold text-gray-700 bg-gray-100 border border-gray-300 whitespace-nowrap">
+                            Total Qty</td>
+                        <td
+                            class="px-5 py-1.5 font-bold text-gray-800 bg-yellow-200 border border-gray-300 min-w-[180px] text-right">
+                            {{ total_qty_all|floatformat:2|intcomma }}</td>
                     </tr>
                     <tr>
-                        <td class="px-4 py-1.5 font-semibold text-gray-700 bg-gray-100 border border-gray-300 whitespace-nowrap">Avg. Rate</td>
-                        <td class="px-5 py-1.5 font-bold text-gray-800 bg-teal-200 border border-gray-300 text-right">{{ total_avg_rate_all }}</td>
+                        <td
+                            class="px-4 py-1.5 font-semibold text-gray-700 bg-gray-100 border border-gray-300 whitespace-nowrap">
+                            Avg. Rate</td>
+                        <td class="px-5 py-1.5 font-bold text-gray-800 bg-teal-200 border border-gray-300 text-right">{{
+                            total_avg_rate_all|floatformat:2|intcomma }}</td>
                     </tr>
                     <tr>
-                        <td class="px-4 py-1.5 font-semibold text-gray-700 bg-gray-100 border border-gray-300 whitespace-nowrap">Amount</td>
-                        <td class="px-5 py-1.5 font-bold text-gray-800 bg-green-300 border border-gray-300 text-right">{{ total_amount_all }}</td>
+                        <td
+                            class="px-4 py-1.5 font-semibold text-gray-700 bg-gray-100 border border-gray-300 whitespace-nowrap">
+                            Amount</td>
+                        <td class="px-5 py-1.5 font-bold text-gray-800 bg-green-300 border border-gray-300 text-right">
+                            {{ total_amount_all|floatformat:2|intcomma }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -74,30 +87,36 @@ Stock View
                 </thead>
                 <tbody>
                     {% for stock in stocks %}
-                    {% if stock.total_qty <= 0 %}
-                    <tr class="border-b border-[#B0B0B0] bg-green-300 hover:bg-green-400 transition-all duration-200">
-                    {% else %}
-                    <tr class="border-b border-[#B0B0B0] odd:bg-white even:bg-[#E5E7EB] hover:bg-[#F0F8FF] transition-all duration-200">
-                    {% endif %}
-                        <td class="px-2 py-1 text-left font-medium border-r border-[#B0B0B0]">{{ forloop.counter }}</td>
-                        <td class="px-2 py-1 text-left border-r border-[#B0B0B0]">{{ stock.godown.name }}</td>
-                        <td class="px-2 py-1 text-right border-r border-[#B0B0B0]">{{ stock.total_qty }}</td>
-                        <td class="px-2 py-1 text-right border-r border-[#B0B0B0]">{{ stock.avg_rate }}</td>
-                        <td class="px-2 py-1 text-right">{{ stock.total_amount }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="px-2 py-4 text-center text-gray-500 font-medium">No data found</td>
-                    </tr>
-                    {% endfor %}
+                    {% if stock.total_qty <= 0 %} <tr
+                        class="border-b border-[#B0B0B0] bg-green-300 hover:bg-green-400 transition-all duration-200">
+                        {% else %}
+                        <tr
+                            class="border-b border-[#B0B0B0] odd:bg-white even:bg-[#E5E7EB] hover:bg-[#F0F8FF] transition-all duration-200">
+                            {% endif %}
+                            <td class="px-2 py-1 text-left font-medium border-r border-[#B0B0B0]">{{ forloop.counter }}
+                            </td>
+                            <td class="px-2 py-1 text-left border-r border-[#B0B0B0]">{{ stock.godown.name }}</td>
+                            <td class="px-2 py-1 text-right border-r border-[#B0B0B0]">{{
+                                stock.total_qty|floatformat:2|intcomma }}</td>
+                            <td class="px-2 py-1 text-right border-r border-[#B0B0B0]">{{
+                                stock.avg_rate|floatformat:2|intcomma }}</td>
+                            <td class="px-2 py-1 text-right">{{ stock.total_amount|floatformat:2|intcomma }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-2 py-4 text-center text-gray-500 font-medium">No data found</td>
+                        </tr>
+                        {% endfor %}
 
-                    <!-- Footer total row — same style as supplier_ledger total row -->
-                    <tr class="bg-blue-200 text-gray-700 uppercase divide-y divide-blue-300 text-xs">
-                        <td colspan="2" class="px-2 py-1 text-right font-bold tracking-wide">Total :</td>
-                        <td class="px-2 py-1 text-right font-bold">{{ total_qty_all }}</td>
-                        <td class="px-2 py-1 text-right font-bold">{{ total_avg_rate_all }}</td>
-                        <td class="px-2 py-1 text-right font-bold">{{ total_amount_all }}</td>
-                    </tr>
+                        <!-- Footer total row — same style as supplier_ledger total row -->
+                        <tr class="bg-blue-200 text-gray-700 uppercase divide-y divide-blue-300 text-xs">
+                            <td colspan="2" class="px-2 py-1 text-right font-bold tracking-wide">Total :</td>
+                            <td class="px-2 py-1 text-right font-bold">{{ total_qty_all|floatformat:2|intcomma }}</td>
+                            <td class="px-2 py-1 text-right font-bold">{{ total_avg_rate_all|floatformat:2|intcomma }}
+                            </td>
+                            <td class="px-2 py-1 text-right font-bold">{{ total_amount_all|floatformat:2|intcomma }}
+                            </td>
+                        </tr>
                 </tbody>
             </table>
         </div>

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block title %} Review Collection #{{ collection.id }} {% endblock title %}
 
@@ -8,7 +9,8 @@
     <div class="flex flex-col md:flex-row justify-between items-center mb-6 border-b border-gray-100 pb-4 gap-4">
         <div>
             <div class="flex items-center gap-2 text-gray-500 text-sm mb-1">
-                <a href="{% url 'pendingapproval' %}" class="hover:text-blue-600 transition-colors">Pending Approvals</a>
+                <a href="{% url 'pendingapproval' %}" class="hover:text-blue-600 transition-colors">Pending
+                    Approvals</a>
                 <i data-lucide="chevron-right" class="w-4 h-4"></i>
                 <span>Review</span>
             </div>
@@ -34,7 +36,8 @@
         <!-- Info Card -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8 mt-3">
             <div class="bg-gray-50 p-3.5 md:p-4 rounded-xl border border-gray-100 flex flex-col justify-center">
-                <label class="text-[11px] md:text-xs text-gray-500 uppercase font-medium mb-0.5 md:mb-1 block">Collector</label>
+                <label
+                    class="text-[11px] md:text-xs text-gray-500 uppercase font-medium mb-0.5 md:mb-1 block">Collector</label>
                 <div class="mt-1 flex items-center gap-2">
                     <div
                         class="w-6 h-6 md:w-8 md:h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-[10px] md:text-xs">
@@ -44,11 +47,14 @@
                 </div>
             </div>
             <div class="bg-gray-50 p-3.5 md:p-4 rounded-xl border border-gray-100 flex flex-col justify-center">
-                <label class="text-[11px] md:text-xs text-gray-500 uppercase font-medium mb-0.5 md:mb-1 block">Collection Date</label>
+                <label
+                    class="text-[11px] md:text-xs text-gray-500 uppercase font-medium mb-0.5 md:mb-1 block">Collection
+                    Date</label>
                 <div class="mt-1 font-bold text-gray-800 text-sm md:text-lg">{{ collection.date }}</div>
             </div>
             <div class="bg-gray-50 p-3.5 md:p-4 rounded-xl border border-gray-100 flex flex-col justify-center">
-                <label class="text-[11px] md:text-xs text-gray-500 uppercase font-medium mb-0.5 md:mb-1 block">Deposit To (Cash/Bank)</label>
+                <label class="text-[11px] md:text-xs text-gray-500 uppercase font-medium mb-0.5 md:mb-1 block">Deposit
+                    To (Cash/Bank)</label>
                 <div class="mt-1">
                     <select name="cash_bank" required
                         class="w-full bg-white border border-gray-300 rounded-md px-2.5 py-1.5 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none shadow-sm">
@@ -73,41 +79,57 @@
             <table class="table-fixed w-full text-sm">
                 <thead class="bg-blue-200 text-gray-700 uppercase text-xs">
                     <tr>
-                        <th class="px-1.5 py-1.5 text-left font-bold text-slate-900 tracking-wider w-32 border-[#B0B0B0]">Transaction</th>
-                        <th class="px-1.5 py-1.5 text-left font-bold text-slate-900 tracking-wider w-[200px] border-[#B0B0B0]">Party</th>
-                        <th class="px-1.5 py-1.5 text-right font-bold text-slate-900 tracking-wider w-32 border-[#B0B0B0]">Amount Due</th>
-                        <th class="px-1.5 py-1.5 text-right font-bold text-slate-900 tracking-wider w-40 border-[#B0B0B0]">Collected (Collector)</th>
-                        <th class="px-1.5 py-1.5 text-left font-bold text-slate-900 tracking-wider w-48 border-[#B0B0B0]">Remark</th>
-                        <th class="px-1.5 py-1.5 text-right font-bold text-slate-900 tracking-wider w-40 border-[#B0B0B0]">Approved Amount</th>
+                        <th
+                            class="px-1.5 py-1.5 text-left font-bold text-slate-900 tracking-wider w-32 border-[#B0B0B0]">
+                            Transaction</th>
+                        <th
+                            class="px-1.5 py-1.5 text-left font-bold text-slate-900 tracking-wider w-[200px] border-[#B0B0B0]">
+                            Party</th>
+                        <th
+                            class="px-1.5 py-1.5 text-right font-bold text-slate-900 tracking-wider w-32 border-[#B0B0B0]">
+                            Amount Due</th>
+                        <th
+                            class="px-1.5 py-1.5 text-right font-bold text-slate-900 tracking-wider w-40 border-[#B0B0B0]">
+                            Collected (Collector)</th>
+                        <th
+                            class="px-1.5 py-1.5 text-left font-bold text-slate-900 tracking-wider w-48 border-[#B0B0B0]">
+                            Remark</th>
+                        <th
+                            class="px-1.5 py-1.5 text-right font-bold text-slate-900 tracking-wider w-40 border-[#B0B0B0]">
+                            Approved Amount</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white">
                     {% for item in items %}
-                    <tr class="border-b border-[#B0B0B0] odd:bg-white even:bg-[#E5E7EB] hover:bg-[#F0F8FF] transition-all duration-200">
+                    <tr
+                        class="border-b border-[#B0B0B0] odd:bg-white even:bg-[#E5E7EB] hover:bg-[#F0F8FF] transition-all duration-200">
                         <td class="px-1.5 py-1.5 border-r border-[#B0B0B0] w-32">
                             <span class="font-medium text-gray-900">{{ item.transaction_id }}</span>
                             <div class="text-[10px] text-gray-500">{{ item.transaction_type }}</div>
                         </td>
                         <td class="px-1.5 py-1.5 border-r border-[#B0B0B0] w-[200px] truncate">
                             {% if item.partner_name %}
-                            <div class="font-medium text-gray-900 truncate" title="{{ item.partner_name }}">{{ item.partner_name }}</div>
+                            <div class="font-medium text-gray-900 truncate" title="{{ item.partner_name }}">{{
+                                item.partner_name }}</div>
                             {% else %}
                             <span class="text-gray-400">-</span>
                             {% endif %}
                         </td>
                         <td class="px-1.5 py-1.5 border-r border-[#B0B0B0] text-right text-gray-500 w-32">
-                            {{ item.amount|floatformat:2 }}
+                            {{ item.amount|floatformat:2|intcomma }}
                         </td>
                         <td class="px-1.5 py-1.5 border-r border-[#B0B0B0] text-right font-medium text-gray-700 w-40">
-                            {{ item.collected_amount|floatformat:2 }}
+                            {{ item.collected_amount|floatformat:2|intcomma }}
                         </td>
-                        <td class="px-1.5 py-1.5 border-r border-[#B0B0B0] text-left text-gray-600 italic w-48 truncate">
+                        <td
+                            class="px-1.5 py-1.5 border-r border-[#B0B0B0] text-left text-gray-600 italic w-48 truncate">
                             {{ item.remark|default:"-" }}
                         </td>
                         <td class="px-1.5 py-1.5 text-right w-40 border-[#B0B0B0]">
                             <input type="text" inputmode="decimal" step="0.01" name="amount_{{ item.id }}"
                                 value="{{ item.collected_amount|floatformat:2 }}"
-                                class="approved-input w-full text-right bg-white border border-gray-300 rounded-md px-2 py-1 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none font-medium text-emerald-600 shadow-inner" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');">
+                                class="approved-input w-full text-right bg-white border border-gray-300 rounded-md px-2 py-1 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none font-medium text-emerald-600 shadow-inner"
+                                oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');">
                         </td>
                     </tr>
                     {% endfor %}
@@ -135,7 +157,7 @@
             inputs.forEach(input => {
                 total += parseFloat(input.value) || 0;
             });
-            totalDisplay.textContent = total.toFixed(2);
+            totalDisplay.textContent = formatComma(total);
         }
 
         inputs.forEach(input => {

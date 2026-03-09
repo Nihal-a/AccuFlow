@@ -1,4 +1,16 @@
 
+
+function formatComma(num) {
+  if (num === null || num === undefined || num === '') return '0.00';
+  return parseFloat(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function parseComma(str) {
+  if (str === null || str === undefined || str === '') return 0;
+  if (typeof str !== 'string') return parseFloat(str) || 0;
+  return parseFloat(str.replace(/,/g, '')) || 0;
+}
+
 function navActive(id) {
   $('.nav-link').removeClass('active');
   $('#' + id).addClass('active');

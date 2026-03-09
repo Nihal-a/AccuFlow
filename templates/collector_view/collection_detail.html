@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block title %}Collection Details{% endblock title %}
 
@@ -30,7 +31,8 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
             <p class="text-xs text-blue-500 uppercase font-medium mb-1">Total Amount</p>
-            <p class="text-3xl font-bold text-gray-800" id="totalAmountDisplay">{{ collection.total_amount|floatformat:2 }}</p>
+            <p class="text-3xl font-bold text-gray-800" id="totalAmountDisplay">{{
+                collection.total_amount|floatformat:2|intcomma }}</p>
         </div>
         <div class="bg-green-50 p-4 rounded-xl border border-green-100">
             <p class="text-xs text-green-500 uppercase font-medium mb-1">Total Collected</p>
@@ -51,7 +53,8 @@
                     <tr>
                         <th class="px-4 py-3 text-left font-medium w-1">
                             <input type="checkbox" id="selectAll"
-                                class="rounded text-blue-600 focus:ring-0 cursor-pointer w-4 h-4" {% if read_only %}disabled{% endif %}>
+                                class="rounded text-blue-600 focus:ring-0 cursor-pointer w-4 h-4" {% if read_only
+                                %}disabled{% endif %}>
                         </th>
                         <th class="px-2 py-3 w-8"></th>
                         <th class="px-4 py-3 text-left font-medium">Contact</th>
@@ -74,7 +77,10 @@
                                 {{ item.status_label|slice:":1" }}
                             </span>
                             {% else %}
-                            <input type="checkbox" class="row-cb rounded text-blue-600 focus:ring-0 cursor-pointer w-4 h-4" data-id="{{ item.id }}" data-amount="{{ item.amount }}" {% if item.collected_amount > 0 %}checked{% endif %} {% if read_only %}disabled{% endif %}>
+                            <input type="checkbox"
+                                class="row-cb rounded text-blue-600 focus:ring-0 cursor-pointer w-4 h-4"
+                                data-id="{{ item.id }}" data-amount="{{ item.amount }}" {% if item.collected_amount> 0
+                            %}checked{% endif %} {% if read_only %}disabled{% endif %}>
                             {% endif %}
                         </td>
                         <td class="px-2 py-3 text-gray-400 cursor-move handle">
@@ -100,18 +106,22 @@
                             </div>
                         </td>
                         <td class="px-4 py-3 text-gray-800 font-medium">{{ item.customer_name }}</td>
-                        <td class="px-4 py-3 text-right text-gray-800 font-medium"><span class="total-amount">{{ item.amount|floatformat:2 }}</span></td>
+                        <td class="px-4 py-3 text-right text-gray-800 font-medium"><span class="total-amount">{{
+                                item.amount|floatformat:2|intcomma }}</span></td>
                         <td class="px-4 py-3 text-right">
                             <input type="text" inputmode="decimal" name="collected_amount_{{ item.id }}"
                                 value="{% if item.collected_amount > 0 %}{{ item.collected_amount|floatformat:2 }}{% endif %}"
                                 class="collected-input w-32 p-2 border rounded-lg text-right focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 disabled:bg-gray-100 disabled:text-gray-500"
-                                placeholder="0" data-max="{{ item.amount }}" {% if read_only or item.is_submitted %}disabled{% endif %} oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');">
+                                placeholder="0" data-max="{{ item.amount }}" {% if read_only or item.is_submitted
+                                %}disabled{% endif %}
+                                oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');">
                             {% if item.is_submitted %}
                             <div class="text-[10px] text-blue-600 font-medium mt-1 uppercase tracking-wide">Submitted
                             </div>
                             {% endif %}
                         </td>
-                        <td class="px-4 py-3 text-right text-red-600 font-bold"><span class="balance-display">{{ item.amount|floatformat:2 }}</span></td>
+                        <td class="px-4 py-3 text-right text-red-600 font-bold"><span class="balance-display">{{
+                                item.amount|floatformat:2|intcomma }}</span></td>
                         <td class="px-4 py-3">
                             <input type="text" name="remark_{{ item.id }}" value="{{ item.remark|default:'' }}"
                                 class="w-full p-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 disabled:bg-gray-100 disabled:text-gray-500"
@@ -180,7 +190,7 @@
                 const val = parseFloat(input.value) || 0;
                 total += val;
             });
-            if (totalCollectedDisplay) totalCollectedDisplay.textContent = total.toFixed(2);
+            if (totalCollectedDisplay) totalCollectedDisplay.textContent = formatComma(total);
             checkSaveButton();
         }
 
@@ -193,7 +203,7 @@
             const collected = parseFloat(input.value) || 0;
 
             const balance = total - collected;
-            balanceSpan.textContent = balance.toFixed(2);
+            balanceSpan.textContent = formatComma(balance);
         }
 
         function debounce(func, wait) {
@@ -334,7 +344,7 @@
         }
 
         updateTotal();
-        
+
         // SortableJS integration
         const sortableBody = document.getElementById('sortableTable');
         if (sortableBody && "{{ read_only }}" !== "True") {
@@ -345,14 +355,14 @@
                 onEnd: function (evt) {
                     const rows = sortableBody.querySelectorAll('tr[data-id]');
                     const orderData = [];
-                    
+
                     rows.forEach((row, index) => {
                         const id = row.getAttribute('data-id');
                         if (id) {
                             orderData.push({ id: parseInt(id), order: index });
                         }
                     });
-                    
+
                     if (orderData.length > 0) {
                         fetch(`/my-collections/update-item-order/{{ collection.id }}/`, {
                             method: 'POST',
@@ -362,13 +372,13 @@
                             },
                             body: JSON.stringify({ orders: orderData })
                         })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.status !== 'success') {
-                                console.error('Failed to save order');
-                            }
-                        })
-                        .catch(err => console.error('Error saving order:', err));
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.status !== 'success') {
+                                    console.error('Failed to save order');
+                                }
+                            })
+                            .catch(err => console.error('Error saving order:', err));
                     }
                 }
             });

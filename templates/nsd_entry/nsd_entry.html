@@ -156,7 +156,7 @@
 
   /* Purchase Amt   */
 
-   /* Text cells wrap in view table removed to match purchase entry's scrollable/expanded behavior */
+  /* Text cells wrap in view table removed to match purchase entry's scrollable/expanded behavior */
   #viewNSDDiv table th:nth-child(4),
   #viewNSDDiv table td:nth-child(4),
   #viewNSDDiv table th:nth-child(5),
@@ -228,7 +228,8 @@
         </div>
         <div class="w-[70%] sm:w-[75%] md:w-[50%] flex items-center gap-3 pr-2 md:pr-0">
           <select name="" id="supplier"
-            class="w-full md:w-[60%] px-2.5 py-1 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 uppercase" required>
+            class="w-full md:w-[60%] px-2.5 py-1 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 uppercase"
+            required>
             <option value="" selected>Select Supplier</option>
             {% for supplier in suppliers_data %}
             <option value="{{ supplier.id }}" data-code="{{supplier.supplierId}}" data-balance="{{supplier.balance}}"
@@ -263,7 +264,8 @@
         </div>
         <div class="w-[70%] sm:w-[75%] md:w-[50%] flex items-center gap-3 pr-2 md:pr-0">
           <select name="" id="customer"
-            class="w-full md:w-[60%] px-2.5 py-1 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 uppercase" required>
+            class="w-full md:w-[60%] px-2.5 py-1 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 uppercase"
+            required>
             <option value="" selected>Select Customer</option>
             {% for customer in customers_data %}
             <option value="{{ customer.id }}" data-code="{{customer.customerId}}" data-balance="{{customer.balance}}"
@@ -554,10 +556,11 @@
   </div>
 </div>
 {% endblock %} {% block externalJS %}
+<script id="customers-data" type="application/json">{{ customers_json|safe }}</script>
+<script id="suppliers-data" type="application/json">{{ suppliers_json|safe }}</script>
 <script>
-
-  var all_customers_data = {{ customers_json| safe }};
-  var all_suppliers_data = {{ suppliers_json| safe }};
+  var all_customers_data = JSON.parse(document.getElementById('customers-data').textContent);
+  var all_suppliers_data = JSON.parse(document.getElementById('suppliers-data').textContent);
   var isUpdate = false;
 
   function refreshBalances() {
@@ -588,7 +591,7 @@
             $(this).data('balance', data.customers[id]);
           }
         });
-        
+
         if ($('#supplier').val()) {
           $('#supplier').trigger('change');
         }
@@ -627,11 +630,11 @@
     const lastRow = `
       <tr class="bg-blue-200 font-bold text-sm" id="totalRow">
         <td class="px-1.5 py-1.5 text-left" colspan="5">Totals:</td>
-        <td class="px-1.5 py-1.5 text-right">${parseFloat(totalQty).toFixed(2)}</td>
-        <td class="px-1.5 py-1.5 text-right">${parseFloat(rateAvg).toFixed(2)}</td>
-        <td class="px-1.5 py-1.5 text-right">${parseFloat(totalAmount).toFixed(2)}</td>
-        <td class="px-1.5 py-1.5 text-right">${parseFloat(purchaseRateAvg).toFixed(2)}</td>
-        <td class="px-1.5 py-1.5 text-right">${parseFloat(totalPurchaseAmount).toFixed(2)}</td>
+        <td class="px-1.5 py-1.5 text-right">${formatComma(totalQty)}</td>
+        <td class="px-1.5 py-1.5 text-right">${formatComma(rateAvg)}</td>
+        <td class="px-1.5 py-1.5 text-right">${formatComma(totalAmount)}</td>
+        <td class="px-1.5 py-1.5 text-right">${formatComma(purchaseRateAvg)}</td>
+        <td class="px-1.5 py-1.5 text-right">${formatComma(totalPurchaseAmount)}</td>
       </tr>`;
     tableBody.insertAdjacentHTML('beforeend', lastRow);
 
@@ -675,7 +678,7 @@
     $('#supplierID').val(code);
     $('#supplierCredit').empty();
     $('#supplierCredit').append(`
-      <p class="font-semibold ${balance < 0 ? 'text-red-500' : ''}">Balance: ${balance.toFixed(2)} </p> 
+      <p class="font-semibold ${balance < 0 ? 'text-red-500' : ''}">Balance: ${formatComma(balance)} </p> 
       `);
     $('#customer option').each(function () {
       if ($(this).data('type') == supplierType && $(this).val() == $('#supplier').val()) {
@@ -757,7 +760,7 @@
     var customerType = selectedOption.data('type');
     $('#customerCredit').empty();
     $('#customerCredit').append(`
-      <p class="font-semibold ${balance <= 0 ? 'text-red' : ''}">Balance:${balance.toFixed(2)} </p> 
+      <p class="font-semibold ${balance <= 0 ? 'text-red' : ''}">Balance:${formatComma(balance)} </p> 
       `);
     $('#customerID').val(code);
 
@@ -768,8 +771,9 @@
     });
   });
 </script>
+<script id="nsds-data" type="application/json">{{ nsds_json|safe }}</script>
 <script>
-  var nsds = {{ nsds_json| safe }};
+  var nsds = JSON.parse(document.getElementById('nsds-data').textContent);
 
   for (let i = 0; i < nsds.length; i++) {
     const nsd = nsds[i];
@@ -804,19 +808,19 @@
               <input type="hidden" name="qtys" value="${nsd.qty}">
             </td>
             <td class="px-1.5 py-1.5 text-right text-sm w-28 search-area border-r border-[#B0B0B0]">
-              ${parseFloat(nsd.sell_rate).toFixed(2)}
+              ${formatComma(nsd.sell_rate)}
               <input type="hidden" name="sell_rates" value="${nsd.sell_rate}">   
             </td>
             <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area border-r border-[#B0B0B0]">
-              ${parseFloat(nsd.sell_amount).toFixed(2)}
+              ${formatComma(nsd.sell_amount)}
               <input type="hidden" name="sell_amounts" value="${nsd.sell_amount}">   
             </td>
             <td class="px-1.5 py-1.5 text-right text-sm w-28 search-area border-r border-[#B0B0B0]">
-              ${parseFloat(nsd.purchase_rate).toFixed(2)}
+              ${formatComma(nsd.purchase_rate)}
               <input type="hidden" name="purchase_rates" value="${parseFloat(nsd.purchase_rate).toFixed(2)}">
             </td>
             <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
-              ${parseFloat(nsd.purchase_amount).toFixed(2)}
+              ${formatComma(nsd.purchase_amount)}
               <input type="hidden" name="purchase_amounts" value="${parseFloat(nsd.purchase_amount).toFixed(2)}">
             </td>
       </tr>`;
@@ -938,19 +942,19 @@
           <input type="hidden" name="qtys" value="${qty}">
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-28 search-area border-r border-[#B0B0B0]">
-          ${sell_rate.toFixed(2)}
+          ${formatComma(sell_rate)}
           <input type="hidden" name="sell_rates" value="${sell_rate}">
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area border-r border-[#B0B0B0]">
-          ${sell_amount.toFixed(2)}
+          ${formatComma(sell_amount)}
           <input type="hidden" name="sell_amounts" value="${sell_amount}">   
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-28 search-area border-r border-[#B0B0B0]">
-          ${purchase_rate.toFixed(2)}
+          ${formatComma(purchase_rate)}
           <input type="hidden" name="purchase_rates" value="${purchase_rate}">
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
-          ${purchase_amount.toFixed(2)}
+          ${formatComma(purchase_amount)}
           <input type="hidden" name="purchase_amounts" value="${purchase_amount}">
         </td>
         `);
@@ -986,19 +990,19 @@
           <input type="hidden" name="qtys" value="${qty}">
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-28 search-area border-r border-[#B0B0B0]">
-          ${sell_rate.toFixed(2)}
+          ${formatComma(sell_rate)}
           <input type="hidden" name="sell_rates" value="${sell_rate}">
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area border-r border-[#B0B0B0]">
-          ${sell_amount.toFixed(2)}
+          ${formatComma(sell_amount)}
           <input type="hidden" name="sell_amounts" value="${sell_amount}">   
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-28 search-area border-r border-[#B0B0B0]">
-          ${purchase_rate.toFixed(2)}
+          ${formatComma(purchase_rate)}
           <input type="hidden" name="purchase_rates" value="${purchase_rate}">
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
-          ${purchase_amount.toFixed(2)}
+          ${formatComma(purchase_amount)}
           <input type="hidden" name="purchase_amounts" value="${purchase_amount}">
         </td>
       </tr>`;
@@ -1050,66 +1054,55 @@
     $('#createView').removeClass('hidden');
     $('#viewDiv').addClass('hidden');
     const selectedRow = link.closest('tr');
+    const inputs = {
+      date: selectedRow.querySelector('input[name="dates"]')?.value || '',
+      description: selectedRow.querySelector('input[name="descriptions"]')?.value || '',
+      qty: selectedRow.querySelector('input[name="qtys"]')?.value || '',
+      sell_rate: selectedRow.querySelector('input[name="sell_rates"]')?.value || '',
+      sell_amount: selectedRow.querySelector('input[name="sell_amount"]')?.value || '',
+      purchase_rate: selectedRow.querySelector('input[name="purchase_rates"]')?.value || '',
+      purchase_amount: selectedRow.querySelector('input[name="purchase_amounts"]')?.value || '',
+      nsdId: selectedRow.querySelector('input[name="nsd_ids"]')?.value || selectedRow.querySelector('#nsd_id')?.value || '',
+      sender_type: selectedRow.querySelector('input[name="sender_type"]')?.value || selectedRow.querySelector('#sender_type')?.value || 'suppliers',
+      receiver_type: selectedRow.querySelector('input[name="receiver_type"]')?.value || selectedRow.querySelector('#receiver_type')?.value || 'suppliers',
+      supplier: selectedRow.querySelector('input[name="suppliers"]')?.value || '',
+      customer: selectedRow.querySelector('input[name="customers"]')?.value || '',
+      nsd_nos: selectedRow.querySelector('input[name="nsd_nos"]')?.value || ''
+    };
+
     if (isUpdate) {
-
-      document.getElementById("nsd_name").value = selectedRow.cells[3].querySelector('input[name="nsd_nos"]').value;
-      document.getElementById("date").value = selectedRow.cells[3].querySelector('input[name="dates"]').value;
-      document.getElementById("customer").value = selectedRow.cells[3].querySelector('input[name="customers"]').value;
-      document.getElementById("description").value = selectedRow.cells[4].innerText.trim();
-      document.getElementById("supplier").value = selectedRow.cells[5].querySelector('input[name="suppliers"]').value;
-      document.getElementById("qty").value = selectedRow.cells[6].innerText.trim();
-      document.getElementById("sell_rate").value = selectedRow.cells[7].innerText.trim();
-      document.getElementById("sell_amount").value = selectedRow.cells[8].innerText.trim();
-      document.getElementById("purchase_rate").value = selectedRow.cells[9].innerText.trim();
-      document.getElementById("purchase_amount").value = selectedRow.cells[10].innerText.trim();
-      document.getElementById("nsdId").value = selectedRow.querySelector('#nsd_id').value;
-      var sender_type = selectedRow.querySelector('#sender_type') ? selectedRow.querySelector('#sender_type').value : 'suppliers';
-      var receiver_type = selectedRow.querySelector('#receiver_type') ? selectedRow.querySelector('#receiver_type').value : 'suppliers';
-
-      if (sender_type === 'customers') {
-        $('#allSuppliers').prop('checked', true).change();
-      } else {
-        $('#allSuppliers').prop('checked', false).change();
-      }
-      document.getElementById("supplier").value = selectedRow.cells[5].querySelector('input[name="suppliers"]').value;
-
-      if (receiver_type === 'customers') {
-        $('#allCustomer').prop('checked', true).change();
-      } else {
-        $('#allCustomer').prop('checked', false).change();
-      }
-      document.getElementById("customer").value = selectedRow.cells[3].querySelector('input[name="customers"]').value;
+      document.getElementById("nsd_name").value = inputs.nsd_nos;
     } else {
       selectedTR = selectedRow;
       makeRowHighlight(selectedRow);
-      document.getElementById("nsd_name").value = selectedRow.cells[2].querySelector('input[name="nsd_nos"]').value;
-      document.getElementById("date").value = selectedRow.cells[2].querySelector('input[name="dates"]').value;
-      document.getElementById("customer").value = selectedRow.cells[2].querySelector('input[name="customers"]').value;
-      document.getElementById("description").value = selectedRow.cells[3].innerText.trim();
-      document.getElementById("supplier").value = selectedRow.cells[4].querySelector('input[name="suppliers"]').value;
-      document.getElementById("qty").value = selectedRow.cells[5].innerText.trim();
-      document.getElementById("sell_rate").value = selectedRow.cells[6].innerText.trim();
-      document.getElementById("sell_amount").value = selectedRow.cells[7].innerText.trim();
-      document.getElementById("purchase_rate").value = selectedRow.cells[8].innerText.trim();
-      document.getElementById("purchase_amount").value = selectedRow.cells[9].innerText.trim();
-      document.getElementById("nsdId").value = selectedRow.querySelector('#nsd_id').value;
-      var sender_type = selectedRow.querySelector('#sender_type') ? selectedRow.querySelector('#sender_type').value : 'suppliers';
-      var receiver_type = selectedRow.querySelector('#receiver_type') ? selectedRow.querySelector('#receiver_type').value : 'suppliers';
-
-      if (sender_type === 'customers') {
-        $('#allSuppliers').prop('checked', true).change();
-      } else {
-        $('#allSuppliers').prop('checked', false).change();
-      }
-      document.getElementById("supplier").value = selectedRow.cells[4].querySelector('input[name="suppliers"]').value;
-
-      if (receiver_type === 'customers') {
-        $('#allCustomer').prop('checked', true).change();
-      } else {
-        $('#allCustomer').prop('checked', false).change();
-      }
-      document.getElementById("customer").value = selectedRow.cells[2].querySelector('input[name="customers"]').value;
+      document.getElementById("nsd_name").value = inputs.nsd_nos;
     }
+
+    document.getElementById("date").value = inputs.date;
+    document.getElementById("customer").value = inputs.customer;
+    document.getElementById("description").value = inputs.description;
+    document.getElementById("supplier").value = inputs.supplier;
+    document.getElementById("qty").value = inputs.qty;
+    document.getElementById("sell_rate").value = inputs.sell_rate;
+    document.getElementById("sell_amount").value = inputs.sell_amount;
+    document.getElementById("purchase_rate").value = inputs.purchase_rate;
+    document.getElementById("purchase_amount").value = inputs.purchase_amount;
+    document.getElementById("nsdId").value = inputs.nsdId;
+
+    if (inputs.sender_type === 'customers') {
+      $('#allSuppliers').prop('checked', true).change();
+    } else {
+      $('#allSuppliers').prop('checked', false).change();
+    }
+    document.getElementById("supplier").value = inputs.supplier;
+
+    if (inputs.receiver_type === 'customers') {
+      $('#allCustomer').prop('checked', true).change();
+    } else {
+      $('#allCustomer').prop('checked', false).change();
+    }
+    document.getElementById("customer").value = inputs.customer;
+
 
     $('#addToGridText').text('Update Grid');
     $('#addGrid').removeClass('bg-blue-500 hover:bg-blue-600').addClass('bg-green-500 hover:bg-green-600');
@@ -1146,11 +1139,11 @@
           resetSLNo();
           addLastRow();
           refreshBalances();
-          
+
           if (!$('#viewNSDDiv').hasClass('hidden')) {
-              $('#dateFilter').click();
+            $('#dateFilter').click();
           }
-          
+
           getLastNSDNo();
           closeModal();
         } else {
@@ -1251,19 +1244,19 @@
                 ${nsd.which_sender_type === 'suppliers' ? nsd.sender_supplier : nsd.sender_customer} 
                 <input type="hidden" name="suppliers" value="${nsd.which_sender_type === 'suppliers' ? nsd.sender_supplier_id : nsd.sender_customer_id}">
               </td>
-              <td class="px-1.5 py-1.5 text-right text-sm border-r border-[#B0B0B0]">${parseFloat(nsd.qty).toFixed(2)}
+              <td class="px-1.5 py-1.5 text-right text-sm border-r border-[#B0B0B0]">${formatComma(nsd.qty)}
                 <input type="hidden" name="qtys" value="${nsd.qty}">
               </td>
-              <td class="px-1.5 py-1.5 text-right text-sm border-r border-[#B0B0B0]">${parseFloat(nsd.sell_rate).toFixed(2)}
+              <td class="px-1.5 py-1.5 text-right text-sm border-r border-[#B0B0B0]">${formatComma(nsd.sell_rate)}
                 <input type="hidden" name="sell_rates" value="${nsd.sell_rate}">
               </td>
-              <td class="px-1.5 py-1.5 text-right text-sm border-r border-[#B0B0B0]">${parseFloat(nsd.sell_amount).toFixed(2)}
+              <td class="px-1.5 py-1.5 text-right text-sm border-r border-[#B0B0B0]">${formatComma(nsd.sell_amount)}
                 <input type="hidden" name="sell_amount" value="${nsd.sell_amount}">
               </td>
-              <td class="px-1.5 py-1.5 text-right text-sm border-r border-[#B0B0B0]">${parseFloat(nsd.purchase_rate).toFixed(2)}
+              <td class="px-1.5 py-1.5 text-right text-sm border-r border-[#B0B0B0]">${formatComma(nsd.purchase_rate)}
                 <input type="hidden" name="purchase_rates" value="${nsd.purchase_rate}">
               </td>
-              <td class="px-1.5 py-1.5 text-right text-sm">${parseFloat(nsd.purchase_amount).toFixed(2)}
+              <td class="px-1.5 py-1.5 text-right text-sm">${formatComma(nsd.purchase_amount)}
                 <input type="hidden" name="purchase_amounts" value="${parseFloat(nsd.purchase_amount).toFixed(2)}">
               </td>
             </tr>`;
@@ -1272,11 +1265,11 @@
         tableBody.append(`
           <tr class="bg-blue-200 font-bold text-sm" id="totalRow">
             <td class="px-1.5 py-1.5 text-left" colspan="6">Totals:</td>
-            <td class="px-1.5 py-1.5 text-right">${parseFloat(totalQty).toFixed(2)}</td>
-            <td class="px-1.5 py-1.5 text-right">${parseFloat(sell_rate_avg).toFixed(2)}</td>
-            <td class="px-1.5 py-1.5 text-right">${parseFloat(total_sell_amount).toFixed(2)}</td>
-            <td class="px-1.5 py-1.5 text-right">${parseFloat(purchase_rate_avg).toFixed(2)}</td>
-            <td class="px-1.5 py-1.5 text-right">${parseFloat(total_purchase_amount).toFixed(2)}</td>
+            <td class="px-1.5 py-1.5 text-right">${formatComma(totalQty)}</td>
+            <td class="px-1.5 py-1.5 text-right">${formatComma(sell_rate_avg)}</td>
+            <td class="px-1.5 py-1.5 text-right">${formatComma(total_sell_amount)}</td>
+            <td class="px-1.5 py-1.5 text-right">${formatComma(purchase_rate_avg)}</td>
+            <td class="px-1.5 py-1.5 text-right">${formatComma(total_purchase_amount)}</td>
           </tr>
         `);
 
@@ -1346,7 +1339,7 @@
     }
   });
 
-  $('form').on('submit', function() {
+  $('form').on('submit', function () {
     let targetDate;
     if (typeof isUpdate !== 'undefined' && isUpdate) {
       targetDate = $('#date').val();
@@ -1354,7 +1347,7 @@
       targetDate = new Date().toLocaleDateString('en-CA');
       $('#date').val(targetDate);
     }
-    
+
     if (targetDate) {
       $(this).find('input[name="dates"]').val(targetDate);
     }

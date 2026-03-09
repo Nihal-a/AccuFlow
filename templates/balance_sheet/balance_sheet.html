@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
 {% block title %}
 Balance Sheet
 {% endblock title %}
@@ -41,7 +42,8 @@ Balance Sheet
             <table class="table-auto w-full min-w-[800px] whitespace-nowrap text-sm font-sans">
                 <thead class="bg-blue-200 text-gray-700 uppercase text-xs">
                     <tr>
-                        <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-32">
+                        <th
+                            class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider w-32">
                             Code
                         </th>
                         <th class="px-1.5 py-1.5 text-left text-xs font-bold text-slate-900 uppercase tracking-wider">
@@ -91,7 +93,7 @@ Balance Sheet
                             {% if account.highlight == 'orange' %}border-yellow-300
                             {% elif account.highlight == 'green' %}border-green-300{% endif %}
                         ">
-                            {% if account.debit > 0 %}{{ account.debit|floatformat:2 }}{% endif %}
+                            {% if account.debit > 0 %}{{ account.debit|floatformat:2|intcomma }}{% endif %}
                         </td>
 
                         <td class="px-1.5 py-1.5 text-right 
@@ -99,7 +101,7 @@ Balance Sheet
                             {% if account.highlight == 'orange' %}border-yellow-300
                             {% elif account.highlight == 'green' %}border-green-300{% endif %}
                         ">
-                            {% if account.credit > 0 %}{{ account.credit|floatformat:2 }}{% endif %}
+                            {% if account.credit > 0 %}{{ account.credit|floatformat:2|intcomma }}{% endif %}
                         </td>
                     </tr>
                     {% endfor %}
@@ -108,8 +110,10 @@ Balance Sheet
                     <tr class="bg-blue-100 text-blue-800 uppercase divide-y divide-blue-300 text-xs font-bold">
                         <td class="px-1.5 py-2 text-left border-t border-blue-300"></td>
                         <td class="px-1.5 py-2 text-right tracking-wide border-t border-blue-300">Total</td>
-                        <td class="px-1.5 py-2 text-right border-t border-blue-300">{{ total_debit|floatformat:2 }}</td>
-                        <td class="px-1.5 py-2 text-right border-t border-blue-300">{{ total_credit|floatformat:2 }}</td>
+                        <td class="px-1.5 py-2 text-right border-t border-blue-300">
+                            {{ total_debit|floatformat:2|intcomma }}</td>
+                        <td class="px-1.5 py-2 text-right border-t border-blue-300">
+                            {{ total_credit|floatformat:2|intcomma }}</td>
                     </tr>
 
                 </tbody>

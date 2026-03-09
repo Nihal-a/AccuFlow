@@ -1,11 +1,13 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block title %}
 Godown Ledger
 {% endblock title %}
 
 {% block content %}
-<div class="bg-white sm:rounded-xl p-4 sm:p-6 mt-3 -mx-4 sm:mx-0 w-[calc(100%+2rem)] sm:w-full shadow-sm sm:shadow-none">
+<div
+    class="bg-white sm:rounded-xl p-4 sm:p-6 mt-3 -mx-4 sm:mx-0 w-[calc(100%+2rem)] sm:w-full shadow-sm sm:shadow-none">
     <h1 class="text-2xl font-medium mb-0 text-gray-700 uppercase">
         Godown Ledger
     </h1>
@@ -68,8 +70,11 @@ Godown Ledger
                 <div class="col-span-12 w-full flex items-center mt-2 lg:mt-0 pb-1 sm:pb-0">
                     <div class="w-full flex flex-row items-center gap-4 sm:gap-5 flex-nowrap">
                         <div class="flex items-center shrink-0">
-                            <input type="checkbox" id="noOpeningBalance" name="opening" checked class="h-4 w-4 text-blue-600 rounded shrink-0">
-                            <label for="noOpeningBalance" class="ml-1.5 text-[0.65rem] xs:text-xs sm:text-sm text-gray-700 font-medium cursor-pointer leading-tight">Without Opening Balance</label>
+                            <input type="checkbox" id="noOpeningBalance" name="opening" checked
+                                class="h-4 w-4 text-blue-600 rounded shrink-0">
+                            <label for="noOpeningBalance"
+                                class="ml-1.5 text-[0.65rem] xs:text-xs sm:text-sm text-gray-700 font-medium cursor-pointer leading-tight">Without
+                                Opening Balance</label>
                         </div>
 
                         <div class="flex gap-2 shrink-0">
@@ -80,7 +85,7 @@ Godown Ledger
 
                             <button id="btnView" type="submit"
                                 class="leading-none inline-flex items-center justify-center gap-1 bg-blue-500 text-white text-xs sm:text-sm font-medium px-3 py-1.5 sm:py-2 rounded-md shadow-sm hover:bg-blue-600 transition-all duration-300">
-                               <span>View<span class="hidden sm:inline"> Results</span></span>
+                                <span>View<span class="hidden sm:inline"> Results</span></span>
                             </button>
                         </div>
                     </div>
@@ -89,12 +94,16 @@ Godown Ledger
 
             {% if godown %}
             <div class="overflow-x-auto mt-5 w-full border border-gray-200 rounded-lg">
-                <table id="viewPurchaseTable" class="w-full min-w-[800px] md:min-w-full text-xs sm:text-sm rounded-t-sm overflow-hidden whitespace-nowrap">
+                <table id="viewPurchaseTable"
+                    class="w-full min-w-[800px] md:min-w-full text-xs sm:text-sm rounded-t-sm overflow-hidden whitespace-nowrap">
                     <thead class="bg-blue-200 text-gray-700 uppercase text-xs">
                         <tr>
                             <th colspan="7"></th>
-                            <th class="px-2 py-1 text-left font-semibold tracking-wide w-1" colspan="2">Open Balance</th>
-                            <th class="px-2 py-1 text-left font-semibold tracking-wide w-1">{{open_balance}}</th>
+                            <th class="px-2 py-1 text-left font-semibold tracking-wide w-1" colspan="2">Open Balance
+                            </th>
+                            <th class="px-2 py-1 text-left font-semibold tracking-wide w-1">
+                                {{open_balance|floatformat:2|intcomma}}
+                            </th>
                         </tr>
                         <tr>
                             <!-- <th class="px-2 py-1 text-left font-semibold tracking-wide w-1">Actions</th> -->
@@ -119,11 +128,11 @@ Godown Ledger
                             <td class="px-2 py-1 text-left">{{ledger.transaction_no}}</td>
                             <td class="px-2 py-1 text-left">{{ledger.type}}</td>
                             <td class="px-2 py-1 text-left">{{ledger.description}}</td>
-                            <td class="px-2 py-1 text-right">{{ledger.qty}}</td>
-                            <td class="px-2 py-1 text-right">{{ledger.rate}}</td>
-                            <td class="px-2 py-1 text-right">{{ledger.debit}}</td>
-                            <td class="px-2 py-1 text-right">{{ledger.credit}}</td>
-                            <td class="px-2 py-1 text-right font-medium">{{ledger.balance}}</td>
+                            <td class="px-2 py-1 text-right">{{ledger.qty|floatformat:2|intcomma}}</td>
+                            <td class="px-2 py-1 text-right">{{ledger.rate|floatformat:2|intcomma}}</td>
+                            <td class="px-2 py-1 text-right">{{ledger.debit|floatformat:2|intcomma}}</td>
+                            <td class="px-2 py-1 text-right">{{ledger.credit|floatformat:2|intcomma}}</td>
+                            <td class="px-2 py-1 text-right font-medium">{{ledger.balance|floatformat:2|intcomma}}</td>
                         </tr>
                         {% endif %}
                         {% endfor %}
@@ -135,9 +144,12 @@ Godown Ledger
                         <tr class="bg-blue-200 text-gray-700 uppercase divide-y divide-blue-300 text-xs">
                             <td colspan="6"></td>
                             <td class="px-2 py-1 text-right font-bold tracking-wide">Total :</td>
-                            <td class="px-2 py-1 text-right font-bold">{{debit_total|default:'0.00'}}</td>
-                            <td class="px-2 py-1 text-right font-bold">{{credit_total|default:'0.00'}}</td>
-                            <td class="px-2 py-1 text-right font-bold">{{total_balance|default:'0.00'}}</td>
+                            <td class="px-2 py-1 text-right font-bold">
+                                {{debit_total|default:'0.00'|floatformat:2|intcomma}}</td>
+                            <td class="px-2 py-1 text-right font-bold">
+                                {{credit_total|default:'0.00'|floatformat:2|intcomma}}</td>
+                            <td class="px-2 py-1 text-right font-bold">
+                                {{total_balance|default:'0.00'|floatformat:2|intcomma}}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -147,6 +159,8 @@ Godown Ledger
         </div>
     </div>
 </div>
+<div id="ledger-config" class="hidden" data-godown-id="{{ godown.id }}" data-opening="{{ opening }}"
+    data-sort="{{ sort }}"></div>
 {% endblock content %}
 
 {% block externalJS %}
@@ -159,15 +173,19 @@ Godown Ledger
         var code = selectedOption.data('code') || '';
         $('#godownID').val(code);
     });
-    {% if godown %}
-    $('#godown').val('{{godown.id}}').change()
-    {% endif %}
-    console.log('{{opening}}')
-    {% if opening == 'on' %}
-    $('#noOpeningBalance').prop('checked', true).change();
-    {% else %}
-    $('#noOpeningBalance').prop('checked', false).change();
-    {% endif %}
-    $('#sortOrder').val('{{sort}}').change();  
+    const config = document.getElementById('ledger-config').dataset;
+    if (config.godownId) {
+        $('#godown').val(config.godownId).change();
+    }
+
+    if (config.opening === 'on') {
+        $('#noOpeningBalance').prop('checked', true).change();
+    } else {
+        $('#noOpeningBalance').prop('checked', false).change();
+    }
+
+    if (config.sort) {
+        $('#sortOrder').val(config.sort).change();
+    }
 </script>
 {% endblock externalJS %}
