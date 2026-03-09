@@ -8,6 +8,7 @@ urlpatterns = [
     path('clients/create/', views.ClientAddView.as_view(), name='create-client'),
     path('clients/update/<int:id>/', views.ClientUpdateView.as_view(), name='update-client'),
     path('clients/delete/<int:client_id>/', views.DeleteClientView.as_view(), name='delete-client'),
+    path('clients/toggle-block/<int:client_id>/', views.toggle_client_block, name='toggle-client-block'),
     
     path('subscriptions/', views.SubscriptionListView.as_view(), name='subscriptions'),
     path('subscriptions/create/', views.SubscriptionCreateView.as_view(), name='create-subscription'),

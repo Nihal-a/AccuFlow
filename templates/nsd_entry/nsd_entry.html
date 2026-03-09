@@ -1059,7 +1059,7 @@
       description: selectedRow.querySelector('input[name="descriptions"]')?.value || '',
       qty: selectedRow.querySelector('input[name="qtys"]')?.value || '',
       sell_rate: selectedRow.querySelector('input[name="sell_rates"]')?.value || '',
-      sell_amount: selectedRow.querySelector('input[name="sell_amount"]')?.value || '',
+      sell_amount: selectedRow.querySelector('input[name="sell_amounts"]')?.value || '',
       purchase_rate: selectedRow.querySelector('input[name="purchase_rates"]')?.value || '',
       purchase_amount: selectedRow.querySelector('input[name="purchase_amounts"]')?.value || '',
       nsdId: selectedRow.querySelector('input[name="nsd_ids"]')?.value || selectedRow.querySelector('#nsd_id')?.value || '',
@@ -1096,7 +1096,7 @@
     }
     document.getElementById("supplier").value = inputs.supplier;
 
-    if (inputs.receiver_type === 'customers') {
+    if (inputs.receiver_type === 'suppliers') {
       $('#allCustomer').prop('checked', true).change();
     } else {
       $('#allCustomer').prop('checked', false).change();
@@ -1251,7 +1251,7 @@
                 <input type="hidden" name="sell_rates" value="${nsd.sell_rate}">
               </td>
               <td class="px-1.5 py-1.5 text-right text-sm border-r border-[#B0B0B0]">${formatComma(nsd.sell_amount)}
-                <input type="hidden" name="sell_amount" value="${nsd.sell_amount}">
+                <input type="hidden" name="sell_amounts" value="${nsd.sell_amount}">
               </td>
               <td class="px-1.5 py-1.5 text-right text-sm border-r border-[#B0B0B0]">${formatComma(nsd.purchase_rate)}
                 <input type="hidden" name="purchase_rates" value="${nsd.purchase_rate}">

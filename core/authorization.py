@@ -112,9 +112,8 @@ def verify_object_ownership(obj, user):
     
     # Verify ownership
     if obj.client != user_client:
-        raise PermissionDenied(
-            f"Access denied: {obj.__class__.__name__} belongs to different tenant"
-        )
+        from django.http import Http404
+        raise Http404("Resource not found")
 
 
 def get_object_for_user(model, user, **kwargs):

@@ -61,7 +61,15 @@ urlpatterns = [
     path('whatsapp/', include('whatsapp.urls')),
 ]
 
+from core.views import handler404 as core_handler404, handler403 as core_handler403
+handler404 = 'core.views.handler404'
+handler403 = 'core.views.handler403'
+
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     
+# Catch-all at the very end of everything for 404s even in debug mode
+urlpatterns += [
+    path('<path:resource>', core_handler404),
+]

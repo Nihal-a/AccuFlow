@@ -40,12 +40,12 @@ class SubscriptionMiddleware:
             client_obj = None
             if request.user.is_client:
                 try:
-                    client_obj = Clients.objects.get(user=request.user)
+                    client_obj = Clients.objects.get(user=request.user, is_active=True)
                 except Clients.DoesNotExist:
                     pass
             elif request.user.is_collector:
                 try:
-                    collector = Collectors.objects.get(user=request.user)
+                    collector = Collectors.objects.get(user=request.user, is_active=True)
                     client_obj = collector.client
                 except (Collectors.DoesNotExist, AttributeError):
                     pass

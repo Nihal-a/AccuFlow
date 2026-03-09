@@ -85,28 +85,45 @@
       <tbody class="bg-gray-100">
         {% if clients %}
         {% for client in clients %}
-        <tr class="hover:bg-gray-50  divide-x divide-y divide-gray-300 odd:bg-white even:bg-gray-100">
+        <tr
+          class="hover:bg-gray-50 divide-x divide-y divide-gray-300 {% if client.is_blocked %}bg-gray-200 opacity-75{% else %}odd:bg-white even:bg-gray-100{% endif %} transition-all">
 
           <td class="px-4 py-2 w-1">
             <div class="flex gap-2">
               <button onclick="openEditModal('{{ client.id }}')"
-                class="bg-blue-500 text-white px-2 py-1.5 rounded hover:bg-blue-600 text-xs">
+                class="bg-blue-500 text-white px-2 py-1.5 rounded hover:bg-blue-600 text-xs shadow-sm transition-all"
+                title="Edit">
                 <i class="fa-solid fa-pen"></i>
               </button>
+
+              <button
+                onclick="openBlockModal('{{ client.id }}', '{{ client.name|escapejs }}', {{ client.is_blocked|yesno:'true,false' }})"
+                class="{% if client.is_blocked %}bg-amber-500 hover:bg-amber-600{% else %}bg-slate-600 hover:bg-slate-700{% endif %} text-white px-2 py-1.5 rounded text-xs shadow-sm transition-all"
+                title="{% if client.is_blocked %}Unblock{% else %}Block{% endif %} Client">
+                <i class="fa-solid {% if client.is_blocked %}fa-lock-open{% else %}fa-lock{% endif %}"></i>
+              </button>
+
               <button onclick="openModal('{{ client.id }}')"
-                class="bg-red-500 text-white px-2 py-1.5 rounded hover:bg-red-600 text-xs">
+                class="bg-red-500 text-white px-2 py-1.5 rounded hover:bg-red-600 text-xs shadow-sm transition-all"
+                title="Delete">
                 <i class="fa-solid fa-trash"></i>
               </button>
             </div>
           </td>
-          <td class="px-4 py-2 w-1">
+          <td class="px-4 py-2 w-1 text-center font-medium text-gray-500">
             {{forloop.counter}}
           </td>
           <td class="px-4 py-2 font-semibold uppercase search-area">
-            {{ client.name }} ({{client.clientId}})
-            {% if client.has_whatsapp_access %}
-            <i class="fa-brands fa-whatsapp text-green-500 ml-1 text-lg" title="WhatsApp Automation Enabled"></i>
-            {% endif %}
+            <div class="flex items-center gap-2">
+              {{ client.name }} ({{client.clientId}})
+              {% if client.is_blocked %}
+              <span
+                class="bg-red-100 text-red-700 text-[10px] font-bold px-1.5 py-0.5 rounded border border-red-200">BLOCKED</span>
+              {% endif %}
+              {% if client.has_whatsapp_access %}
+              <i class="fa-brands fa-whatsapp text-green-500 text-lg" title="WhatsApp Automation Enabled"></i>
+              {% endif %}
+            </div>
           </td>
           <td class="px-4 py-2 text-gray-700 search-area"> {{ client.phone }}</td>
           <td class="px-4 py-2 text-gray-700 search-area">{{ client.email }}</td>
@@ -239,6 +256,26 @@
     </div>
   </div>
 </div>
+
+<div id="blockModal"
+  class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50">
+  <div class="bg-white rounded-xl shadow-lg p-6 w-96 text-center">
+    <div id="blockModalIcon" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full mb-4">
+    </div>
+    <h2 id="blockModalTitle" class="text-lg font-semibold mb-2 text-gray-800"></h2>
+    <p id="blockModalMessage" class="mb-6 text-gray-600 text-sm px-4">
+    </p>
+
+    <div class="flex justify-center space-x-4">
+      <button onclick="closeBlockModal()"
+        class="bg-gray-300 text-gray-800 px-6 py-2 rounded hover:bg-gray-400 font-medium transition-all">
+        Cancel
+      </button>
+      <a id="confirmBlockBtn" href="#" class="px-6 py-2 rounded text-white font-medium transition-all">
+      </a>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block externalJS %}
@@ -259,6 +296,38 @@
     deleteUrl = "{% url 'delete-client' 0 %}".replace("0", clientId);
     document.getElementById("deleteForm").setAttribute("action", deleteUrl);
     document.getElementById("confirmModal").classList.remove("hidden");
+  }
+
+  function openBlockModal(clientId, clientName, isBlocked) {
+    const url = "{% url 'toggle-client-block' 0 %}".replace("0", clientId);
+    const confirmBtn = document.getElementById("confirmBlockBtn");
+    const title = document.getElementById("blockModalTitle");
+    const message = document.getElementById("blockModalMessage");
+    const iconDiv = document.getElementById("blockModalIcon");
+
+    confirmBtn.setAttribute("href", url);
+
+    if (isBlocked) {
+      title.textContent = "Unblock Client";
+      message.textContent = `Are you sure you want to unblock "${clientName}"? This will restore their access to the system.`;
+      confirmBtn.textContent = "Unblock Now";
+      confirmBtn.className = "bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 font-medium transition-all";
+      iconDiv.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4";
+      iconDiv.innerHTML = '<i class="fa-solid fa-lock-open text-green-600 text-xl"></i>';
+    } else {
+      title.textContent = "Block Client";
+      message.textContent = `Are you sure you want to block "${clientName}"? This will immediately prevent both the client and their collectors from logging in.`;
+      confirmBtn.textContent = "Block Now";
+      confirmBtn.className = "bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700 font-medium transition-all";
+      iconDiv.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4";
+      iconDiv.innerHTML = '<i class="fa-solid fa-lock text-red-600 text-xl"></i>';
+    }
+
+    document.getElementById("blockModal").classList.remove("hidden");
+  }
+
+  function closeBlockModal() {
+    document.getElementById("blockModal").classList.add("hidden");
   }
 
   function closeModal() {

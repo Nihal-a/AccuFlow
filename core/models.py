@@ -132,6 +132,7 @@ class Clients(SoftDeleteMixin):
     subscription_start = models.DateField(null=True, blank=True)
     subscription_end = models.DateField(null=True, blank=True)
     is_trial_active = models.BooleanField(default=False)
+    is_blocked = models.BooleanField(default=False)
 
     # WhatsApp Integration
     has_whatsapp_access = models.BooleanField(default=False)

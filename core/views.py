@@ -21,25 +21,28 @@ def user_login(request):
             client_obj = None
             if user.is_client:
                  try:
-                     client_obj = Clients.objects.get(user=user)
+                     client_obj = Clients.objects.get(user=user, is_active=True)
                  except Clients.DoesNotExist:
-                     pass
+                     messages.error(request, "Your client record is inactive or not found.")
+                     return redirect('login')
             elif user.is_collector:
                  try:
-                     collector = Collectors.objects.get(user=user)
+                     collector = Collectors.objects.get(user=user, is_active=True)
                      client_obj = collector.client
                  except Collectors.DoesNotExist:
-                     pass
+                     messages.error(request, "Your collector record is inactive or not found.")
+                     return redirect('login')
             
             if client_obj:
+                 if client_obj.is_blocked:
+                      messages.error(request, "Access denied. Your client account has been blocked. Please contact supporter.")
+                      return redirect('login')
                  from django.utils import timezone
                  
 
                  if not client_obj.is_subscription_active:
-                     login(request, user)
-                     user.last_session_key = request.session.session_key
-                     user.save(update_fields=['last_session_key'])
-                     return redirect('subscription_expired')
+                     messages.error(request, "Access denied. Your client's subscription has expired. Please contact your administrator.")
+                     return redirect('login')
                  
 
                  if client_obj.subscription_end:
@@ -284,10 +287,19 @@ class ClientDashboardView(View):
 
 
 def getClient(user):
-    if Clients.objects.filter(user=user,is_active=True).exists():
-        return Clients.objects.get(user=user,is_active=True)
-    else:
-        return None
+    from .models import Clients, Collectors
+    if user.is_client:
+        try:
+            return Clients.objects.get(user=user, is_active=True)
+        except Clients.DoesNotExist:
+            return None
+    elif user.is_collector:
+        try:
+            collector = Collectors.objects.get(user=user, is_active=True)
+            return collector.client
+        except Collectors.DoesNotExist:
+            return None
+    return None
        
 
 def update_party(party):
@@ -454,3 +466,10 @@ def lock_admin_actions(request):
         del request.session['admin_action_authorized']
         request.session.modified = True
     return JsonResponse({'status': 'success'})
+
+def handler404(request, exception=None, *args, **kwargs):
+    return render(request, '404.html', status=404)
+
+def handler403(request, exception=None, *args, **kwargs):
+    # Security: Show 404 instead of 403 to avoid revealing resource existence
+    return render(request, '404.html', status=404)

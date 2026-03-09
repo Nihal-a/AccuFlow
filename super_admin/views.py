@@ -301,19 +301,31 @@ class DeleteClientView(View):
         messages.success(request, f"Client '{client.name}' moved to recycle bin.")
         return redirect('clients')
 
+@login_required
+@staff_member_required
+def toggle_client_block(request, client_id):
+    client = get_object_or_404(Clients, id=client_id)
+    client.is_blocked = not client.is_blocked
+    client.save()
+    status = "blocked" if client.is_blocked else "unblocked"
+    messages.success(request, f"Client '{client.name}' has been {status}.")
+    return redirect('clients')
+
 
 
 def last_client_id():
-    last_client = Clients.objects.filter(is_active=True, clientId__regex=r'^AF-\d+$').order_by('clientId').last() 
-    if last_client and last_client.clientId:
+    client_ids = Clients.objects.filter(clientId__regex=r'^AF-\d+$').values_list('clientId', flat=True)
+    
+    max_num = 0
+    for cid in client_ids:
         try:
-            prefix, num = last_client.clientId.split('-')
-            if not num.isdigit():
-                return 'AF-1'
-            return f"{prefix}-{int(num) + 1}"
-        except ValueError:
-            return 'AF-1'
-    return 'AF-1'
+            num = int(cid.split('-')[1])
+            if num > max_num:
+                max_num = num
+        except (IndexError, ValueError):
+            continue
+            
+    return f"AF-{max_num + 1}"
 
 
 
