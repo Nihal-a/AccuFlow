@@ -133,10 +133,13 @@ class AddressView(View):
                 except Godowns.DoesNotExist:
                     pass
 
+        total_qty = sum((t['qty'] or Decimal('0')) for t in transactions) if transactions else Decimal('0')
+
         return render(request, 'stock_view/address_view.html', {
             'godowns': godowns,
             'suppliers': suppliers,
             'transactions': transactions,
+            'total_qty': total_qty,
             'date_from': date_from_str,
             'date_to': date_to_str,
             'selected_party': party_id,

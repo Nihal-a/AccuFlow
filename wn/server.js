@@ -138,11 +138,6 @@ function isValidClientId(clientId) {
     return /^[a-zA-Z0-9_-]{3,50}$/.test(clientId);
 }
 
-const CAPTIONS = [
-    "📈 Your latest trade summary is ready. Please review above.",
-    "📊 Account update: Here is your recent activity snapshot.",
-    "💼 Daily trade report generated. Balance details attached."
-];
 
 // --- HUMAN-LIKE TYPING SIMULATION (Anti-Ban) ---
 async function simulateTyping(sock, phone) {
@@ -151,8 +146,9 @@ async function simulateTyping(sock, phone) {
         await sock.sendPresenceUpdate('composing', phone);
         const typingMs = 1000 + Math.random() * 3000; // 1-4 seconds
         await new Promise(r => setTimeout(r, typingMs));
+        // Note: the act of sending the message automatically clears the composing state
+        // but we explicitly send 'paused' just to be safe if the send is delayed
         await sock.sendPresenceUpdate('paused', phone);
-        await new Promise(r => setTimeout(r, 300 + Math.random() * 500));
     } catch (e) {
         // Non-critical — don't block send if presence fails
         logger.debug(`Typing simulation skipped: ${e.message}`);
@@ -572,18 +568,21 @@ async function processBatchSend(jobId, clientId, accounts) {
             const phone = formatPhone(waNumber);
             const hasTransactions = account.transactions && account.transactions.length > 0;
 
-            await simulateTyping(session.sock, phone);
-
             if (accountMode === 'image' && hasTransactions) {
                 const imageBuffer = await generateTradeTable(account);
-                await session.sock.sendMessage(phone, { image: imageBuffer, caption: `BALANCE='${account.balance}'` });
+                await simulateTyping(session.sock, phone);
+                await session.sock.sendMessage(phone, { image: imageBuffer, caption: `${getRotatedBalanceText()}'${account.balance}'` });
                 logger.info(`[${clientId}] [Job ${jobId}] Sent IMAGE to ${accountName} (${i + 1}/${accounts.length})`);
             } else {
+                await simulateTyping(session.sock, phone);
                 await session.sock.sendMessage(phone, {
-                    text: `BALANCE='${account.balance}'`
+                    text: `${getRotatedBalanceText()}'${account.balance}'`
                 });
                 logger.info(`[${clientId}] [Job ${jobId}] Sent TEXT to ${accountName} (${i + 1}/${accounts.length})`);
             }
+
+            // Send explicit paused event so WhatsApp knows composing stopped
+            try { await session.sock.sendPresenceUpdate('paused', phone); } catch(e) {}
 
             session.messagesSentThisMinute++;
             session.messagesSentToday++;
@@ -745,9 +744,6 @@ app.post('/api/:clientId/send-address-rows', authMiddleware, validateClientId, a
             // Presence lifecycle: go online for the conversation
             try { await session.sock.sendPresenceUpdate('available'); } catch(e) {}
 
-            // Simulate typing only ONCE at the start — these are all to the same person
-            await simulateTyping(session.sock, phone);
-
             for (let i = 0; i < rows.length; i++) {
                 if (job.status === 'cancelled') break;
 
@@ -755,9 +751,15 @@ app.post('/api/:clientId/send-address-rows', authMiddleware, validateClientId, a
                 try {
                     await waitForRateLimit(session);
 
+                    // Simulate typing before sending each row
+                    await simulateTyping(session.sock, phone);
+
                     const text = `${row.description || '-'}=${row.qty || '0'}`;
 
                     await session.sock.sendMessage(phone, { text });
+                    // Send explicit paused event so WhatsApp knows composing stopped
+                    try { await session.sock.sendPresenceUpdate('paused', phone); } catch(e) {}
+                    
                     session.messagesSentThisMinute++;
                     session.messagesSentToday++;
                     session.lastActive = Date.now();

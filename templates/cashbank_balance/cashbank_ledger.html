@@ -26,7 +26,7 @@
                             required>
                             <option value="">-- Select Cash/Bank --</option>
                             {% for cb in cashbanks %}
-                            <option value="{{ cb.id }}" {% if cashbank and cashbank.id==cb.id %}selected{% endif %}>
+                            <option value="{{ cb.id }}" {% if cashbank and cashbank.id == cb.id %}selected{% endif %}>
                                 {{ cb.name }}
                             </option>
                             {% endfor %}

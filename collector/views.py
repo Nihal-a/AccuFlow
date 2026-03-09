@@ -54,13 +54,17 @@ class AddCollectorView(View):
             
             can_collect = request.POST.get('can_collect_directly') == 'on'
             
+            from core.utils import get_next_id
+            collector_id_val = get_next_id(Collectors, 'collectorId', getClient(request.user), 'COL-')
+            
             collector = Collectors.objects.create(
                 name=name,
                 phone=phone,
                 address=address,
                 client=getClient(request.user),
                 user=user,
-                can_collect_directly=can_collect
+                can_collect_directly=can_collect,
+                collectorId=collector_id_val
             )
             if wa:
                 collector.country_code = country_code
