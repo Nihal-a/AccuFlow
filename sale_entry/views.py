@@ -1,3 +1,4 @@
+from django.views.decorators.http import require_POST
 import datetime
 import json
 from django.shortcuts import render,redirect, get_object_or_404
@@ -280,14 +281,14 @@ def sales_by_date(request):
     return JsonResponse({'sales': saleData, 'total_qty': total_qty, 'total_amount': total_amount, 'rate_avg': rate_avg})
 
 
+@require_POST
 def delete_sale(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            pk = data.get('id')
-        except json.JSONDecodeError:
-            pk = request.POST.get('id')
-    else:
+    try:
+        data = json.loads(request.body)
+        pk = data.get('id')
+    except json.JSONDecodeError:
+        pk = request.POST.get('id')
+    if not pk:
         pk = request.GET.get('id')
         
     if not pk:

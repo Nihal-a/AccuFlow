@@ -377,7 +377,7 @@ def calculate_cashbank_balance(cashbank, client, date_limit=None):
 def update_ledger(where, to=None, old_purchase=0, new_purchase=0, old_sale=0, new_sale=0):
 
     if where:
-        where.refresh_from_db()
+        where = type(where).objects.select_for_update().get(pk=where.pk)
 
         if Decimal(old_purchase) > 0: 
             where.credit -= Decimal(old_purchase)
@@ -392,7 +392,7 @@ def update_ledger(where, to=None, old_purchase=0, new_purchase=0, old_sale=0, ne
         where.save()
 
     if to:
-        to.refresh_from_db()
+        to = type(to).objects.select_for_update().get(pk=to.pk)
 
         if Decimal(old_sale) > 0:
             to.debit -= Decimal(old_sale)

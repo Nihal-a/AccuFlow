@@ -1,3 +1,4 @@
+from django.views.decorators.http import require_POST
 import datetime
 import json
 from decimal import Decimal
@@ -193,8 +194,9 @@ def commissions_by_date(request):
     return JsonResponse({'commissions': commissionData, 'total_qty': total_qty, 'total_amount': total_amount, 'rate_avg': rate_avg})
 
 
+@require_POST
 def delete_commission(request):
-    pk = request.GET.get('id') 
+    pk = request.POST.get('id') or request.GET.get('id') 
     # Authorization: Ensure commission belongs to user's client
     commission = get_object_for_user(Commissions, request.user, id=pk)
     commission.is_active = False

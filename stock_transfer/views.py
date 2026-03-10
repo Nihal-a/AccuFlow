@@ -1,3 +1,4 @@
+from django.views.decorators.http import require_POST
 import datetime
 import json
 from django.utils.dateparse import parse_date
@@ -211,12 +212,15 @@ class StockTransferHoldView(View):
             print(f"Error holding transfer: {e}")
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
+@require_POST
 def delete_transfer_api(request):
     try:
-        if request.method == 'POST':
+        try:
             data = json.loads(request.body)
             pk = data.get('id')
-        else:
+        except json.JSONDecodeError:
+            pk = request.POST.get('id')
+        if not pk:
             pk = request.GET.get('id')
             
         if not pk:

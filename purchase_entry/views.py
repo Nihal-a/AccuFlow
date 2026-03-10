@@ -1,3 +1,4 @@
+from django.views.decorators.http import require_POST
 import json
 from django.shortcuts import render,redirect, get_object_or_404
 from core.models import Purchases,Suppliers,Customers,Godowns
@@ -274,8 +275,9 @@ def purchases_by_date(request):
     return JsonResponse({'purchases': purchaseData, 'total_qty': total_qty, 'total_amount': total_amount, 'rate_avg': rate_avg})
 
 
+@require_POST
 def delete_purchase(request):
-    pk = request.GET.get('id') 
+    pk = request.POST.get('id') or request.GET.get('id') 
     
     with transaction.atomic():
         # Authorization: Ensure purchase belongs to user's client

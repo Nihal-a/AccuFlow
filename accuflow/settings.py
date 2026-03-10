@@ -9,9 +9,9 @@ env = environ.Env()
 env.read_env()
 
 SECRET_KEY = env('SECRETKEY')
-DEBUG = env('DEBUG')
+DEBUG = env.bool('DEBUG', default=False)
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1', '0.0.0.0'])
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -157,9 +157,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 WHATSAPP_ENABLED = env('WHATSAPP_ENABLED', default='True') == 'True'
 # WHATSAPP_NODE_URL = env('WHATSAPP_NODE_URL', default='http://localhost:3001')
 WHATSAPP_NODE_URL = env('WHATSAPP_NODE_URL', default='http://localhost:3005')
-WHATSAPP_API_KEY = env('WHATSAPP_API_KEY', default='accuflow-wa-dev-key-2024')
+WHATSAPP_API_KEY = env('WHATSAPP_API_KEY')
 WHATSAPP_TIMEOUT = int(env('WHATSAPP_TIMEOUT', default='30'))
-ADMIN_ACTION_PASSWORD = env('ADMIN_ACTION_PASSWORD', default='accuflow@2024')
+ADMIN_ACTION_PASSWORD = env('ADMIN_ACTION_PASSWORD')
 
 
 # Logging for WhatsApp
@@ -174,13 +174,13 @@ LOGGING = {
     },
     'handlers': {
         'whatsapp_file': {
-            'level': 'DEBUG' if DEBUG == 'True' else 'INFO',
+            'level': 'DEBUG' if DEBUG else 'INFO',
             'class': 'logging.FileHandler',
             'filename': os.path.join(BASE_DIR, 'whatsapp.log'),
             'formatter': 'verbose',
         },
         'console': {
-            'level': 'DEBUG' if DEBUG == 'True' else 'INFO',
+            'level': 'DEBUG' if DEBUG else 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
@@ -188,8 +188,26 @@ LOGGING = {
     'loggers': {
         'whatsapp': {
             'handlers': ['whatsapp_file', 'console'],
-            'level': 'DEBUG' if DEBUG == 'True' else 'INFO',
+            'level': 'DEBUG' if DEBUG else 'INFO',
             'propagate': False,
         },
     },
 }
+
+# --- Security Settings ---
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+SECURE_SSL_REDIRECT = not DEBUG
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+
+# --- Session Settings ---
+SESSION_COOKIE_AGE = 86400  # 24 hours
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True

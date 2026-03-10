@@ -613,10 +613,15 @@ class AdminRestoreView(View):
         item.is_active = True
         item.deleted_at = None
         
-        # For Clients, also reactivate their user account
-        if model_name == 'Clients' and hasattr(item, 'user') and item.user:
-            item.user.is_active = True
-            item.user.save()
+        # For Clients, also reactivate their user account and handle clientId conflicts
+        if model_name == 'Clients':
+            # Check if an active client with the same clientId already exists
+            if model.objects.filter(is_active=True, clientId=item.clientId).exclude(id=item.id).exists():
+                item.clientId = last_client_id()
+                
+            if hasattr(item, 'user') and item.user:
+                item.user.is_active = True
+                item.user.save()
         
         item.save()
         return JsonResponse({'status': 'success', 'message': 'Item restored successfully'})

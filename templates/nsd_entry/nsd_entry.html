@@ -1127,7 +1127,8 @@
   function deleteItem() {
 
     fetch(deleteUrl, {
-      method: 'GET',
+      method: 'POST',
+      headers: {'X-CSRFToken': getCookie('csrftoken')}
     })
       .then(response => response.json())
       .then(data => {

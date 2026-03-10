@@ -1,3 +1,4 @@
+from django.views.decorators.http import require_POST
 import datetime
 import json
 from django.shortcuts import render,redirect, get_object_or_404
@@ -298,8 +299,9 @@ def cashs_by_date(request):
     return JsonResponse({'cashs': cashData, 'total_amount': total_amount})
 
 
+@require_POST
 def delete_cash(request):
-    pk = request.GET.get('id') 
+    pk = request.POST.get('id') or request.GET.get('id') 
     cash = get_object_for_user(Cashs, request.user, id=pk)
     
     # Reverse CashBank balance ONLY if finalized (hold=False)

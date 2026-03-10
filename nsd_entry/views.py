@@ -1,3 +1,4 @@
+from django.views.decorators.http import require_POST
 import datetime
 import json
 import logging
@@ -327,8 +328,9 @@ def nsds_by_date(request):
     return JsonResponse(context)
 
 
+@require_POST
 def delete_nsd(request):
-    pk = request.GET.get('id') 
+    pk = request.POST.get('id') or request.GET.get('id') 
     # Authorization: Ensure nsd belongs to user's client
     nsd = get_object_for_user(NSDs, request.user, id=pk)
     nsd.is_active = False
