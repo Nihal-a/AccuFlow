@@ -1,0 +1,228 @@
+﻿python : System check identified some 
+issues:
+At line:1 char:1
++ python manage.py migrate core 2> 
+migrate_stderr.log
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~
+    + CategoryInfo          : NotSpecifie 
+   d: (System check identified some issu  
+  es::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeComma 
+   ndError
+ 
+
+WARNINGS:
+[33;1m?: (mysql.W002) MySQL Strict Mode 
+is not set for database connection 
+'default'
+	HINT: MySQL's Strict Mode fixes many 
+data integrity problems in MySQL, such as 
+data truncation upon insertion, by 
+escalating warnings into errors. It is 
+strongly recommended you activate it. 
+See: https://docs.djangoproject.com/en/5.2
+/ref/databases/#mysql-sql-mode[0m
+Traceback (most recent call last):
+  File "C:\ADPROJECT\env\Lib\site-packages
+\django\db\backends\utils.py", line 105, 
+in _execute
+    return self.cursor.execute(sql, 
+params)
+           
+~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\ADPROJECT\env\Lib\site-packages
+\django\db\backends\mysql\base.py", line 
+76, in execute
+    return self.cursor.execute(query, 
+args)
+           
+~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\ADPROJECT\env\Lib\site-packages
+\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\ADPROJECT\env\Lib\site-packages
+\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\ADPROJECT\env\Lib\site-packages
+\MySQLdb\connections.py", line 280, in 
+query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+MySQLdb.OperationalError: (1061, 
+"Duplicate key name 'core_cashbanks_client
+_id_cashbankId_8403c56c_uniq'")
+
+The above exception was the direct cause 
+of the following exception:
+
+Traceback (most recent call last):
+  File "C:\ac\AccuFlow\manage.py", line 
+21, in <module>
+    main()
+    ~~~~^^
+  File "C:\ac\AccuFlow\manage.py", line 
+17, in main
+    execute_from_command_line(sys.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\ADPROJECT\env\Lib\site-packages
+\django\core\management\__init__.py", 
+line 442, in execute_from_command_line
+    utility.execute()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\ADPROJECT\env\Lib\site-packages
+\django\core\management\__init__.py", 
+line 436, in execute
+    self.fetch_command(subcommand).run_fro
+m_argv(self.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~^^^^^^^^^^^
+  File "C:\ADPROJECT\env\Lib\site-packages
+\django\core\management\base.py", line 
+416, in run_from_argv
+    self.execute(*args, **cmd_options)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\ADPROJECT\env\Lib\site-packages
+\django\core\management\base.py", line 
+460, in execute
+    output = self.handle(*args, **options)
+  File "C:\ADPROJECT\env\Lib\site-packages
+\django\core\management\base.py", line 
+107, in wrapper
+    res = handle_func(*args, **kwargs)
+  File "C:\ADPROJECT\env\Lib\site-packages
+\django\core\management\commands\migrate.p
+y", line 353, in handle
+    post_migrate_state = executor.migrate(
+        targets,
+    ...<3 lines>...
+        fake_initial=fake_initial,
+    )
+  File "C:\ADPROJECT\env\Lib\site-packages
+\django\db\migrations\executor.py", line 
+135, in migrate
+    state = self._migrate_all_forwards(
+        state, plan, full_plan, 
+fake=fake, fake_initial=fake_initial
+    )
+  File "C:\ADPROJECT\env\Lib\site-packages
+\django\db\migrations\executor.py", line 
+167, in _migrate_all_forwards
+    state = self.apply_migration(
+        state, migration, fake=fake, 
+fake_initial=fake_initial
+    )
+  File "C:\ADPROJECT\env\Lib\site-packages
+\django\db\migrations\executor.py", line 
+255, in apply_migration
+    state = migration.apply(state, 
+schema_editor)
+  File "C:\ADPROJECT\env\Lib\site-packages
+\django\db\migrations\migration.py", line 
+132, in apply
+    operation.database_forwards(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self.app_label, schema_editor, 
+old_state, project_state
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\ADPROJECT\env\Lib\site-packages
+\django\db\migrations\operations\models.py
+", line 717, in database_forwards
+    alter_together(
+    ~~~~~~~~~~~~~~^
+        new_model,
+        ^^^^^^^^^^
+        from_model_state.options.get(self.
+option_name) or set(),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
+        to_model_state.options.get(self.op
+tion_name) or set(),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\ADPROJECT\env\Lib\site-packages
+\django\db\backends\base\schema.py", line 
+623, in alter_unique_together
+    self.execute(self._create_unique_sql(m
+odel, fields))
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^
+  File "C:\ADPROJECT\env\Lib\site-packages
+\django\db\backends\base\schema.py", line 
+204, in execute
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\ADPROJECT\env\Lib\site-packages
+\django\db\backends\utils.py", line 122, 
+in execute
+    return super().execute(sql, params)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\ADPROJECT\env\Lib\site-packages
+\django\db\backends\utils.py", line 79, 
+in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, 
+executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\ADPROJECT\env\Lib\site-packages
+\django\db\backends\utils.py", line 92, 
+in _execute_with_wrappers
+    return executor(sql, params, many, 
+context)
+  File "C:\ADPROJECT\env\Lib\site-packages
+\django\db\backends\utils.py", line 100, 
+in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\ADPROJECT\env\Lib\site-packages
+\django\db\utils.py", line 91, in __exit__
+    raise 
+dj_exc_value.with_traceback(traceback) 
+from exc_value
+  File "C:\ADPROJECT\env\Lib\site-packages
+\django\db\backends\utils.py", line 105, 
+in _execute
+    return self.cursor.execute(sql, 
+params)
+           
+~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\ADPROJECT\env\Lib\site-packages
+\django\db\backends\mysql\base.py", line 
+76, in execute
+    return self.cursor.execute(query, 
+args)
+           
+~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\ADPROJECT\env\Lib\site-packages
+\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\ADPROJECT\env\Lib\site-packages
+\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\ADPROJECT\env\Lib\site-packages
+\MySQLdb\connections.py", line 280, in 
+query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+django.db.utils.OperationalError: (1061, 
+"Duplicate key name 'core_cashbanks_client
+_id_cashbankId_8403c56c_uniq'")
+
+(process:12056): GLib-GIO-WARNING **: 
+23:47:53.429: Unexpectedly, UWP app `Micro
+soft.OutlookForWindows_1.2025.129.300_x64_
+_8wekyb3d8bbwe' (AUMId `Microsoft.OutlookF
+orWindows_8wekyb3d8bbwe!Microsoft.Outlookf
+orWindows') supports 4 extensions but has 
+no verbs

@@ -1,7 +1,11 @@
 from django.db import models
 from decimal import Decimal
+from django.core.validators import MinValueValidator
 from django.utils import timezone
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 import uuid
+import datetime
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, PermissionsMixin, Group, Permission
 
 class SoftDeleteMixin(models.Model):
@@ -108,7 +112,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
 class SubscriptionPlan(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
-    price = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
+    price = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
     duration_days = models.IntegerField(default=30, help_text="Duration in days (e.g., 30 for monthly, 365 for yearly)")
     is_trial = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -116,6 +120,11 @@ class SubscriptionPlan(models.Model):
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=models.Q(price__gte=Decimal('0.00')), name='subscriptionplan_price_gte_0'),
+        ]
 
 class Clients(SoftDeleteMixin):
     name = models.TextField(blank=True,null=True)
@@ -168,13 +177,13 @@ class Clients(SoftDeleteMixin):
 
 class Customers(SoftDeleteMixin):
     name = models.TextField(blank=True,null=True)
-    customerId = models.TextField(blank=True,null=True)
+    customerId = models.CharField(max_length=50, blank=True,null=True)
     phone = models.TextField(blank=True,null=True)
     address = models.TextField(blank=True,null=True)
-    open_credit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
-    open_debit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
-    otc_credit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
-    otc_debit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
+    open_credit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
+    open_debit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
+    otc_credit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
+    otc_debit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
@@ -182,8 +191,8 @@ class Customers(SoftDeleteMixin):
     wa = models.TextField(blank=True,null=True)
     balance = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
     client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
-    credit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
-    debit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
+    credit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
+    debit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
     open_balance = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
     otc_balance = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
     
@@ -194,22 +203,32 @@ class Customers(SoftDeleteMixin):
     def get_balance(self):
         return self.balance 
     
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=models.Q(open_credit__gte=Decimal('0.00')), name='customers_open_credit_gte_0'),
+            models.CheckConstraint(condition=models.Q(open_debit__gte=Decimal('0.00')), name='customers_open_debit_gte_0'),
+            models.CheckConstraint(condition=models.Q(otc_credit__gte=Decimal('0.00')), name='customers_otc_credit_gte_0'),
+            models.CheckConstraint(condition=models.Q(otc_debit__gte=Decimal('0.00')), name='customers_otc_debit_gte_0'),
+            models.CheckConstraint(condition=models.Q(credit__gte=Decimal('0.00')), name='customers_credit_gte_0'),
+            models.CheckConstraint(condition=models.Q(debit__gte=Decimal('0.00')), name='customers_debit_gte_0'),
+        ]
+        unique_together = ('client', 'customerId')
 class Suppliers(SoftDeleteMixin):
     name = models.TextField(blank=True,null=True)
-    supplierId = models.TextField(blank=True,null=True)
+    supplierId = models.CharField(max_length=50, blank=True,null=True)
     phone = models.TextField(blank=True,null=True)
     address = models.TextField(blank=True,null=True)
-    open_credit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
-    open_debit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
-    otc_credit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
-    otc_debit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
+    open_credit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
+    open_debit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
+    otc_credit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
+    otc_debit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
     country_code = models.TextField(blank=True,null=True)
     wa = models.TextField(blank=True,null=True)
-    credit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
-    debit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
+    credit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
+    debit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
     balance = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
     client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
     open_balance = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
@@ -221,13 +240,23 @@ class Suppliers(SoftDeleteMixin):
     def get_balance(self):
         return self.balance 
     
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=models.Q(open_credit__gte=Decimal('0.00')), name='suppliers_open_credit_gte_0'),
+            models.CheckConstraint(condition=models.Q(open_debit__gte=Decimal('0.00')), name='suppliers_open_debit_gte_0'),
+            models.CheckConstraint(condition=models.Q(otc_credit__gte=Decimal('0.00')), name='suppliers_otc_credit_gte_0'),
+            models.CheckConstraint(condition=models.Q(otc_debit__gte=Decimal('0.00')), name='suppliers_otc_debit_gte_0'),
+            models.CheckConstraint(condition=models.Q(credit__gte=Decimal('0.00')), name='suppliers_credit_gte_0'),
+            models.CheckConstraint(condition=models.Q(debit__gte=Decimal('0.00')), name='suppliers_debit_gte_0'),
+        ]
+        unique_together = ('client', 'supplierId')
     
     
 class Expenses(SoftDeleteMixin):
     category  = models.TextField(blank=True,null=True)
-    expenseId = models.TextField(blank=True,null=True)
+    expenseId = models.CharField(max_length=50, blank=True,null=True)
     description = models.TextField(blank=True,null=True) 
-    amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
+    amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
     created_at = models.DateTimeField(auto_now_add=True,blank=True,null=True)
     is_active = models.BooleanField(default=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
@@ -236,16 +265,22 @@ class Expenses(SoftDeleteMixin):
     def __str__(self):
         return self.category
     
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=models.Q(amount__gte=Decimal('0.00')), name='expenses_amount_gte_0'),
+        ]
+        unique_together = ('client', 'expenseId')
+    
 
 class Godowns(SoftDeleteMixin):
     name = models.TextField(blank=True,null=True)
-    godownId = models.TextField(blank=True,null=True)
+    godownId = models.CharField(max_length=50, blank=True,null=True)
     phone = models.TextField(blank=True,null=True)
     address = models.TextField(blank=True,null=True)
-    open_credit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
-    open_debit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
-    otc_credit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
-    otc_debit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
+    open_credit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
+    open_debit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
+    otc_credit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
+    otc_debit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
@@ -253,9 +288,9 @@ class Godowns(SoftDeleteMixin):
     wa = models.TextField(blank=True,null=True)
     balance = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
     client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
-    credit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
-    debit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
-    qty = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
+    credit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
+    debit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
+    qty = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
     open_balance = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
     otc_balance = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
     
@@ -267,9 +302,20 @@ class Godowns(SoftDeleteMixin):
     def get_balance(self):
         return self.qty 
     
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=models.Q(open_credit__gte=Decimal('0.00')), name='godowns_open_credit_gte_0'),
+            models.CheckConstraint(condition=models.Q(open_debit__gte=Decimal('0.00')), name='godowns_open_debit_gte_0'),
+            models.CheckConstraint(condition=models.Q(otc_credit__gte=Decimal('0.00')), name='godowns_otc_credit_gte_0'),
+            models.CheckConstraint(condition=models.Q(otc_debit__gte=Decimal('0.00')), name='godowns_otc_debit_gte_0'),
+            models.CheckConstraint(condition=models.Q(credit__gte=Decimal('0.00')), name='godowns_credit_gte_0'),
+            models.CheckConstraint(condition=models.Q(debit__gte=Decimal('0.00')), name='godowns_debit_gte_0'),
+            models.CheckConstraint(condition=models.Q(qty__gte=Decimal('0.00')), name='godowns_qty_gte_0'),
+        ]
+        unique_together = ('client', 'godownId')
 class CashBanks(SoftDeleteMixin):
     name  = models.TextField(blank=True,null=True)
-    cashbankId = models.TextField(blank=True,null=True)
+    cashbankId = models.CharField(max_length=50, blank=True,null=True)
     description = models.TextField(blank=True,null=True) 
     created_at = models.DateTimeField(auto_now_add=True,blank=True,null=True)
     is_active = models.BooleanField(default=True)
@@ -280,10 +326,13 @@ class CashBanks(SoftDeleteMixin):
     def __str__(self):
         return self.name
     
+    class Meta:
+        unique_together = ('client', 'cashbankId')
+    
 class Collectors(SoftDeleteMixin):
     name = models.TextField(blank=True,null=True)
     user = models.ForeignKey(UserAccount,on_delete=models.CASCADE,blank=True,null=True)
-    collectorId = models.TextField(blank=True,null=True)
+    collectorId = models.CharField(max_length=50, blank=True,null=True)
     phone = models.TextField(blank=True,null=True)
     address = models.TextField(blank=True,null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -294,17 +343,20 @@ class Collectors(SoftDeleteMixin):
     can_collect_directly = models.BooleanField(default=False)
     client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
     
+    class Meta:
+        unique_together = ('client', 'collectorId')
+    
     
 class Purchases(SoftDeleteMixin):
-    purchase_no = models.TextField(blank=True,null=True)
+    purchase_no = models.CharField(max_length=50, blank=True,null=True)
     supplier = models.ForeignKey(Suppliers, on_delete=models.CASCADE, blank=True, null=True)
     godown = models.ForeignKey(Godowns, on_delete=models.CASCADE, blank=True, null=True)
     customer = models.ForeignKey(Customers, on_delete=models.CASCADE, blank=True, null=True)
     date = models.DateField(blank=True,null=True)
     code = models.TextField(blank=True,null=True)
-    qty = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
-    amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
-    total_amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
+    qty = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
+    amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
+    total_amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
     created_at = models.DateTimeField(auto_now_add=True,blank=True,null=True)
     is_active = models.BooleanField(default=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
@@ -333,17 +385,28 @@ class Purchases(SoftDeleteMixin):
             return self.customer
         elif self.which_type == 'suppliers':
             return self.supplier
+            
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=models.Q(qty__gte=Decimal('0.00')), name='purchases_qty_gte_0'),
+            models.CheckConstraint(condition=models.Q(amount__gte=Decimal('0.00')), name='purchases_amount_gte_0'),
+            models.CheckConstraint(condition=models.Q(total_amount__gte=Decimal('0.00')), name='purchases_total_amount_gte_0'),
+        ]
+        unique_together = ('client', 'purchase_no')
+        indexes = [
+            models.Index(fields=['client', 'is_active', 'date']),
+        ]
     
 class Sales(SoftDeleteMixin):
-    sale_no = models.TextField(blank=True,null=True)
+    sale_no = models.CharField(max_length=50, blank=True,null=True)
     supplier = models.ForeignKey(Suppliers, on_delete=models.RESTRICT, blank=True, null=True)
     godown = models.ForeignKey(Godowns, on_delete=models.RESTRICT, blank=True, null=True)
     customer = models.ForeignKey(Customers, on_delete=models.RESTRICT, blank=True, null=True)
     date = models.DateField(blank=True,null=True)
     code = models.TextField(blank=True,null=True)
-    qty = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
-    amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
-    total_amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
+    qty = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
+    amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
+    total_amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
     created_at = models.DateTimeField(auto_now_add=True,blank=True,null=True)
     is_active = models.BooleanField(default=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
@@ -371,16 +434,27 @@ class Sales(SoftDeleteMixin):
             return self.customer
         elif self.which_type == 'suppliers':
             return self.supplier
+            
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=models.Q(qty__gte=Decimal('0.00')), name='sales_qty_gte_0'),
+            models.CheckConstraint(condition=models.Q(amount__gte=Decimal('0.00')), name='sales_amount_gte_0'),
+            models.CheckConstraint(condition=models.Q(total_amount__gte=Decimal('0.00')), name='sales_total_amount_gte_0'),
+        ]
+        unique_together = ('client', 'sale_no')
+        indexes = [
+            models.Index(fields=['client', 'is_active', 'date']),
+        ]
 
 class Commissions(SoftDeleteMixin):
-    commission_no = models.TextField(blank=True,null=True)
+    commission_no = models.CharField(max_length=50, blank=True,null=True)
     expense = models.ForeignKey(Expenses, on_delete=models.RESTRICT, blank=True, null=True)
     godown = models.ForeignKey(Godowns, on_delete=models.RESTRICT, blank=True, null=True)
     date = models.DateField(blank=True,null=True)
     code = models.TextField(blank=True,null=True)
-    qty = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
-    amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
-    total_amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
+    qty = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
+    amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
+    total_amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
     created_at = models.DateTimeField(auto_now_add=True,blank=True,null=True)
     is_active = models.BooleanField(default=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
@@ -393,22 +467,33 @@ class Commissions(SoftDeleteMixin):
     
     def __str__(self):
         return self.commission_no
+        
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=models.Q(qty__gte=Decimal('0.00')), name='commissions_qty_gte_0'),
+            models.CheckConstraint(condition=models.Q(amount__gte=Decimal('0.00')), name='commissions_amount_gte_0'),
+            models.CheckConstraint(condition=models.Q(total_amount__gte=Decimal('0.00')), name='commissions_total_amount_gte_0'),
+        ]
+        unique_together = ('client', 'commission_no')
+        indexes = [
+            models.Index(fields=['client', 'is_active', 'date']),
+        ]
     
         
 
 class NSDs(SoftDeleteMixin):
-    nsd_no = models.TextField(blank=True,null=True)
+    nsd_no = models.CharField(max_length=50, blank=True,null=True)
     sender_supplier = models.ForeignKey(Suppliers, on_delete=models.RESTRICT, blank=True, null=True,related_name='sender_supplier')
     sender_customer = models.ForeignKey(Customers, on_delete=models.RESTRICT, blank=True, null=True,related_name='sender_customer')
     receiver_supplier = models.ForeignKey(Suppliers, on_delete=models.RESTRICT, blank=True, null=True,related_name='receiver_supplier')
     receiver_customer = models.ForeignKey(Customers, on_delete=models.RESTRICT, blank=True, null=True,related_name='receiver_customer')
     date = models.DateField(blank=True,null=True)
     code = models.TextField(blank=True,null=True)
-    qty = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
-    sell_rate = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
-    sell_amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
-    purchase_rate = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
-    purchase_amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
+    qty = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
+    sell_rate = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
+    sell_amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
+    purchase_rate = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
+    purchase_amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
     created_at = models.DateTimeField(auto_now_add=True,blank=True,null=True)
     is_active = models.BooleanField(default=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
@@ -450,20 +535,26 @@ class NSDs(SoftDeleteMixin):
         elif (self.receiver_customer == None) and (self.receiver_supplier != None):
             return self.receiver_supplier 
         
-    @property
-    def party(self):
-        if self.which_type == 'customers':
-            return self.customer
-        elif self.which_type == 'suppliers':
-            return self.supplier
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=models.Q(qty__gte=Decimal('0.00')), name='nsds_qty_gte_0'),
+            models.CheckConstraint(condition=models.Q(sell_rate__gte=Decimal('0.00')), name='nsds_sell_rate_gte_0'),
+            models.CheckConstraint(condition=models.Q(sell_amount__gte=Decimal('0.00')), name='nsds_sell_amount_gte_0'),
+            models.CheckConstraint(condition=models.Q(purchase_rate__gte=Decimal('0.00')), name='nsds_purchase_rate_gte_0'),
+            models.CheckConstraint(condition=models.Q(purchase_amount__gte=Decimal('0.00')), name='nsds_purchase_amount_gte_0'),
+        ]
+        unique_together = ('client', 'nsd_no')
+        indexes = [
+            models.Index(fields=['client', 'is_active', 'date']),
+        ]
         
 class Cashs(SoftDeleteMixin):
-    cash_no = models.TextField(blank=True,null=True)
+    cash_no = models.CharField(max_length=50, blank=True,null=True)
     cash_bank = models.ForeignKey(CashBanks, on_delete=models.RESTRICT, blank=True, null=True)
     customer = models.ForeignKey(Customers, on_delete=models.RESTRICT, blank=True, null=True)
     supplier = models.ForeignKey(Suppliers, on_delete=models.RESTRICT, blank=True, null=True)
     date = models.DateField(blank=True,null=True)
-    amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
+    amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
     created_at = models.DateTimeField(auto_now_add=True,blank=True,null=True)
     is_active = models.BooleanField(default=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
@@ -493,15 +584,24 @@ class Cashs(SoftDeleteMixin):
             return self.customer
         elif self.which_type == 'suppliers':
             return self.supplier
+            
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=models.Q(amount__gte=Decimal('0.00')), name='cashs_amount_gte_0'),
+        ]
+        unique_together = ('client', 'cash_no')
+        indexes = [
+            models.Index(fields=['client', 'is_active', 'date']),
+        ]
         
 
 class StockTransfers(SoftDeleteMixin):
-    transfer_no = models.TextField(blank=True, null=True)
+    transfer_no = models.CharField(max_length=50, blank=True, null=True)
     transfer_from = models.ForeignKey(Godowns,on_delete=models.CASCADE,related_name='transfers_from',blank=True, null=True)
     transfer_to = models.ForeignKey(Godowns,on_delete=models.CASCADE,related_name='transfers_to',blank=True,null=True)
     date = models.DateField(blank=True, null=True)
     code = models.TextField(blank=True, null=True)
-    qty = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
+    qty = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
@@ -515,10 +615,19 @@ class StockTransfers(SoftDeleteMixin):
     def __str__(self):
         return self.transfer_no
 
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=models.Q(qty__gte=Decimal('0.00')), name='stocktransfers_qty_gte_0'),
+        ]
+        unique_together = ('client', 'transfer_no')
+        indexes = [
+            models.Index(fields=['client', 'is_active', 'date']),
+        ]
+
 class Collection(SoftDeleteMixin):
     collector = models.ForeignKey(Collectors, on_delete=models.CASCADE, null=True, blank=True)
     date = models.DateField(null=True, blank=True)
-    total_amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
+    total_amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
@@ -539,26 +648,40 @@ class Collection(SoftDeleteMixin):
         name = self.collector.name if self.collector else "Unknown"
         return f"Collection {self.id} - {name}"
 
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=models.Q(total_amount__gte=Decimal('0.00')), name='collection_total_amount_gte_0'),
+        ]
+
 class CollectionItem(models.Model):
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE, related_name='items')
     transaction_id = models.CharField(max_length=100, null=True, blank=True)
     transaction_type = models.CharField(max_length=50, null=True, blank=True)
-    amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
-    collected_amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
+    amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
+    collected_amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
     is_credit = models.BooleanField(default=False) 
     remark = models.TextField(blank=True, null=True)
     order = models.PositiveIntegerField(default=0)
     
     class Meta:
+        constraints = [
+            models.CheckConstraint(condition=models.Q(amount__gte=Decimal('0.00')), name='collectionitem_amount_gte_0'),
+            models.CheckConstraint(condition=models.Q(collected_amount__gte=Decimal('0.00')), name='collectionitem_collected_amount_gte_0'),
+        ]
         ordering = ['order']
         
     def __str__(self):
         return f"{self.transaction_type} - {self.transaction_id}"
 
 class SubscriptionPayment(models.Model):
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=models.Q(amount__gte=Decimal('0.00')), name='subscriptionpayment_amount_gte_0'),
+        ]
+
     client = models.ForeignKey(Clients, on_delete=models.CASCADE)
     plan = models.ForeignKey(SubscriptionPlan, on_delete=models.SET_NULL, null=True)
-    amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
+    amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
     date = models.DateField(auto_now_add=True)
     transaction_id = models.TextField(blank=True, null=True)
     payment_method = models.TextField(blank=True, null=True)
@@ -567,10 +690,7 @@ class SubscriptionPayment(models.Model):
     def __str__(self):
         return f"{self.client} - {self.plan} - {self.amount}"
 
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from django.utils import timezone
-import datetime
+
 
 @receiver(post_save, sender=SubscriptionPayment)
 def update_client_subscription(sender, instance, created, **kwargs):
@@ -585,8 +705,13 @@ def update_client_subscription(sender, instance, created, **kwargs):
         client.save()
 
 class AdminExpense(models.Model):
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=models.Q(amount__gte=Decimal('0.00')), name='adminexpense_amount_gte_0'),
+        ]
+
     title = models.CharField(max_length=200)
-    amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
+    amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
     remark = models.TextField(blank=True, null=True)
     date = models.DateField(auto_now_add=True)
     is_active = models.BooleanField(default=True)

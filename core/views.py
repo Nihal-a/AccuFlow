@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from .models import Clients, Collection, Collectors, Customers, Expenses, Suppliers
 from decimal import Decimal
 from django.views import View
@@ -374,6 +375,7 @@ def calculate_cashbank_balance(cashbank, client, date_limit=None):
     return received_sum - paid_sum
 
 
+@transaction.atomic
 def update_ledger(where, to=None, old_purchase=0, new_purchase=0, old_sale=0, new_sale=0):
 
     if where:
