@@ -19,7 +19,7 @@ class SubscriptionMiddleware:
             try:
                 login_url = reverse('login')
                 logout_url = reverse('logout')
-            except:
+            except Exception:
                 login_url = '/login/'
                 logout_url = '/logout/'
 
@@ -64,7 +64,7 @@ class SubscriptionMiddleware:
                 if not is_active:
                     try:
                         expired_url = reverse('subscription_expired')
-                    except:
+                    except Exception:
                         expired_url = '/subscription-expired/'
                     
                     # Handle AJAX requests separately to avoid returning HTML instead of expected JSON
@@ -95,3 +95,13 @@ class SingleSessionMiddleware:
                     return redirect('login')
                     
         return self.get_response(request)
+
+class CSPMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        # Add CSP Headers 
+        response['Content-Security-Policy'] = "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https: http:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: http:; style-src 'self' 'unsafe-inline' https: http:; font-src 'self' data: https: http:; img-src 'self' data: blob: https: http:; connect-src 'self' ws: wss: https: http:;"
+        return response

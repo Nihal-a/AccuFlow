@@ -1,7 +1,7 @@
 from django.shortcuts import render,redirect, get_object_or_404
 from core.models import Customers, Sales, Purchases, NSDs, Cashs, Suppliers
 from django.views import View
-from django.views.generic.edit import DeleteView
+from django.views.decorators.http import require_POST
 from django.db.models import Sum, Q
 from datetime import datetime
 from decimal import Decimal
@@ -20,13 +20,17 @@ class AddCustomerView(View):
         return render(request,'customer/create.html')
     
     def post(self,request):
+        client = getClient(request.user)
         name = request.POST.get('name')
         phone = request.POST.get('phone')
         address = request.POST.get('address')
-        open_credit = Decimal(str(request.POST.get('open_credit', 0)))
-        open_debit = Decimal(str(request.POST.get('open_debit', 0)))
-        otc_credit = Decimal(str(request.POST.get('otc_credit', 0)))
-        otc_debit = Decimal(str(request.POST.get('otc_debit', 0)))
+        try:
+            open_credit = Decimal(str(request.POST.get('open_credit', 0)))
+            open_debit = Decimal(str(request.POST.get('open_debit', 0)))
+            otc_credit = Decimal(str(request.POST.get('otc_credit', 0)))
+            otc_debit = Decimal(str(request.POST.get('otc_debit', 0)))
+        except Exception:
+            return redirect('customers')
         country_code = request.POST.get('country_code')
         wa = request.POST.get('whatsapp_number')
         open_balance = open_debit - open_credit
@@ -48,8 +52,8 @@ class AddCustomerView(View):
             open_debit=open_debit,
             otc_credit=otc_credit,
             otc_debit=otc_debit,
-            customerId=last_customer_id(client=getClient(request.user)),
-            client=getClient(request.user),
+            customerId=last_customer_id(client=client),
+            client=client,
             open_balance = open_balance,
             otc_balance = otc_balance,
             balance = balance,
@@ -63,7 +67,7 @@ class AddCustomerView(View):
         return redirect('customers')
 
 class DeleteCustomerView(View):
-    def get(self, request, customer_id):
+    def post(self, request, customer_id):
         # Authorization: Ensure customer belongs to user's client (or user is superuser)
         customer = get_object_for_user(Customers, request.user, id=customer_id)
         customer.is_active = False 
@@ -83,10 +87,13 @@ class UpdateCustomerView(View):
         customer.name = request.POST.get('name')
         customer.phone = request.POST.get('phone')
         customer.address = request.POST.get('address')
-        customer.open_credit = Decimal(str(request.POST.get('open_credit', 0)))
-        customer.open_debit = Decimal(str(request.POST.get('open_debit', 0)))
-        customer.otc_credit = Decimal(str(request.POST.get('otc_credit', 0)))
-        customer.otc_debit = Decimal(str(request.POST.get('otc_debit', 0)))
+        try:
+            customer.open_credit = Decimal(str(request.POST.get('open_credit', 0)))
+            customer.open_debit = Decimal(str(request.POST.get('open_debit', 0)))
+            customer.otc_credit = Decimal(str(request.POST.get('otc_credit', 0)))
+            customer.otc_debit = Decimal(str(request.POST.get('otc_debit', 0)))
+        except Exception:
+            return redirect('customers')
         country_code = request.POST.get('country_code')
         wa = request.POST.get('whatsapp_number')
         
@@ -165,7 +172,7 @@ class CustomerLedgerView(View):
         if not customer_id:
             return render(request, 'customer/customer_ledger.html', context)
 
-        customer = get_object_or_404(Customers, id=customer_id)
+        customer = get_object_or_404(Customers, id=customer_id, is_active=True, client=client)
         context['customer'] = customer
 
         date_from = self.parse_date(date_from_str)
@@ -188,7 +195,7 @@ class CustomerLedgerView(View):
             date_filter &= Q(date__lte=date_to)
 
         # Sales (Debit for Customer)
-        sales = Sales.objects.filter(base_filter, date_filter, customer=customer)
+        sales = Sales.objects.filter(base_filter, date_filter, customer=customer).select_related('godown')
         for s in sales:
             desc = f"{s.godown.name}\n{s.description}" if sort != 'Detailed' else s.description
             ledger_items.append({
@@ -205,7 +212,7 @@ class CustomerLedgerView(View):
             })
 
         # Purchases from Customer (Credit for Customer) - Rare but possible
-        purchases = Purchases.objects.filter(base_filter, date_filter, customer=customer)
+        purchases = Purchases.objects.filter(base_filter, date_filter, customer=customer).select_related('godown')
         for p in purchases:
             desc = f"{p.godown.name}\n{p.description}" if sort != 'Remark' else p.description
             ledger_items.append({
@@ -259,7 +266,7 @@ class CustomerLedgerView(View):
             })
 
         # Cash (Received from Customer -> Credit. Paid to Customer -> Debit)
-        cashs = Cashs.objects.filter(base_filter, date_filter, customer=customer)
+        cashs = Cashs.objects.filter(base_filter, date_filter, customer=customer).select_related('cash_bank')
         for c in cashs:
             is_received = (c.transaction == 'Received')
             desc = c.cash_bank.name if sort != 'Remark' else c.description

@@ -507,20 +507,18 @@
   function addLastRow() {
     const tableBody = document.getElementById("cashTableBody");
     $('#totalRow').remove();
-    var totalQty = 0;
     var totalAmount = 0;
-    var rateSum = 0;
     count = 0;
     tableBody.querySelectorAll("tr").forEach(function (row) {
-      const amount = parseFloat(row.cells[7].innerText) || 0;
+      if (row.id === 'totalRow') return;
+      const amount = parseComma(row.cells[7].innerText);
       totalAmount += amount;
       count += 1;
     });
-    rateAvg = rateSum / count || 0;
     const lastRow = `
-      <tr class="bg-blue-200 font-bold text-sm" id="totalRow">
-        <td class="px-1.5 py-1.5 text-left" colspan="7">Totals:</td>
-        <td class="px-1.5 py-1.5 text-right">${formatComma(totalAmount)}</td>
+      <tr class="bg-blue-200 font-semibold text-gray-800 border-t-2 border-blue-300" id="totalRow">
+        <td class="px-1.5 py-1.5 text-left text-sm" colspan="7">Totals:</td>
+        <td class="px-1.5 py-1.5 text-right text-sm">${formatComma(totalAmount)}</td>
       </tr>`;
     tableBody.insertAdjacentHTML('beforeend', lastRow);
 

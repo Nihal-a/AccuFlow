@@ -8,10 +8,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env() 
 env.read_env()
 
-SECRET_KEY = env('SECRETKEY')
-DEBUG = env.bool('DEBUG', default=False)
+SECRET_KEY = env('SECRETKEY', default='dev-secret-key-123')
+DEBUG = env.bool('DEBUG', default=True)
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1', '0.0.0.0'])
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['*'])
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -55,6 +55,7 @@ MIDDLEWARE = [
     'core.middleware.SubscriptionMiddleware',
     'core.middleware.SingleSessionMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.middleware.CSPMiddleware',
     'axes.middleware.AxesMiddleware',
 ]
 
@@ -102,9 +103,14 @@ DATABASES = {
         'PASSWORD': env('DATABASE_PASS'),
         'HOST': env('DATABASE_HOST'),
         'PORT': env('DATABASE_PORT'),
+        'CONN_MAX_AGE': 600,
+        'CONN_HEALTH_CHECKS': True,
         'OPTIONS': {
             'charset': 'utf8',
             'init_command': "SET NAMES 'utf8', innodb_strict_mode=OFF, sql_mode=''",
+            'connect_timeout': 5,
+            'read_timeout': 30,
+            'write_timeout': 30,
         },
     }
 }
@@ -130,7 +136,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'Asia/Kolkata'
+TIME_ZONE = 'Asia/Dubai'
 
 USE_I18N = True
 

@@ -1,26 +1,30 @@
 from django.views.decorators.http import require_POST
-import datetime
 import json
 from django.shortcuts import render,redirect, get_object_or_404
 from core.models import Purchases,Suppliers,Customers,Godowns,Cashs,CashBanks
 from django.views import View
-from django.views.generic.edit import DeleteView
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
+from django.views.decorators.cache import never_cache
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
 
 from core.views import getClient, update_ledger, calculate_customer_balance, calculate_supplier_balance, calculate_cashbank_balance
 from core.authorization import get_object_for_user
 from core.utils import validate_positive_decimal
 from django.db import transaction
 
+
+@method_decorator(never_cache, name='dispatch')
 class CashEntryView(View):
     def get(self,request):
-        cashs = Cashs.objects.filter(hold=True,is_active=True,client=getClient(request.user))
+        client = getClient(request.user)
+        cashs = Cashs.objects.filter(hold=True,is_active=True,client=client).select_related('supplier', 'customer', 'cash_bank')
         cb = (
             Cashs.objects.filter(
                 hold=False,
                 is_active=True,
-                client=getClient(request.user)
+                client=client
             )
             .values('cash_bank__id')
             .last()
@@ -48,9 +52,9 @@ class CashEntryView(View):
                 'type':cash.which_type if cash.which_type else '',
                 'transaction':cash.transaction if cash.transaction else ''
             })
-        suppliers = Suppliers.objects.filter(is_active=True,client=getClient(request.user))
-        customers = Customers.objects.filter(is_active=True,client=getClient(request.user))
-        cashbanks = CashBanks.objects.filter(is_active=True,client=getClient(request.user))
+        suppliers = Suppliers.objects.filter(is_active=True,client=client)
+        customers = Customers.objects.filter(is_active=True,client=client)
+        cashbanks = CashBanks.objects.filter(is_active=True,client=client)
         
         customersData = []
         for customer in customers:
@@ -58,7 +62,7 @@ class CashEntryView(View):
                 'id':customer.id,
                 'name':customer.name,
                 'customerId':customer.customerId, 
-                'balance':str(calculate_customer_balance(customer, getClient(request.user))),
+                'balance':str(calculate_customer_balance(customer, client)),
             })
             
         suppliersData = []
@@ -67,12 +71,12 @@ class CashEntryView(View):
                 'id':supplier.id,
                 'name':supplier.name,
                 'supplierId':supplier.supplierId,
-                'balance':str(calculate_supplier_balance(supplier, getClient(request.user))),
+                'balance':str(calculate_supplier_balance(supplier, client)),
             })
             
         # Add dynamic calculated balance to CashBanks
         for cb in cashbanks:
-            cb.calculated_balance = calculate_cashbank_balance(cb, getClient(request.user))
+            cb.calculated_balance = calculate_cashbank_balance(cb, client)
 
         context = {
             'cashs':cashData,
@@ -87,6 +91,7 @@ class CashEntryView(View):
         return render(request,'cashs/cash_entry.html',context)
     
 
+@method_decorator(never_cache, name='dispatch')
 class CashAddView(View):
     @transaction.atomic
     def post(self,request):
@@ -130,7 +135,9 @@ class CashAddView(View):
             cash_bank = get_object_for_user(CashBanks, request.user, id=cashbanks_ids[count]) if cashbanks_ids[count] else None
             
             # Management: Update CashBank balance now that it's finalized (hold=False)
+            # Use select_for_update() to prevent lost updates under concurrent access
             if cash_bank:
+                cash_bank = CashBanks.objects.select_for_update().get(pk=cash_bank.pk)
                 if transactions[count] == 'Received':
                     cash_bank.balance += amount_val
                 else:
@@ -154,6 +161,7 @@ class CashAddView(View):
         return redirect('cash')
 
 
+@method_decorator(never_cache, name='dispatch')
 class CashHold(View):
     @transaction.atomic
     def post(self,request):
@@ -189,11 +197,13 @@ class CashHold(View):
             cash.party_balance -= cash.amount
             
             if cash.cash_bank and not cash.hold:
+                cb_locked = CashBanks.objects.select_for_update().get(pk=cash.cash_bank.pk)
                 if cash.transaction == 'Received':
-                    cash.cash_bank.balance -= cash.amount
+                    cb_locked.balance -= cash.amount
                 else:
-                    cash.cash_bank.balance += cash.amount
-                cash.cash_bank.save()
+                    cb_locked.balance += cash.amount
+                cb_locked.save()
+                cash.cash_bank = cb_locked
 
             if not cash.hold:
                 if cash.transaction == 'Paid':
@@ -215,6 +225,7 @@ class CashHold(View):
             cash.party_balance += amount
             
             if cash_bank and not cash.hold:
+                cash_bank = CashBanks.objects.select_for_update().get(pk=cash_bank.pk)
                 if transaction == 'Received':
                     cash_bank.balance += amount
                 else:
@@ -260,11 +271,15 @@ def getLastCashNo(client):
     return new_cash_no
     
 
+@login_required
+@never_cache
 def Cash_no(request):
     new_cash_no = getLastCashNo(client=getClient(request.user))
     return JsonResponse({'cash_no': new_cash_no})
 
 
+@login_required
+@never_cache
 def cashs_by_date(request):
     from_date = request.GET.get('from')
     to_date = request.GET.get('to')
@@ -275,7 +290,7 @@ def cashs_by_date(request):
             hold=False,
             is_active=True,
             client=getClient(request.user)
-        )
+        ).select_related('supplier', 'customer', 'cash_bank')
         
     cashData = []
     total_amount = 0
@@ -299,18 +314,22 @@ def cashs_by_date(request):
     return JsonResponse({'cashs': cashData, 'total_amount': total_amount})
 
 
+@never_cache
 @require_POST
+@transaction.atomic
 def delete_cash(request):
     pk = request.POST.get('id') or request.GET.get('id') 
     cash = get_object_for_user(Cashs, request.user, id=pk)
     
     # Reverse CashBank balance ONLY if finalized (hold=False)
+    # Use select_for_update() to prevent lost updates under concurrent access
     if cash.cash_bank and not cash.hold:
+        cb_locked = CashBanks.objects.select_for_update().get(pk=cash.cash_bank.pk)
         if cash.transaction == 'Received':
-            cash.cash_bank.balance -= cash.amount
+            cb_locked.balance -= cash.amount
         else:
-            cash.cash_bank.balance += cash.amount
-        cash.cash_bank.save()
+            cb_locked.balance += cash.amount
+        cb_locked.save()
 
     if not cash.hold:
         if cash.transaction == 'Paid':
@@ -322,6 +341,8 @@ def delete_cash(request):
     cash.save()
     return JsonResponse({'status':'success','message':'Cash deleted successfully'})
 
+@login_required
+@never_cache
 def cash_balances_api(request):
     client = getClient(request.user)
     suppliers = Suppliers.objects.filter(is_active=True, client=client)

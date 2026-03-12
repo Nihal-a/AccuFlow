@@ -251,7 +251,7 @@
     });
 
     const data = await response.json();
-    if (data.exists) {
+    if (data.available === false) {
       usernameStatus.textContent = "❌ Username already taken";
       usernameStatus.className = "text-red-600 text-sm mt-1";
       isUsernameValid = false;

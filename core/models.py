@@ -8,6 +8,14 @@ import uuid
 import datetime
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, PermissionsMixin, Group, Permission
 
+
+class TransactionType:
+    """Constants for transaction type strings used throughout the codebase."""
+    CUSTOMERS = 'customers'
+    SUPPLIERS = 'suppliers'
+    RECEIVED = 'Received'
+    PAID = 'Paid'
+
 class SoftDeleteMixin(models.Model):
     deleted_at = models.DateTimeField(null=True, blank=True)
 
@@ -73,7 +81,7 @@ class UserAccountManager(BaseUserManager):
 
 
 class UserAccount(AbstractBaseUser, PermissionsMixin):
-    username = models.CharField(max_length=200, unique=True) 
+    username = models.CharField(max_length=50, unique=True) 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
@@ -127,14 +135,14 @@ class SubscriptionPlan(models.Model):
         ]
 
 class Clients(SoftDeleteMixin):
-    name = models.TextField(blank=True,null=True)
+    name = models.CharField(max_length=255, blank=True, null=True)
     user = models.ForeignKey(UserAccount,on_delete=models.CASCADE,blank=True,null=True)
-    email = models.TextField(blank=True,null=True)
+    email = models.CharField(max_length=254, blank=True, null=True)
     is_active= models.BooleanField(default=True)
-    phone = models.TextField(blank=True,null=True)
-    wa = models.TextField(blank=True,null=True)
-    country_code = models.TextField(blank=True,null=True)
-    clientId = models.TextField(blank=True,null=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    wa = models.CharField(max_length=20, blank=True, null=True)
+    country_code = models.CharField(max_length=10, blank=True, null=True)
+    clientId = models.CharField(max_length=20, blank=True, null=True, unique=True)
     
     # Subscription Fields
     subscription_plan = models.ForeignKey(SubscriptionPlan, on_delete=models.SET_NULL, null=True, blank=True)
@@ -212,6 +220,9 @@ class Customers(SoftDeleteMixin):
             models.CheckConstraint(condition=models.Q(credit__gte=Decimal('0.00')), name='customers_credit_gte_0'),
             models.CheckConstraint(condition=models.Q(debit__gte=Decimal('0.00')), name='customers_debit_gte_0'),
         ]
+        indexes = [
+            models.Index(fields=['client', 'is_active'], name='idx_customers_client_active'),
+        ]
         unique_together = ('client', 'customerId')
 class Suppliers(SoftDeleteMixin):
     name = models.TextField(blank=True,null=True)
@@ -248,6 +259,9 @@ class Suppliers(SoftDeleteMixin):
             models.CheckConstraint(condition=models.Q(otc_debit__gte=Decimal('0.00')), name='suppliers_otc_debit_gte_0'),
             models.CheckConstraint(condition=models.Q(credit__gte=Decimal('0.00')), name='suppliers_credit_gte_0'),
             models.CheckConstraint(condition=models.Q(debit__gte=Decimal('0.00')), name='suppliers_debit_gte_0'),
+        ]
+        indexes = [
+            models.Index(fields=['client', 'is_active'], name='idx_suppliers_client_active'),
         ]
         unique_together = ('client', 'supplierId')
     
@@ -290,7 +304,7 @@ class Godowns(SoftDeleteMixin):
     client = models.ForeignKey(Clients,on_delete=models.CASCADE,blank=True,null=True)
     credit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
     debit = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
-    qty = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
+    qty = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
     open_balance = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
     otc_balance = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
     
@@ -310,7 +324,6 @@ class Godowns(SoftDeleteMixin):
             models.CheckConstraint(condition=models.Q(otc_debit__gte=Decimal('0.00')), name='godowns_otc_debit_gte_0'),
             models.CheckConstraint(condition=models.Q(credit__gte=Decimal('0.00')), name='godowns_credit_gte_0'),
             models.CheckConstraint(condition=models.Q(debit__gte=Decimal('0.00')), name='godowns_debit_gte_0'),
-            models.CheckConstraint(condition=models.Q(qty__gte=Decimal('0.00')), name='godowns_qty_gte_0'),
         ]
         unique_together = ('client', 'godownId')
 class CashBanks(SoftDeleteMixin):
@@ -374,16 +387,16 @@ class Purchases(SoftDeleteMixin):
     
     @property
     def which_type(self):
-        if (self.supplier == None) and (self.customer != None):
-            return 'customers'
-        elif (self.customer == None) and (self.supplier != None):
-            return 'suppliers'
+        if (self.supplier is None) and (self.customer is not None):
+            return TransactionType.CUSTOMERS
+        elif (self.customer is None) and (self.supplier is not None):
+            return TransactionType.SUPPLIERS
         
     @property
     def party(self):
-        if self.which_type == 'customers':
+        if self.which_type == TransactionType.CUSTOMERS:
             return self.customer
-        elif self.which_type == 'suppliers':
+        elif self.which_type == TransactionType.SUPPLIERS:
             return self.supplier
             
     class Meta:
@@ -423,16 +436,16 @@ class Sales(SoftDeleteMixin):
     
     @property
     def which_type(self):
-        if (self.supplier == None) and (self.customer != None):
-            return 'customers'
-        elif (self.customer == None) and (self.supplier != None):
-            return 'suppliers'
+        if (self.supplier is None) and (self.customer is not None):
+            return TransactionType.CUSTOMERS
+        elif (self.customer is None) and (self.supplier is not None):
+            return TransactionType.SUPPLIERS
         
     @property
     def party(self):
-        if self.which_type == 'customers':
+        if self.which_type == TransactionType.CUSTOMERS:
             return self.customer
-        elif self.which_type == 'suppliers':
+        elif self.which_type == TransactionType.SUPPLIERS:
             return self.supplier
             
     class Meta:
@@ -510,29 +523,29 @@ class NSDs(SoftDeleteMixin):
     
     @property
     def which_sender_type(self):
-        if (self.sender_supplier == None) and (self.sender_customer != None):
-            return 'customers'
-        elif (self.sender_customer == None) and (self.sender_supplier != None):
-            return 'suppliers'
+        if (self.sender_supplier is None) and (self.sender_customer is not None):
+            return TransactionType.CUSTOMERS
+        elif (self.sender_customer is None) and (self.sender_supplier is not None):
+            return TransactionType.SUPPLIERS
     
     @property
     def which_receiver_type(self):
-        if (self.receiver_supplier == None) and (self.receiver_customer != None):
-            return 'customers'
-        elif (self.receiver_customer == None) and (self.receiver_supplier != None):
-            return 'suppliers'
+        if (self.receiver_supplier is None) and (self.receiver_customer is not None):
+            return TransactionType.CUSTOMERS
+        elif (self.receiver_customer is None) and (self.receiver_supplier is not None):
+            return TransactionType.SUPPLIERS
     @property
     def sender(self):
-        if (self.sender_supplier == None) and (self.sender_customer != None):
+        if (self.sender_supplier is None) and (self.sender_customer is not None):
             return self.sender_customer
-        elif (self.sender_customer == None) and (self.sender_supplier != None):
+        elif (self.sender_customer is None) and (self.sender_supplier is not None):
             return self.sender_supplier
     
     @property
     def receiver(self):
-        if (self.receiver_supplier == None) and (self.receiver_customer != None):
+        if (self.receiver_supplier is None) and (self.receiver_customer is not None):
             return self.receiver_customer
-        elif (self.receiver_customer == None) and (self.receiver_supplier != None):
+        elif (self.receiver_customer is None) and (self.receiver_supplier is not None):
             return self.receiver_supplier 
         
     class Meta:
@@ -573,16 +586,16 @@ class Cashs(SoftDeleteMixin):
     
     @property
     def which_type(self):
-        if (self.supplier == None) and (self.customer != None):
-            return 'customers'
-        elif (self.customer == None) and (self.supplier != None):
-            return 'suppliers'
+        if (self.supplier is None) and (self.customer is not None):
+            return TransactionType.CUSTOMERS
+        elif (self.customer is None) and (self.supplier is not None):
+            return TransactionType.SUPPLIERS
         
     @property
     def party(self): 
-        if self.which_type == 'customers':
+        if self.which_type == TransactionType.CUSTOMERS:
             return self.customer
-        elif self.which_type == 'suppliers':
+        elif self.which_type == TransactionType.SUPPLIERS:
             return self.supplier
             
     class Meta:

@@ -20,10 +20,13 @@ class AddSupplierView(View):
         name = request.POST.get('name')
         phone = request.POST.get('phone')
         address = request.POST.get('address')
-        open_credit = Decimal(str(request.POST.get('open_credit', 0)))
-        open_debit = Decimal(str(request.POST.get('open_debit', 0)))
-        otc_credit = Decimal(str(request.POST.get('otc_credit', 0)))
-        otc_debit = Decimal(str(request.POST.get('otc_debit', 0)))
+        try:
+            open_credit = Decimal(str(request.POST.get('open_credit', 0)))
+            open_debit = Decimal(str(request.POST.get('open_debit', 0)))
+            otc_credit = Decimal(str(request.POST.get('otc_credit', 0)))
+            otc_debit = Decimal(str(request.POST.get('otc_debit', 0)))
+        except Exception:
+            return redirect('suppliers')
         country_code = request.POST.get('country_code')
         wa = request.POST.get('whatsapp_number')
         open_balance = open_debit - open_credit
@@ -79,11 +82,14 @@ class UpdateSupplierView(View):
         supplier.name = request.POST.get('name')
         supplier.phone = request.POST.get('phone')
         supplier.address = request.POST.get('address')
-        supplier.open_credit = Decimal(str(request.POST.get('open_credit', 0)))
-        supplier.open_debit = Decimal(str(request.POST.get('open_debit', 0)))
-        customer_otc_credit = Decimal(str(request.POST.get('otc_credit', 0))) # Variable name fix if needed, but the field is otc_credit
-        supplier.otc_credit = Decimal(str(request.POST.get('otc_credit', 0)))
-        supplier.otc_debit = Decimal(str(request.POST.get('otc_debit', 0)))
+        try:
+            supplier.open_credit = Decimal(str(request.POST.get('open_credit', 0)))
+            supplier.open_debit = Decimal(str(request.POST.get('open_debit', 0)))
+            customer_otc_credit = Decimal(str(request.POST.get('otc_credit', 0))) # Variable name fix if needed, but the field is otc_credit
+            supplier.otc_credit = Decimal(str(request.POST.get('otc_credit', 0)))
+            supplier.otc_debit = Decimal(str(request.POST.get('otc_debit', 0)))
+        except Exception:
+            return redirect('suppliers')
         country_code = request.POST.get('country_code')
         wa = request.POST.get('whatsapp_number')
         

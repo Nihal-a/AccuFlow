@@ -5,10 +5,17 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
+from django.views.decorators.cache import never_cache
 from .models import Clients, Collection, Collectors, Customers, Expenses, Suppliers
 from decimal import Decimal
 from django.views import View
 from django.utils.decorators import method_decorator
+import logging
+
+logger = logging.getLogger(__name__)
+ 
+
+TWOPLACES = Decimal('0.01')
  
 
 
@@ -79,6 +86,7 @@ def user_logout(request):
  
 
 @method_decorator(login_required, name='dispatch')
+@method_decorator(never_cache, name='dispatch')
 class ClientDashboardView(View):
     def get(self, request):
         if not request.user.is_client:
@@ -212,16 +220,16 @@ class ClientDashboardView(View):
                 chart_labels.append(mo_start.strftime('%b'))
 
                 p = Purchases.objects.filter(client=client, is_active=True, hold=False, **mo_filter).aggregate(t=Sum('total_amount'))
-                chart_purchase.append(float(p['t'] or 0))
+                chart_purchase.append(str(p['t'] or Decimal('0.0000')))
                 s = Sales.objects.filter(client=client, is_active=True, hold=False, **mo_filter).aggregate(t=Sum('total_amount'))
-                chart_sale.append(float(s['t'] or 0))
+                chart_sale.append(str(s['t'] or Decimal('0.0000')))
                 n = NSDs.objects.filter(client=client, is_active=True, hold=False, **mo_filter).aggregate(t=Sum('sell_amount'))
-                chart_nsd.append(float(n['t'] or 0))
+                chart_nsd.append(str(n['t'] or Decimal('0.0000')))
                 
                 c_in = Cashs.objects.filter(client=client, is_active=True, hold=False, transaction='Received', **mo_filter).aggregate(t=Sum('amount'))
                 c_out = Cashs.objects.filter(client=client, is_active=True, hold=False, transaction='Paid', **mo_filter).aggregate(t=Sum('amount'))
-                net_cash = float((c_in['t'] or Decimal('0')) - (c_out['t'] or Decimal('0')))
-                chart_cash.append(net_cash)
+                net_cash = (c_in['t'] or Decimal('0')) - (c_out['t'] or Decimal('0'))
+                chart_cash.append(str(net_cash))
         else:
             # Month view: daily totals for each day
             def daily_totals(model, value_field, extra_filter=None):
@@ -238,7 +246,7 @@ class ClientDashboardView(View):
                     rd = row['date']
                     if hasattr(rd, 'date'):
                         rd = rd.date()
-                    result[rd] = float(row['total'] or 0)
+                    result[rd] = str(row['total'] or Decimal('0.0000'))
                 return result
 
             p_daily = daily_totals(Purchases, 'total_amount')
@@ -251,11 +259,13 @@ class ClientDashboardView(View):
             current_day = month_start
             while current_day <= month_end:
                 chart_labels.append(current_day.strftime('%d'))
-                chart_purchase.append(p_daily.get(current_day, 0))
-                chart_sale.append(s_daily.get(current_day, 0))
-                chart_nsd.append(n_daily.get(current_day, 0))
+                chart_purchase.append(p_daily.get(current_day, "0.0000"))
+                chart_sale.append(s_daily.get(current_day, "0.0000"))
+                chart_nsd.append(n_daily.get(current_day, "0.0000"))
                 
-                net_day_cash = c_in_daily.get(current_day, 0) - c_out_daily.get(current_day, 0)
+                in_val = Decimal(c_in_daily.get(current_day, "0.0000"))
+                out_val = Decimal(c_out_daily.get(current_day, "0.0000"))
+                net_day_cash = str(in_val - out_val)
                 chart_cash.append(net_day_cash)
                 current_day += timedelta(days=1)
 
@@ -282,25 +292,34 @@ class ClientDashboardView(View):
             'selected_month': selected_month,
             'month_display': month_display,
             'available_months': available_months,
-            'chart_data_json': json.dumps(chart_data),
+            'chart_data_json': chart_data,
         }
         return render(request, 'dashboard/client_dashboard.html', context)
 
 
-def getClient(user):
+def getClient(user, request=None):
+    # PERF-10: Cache on request to avoid repeated DB lookups per request
+    cache_attr = '_cached_client'
+    if request and hasattr(request, cache_attr):
+        return getattr(request, cache_attr)
+    
     from .models import Clients, Collectors
+    client = None
     if user.is_client:
         try:
-            return Clients.objects.get(user=user, is_active=True)
+            client = Clients.objects.get(user=user, is_active=True)
         except Clients.DoesNotExist:
-            return None
+            pass
     elif user.is_collector:
         try:
-            collector = Collectors.objects.get(user=user, is_active=True)
-            return collector.client
+            collector = Collectors.objects.select_related('client').get(user=user, is_active=True)
+            client = collector.client
         except Collectors.DoesNotExist:
-            return None
-    return None
+            pass
+    
+    if request:
+        setattr(request, cache_attr, client)
+    return client
        
 
 def update_party(party):
@@ -309,7 +328,7 @@ def update_party(party):
         party.debit -= cancel
         party.credit -= cancel
     
-    party.balance = party.debit - party.credit
+    party.balance = (party.debit - party.credit).quantize(TWOPLACES)
 
 
 def calculate_supplier_balance(supplier, client, date_limit=None):
@@ -334,7 +353,7 @@ def calculate_supplier_balance(supplier, client, date_limit=None):
     transaction_balance = (sales_sum + receiver_sum + cash_paid) - (purchases_sum + sender_sum + cash_received)
     static_ob = supplier.open_debit - supplier.open_credit
     
-    return static_ob + transaction_balance
+    return (static_ob + transaction_balance).quantize(TWOPLACES)
 
 def calculate_customer_balance(customer, client, date_limit=None):
     from core.models import Purchases, Sales, NSDs, Cashs
@@ -358,7 +377,7 @@ def calculate_customer_balance(customer, client, date_limit=None):
     transaction_balance = (sales_sum + receiver_sum + cash_paid) - (purchases_sum + sender_sum + cash_received)
     static_ob = customer.open_debit - customer.open_credit
     
-    return static_ob + transaction_balance
+    return (static_ob + transaction_balance).quantize(TWOPLACES)
 
 def calculate_cashbank_balance(cashbank, client, date_limit=None):
     from core.models import Cashs
@@ -372,41 +391,49 @@ def calculate_cashbank_balance(cashbank, client, date_limit=None):
     received_sum = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
     paid_sum = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
     
-    return received_sum - paid_sum
+    return (received_sum - paid_sum).quantize(TWOPLACES)
 
 
 @transaction.atomic
 def update_ledger(where, to=None, old_purchase=0, new_purchase=0, old_sale=0, new_sale=0):
+    parties = []
+    if where: parties.append(('where', type(where), where.pk))
+    if to: parties.append(('to', type(to), to.pk))
+    
+    # Sort by model name then PK for deterministic lock progression, preventing deadlocks
+    parties.sort(key=lambda x: (x[1].__name__, x[2]))
+    
+    locked_instances = {}
+    for key, model_cls, pk in parties:
+        locked_instances[key] = model_cls.objects.select_for_update().get(pk=pk)
 
-    if where:
-        where = type(where).objects.select_for_update().get(pk=where.pk)
+    w = locked_instances.get('where')
+    if w:
+        if Decimal(str(old_purchase)) > 0: 
+            w.credit -= Decimal(str(old_purchase))
+            if w.credit < 0:
+                w.debit += abs(w.credit)
+                w.credit = 0
 
-        if Decimal(old_purchase) > 0: 
-            where.credit -= Decimal(old_purchase)
-            if where.credit < 0:
-                where.debit += abs(where.credit)
-                where.credit = 0
+        if Decimal(str(new_purchase)) > 0:
+            w.credit += Decimal(str(new_purchase))
 
-        if Decimal(new_purchase) > 0:
-            where.credit += Decimal(new_purchase)
+        update_party(w)
+        w.save()
 
-        update_party(where)
-        where.save()
+    t = locked_instances.get('to')
+    if t:
+        if Decimal(str(old_sale)) > 0:
+            t.debit -= Decimal(str(old_sale))
+            if t.debit < 0:
+                t.credit += abs(t.debit)
+                t.debit = 0
 
-    if to:
-        to = type(to).objects.select_for_update().get(pk=to.pk)
+        if Decimal(str(new_sale)) > 0:
+            t.debit += Decimal(str(new_sale))
 
-        if Decimal(old_sale) > 0:
-            to.debit -= Decimal(old_sale)
-            if to.debit < 0:
-                to.credit += abs(to.debit)
-                to.debit = 0
-
-        if Decimal(new_sale) > 0:
-            to.debit += Decimal(new_sale)
-
-        update_party(to)
-        to.save()
+        update_party(t)
+        t.save()
 
 
 @login_required
@@ -450,7 +477,9 @@ def verify_admin_action_password(request):
         data = json.loads(request.body)
         password = data.get('password')
         
-        if password == settings.ADMIN_ACTION_PASSWORD:
+        from django.utils.crypto import constant_time_compare
+        
+        if password and constant_time_compare(str(password), str(settings.ADMIN_ACTION_PASSWORD)):
             request.session['admin_action_authorized'] = True
             request.session.modified = True
             request.session.save()
@@ -459,7 +488,8 @@ def verify_admin_action_password(request):
             # Simple comment test
             return JsonResponse({'status': 'error', 'message': 'Invalid secret key'})
     except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)})
+        logger.exception("verify_admin_action_password failed")
+        return JsonResponse({'status': 'error', 'message': 'An unexpected error occurred'})
 
 @login_required
 @require_POST

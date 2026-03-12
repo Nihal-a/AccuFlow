@@ -245,7 +245,7 @@ class GeneralLedgerView(View):
 
     def get_supplier_transactions(self, supplier, base_filter, date_filter, sort, ledger_items):
         # ... logic from supplier_ledger ...
-        purchases = Purchases.objects.filter(base_filter, date_filter, supplier=supplier)
+        purchases = Purchases.objects.filter(base_filter, date_filter, supplier=supplier).select_related('godown')
         for p in purchases:
             desc = f"{p.godown.name}\n{p.description}" if sort != 'Remark' else p.description
             ledger_items.append({
@@ -261,7 +261,7 @@ class GeneralLedgerView(View):
                 'original_obj': p
             })
             
-        sales = Sales.objects.filter(base_filter, date_filter, supplier=supplier)
+        sales = Sales.objects.filter(base_filter, date_filter, supplier=supplier).select_related('godown')
         for s in sales:
             desc = f"{s.godown.name}\n{s.description}" if sort != 'Detailed' else s.description
             ledger_items.append({
@@ -309,7 +309,7 @@ class GeneralLedgerView(View):
                 'original_obj': n
             })
 
-        cashs = Cashs.objects.filter(base_filter, date_filter, supplier=supplier)
+        cashs = Cashs.objects.filter(base_filter, date_filter, supplier=supplier).select_related('cash_bank')
         for c in cashs:
             is_received = (c.transaction == 'Received')
             desc = c.cash_bank.name if sort != 'Remark' else c.description
@@ -328,7 +328,7 @@ class GeneralLedgerView(View):
 
     def get_customer_transactions(self, customer, base_filter, date_filter, sort, ledger_items):
         # ... logic from customer_ledger ...
-        purchases = Purchases.objects.filter(base_filter, date_filter, customer=customer)
+        purchases = Purchases.objects.filter(base_filter, date_filter, customer=customer).select_related('godown')
         for p in purchases:
             desc = f"{p.godown.name}\n{p.description}" if sort != 'Remark' else p.description
             ledger_items.append({
@@ -344,7 +344,7 @@ class GeneralLedgerView(View):
                 'original_obj': p
             })
 
-        sales = Sales.objects.filter(base_filter, date_filter, customer=customer)
+        sales = Sales.objects.filter(base_filter, date_filter, customer=customer).select_related('godown')
         for s in sales:
             desc = f"{s.godown.name}\n{s.description}" if sort != 'Detailed' else s.description
             ledger_items.append({
@@ -392,7 +392,7 @@ class GeneralLedgerView(View):
                 'original_obj': n
             })
 
-        cashs = Cashs.objects.filter(base_filter, date_filter, customer=customer)
+        cashs = Cashs.objects.filter(base_filter, date_filter, customer=customer).select_related('cash_bank')
         for c in cashs:
             is_received = (c.transaction == 'Received')
             desc = c.cash_bank.name if sort != 'Remark' else c.description
@@ -414,7 +414,7 @@ class GeneralLedgerView(View):
         
         # Purchases (In -> Debit)
         # Note: In godown_ledger logic it was 'debit': p.qty
-        purchases = Purchases.objects.filter(base_filter, date_filter, godown=godown)
+        purchases = Purchases.objects.filter(base_filter, date_filter, godown=godown).select_related('supplier', 'customer')
         for p in purchases:
             supplier_name = p.supplier.name if p.supplier else (p.customer.name if hasattr(p, 'customer') and p.customer else '')
             desc = f"{supplier_name}\n{p.description}" if sort != 'Remark' else (p.description or "")
@@ -432,7 +432,7 @@ class GeneralLedgerView(View):
             })
 
         # Sales (Out -> Credit)
-        sales = Sales.objects.filter(base_filter, date_filter, godown=godown)
+        sales = Sales.objects.filter(base_filter, date_filter, godown=godown).select_related('supplier', 'customer')
         for s in sales:
             customer_name = s.customer.name if s.customer else (s.supplier.name if hasattr(s, 'supplier') and s.supplier else '')
             desc = f"{customer_name}\n{s.description}" if sort != 'Detailed' else (s.description or "")
@@ -451,7 +451,7 @@ class GeneralLedgerView(View):
 
         # Stock Transfers FROM this godown (Out -> Credit)
         transfer_base = Q(is_active=True, hold=False, client=godown.client)
-        transfers_out = StockTransfers.objects.filter(transfer_base, date_filter, transfer_from=godown)
+        transfers_out = StockTransfers.objects.filter(transfer_base, date_filter, transfer_from=godown).select_related('transfer_to')
         for t in transfers_out:
             desc = f"To: {t.transfer_to.name if t.transfer_to else ''}\n{t.description}" if sort != 'Remark' else (t.description or "")
             ledger_items.append({
@@ -468,7 +468,7 @@ class GeneralLedgerView(View):
             })
 
         # Stock Transfers TO this godown (In -> Debit)
-        transfers_in = StockTransfers.objects.filter(transfer_base, date_filter, transfer_to=godown)
+        transfers_in = StockTransfers.objects.filter(transfer_base, date_filter, transfer_to=godown).select_related('transfer_from')
         for t in transfers_in:
             desc = f"From: {t.transfer_from.name if t.transfer_from else ''}\n{t.description}" if sort != 'Remark' else (t.description or "")
             ledger_items.append({
@@ -485,7 +485,7 @@ class GeneralLedgerView(View):
             })
 
         # Commissions (Out -> Credit, like sales)
-        commissions = Commissions.objects.filter(base_filter, date_filter, godown=godown)
+        commissions = Commissions.objects.filter(base_filter, date_filter, godown=godown).select_related('expense')
         for c in commissions:
             expense_name = c.expense.category if c.expense else ''
             desc = f"{expense_name}\n{c.description}" if sort != 'Remark' else (c.description or "")
