@@ -104,10 +104,10 @@ class PurchaseAddView(View):
                 
                 # Validation
                 try:
-                    qty_val = Decimal(str(qtys[count] or 0))
-                    amount_val = Decimal(str(amounts[count] or 0))
+                    qty_val = validate_positive_decimal(qtys[count], "Qty")
+                    amount_val = validate_positive_decimal(amounts[count], "Amount")
                     total_amount_val = (qty_val * amount_val).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-                except Exception:
+                except (ValidationError, Exception):
                     return redirect('purchase')
 
 
@@ -150,9 +150,11 @@ class PurchaseHold(View):
             godown = data.get('godown')
             date = data.get('date')
             try:
-                qty = Decimal(str(data.get('qty', 0)))
-                amount = Decimal(str(data.get('amount', 0)))
+                qty = validate_positive_decimal(data.get('qty'), "Qty")
+                amount = validate_positive_decimal(data.get('amount'), "Amount")
                 total_amount = (qty * amount).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            except ValidationError as e:
+                return JsonResponse({'status': 'error', 'message': e.message}, status=400)
             except Exception:
                 return JsonResponse({'status': 'error', 'message': 'Invalid numeric data for qty or amount.'}, status=400)
             description = data.get('description')
@@ -322,13 +324,13 @@ def delete_purchase(request):
         purchase.is_active = False
         if not purchase.hold:
             update_ledger(
-            where=purchase.party, 
-            to=None,
-            old_purchase=purchase.total_amount,
-            old_sale=purchase.total_amount,
-            new_purchase=0,
-            new_sale=0
-        )
+                where=purchase.party,
+                to=None,
+                old_purchase=purchase.total_amount,
+                old_sale=0,
+                new_purchase=0,
+                new_sale=0
+            )
             # Lock godown row to prevent concurrent qty race conditions
             purchase.godown = Godowns.objects.select_for_update().get(pk=purchase.godown.pk)
             purchase.godown.qty = F('qty') - purchase.qty

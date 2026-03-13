@@ -1,6 +1,6 @@
 from decimal import Decimal
 from django.db.models import Sum, Q
-from core.models import Customers, Suppliers, Cashs, Commissions
+from core.models import Customers, Suppliers, Cashs, Commissions, Expenses
 from profit_loss.services import PandLService, StockService, TrialBalanceService
 import datetime
 
@@ -24,8 +24,9 @@ class BalanceSheetService:
         
         cash_received = Cashs.objects.filter(base_filter_active, date_filter_cumulative, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
         cash_paid = Cashs.objects.filter(base_filter_active, date_filter_cumulative, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
-        commissions_total_cash = Commissions.objects.filter(base_filter_active, date_filter_cumulative).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
-        cash_balance = cash_received - cash_paid - commissions_total_cash
+        commissions_total_cash = Commissions.objects.filter(base_filter_active, Q(hold=False), date_filter_cumulative).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+        expenses_total_cash = Expenses.objects.filter(base_filter_active, date_filter_cumulative).aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
+        cash_balance = cash_received - cash_paid - commissions_total_cash - expenses_total_cash
         
         accounts.append({
             'code': '1201', 'name': 'CASH BOOK', 
@@ -97,15 +98,29 @@ class BalanceSheetService:
             })
 
         # --- EQUITY ---
+        # Opening Balance Equity (contra entry for customer/supplier opening balances)
+        total_open_credit = Customers.objects.filter(base_filter_active).aggregate(s=Sum('open_credit'))['s'] or Decimal('0')
+        total_open_credit += Suppliers.objects.filter(base_filter_active).aggregate(s=Sum('open_credit'))['s'] or Decimal('0')
+        total_open_debit = Customers.objects.filter(base_filter_active).aggregate(s=Sum('open_debit'))['s'] or Decimal('0')
+        total_open_debit += Suppliers.objects.filter(base_filter_active).aggregate(s=Sum('open_debit'))['s'] or Decimal('0')
+
+        obe_balance = total_open_credit - total_open_debit
+        if obe_balance != 0:
+            accounts.append({
+                'code': '3000', 'name': 'OPENING BALANCE EQUITY',
+                'debit': abs(obe_balance) if obe_balance < 0 else 0,
+                'credit': abs(obe_balance) if obe_balance > 0 else 0,
+            })
+
         # Net Income
         pnl_start_date = datetime.date(2000, 1, 1)
         pnl_data = PandLService.get_financial_data(client, pnl_start_date, date_to)
         net_income = pnl_data['net_income']
-        
+
         accounts.append({
-            'code': '3900', 'name': 'PROFIT & LOSS ACCOUNT', 
-            'debit': abs(net_income) if net_income < 0 else 0, # Loss is Debit
-            'credit': net_income if net_income >= 0 else 0, # Profit is Credit
+            'code': '3900', 'name': 'PROFIT & LOSS ACCOUNT',
+            'debit': abs(net_income) if net_income < 0 else 0,
+            'credit': net_income if net_income >= 0 else 0,
             'highlight': 'green'
         })
 
@@ -119,5 +134,5 @@ class BalanceSheetService:
             'total_debit': total_debit,
             'total_credit': total_credit,
             'difference': difference,
-            'is_balanced': abs(difference) < Decimal('0.01'),
+            'is_balanced': difference == Decimal('0'),
         }

@@ -2,7 +2,12 @@
 
 function formatComma(num) {
   if (num === null || num === undefined || num === '') return '0.00';
-  return parseFloat(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  // Keep as string to avoid float precision loss; fall back to parseFloat only for numeric types
+  const str = typeof num === 'string' ? num.trim() : String(parseFloat(num));
+  const [intPart, decPart = ''] = str.split('.');
+  const paddedDec = (decPart + '00').slice(0, 2);
+  const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return `${formattedInt}.${paddedDec}`;
 }
 
 function parseComma(str) {

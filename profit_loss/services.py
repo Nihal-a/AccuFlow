@@ -1,5 +1,5 @@
 from django.db.models import Sum, Q, F
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from core.models import Godowns, Purchases, Sales, Expenses, Commissions, NSDs, Cashs, Customers, Suppliers
 from core.views import calculate_customer_balance, calculate_supplier_balance
 import datetime
@@ -62,8 +62,8 @@ class StockService:
         total_value_all = Decimal('0.0000')
         for item in stocks.values():
             if item['balance_qty'] > 0:
-                avg_rate = (item['purchase_value'] / item['purchase_qty']) if item['purchase_qty'] > 0 else Decimal(0)
-                total_value_all += Decimal(str(item['balance_qty'])) * Decimal(str(avg_rate))
+                avg_rate = (item['purchase_value'] / item['purchase_qty']).quantize(Decimal('0.0001'), rounding=ROUND_HALF_UP) if item['purchase_qty'] > 0 else Decimal(0)
+                total_value_all += (Decimal(str(item['balance_qty'])) * avg_rate).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
                 
         return total_value_all
 
@@ -102,8 +102,7 @@ class PandLService:
         purchases_total = base_purchases + nsd_purchases
 
         # 5. Expenses (Indirect Expense)
-        # Expenses Model has 'created_at' field, NO 'date' field
-        expenses_qs = Expenses.objects.filter(is_active=True, client=client, created_at__range=[start_datetime, end_datetime])
+        expenses_qs = Expenses.objects.filter(is_active=True, client=client, date__range=[start_date, end_date])
         expense_details = []
         total_expense = Decimal('0.0000')
         
@@ -169,16 +168,15 @@ class TrialBalanceService:
         date_filter_periodic = Q(date__range=[start_date, date_limit])
         
         # 1. CASH / BANK (Assets -> Debit)
-        # Logic: Sum(Received) - Sum(Paid).
-        # CRITICAL FIX: Commissions and Expenses describe cash outflows but might not have corresponding 'Cashs' entries.
-        # To balance the Trial Balance, we must assume these are paid via Cash if not recorded.
-        # We subtract them from the Cash Balance.
-        
+        # Commissions and Expenses don't create Cashs records, so their cash outflows
+        # must be deducted here to avoid overstating Cash In Hand.
         cash_received = Cashs.objects.filter(base_filter_active, date_filter_cumulative, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
         cash_paid = Cashs.objects.filter(base_filter_active, date_filter_cumulative, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
-        
-        # Commissions are now separate from Cash In Hand (C2 fix)
-        cash_balance = cash_received - cash_paid
+
+        commissions_total = Commissions.objects.filter(base_filter_active, date_filter_periodic).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+        expenses_total = Expenses.objects.filter(is_active=True, client=client, date__range=[start_date, date_limit]).aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
+
+        cash_balance = cash_received - cash_paid - commissions_total - expenses_total
         
         # Add Opening Balance Equity (C7 fix)
         total_open_credit = Customers.objects.filter(is_active=True, client=client).aggregate(s=Sum('open_credit'))['s'] or Decimal('0')
@@ -265,22 +263,16 @@ class TrialBalanceService:
             })
             
         # 7. EXPENSES (Nominal - Periodic)
-        # Using end of day for date_limit
-        end_datetime = datetime.datetime.combine(date_limit, datetime.time.max)
-        start_datetime = datetime.datetime.combine(start_date, datetime.time.min)
-        
-        expenses_qs = Expenses.objects.filter(is_active=True, client=client, created_at__range=[start_datetime, end_datetime])
-        
         expense_cats = {}
-        for exp in expenses_qs:
+        for exp in Expenses.objects.filter(is_active=True, client=client, date__range=[start_date, date_limit]):
             cat = exp.category.upper() if exp.category else "GENERAL EXPENSE"
             if cat not in expense_cats:
                 expense_cats[cat] = Decimal('0.0000')
             expense_cats[cat] += Decimal(str(exp.amount or 0))
-            
+
         for cat, amount in expense_cats.items():
             if amount > 0:
-                 accounts.append({
+                accounts.append({
                     'code': '6100000X',
                     'name': cat,
                     'debit': amount,
@@ -288,9 +280,8 @@ class TrialBalanceService:
                 })
 
         # 8. COMMISSIONS (Nominal - Periodic)
-        commissions_total = Commissions.objects.filter(base_filter_active, date_filter_periodic).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
         if commissions_total > 0:
-             accounts.append({
+            accounts.append({
                 'code': '62000001',
                 'name': 'COMMISSIONS',
                 'debit': commissions_total,
@@ -308,7 +299,7 @@ class TrialBalanceService:
             'total_debit': total_debit,
             'total_credit': total_credit,
             'difference': difference,
-            'is_balanced': abs(difference) < Decimal('0.01')
+            'is_balanced': difference == Decimal('0')
         }
 
 

@@ -12,6 +12,7 @@ from django.contrib.auth.decorators import login_required
 
 from core.views import getClient, update_ledger, calculate_customer_balance, calculate_supplier_balance
 from core.authorization import get_object_for_user
+from core.utils import validate_positive_decimal
 from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -144,11 +145,10 @@ class SaleAddView(View):
             sale = get_object_for_user(Sales, request.user, id=id)
             
             try:
-                qty_val = Decimal(str(qtys[count] or 0))
-                amount_val = Decimal(str(amounts[count] or 0))
+                qty_val = validate_positive_decimal(qtys[count], "Qty")
+                amount_val = validate_positive_decimal(amounts[count], "Amount")
                 total_amount_val = (qty_val * amount_val).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-            except Exception:
-                # Catch InvalidOperation from decimal parsing
+            except (ValidationError, Exception):
                 return redirect('sale')
 
             update_ledger(where=None,to=seller,new_purchase=total_amount_val,new_sale=total_amount_val) 
@@ -181,9 +181,11 @@ class SaleHold(View):
         godown = data.get('godown')
         date = data.get('date')
         try:
-            qty = Decimal(str(data.get('qty', 0)))
-            amount = Decimal(str(data.get('amount', 0)))
+            qty = validate_positive_decimal(data.get('qty'), "Qty")
+            amount = validate_positive_decimal(data.get('amount'), "Amount")
             total_amount = (qty * amount).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        except ValidationError as e:
+            return JsonResponse({'status': 'error', 'message': e.message}, status=400)
         except Exception:
             return JsonResponse({'status': 'error', 'message': 'Invalid numeric data for qty or amount.'}, status=400)
 
@@ -208,9 +210,9 @@ class SaleHold(View):
             sale = get_object_for_user(Sales, request.user, id=data.get('sale_id'))
             if not sale.hold:
                 update_ledger(
-                    where=None,  
+                    where=None,
                     to=sale.party,
-                    old_purchase=sale.total_amount,
+                    old_purchase=0,
                     old_sale=sale.total_amount,
                     new_purchase=0,
                     new_sale=0
@@ -347,9 +349,9 @@ def delete_sale(request):
     sale.is_active = False
     if not sale.hold:
         update_ledger(
-            to=sale.party,  
+            to=sale.party,
             where=None,
-            old_purchase=sale.total_amount,
+            old_purchase=0,
             old_sale=sale.total_amount,
             new_purchase=0,
             new_sale=0

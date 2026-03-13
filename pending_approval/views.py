@@ -91,15 +91,16 @@ class PendingApprovalDetailView(LoginRequiredMixin, View):
                 messages.error(request, "Please select a Cash/Bank account for deposit.")
                 return redirect('pending_approval_detail', id=id)
             
-            cash_bank = get_object_or_404(CashBanks, id=cb_id, client=client)
-            
+            cash_bank = get_object_or_404(CashBanks.objects.select_for_update(), id=cb_id, client=client)
+
             items = collection.items.all()
             approved_count = 0
-            
+            total_approved_amount = Decimal('0.0000')
+
             # Generate cash number once before the loop and increment per item
             # to prevent duplicate cash numbers (VULN #46)
             next_cash_no = getLastCashNo(client=client)
-            
+
             for item in items:
                 amount_str = request.POST.get(f'amount_{item.id}')
                 try:
@@ -113,7 +114,8 @@ class PendingApprovalDetailView(LoginRequiredMixin, View):
                 
                 if amount > 0:
                     approved_count += 1
-                    
+                    total_approved_amount += amount
+
                     customer = None
                     supplier = None
                     
@@ -150,6 +152,10 @@ class PendingApprovalDetailView(LoginRequiredMixin, View):
                             next_cash_no = str(int(next_cash_no) + 1)
                         else:
                             next_cash_no = str(next_cash_no) + '_1'
+
+            if total_approved_amount > 0:
+                cash_bank.balance = Decimal(str(cash_bank.balance)) + total_approved_amount
+                cash_bank.save()
 
             collection.status = 'Approved'
             collection.is_viewed = False
