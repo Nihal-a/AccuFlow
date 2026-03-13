@@ -59,6 +59,22 @@ class FinancialService:
         return received_sum - paid_sum
 
     @staticmethod
+    def calculate_godown_qty(godown, client, date_limit=None):
+        from core.models import Purchases, Sales, StockTransfers, Commissions
+        base_filter = Q(is_active=True, hold=False, client=client)
+        if date_limit:
+            base_filter &= Q(date__lte=date_limit)
+            
+        p_qty = Purchases.objects.filter(base_filter, godown=godown).aggregate(s=Sum('qty'))['s'] or Decimal('0')
+        s_qty = Sales.objects.filter(base_filter, godown=godown).aggregate(s=Sum('qty'))['s'] or Decimal('0')
+        c_qty = Commissions.objects.filter(base_filter, godown=godown).aggregate(s=Sum('qty'))['s'] or Decimal('0')
+        
+        t_in = StockTransfers.objects.filter(base_filter, transfer_to=godown).aggregate(s=Sum('qty'))['s'] or Decimal('0')
+        t_out = StockTransfers.objects.filter(base_filter, transfer_from=godown).aggregate(s=Sum('qty'))['s'] or Decimal('0')
+        
+        return (p_qty + t_in) - (s_qty + c_qty + t_out)
+
+    @staticmethod
     def update_party_balance(party):
         if party.debit > 0 and party.credit > 0:
             cancel = min(party.debit, party.credit)

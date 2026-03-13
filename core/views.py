@@ -3,12 +3,14 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.views.decorators.cache import never_cache
 from django.contrib.auth.decorators import login_required
 from .models import Clients, Collection, Collectors, Customers, Expenses, Suppliers, TransactionType
 from .services import FinancialService
 from decimal import Decimal
 from django.views import View
 from django.utils.decorators import method_decorator
+from django.db import transaction
 import logging
 
 logger = logging.getLogger(__name__)
@@ -331,66 +333,16 @@ def update_party(party):
 
 
 def calculate_supplier_balance(supplier, client, date_limit=None):
-    from core.models import Purchases, Sales, NSDs, Cashs
-    from django.db.models import Sum, Q
-
-    base_filter = Q(is_active=True, hold=False, client=client, supplier=supplier)
-    nsd_base = Q(is_active=True, hold=False, client=client)
-    
-    if date_limit:
-        base_filter &= Q(date__lte=date_limit)
-        nsd_base &= Q(date__lte=date_limit)
-    
-    purchases_sum = Purchases.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
-    sales_sum = Sales.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
-    sender_sum = NSDs.objects.filter(nsd_base, sender_supplier=supplier).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0.0000')
-    receiver_sum = NSDs.objects.filter(nsd_base, receiver_supplier=supplier).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0.0000')
-    
-    cash_received = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
-    cash_paid = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
-    
-    transaction_balance = (sales_sum + receiver_sum + cash_paid) - (purchases_sum + sender_sum + cash_received)
-    static_ob = supplier.open_debit - supplier.open_credit
-    
-    return (static_ob + transaction_balance).quantize(TWOPLACES)
+    from .services import FinancialService
+    return FinancialService.calculate_supplier_balance(supplier, client, date_limit)
 
 def calculate_customer_balance(customer, client, date_limit=None):
-    from core.models import Purchases, Sales, NSDs, Cashs
-    from django.db.models import Sum, Q
-
-    base_filter = Q(is_active=True, hold=False, client=client, customer=customer)
-    nsd_base = Q(is_active=True, hold=False, client=client)
-    
-    if date_limit:
-        base_filter &= Q(date__lte=date_limit)
-        nsd_base &= Q(date__lte=date_limit)
-    
-    purchases_sum = Purchases.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
-    sales_sum = Sales.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
-    sender_sum = NSDs.objects.filter(nsd_base, sender_customer=customer).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0.0000')
-    receiver_sum = NSDs.objects.filter(nsd_base, receiver_customer=customer).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0.0000')
-    
-    cash_received = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
-    cash_paid = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
-    
-    transaction_balance = (sales_sum + receiver_sum + cash_paid) - (purchases_sum + sender_sum + cash_received)
-    static_ob = customer.open_debit - customer.open_credit
-    
-    return (static_ob + transaction_balance).quantize(TWOPLACES)
+    from .services import FinancialService
+    return FinancialService.calculate_customer_balance(customer, client, date_limit)
 
 def calculate_cashbank_balance(cashbank, client, date_limit=None):
-    from core.models import Cashs
-    from django.db.models import Sum, Q
-    from decimal import Decimal
-
-    base_filter = Q(is_active=True, hold=False, client=client, cash_bank=cashbank)
-    if date_limit:
-        base_filter &= Q(date__lte=date_limit)
-        
-    received_sum = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
-    paid_sum = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
-    
-    return (received_sum - paid_sum).quantize(TWOPLACES)
+    from .services import FinancialService
+    return FinancialService.calculate_cashbank_balance(cashbank, client, date_limit)
 
 
 @transaction.atomic

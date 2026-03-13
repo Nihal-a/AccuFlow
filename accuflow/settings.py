@@ -8,10 +8,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env() 
 env.read_env()
 
-SECRET_KEY = env('SECRETKEY', default='dev-secret-key-123')
-DEBUG = env.bool('DEBUG', default=True)
+SECRET_KEY = env('SECRETKEY')
+DEBUG = env.bool('DEBUG', default=False)
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['*'])
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1', '0.0.0.0'])
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -107,7 +107,7 @@ DATABASES = {
         'CONN_HEALTH_CHECKS': True,
         'OPTIONS': {
             'charset': 'utf8',
-            'init_command': "SET NAMES 'utf8', innodb_strict_mode=OFF, sql_mode=''",
+            'init_command': "SET NAMES 'utf8', innodb_strict_mode=ON, sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO'",
             'connect_timeout': 5,
             'read_timeout': 30,
             'write_timeout': 30,

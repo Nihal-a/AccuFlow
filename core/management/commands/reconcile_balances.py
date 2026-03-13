@@ -29,9 +29,12 @@ class Command(BaseCommand):
                     discrepancies.append(f"Supplier {s.name} ({s.id}): DB={s.balance}, Calc={calc}")
 
             # Godowns (Qty)
-            # Note: We need a calculate_godown_qty too.
-            # I'll implement godown reconciliation too.
-            # ... skipping for brevity or I'll add it properly ...
+            godowns = Godowns.objects.filter(client=client, is_active=True)
+            from core.services import FinancialService
+            for g in godowns:
+                calc = FinancialService.calculate_godown_qty(g, client)
+                if abs(g.qty - calc) > 0.001:
+                    discrepancies.append(f"Godown {g.name} ({g.id}): DB={g.qty}, Calc={calc}")
         
         if discrepancies:
             for d in discrepancies:

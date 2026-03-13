@@ -2,7 +2,7 @@ from django.views.decorators.http import require_POST
 import json
 import logging
 from django.shortcuts import render,redirect, get_object_or_404
-from core.models import Purchases,Suppliers,Customers,Godowns,NSDs
+from core.models import Customers, Suppliers, NSDs, TransactionType
 from django.views import View
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
@@ -103,26 +103,22 @@ class NSDAddView(View):
         count = 0
         for id in nsd_ids:
             sender_customer = None 
-            sender_customer = None
+            sender_supplier = None
             receiver_customer = None
             receiver_supplier = None
             nsd = get_object_for_user(NSDs, request.user, id=id)
             sender = None
             receiver = None
-            if receiver_types[count] == 'customers':
+            if receiver_types[count] == TransactionType.CUSTOMERS:
                 receiver_customer = get_object_for_user(Customers, request.user, id=customer_ids[count]) if customer_ids[count] else None
-                receiver_supplier = None
                 receiver = receiver_customer
             else:
-                receiver_customer = None
                 receiver_supplier = get_object_for_user(Suppliers, request.user, id=customer_ids[count]) if customer_ids[count] else None     
                 receiver = receiver_supplier       
-            if sender_types[count] == 'customers':
+            if sender_types[count] == TransactionType.CUSTOMERS:
                 sender_customer = get_object_for_user(Customers, request.user, id=supplier_ids[count]) if supplier_ids[count] else None
-                sender_supplier = None 
                 sender = sender_customer
             else:  
-                sender_customer = None
                 sender_supplier = get_object_for_user(Suppliers, request.user, id=supplier_ids[count]) if supplier_ids[count] else None
                 sender = sender_supplier
             # Validation
@@ -162,13 +158,18 @@ class NSDAddView(View):
 
 @method_decorator(never_cache, name='dispatch')
 class NSDHold(View):
-    def post(self,request):
+    def post(self, request):
         with transaction.atomic():
             try:
                 data = json.loads(request.body)
                 nsd_no = data.get('nsd_no')
-                supplier = data.get('supplier')
+                supplier_id = data.get('supplier')  # sender id
+                customer_id = data.get('customer')  # receiver id
                 date = data.get('date')
+                description = data.get('description')
+                sender_type = data.get('sender_type')
+                receiver_type = data.get('receiver_type')
+
                 try:
                     qty = Decimal(str(data.get('qty', 0)))
                     sell_rate = Decimal(str(data.get('sell_rate', 0)))
@@ -177,46 +178,75 @@ class NSDHold(View):
                     purchase_amount = (qty * purchase_rate).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
                 except Exception:
                     return JsonResponse({'status': 'error', 'message': 'Invalid numeric data.'}, status=400)
-                description = data.get('description')
-                sender_type = data.get('sender_type')
-                receiver_type = data.get('receiver_type')
-                customer = data.get('customer') 
+
                 sender_customer = None
                 sender_supplier = None
                 receiver_customer = None
-                # Authorization: Ensure supplier belongs to user's client
-                receiver_supplier = get_object_for_user(Suppliers, request.user, id=customer) if customer else None 
-                receiver = receiver_supplier  
-            if data.get('nsd_id'):
-                # Authorization: Ensure nsd belongs to user's client
-                nsd = get_object_for_user(NSDs, request.user, id=data.get('nsd_id'))
-                if not nsd.hold:
-                    update_ledger(
-                        where=nsd.sender, 
-                        to=nsd.receiver,
-                        old_purchase=nsd.purchase_amount,
-                        old_sale=nsd.sell_amount,
-                        new_purchase=0,
-                        new_sale=0
+                receiver_supplier = None
+                sender = None
+                receiver = None
+
+                # Resolve Sender
+                if sender_type == TransactionType.CUSTOMERS:
+                    sender_customer = get_object_for_user(Customers, request.user, id=supplier_id) if supplier_id else None
+                    sender = sender_customer
+                else:
+                    sender_supplier = get_object_for_user(Suppliers, request.user, id=supplier_id) if supplier_id else None
+                    sender = sender_supplier
+
+                # Resolve Receiver
+                if receiver_type == TransactionType.CUSTOMERS:
+                    receiver_customer = get_object_for_user(Customers, request.user, id=customer_id) if customer_id else None
+                    receiver = receiver_customer
+                else:
+                    receiver_supplier = get_object_for_user(Suppliers, request.user, id=customer_id) if customer_id else None
+                    receiver = receiver_supplier
+
+                nsd_id = data.get('nsd_id')
+                if nsd_id:
+                    nsd = get_object_for_user(NSDs, request.user, id=nsd_id)
+                    if not nsd.hold:
+                        update_ledger(
+                            where=nsd.sender, 
+                            to=nsd.receiver,
+                            old_purchase=nsd.purchase_amount,
+                            old_sale=nsd.sell_amount,
+                            new_purchase=0,
+                            new_sale=0
+                        )
+                    
+                    nsd.nsd_no = nsd_no
+                    nsd.date = date
+                    nsd.qty = qty
+                    nsd.sell_rate = sell_rate
+                    nsd.sell_amount = sell_amount
+                    nsd.purchase_rate = purchase_rate
+                    nsd.purchase_amount = purchase_amount
+                    nsd.description = description
+                    nsd.sender_supplier = sender_supplier
+                    nsd.sender_customer = sender_customer
+                    nsd.receiver_supplier = receiver_supplier
+                    nsd.receiver_customer = receiver_customer
+                    nsd.client = getClient(request.user)
+                    nsd.save()
+                else:
+                    nsd = NSDs.objects.create(
+                        nsd_no=nsd_no,
+                        date=date,
+                        qty=qty,
+                        sell_rate=sell_rate,
+                        sell_amount=sell_amount,
+                        purchase_rate=purchase_rate,
+                        purchase_amount=purchase_amount,
+                        description=description,
+                        sender_supplier=sender_supplier,
+                        sender_customer=sender_customer,
+                        receiver_supplier=receiver_supplier,
+                        receiver_customer=receiver_customer,
+                        hold=True,
+                        client=getClient(request.user)
                     )
-                    nsd.sender_balance -= nsd.purchase_amount
-                    nsd.receiver_balance -= nsd.sell_amount
-                nsd.nsd_no = nsd_no
-                nsd.date = date
-                nsd.qty = qty
-                nsd.sell_rate = sell_rate
-                nsd.sell_amount = sell_amount
-                nsd.purchase_rate = purchase_rate
-                nsd.purchase_amount = purchase_amount
-                nsd.description = description
-                nsd.receiver_customer = receiver_customer
-                nsd.receiver_supplier = receiver_supplier
-                nsd.sender_customer = sender_customer
-                nsd.sender_supplier = sender_supplier
-                nsd.client=getClient(request.user)
-                if not nsd.hold:
-                    nsd.hold = False 
-                nsd.save()
+
                 if not nsd.hold:
                     update_ledger(
                         where=sender, 
@@ -226,43 +256,15 @@ class NSDHold(View):
                         old_purchase=0,
                         old_sale=0
                     )
-                    nsd.sender_balance += purchase_amount
-                    nsd.receiver_balance += sell_amount
+                    nsd.sender_balance = sender.balance
+                    nsd.receiver_balance = receiver.balance
                     nsd.save()
-                    if not nsd.hold:
-                        update_ledger(
-                            where=sender, 
-                            to=receiver,
-                            new_purchase=purchase_amount,
-                            new_sale=sell_amount,
-                            old_purchase=0,
-                            old_sale=0
-                        )
-                        nsd.sender_balance += sell_amount
-                        nsd.receiver_balance += purchase_amount
-                        nsd.save()
-                    return JsonResponse({'status':'success','nsd_id':nsd.id,'hold':nsd.hold})
-                nsd = NSDs.objects.create(
-                    nsd_no=nsd_no,
-                    date=date,
-                    qty=qty,
-                    sell_rate=sell_rate,
-                    sell_amount=sell_amount,
-                    purchase_rate=purchase_rate,
-                    purchase_amount=purchase_amount,
-                    description=description,
-                    receiver_customer=receiver_customer,
-                    receiver_supplier=receiver_supplier,
-                    sender_customer=sender_customer,
-                    sender_supplier=sender_supplier,
-                    hold=True,
-                    client=getClient(request.user)
-                )
-                return JsonResponse({'status':'success','nsd_id':nsd.id,'hold':nsd.hold}) 
-            
+
+                return JsonResponse({'status': 'success', 'nsd_id': nsd.id, 'hold': nsd.hold})
+
             except Exception as e:
                 logger.exception("NSD hold failed")
-                return JsonResponse({'status':'error','message':'An error occurred while processing the NSD.'})
+                return JsonResponse({'status': 'error', 'message': str(e)})
         
     
     
