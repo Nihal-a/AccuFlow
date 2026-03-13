@@ -191,8 +191,8 @@ class GeneralLedgerView(View):
              
              purchases_sum = Purchases.objects.filter(s_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
              sales_sum = Sales.objects.filter(s_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
-             sender_sum = NSDs.objects.filter(nsd_base, sender_supplier=party).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0.0000')
-             receiver_sum = NSDs.objects.filter(nsd_base, receiver_supplier=party).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0.0000')
+             sender_sum = NSDs.objects.filter(nsd_base, sender_supplier=party).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0.0000')
+             receiver_sum = NSDs.objects.filter(nsd_base, receiver_supplier=party).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0.0000')
              
              cash_received = Cashs.objects.filter(s_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
              cash_paid = Cashs.objects.filter(s_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
@@ -208,8 +208,8 @@ class GeneralLedgerView(View):
 
              purchases_sum = Purchases.objects.filter(c_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
              sales_sum = Sales.objects.filter(c_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
-             sender_sum = NSDs.objects.filter(nsd_base, sender_customer=party).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0.0000')
-             receiver_sum = NSDs.objects.filter(nsd_base, receiver_customer=party).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0.0000')
+             sender_sum = NSDs.objects.filter(nsd_base, sender_customer=party).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0.0000')
+             receiver_sum = NSDs.objects.filter(nsd_base, receiver_customer=party).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0.0000')
              
              cash_received = Cashs.objects.filter(c_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
              cash_paid = Cashs.objects.filter(c_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')

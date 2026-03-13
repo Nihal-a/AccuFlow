@@ -4,7 +4,8 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
-from .models import Clients, Collection, Collectors, Customers, Expenses, Suppliers
+from .models import Clients, Collection, Collectors, Customers, Expenses, Suppliers, TransactionType
+from .services import FinancialService
 from decimal import Decimal
 from django.views import View
 from django.utils.decorators import method_decorator
@@ -163,8 +164,8 @@ class ClientDashboardView(View):
             count=Count('id'), total=Sum('sell_amount'))
             
         # Cash/Bank Metrics (Net Cash Flow)
-        c_rcv = Cashs.objects.filter(transaction='Received', **base_kwargs, **date_filter).aggregate(c=Count('id'), t=Sum('amount'))
-        c_paid = Cashs.objects.filter(transaction='Paid', **base_kwargs, **date_filter).aggregate(c=Count('id'), t=Sum('amount'))
+        c_rcv = Cashs.objects.filter(transaction=TransactionType.RECEIVED, **base_kwargs, **date_filter).aggregate(c=Count('id'), t=Sum('amount'))
+        c_paid = Cashs.objects.filter(transaction=TransactionType.PAID, **base_kwargs, **date_filter).aggregate(c=Count('id'), t=Sum('amount'))
         cash_stats = {
             'count': (c_rcv['c'] or 0) + (c_paid['c'] or 0),
             'total': (c_rcv['t'] or Decimal('0')) - (c_paid['t'] or Decimal('0'))
@@ -217,8 +218,8 @@ class ClientDashboardView(View):
                 n = NSDs.objects.filter(client=client, is_active=True, hold=False, **mo_filter).aggregate(t=Sum('sell_amount'))
                 chart_nsd.append(float(n['t'] or 0))
                 
-                c_in = Cashs.objects.filter(client=client, is_active=True, hold=False, transaction='Received', **mo_filter).aggregate(t=Sum('amount'))
-                c_out = Cashs.objects.filter(client=client, is_active=True, hold=False, transaction='Paid', **mo_filter).aggregate(t=Sum('amount'))
+                c_in = Cashs.objects.filter(client=client, is_active=True, hold=False, transaction=TransactionType.RECEIVED, **mo_filter).aggregate(t=Sum('amount'))
+                c_out = Cashs.objects.filter(client=client, is_active=True, hold=False, transaction=TransactionType.PAID, **mo_filter).aggregate(t=Sum('amount'))
                 net_cash = float((c_in['t'] or Decimal('0')) - (c_out['t'] or Decimal('0')))
                 chart_cash.append(net_cash)
         else:
@@ -244,8 +245,8 @@ class ClientDashboardView(View):
             s_daily = daily_totals(Sales, 'total_amount')
             n_daily = daily_totals(NSDs, 'sell_amount')
             
-            c_in_daily = daily_totals(Cashs, 'amount', {'transaction': 'Received'})
-            c_out_daily = daily_totals(Cashs, 'amount', {'transaction': 'Paid'})
+            c_in_daily = daily_totals(Cashs, 'amount', {'transaction': TransactionType.RECEIVED})
+            c_out_daily = daily_totals(Cashs, 'amount', {'transaction': TransactionType.PAID})
 
             current_day = month_start
             while current_day <= month_end:
@@ -303,108 +304,20 @@ def getClient(user):
        
 
 def update_party(party):
-    if party.debit > 0 and party.credit > 0:
-        cancel = min(party.debit, party.credit)
-        party.debit -= cancel
-        party.credit -= cancel
-    
-    party.balance = party.debit - party.credit
+    FinancialService.update_party_balance(party)
 
 
 def calculate_supplier_balance(supplier, client, date_limit=None):
-    from core.models import Purchases, Sales, NSDs, Cashs
-    from django.db.models import Sum, Q
-
-    base_filter = Q(is_active=True, hold=False, client=client, supplier=supplier)
-    nsd_base = Q(is_active=True, hold=False, client=client)
-    
-    if date_limit:
-        base_filter &= Q(date__lte=date_limit)
-        nsd_base &= Q(date__lte=date_limit)
-    
-    purchases_sum = Purchases.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
-    sales_sum = Sales.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
-    sender_sum = NSDs.objects.filter(nsd_base, sender_supplier=supplier).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0.0000')
-    receiver_sum = NSDs.objects.filter(nsd_base, receiver_supplier=supplier).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0.0000')
-    
-    cash_received = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
-    cash_paid = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
-    
-    transaction_balance = (sales_sum + receiver_sum + cash_paid) - (purchases_sum + sender_sum + cash_received)
-    static_ob = supplier.open_debit - supplier.open_credit
-    
-    return static_ob + transaction_balance
+    return FinancialService.calculate_supplier_balance(supplier, client, date_limit)
 
 def calculate_customer_balance(customer, client, date_limit=None):
-    from core.models import Purchases, Sales, NSDs, Cashs
-    from django.db.models import Sum, Q
-
-    base_filter = Q(is_active=True, hold=False, client=client, customer=customer)
-    nsd_base = Q(is_active=True, hold=False, client=client)
-    
-    if date_limit:
-        base_filter &= Q(date__lte=date_limit)
-        nsd_base &= Q(date__lte=date_limit)
-    
-    purchases_sum = Purchases.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
-    sales_sum = Sales.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
-    sender_sum = NSDs.objects.filter(nsd_base, sender_customer=customer).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0.0000')
-    receiver_sum = NSDs.objects.filter(nsd_base, receiver_customer=customer).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0.0000')
-    
-    cash_received = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
-    cash_paid = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
-    
-    transaction_balance = (sales_sum + receiver_sum + cash_paid) - (purchases_sum + sender_sum + cash_received)
-    static_ob = customer.open_debit - customer.open_credit
-    
-    return static_ob + transaction_balance
+    return FinancialService.calculate_customer_balance(customer, client, date_limit)
 
 def calculate_cashbank_balance(cashbank, client, date_limit=None):
-    from core.models import Cashs
-    from django.db.models import Sum, Q
-    from decimal import Decimal
-
-    base_filter = Q(is_active=True, hold=False, client=client, cash_bank=cashbank)
-    if date_limit:
-        base_filter &= Q(date__lte=date_limit)
-        
-    received_sum = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
-    paid_sum = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
-    
-    return received_sum - paid_sum
-
+    return FinancialService.calculate_cashbank_balance(cashbank, client, date_limit)
 
 def update_ledger(where, to=None, old_purchase=0, new_purchase=0, old_sale=0, new_sale=0):
-
-    if where:
-        where = type(where).objects.select_for_update().get(pk=where.pk)
-
-        if Decimal(old_purchase) > 0: 
-            where.credit -= Decimal(old_purchase)
-            if where.credit < 0:
-                where.debit += abs(where.credit)
-                where.credit = 0
-
-        if Decimal(new_purchase) > 0:
-            where.credit += Decimal(new_purchase)
-
-        update_party(where)
-        where.save()
-
-    if to:
-        to = type(to).objects.select_for_update().get(pk=to.pk)
-
-        if Decimal(old_sale) > 0:
-            to.debit -= Decimal(old_sale)
-            if to.debit < 0:
-                to.credit += abs(to.debit)
-                to.debit = 0
-
-        if Decimal(new_sale) > 0:
-            to.debit += Decimal(new_sale)
-
-        update_party(to)
-        to.save()
+    FinancialService.update_ledger(where, to, old_purchase, new_purchase, old_sale, new_sale)
 
 
 @login_required

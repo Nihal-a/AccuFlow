@@ -104,7 +104,7 @@ DATABASES = {
         'PORT': env('DATABASE_PORT'),
         'OPTIONS': {
             'charset': 'utf8',
-            'init_command': "SET NAMES 'utf8', innodb_strict_mode=OFF, sql_mode=''",
+            'init_command': "SET NAMES 'utf8', innodb_strict_mode=ON, sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO'",
         },
     }
 }

@@ -167,8 +167,10 @@ class PurchaseHold(View):
                     purchase.party.save()
                     purchase.godown.qty = F('qty') - purchase.qty
                     purchase.godown.save()
-                    purchase.purchaser_balance = purchase.purchaser_balance - purchase.qty
-                    purchase.seller_balance = purchase.seller_balance - purchase.amount
+                    purchase.godown.refresh_from_db()
+                    purchase.party.refresh_from_db()
+                    purchase.purchaser_balance = purchase.godown.qty
+                    purchase.seller_balance = purchase.party.balance
                 purchase.purchase_no = purchase_no 
                 purchase.supplier = supplier
                 purchase.customer = customer
@@ -193,9 +195,11 @@ class PurchaseHold(View):
                     )
                     godown.qty = F('qty') + qty
                     godown.save()
+                    godown.refresh_from_db()
+                    new_seller.refresh_from_db()
                     
-                    purchase.purchaser_balance += qty
-                    purchase.seller_balance += amount
+                    purchase.purchaser_balance = godown.qty
+                    purchase.seller_balance = new_seller.balance
                     purchase.save()
                     
     

@@ -197,8 +197,8 @@ class NSDHold(View):
                         new_purchase=0,
                         new_sale=0
                     )
-                    nsd.sender_balance -= nsd.sell_amount
-                    nsd.receiver_balance -= nsd.purchase_amount
+                    nsd.sender_balance -= nsd.purchase_amount
+                    nsd.receiver_balance -= nsd.sell_amount
                 nsd.nsd_no = nsd_no
                 nsd.date = date
                 nsd.qty = qty
@@ -224,8 +224,8 @@ class NSDHold(View):
                         old_purchase=0,
                         old_sale=0
                     )
-                    nsd.sender_balance += sell_amount
-                    nsd.receiver_balance += purchase_amount
+                    nsd.sender_balance += purchase_amount
+                    nsd.receiver_balance += sell_amount
                     nsd.save()
                 return JsonResponse({'status':'success','nsd_id':nsd.id,'hold':nsd.hold})
             nsd = NSDs.objects.create(

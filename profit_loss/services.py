@@ -9,43 +9,57 @@ class StockService:
     def calculate_stock_value(client, date_limit):
         """
         Calculates the total value of stock across all godowns for a client as of a specific date.
-        Uses Weighted Average Cost method.
+        Uses Weighted Average Cost method. Includes Commissions and Stock Transfers.
         """
-        godowns = Godowns.objects.filter(is_active=True, client=client)
-        total_value_all = Decimal('0.0000')
-        
         base_filter = Q(is_active=True, hold=False, client=client)
         date_filter = Q(date__lte=date_limit)
         
         purchases = Purchases.objects.filter(base_filter, date_filter)
         sales = Sales.objects.filter(base_filter, date_filter)
+        commissions = Commissions.objects.filter(base_filter, date_filter)
+        from core.models import StockTransfers
+        transfers = StockTransfers.objects.filter(base_filter, date_filter)
         
-        stocks = {}
+        stocks = {} # {godown_id: {'purchase_qty', 'purchase_value', 'balance_qty'}}
         
-        # Process Purchases
-        for p in purchases:
-            g_id = p.godown_id
-            if not g_id: continue
-            if g_id not in stocks:
+        def ensure_godown(g_id):
+            if g_id and g_id not in stocks:
                 stocks[g_id] = {'purchase_qty': Decimal(0), 'purchase_value': Decimal(0), 'balance_qty': Decimal(0)}
+
+        # 1. Process Purchases (Increases Qty and sets Value base)
+        for p in purchases:
+            ensure_godown(p.godown_id)
+            if p.godown_id:
+                qty = Decimal(str(p.qty))
+                stocks[p.godown_id]['purchase_qty'] += qty
+                stocks[p.godown_id]['purchase_value'] += qty * Decimal(str(p.amount))
+                stocks[p.godown_id]['balance_qty'] += qty
             
-            qty = Decimal(str(p.qty))
-            amount = Decimal(str(p.amount))
-            stocks[g_id]['purchase_qty'] += qty
-            stocks[g_id]['purchase_value'] += qty * amount
-            stocks[g_id]['balance_qty'] += qty
-            
-        # Process Sales (reduce quantity only, value remains based on avg cost)
+        # 2. Process Sales (Decreases Qty)
         for s in sales:
-            g_id = s.godown_id
-            if not g_id: continue
-            if g_id not in stocks:
-                 stocks[g_id] = {'purchase_qty': Decimal(0), 'purchase_value': Decimal(0), 'balance_qty': Decimal(0)}
-            
-            qty = Decimal(str(s.qty))
-            stocks[g_id]['balance_qty'] -= qty
+            ensure_godown(s.godown_id)
+            if s.godown_id:
+                stocks[s.godown_id]['balance_qty'] -= Decimal(str(s.qty))
+
+        # 3. Process Commissions (Decreases Qty)
+        for c in commissions:
+            ensure_godown(c.godown_id)
+            if c.godown_id:
+                stocks[c.godown_id]['balance_qty'] -= Decimal(str(c.qty))
+
+        # 4. Process Stock Transfers
+        for t in transfers:
+            ensure_godown(t.transfer_from_id)
+            ensure_godown(t.transfer_to_id)
+            if t.transfer_from_id:
+                stocks[t.transfer_from_id]['balance_qty'] -= Decimal(str(t.qty))
+            if t.transfer_to_id:
+                stocks[t.transfer_to_id]['balance_qty'] += Decimal(str(t.qty))
+                # Note: For weighted average, transfers might complicate valuation if godowns have different costs.
+                # Here we assume a global average cost per Godown based on its own purchases.
             
         # Calculate Value
+        total_value_all = Decimal('0.0000')
         for item in stocks.values():
             if item['balance_qty'] > 0:
                 avg_rate = (item['purchase_value'] / item['purchase_qty']) if item['purchase_qty'] > 0 else Decimal(0)
@@ -64,7 +78,7 @@ class PandLService:
         end_datetime = datetime.datetime.combine(end_date, datetime.time.max)
         start_datetime = datetime.datetime.combine(start_date, datetime.time.min)
 
-        base_filter = Q(is_active=True, client=client)
+        base_filter = Q(is_active=True, hold=False, client=client)
         date_filter_range = Q(date__range=[start_date, end_date])
         created_at_filter_range = Q(created_at__range=[start_datetime, end_datetime])
 
@@ -89,7 +103,7 @@ class PandLService:
 
         # 5. Expenses (Indirect Expense)
         # Expenses Model has 'created_at' field, NO 'date' field
-        expenses_qs = Expenses.objects.filter(base_filter, created_at_filter_range)
+        expenses_qs = Expenses.objects.filter(is_active=True, client=client, created_at__range=[start_datetime, end_datetime])
         expense_details = []
         total_expense = Decimal('0.0000')
         
@@ -142,7 +156,7 @@ class TrialBalanceService:
     @staticmethod
     def get_trial_balance(client, date_limit):
         accounts = []
-        base_filter_active = Q(is_active=True, client=client)
+        base_filter_active = Q(is_active=True, hold=False, client=client)
         
         # Determine Financial Year Start (Default Jan 1st of current year)
         # Ideally this should be configurable, but consistent with P&L defaults for now
@@ -163,17 +177,24 @@ class TrialBalanceService:
         cash_received = Cashs.objects.filter(base_filter_active, date_filter_cumulative, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
         cash_paid = Cashs.objects.filter(base_filter_active, date_filter_cumulative, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
         
-        # Calculate totals for implicit cash expenses
-        commissions_total_cash = Commissions.objects.filter(base_filter_active, date_filter_cumulative).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+        # Commissions are now separate from Cash In Hand (C2 fix)
+        cash_balance = cash_received - cash_paid
         
-        # Expenses Logic: 'Expenses' model acts as category, but if it has Amount it's an expense. 
-        # However, checking views, Expenses seem to be categories. 
-        # If there's an 'Expenses' entry with Amount > 0, we treat it as expense.
-        # expenses_total_cash = Expenses.objects.filter(base_filter_active, created_at__lte=date_limit).aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
-        # user scenario specific: Commission 52 is the key. 
+        # Add Opening Balance Equity (C7 fix)
+        total_open_credit = Customers.objects.filter(is_active=True, client=client).aggregate(s=Sum('open_credit'))['s'] or Decimal('0')
+        total_open_credit += Suppliers.objects.filter(is_active=True, client=client).aggregate(s=Sum('open_credit'))['s'] or Decimal('0')
+        total_open_debit = Customers.objects.filter(is_active=True, client=client).aggregate(s=Sum('open_debit'))['s'] or Decimal('0')
+        total_open_debit += Suppliers.objects.filter(is_active=True, client=client).aggregate(s=Sum('open_debit'))['s'] or Decimal('0')
         
-        cash_balance = cash_received - cash_paid - commissions_total_cash
-        
+        obe_balance = total_open_credit - total_open_debit
+        if obe_balance != 0:
+            accounts.append({
+                'code': '3000',
+                'name': 'OPENING BALANCE EQUITY',
+                'debit': abs(obe_balance) if obe_balance < 0 else 0,
+                'credit': abs(obe_balance) if obe_balance > 0 else 0,
+            })
+
         if cash_balance != 0:
             accounts.append({
                'code': '1001',

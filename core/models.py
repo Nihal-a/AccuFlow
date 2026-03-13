@@ -4,6 +4,12 @@ from django.utils import timezone
 import uuid
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, PermissionsMixin, Group, Permission
 
+class TransactionType:
+    RECEIVED = 'Received'
+    PAID = 'Paid'
+    CUSTOMERS = 'customers'
+    SUPPLIERS = 'suppliers'
+
 class SoftDeleteMixin(models.Model):
     deleted_at = models.DateTimeField(null=True, blank=True)
 
@@ -228,6 +234,7 @@ class Expenses(SoftDeleteMixin):
     expenseId = models.TextField(blank=True,null=True)
     description = models.TextField(blank=True,null=True) 
     amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
+    date = models.DateField(default=timezone.now, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True,blank=True,null=True)
     is_active = models.BooleanField(default=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
@@ -297,9 +304,9 @@ class Collectors(SoftDeleteMixin):
     
 class Purchases(SoftDeleteMixin):
     purchase_no = models.TextField(blank=True,null=True)
-    supplier = models.ForeignKey(Suppliers, on_delete=models.CASCADE, blank=True, null=True)
-    godown = models.ForeignKey(Godowns, on_delete=models.CASCADE, blank=True, null=True)
-    customer = models.ForeignKey(Customers, on_delete=models.CASCADE, blank=True, null=True)
+    supplier = models.ForeignKey(Suppliers, on_delete=models.RESTRICT, blank=True, null=True)
+    godown = models.ForeignKey(Godowns, on_delete=models.RESTRICT, blank=True, null=True)
+    customer = models.ForeignKey(Customers, on_delete=models.RESTRICT, blank=True, null=True)
     date = models.DateField(blank=True,null=True)
     code = models.TextField(blank=True,null=True)
     qty = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
@@ -497,8 +504,8 @@ class Cashs(SoftDeleteMixin):
 
 class StockTransfers(SoftDeleteMixin):
     transfer_no = models.TextField(blank=True, null=True)
-    transfer_from = models.ForeignKey(Godowns,on_delete=models.CASCADE,related_name='transfers_from',blank=True, null=True)
-    transfer_to = models.ForeignKey(Godowns,on_delete=models.CASCADE,related_name='transfers_to',blank=True,null=True)
+    transfer_from = models.ForeignKey(Godowns,on_delete=models.RESTRICT,related_name='transfers_from',blank=True, null=True)
+    transfer_to = models.ForeignKey(Godowns,on_delete=models.RESTRICT,related_name='transfers_to',blank=True,null=True)
     date = models.DateField(blank=True, null=True)
     code = models.TextField(blank=True, null=True)
     qty = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
@@ -584,6 +591,18 @@ def update_client_subscription(sender, instance, created, **kwargs):
         client.subscription_end = client.subscription_start + datetime.timedelta(days=plan.duration_days)
         client.save()
 
+class AuditLog(models.Model):
+    client = models.ForeignKey(Clients, on_delete=models.CASCADE, null=True, blank=True)
+    user = models.ForeignKey(UserAccount, on_delete=models.SET_NULL, null=True)
+    action = models.CharField(max_length=255)
+    model_name = models.CharField(max_length=100)
+    object_id = models.IntegerField(null=True)
+    changes = models.JSONField(null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+    
 class AdminExpense(models.Model):
     title = models.CharField(max_length=200)
     amount = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
