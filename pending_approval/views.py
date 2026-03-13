@@ -3,12 +3,16 @@ from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.utils import timezone
+from django.db import transaction
+from django.views.decorators.cache import never_cache
+from django.utils.decorators import method_decorator
 from core.models import Collection, Cashs, CashBanks, Sales, Customers, Suppliers
 from core.views import getClient, update_ledger
 from cash_entry.views import getLastCashNo
 from django.db.models import Sum, Count
 from decimal import Decimal, InvalidOperation
 
+@method_decorator(never_cache, name='dispatch')
 class PendingApprovalView(LoginRequiredMixin, View):
     def get(self, request):
         client = getClient(request.user)
@@ -38,6 +42,7 @@ class PendingApprovalView(LoginRequiredMixin, View):
             'selected_date': date_str
         })
 
+@method_decorator(never_cache, name='dispatch')
 class PendingApprovalDetailView(LoginRequiredMixin, View):
     def get(self, request, id):
         client = getClient(request.user)
@@ -65,6 +70,7 @@ class PendingApprovalDetailView(LoginRequiredMixin, View):
             'cashbanks': cashbanks
         })
 
+    @transaction.atomic
     def post(self, request, id):
         client = getClient(request.user)
         collection = get_object_or_404(Collection, id=id, client=client)
@@ -89,6 +95,10 @@ class PendingApprovalDetailView(LoginRequiredMixin, View):
             
             items = collection.items.all()
             approved_count = 0
+            
+            # Generate cash number once before the loop and increment per item
+            # to prevent duplicate cash numbers (VULN #46)
+            next_cash_no = getLastCashNo(client=client)
             
             for item in items:
                 amount_str = request.POST.get(f'amount_{item.id}')
@@ -123,7 +133,7 @@ class PendingApprovalDetailView(LoginRequiredMixin, View):
                         
                         Cashs.objects.create(
                             client=client,
-                            cash_no=getLastCashNo(client=client), 
+                            cash_no=str(next_cash_no),
                             supplier=supplier,
                             customer=customer,
                             cash_bank=cash_bank,
@@ -135,6 +145,11 @@ class PendingApprovalDetailView(LoginRequiredMixin, View):
                             hold=False,
                             is_active=True
                         )
+                        # Increment for the next item
+                        if str(next_cash_no).isdigit():
+                            next_cash_no = str(int(next_cash_no) + 1)
+                        else:
+                            next_cash_no = str(next_cash_no) + '_1'
 
             collection.status = 'Approved'
             collection.is_viewed = False

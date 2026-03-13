@@ -1,13 +1,22 @@
 from django.views.decorators.http import require_POST
 import datetime
 import json
+import logging
 from django.utils.dateparse import parse_date
 from django.shortcuts import render, redirect, get_object_or_404
 from core.models import StockTransfers, Godowns
 from django.views import View
 from django.http import JsonResponse
+from django.db import transaction
+from django.views.decorators.cache import never_cache
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
 from core.views import getClient
 
+logger = logging.getLogger(__name__)
+
+
+@method_decorator(never_cache, name='dispatch')
 class StockTransferView(View):
     def get(self, request):
         client = getClient(request.user)
@@ -21,7 +30,7 @@ class StockTransferView(View):
                 client=client,
                 date__gte=from_date,
                 date__lte=to_date
-            ).order_by('-id')
+            ).select_related('transfer_from', 'transfer_to').order_by('-id')
         else:
             transfers = []
 
@@ -38,7 +47,7 @@ class StockTransferView(View):
             })
             
         godowns = Godowns.objects.filter(is_active=True, client=client)
-        held_transfers = StockTransfers.objects.filter(is_active=True, hold=True, client=client)
+        held_transfers = StockTransfers.objects.filter(is_active=True, hold=True, client=client).select_related('transfer_from', 'transfer_to')
         held_transfer_data = []
         for transfer in held_transfers:
             held_transfer_data.append({
@@ -63,7 +72,9 @@ class StockTransferView(View):
         }
         return render(request, 'stock_transfer/stock_transfer.html', context)
 
+@method_decorator(never_cache, name='dispatch')
 class StockTransferAddView(View):
+    @transaction.atomic
     def post(self, request):
         client = getClient(request.user)
         dates = request.POST.getlist('dates')
@@ -79,11 +90,15 @@ class StockTransferAddView(View):
                 if not (godown_from_ids[i] and godown_to_ids[i] and qtys[i]):
                     continue
                     
-                godown_from = get_object_or_404(Godowns, id=godown_from_ids[i], client=client)
-                godown_to = get_object_or_404(Godowns, id=godown_to_ids[i], client=client)
+                godown_from = Godowns.objects.select_for_update().get(id=godown_from_ids[i], client=client)
+                godown_to = Godowns.objects.select_for_update().get(id=godown_to_ids[i], client=client)
                 
                 from decimal import Decimal
-                qty = Decimal(str(qtys[i]))
+                try:
+                    qty = Decimal(str(qtys[i]))
+                except Exception:
+                    return redirect('stocktransfer')
+
                 
                 # Check if it was a held transfer to approve
                 if transfer_ids and len(transfer_ids) > i and transfer_ids[i]:
@@ -120,11 +135,13 @@ class StockTransferAddView(View):
                 
         return redirect('stocktransfer')
 
+@login_required
+@never_cache
 def get_transfer_no_api(request):
     client = getClient(request.user)
     try:
         new_no = getLastTransferNo(client)
-    except:
+    except Exception:
         new_no = 1
     return JsonResponse({'transfer_no': new_no})
 
@@ -135,14 +152,16 @@ def getLastTransferNo(client):
             return int(last_transfer.transfer_no) + 1
         return 1
     except Exception as e:
-        print(f"Error getting last transfer no: {e}")
+        logger.error(f"Error getting last transfer no: {e}")
         return 1
 
 from core.authorization import get_object_for_user
 
 from decimal import Decimal
 
+@method_decorator(never_cache, name='dispatch')
 class StockTransferHoldView(View):
+    @transaction.atomic
     def post(self, request):
         client = getClient(request.user)
         try:
@@ -151,7 +170,11 @@ class StockTransferHoldView(View):
             date = data.get('date')
             godown_from_id = data.get('godown_from')
             godown_to_id = data.get('godown_to')
-            qty = Decimal(str(data.get('qty', 0)))
+            try:
+                qty = Decimal(str(data.get('qty', 0)))
+            except Exception:
+                return JsonResponse({'status': 'error', 'message': 'Invalid numeric data for qty.'}, status=400)
+
             description = data.get('description')
             transfer_id = data.get('transfer_id')
 
@@ -164,9 +187,9 @@ class StockTransferHoldView(View):
                 
                 # If editing a posted transfer, carefully reverse the old quantities FIRST
                 if not transfer.hold:
-                    # Refresh the old godowns directly from the database to avoid memory overlaps
-                    old_from = get_object_or_404(Godowns, id=transfer.transfer_from.id)
-                    old_to = get_object_or_404(Godowns, id=transfer.transfer_to.id)
+                    # Lock and refresh the old godowns to avoid memory overlaps and race conditions
+                    old_from = Godowns.objects.select_for_update().get(id=transfer.transfer_from.id)
+                    old_to = Godowns.objects.select_for_update().get(id=transfer.transfer_to.id)
                     
                     old_from.qty += transfer.qty
                     old_from.save()
@@ -184,11 +207,11 @@ class StockTransferHoldView(View):
                 
                 # Re-apply quantities to the newly selected godowns if it's a posted transfer
                 if not transfer.hold:
-                    godown_from.refresh_from_db()
+                    godown_from = Godowns.objects.select_for_update().get(pk=godown_from.pk)
                     godown_from.qty -= qty
                     godown_from.save()
                     
-                    godown_to.refresh_from_db()
+                    godown_to = Godowns.objects.select_for_update().get(pk=godown_to.pk)
                     godown_to.qty += qty
                     godown_to.save()
                     
@@ -209,10 +232,12 @@ class StockTransferHoldView(View):
             return JsonResponse({'status': 'success', 'transfer_id': transfer.id, 'hold': transfer.hold})
 
         except Exception as e:
-            print(f"Error holding transfer: {e}")
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+            logger.error(f"Error holding transfer: {e}")
+            return JsonResponse({'status': 'error', 'message': 'An error occurred while processing the transfer.'}, status=400)
 
+@never_cache
 @require_POST
+@transaction.atomic
 def delete_transfer_api(request):
     try:
         try:
@@ -232,19 +257,24 @@ def delete_transfer_api(request):
         # But generally, hold transfers haven't affected balances yet.
         if not transfer.hold:
             # Reverse balance logic if deleting an actual posted transfer...
-            transfer.transfer_from.qty += transfer.qty
-            transfer.transfer_from.save()
-            transfer.transfer_to.qty -= transfer.qty
-            transfer.transfer_to.save()
+            # Use select_for_update() to prevent race conditions
+            gd_from = Godowns.objects.select_for_update().get(pk=transfer.transfer_from.pk)
+            gd_to = Godowns.objects.select_for_update().get(pk=transfer.transfer_to.pk)
+            gd_from.qty += transfer.qty
+            gd_from.save()
+            gd_to.qty -= transfer.qty
+            gd_to.save()
             
         transfer.is_active = False
         transfer.save()
         return JsonResponse({'status': 'success', 'message': 'Transfer deleted successfully'})
         
     except Exception as e:
-        print(f"Error deleting transfer: {e}")
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+        logger.error(f"Error deleting transfer: {e}")
+        return JsonResponse({'status': 'error', 'message': 'An error occurred while deleting the transfer.'}, status=400)
 
+@login_required
+@never_cache
 def transfers_by_date(request):
     client = getClient(request.user)
     from_date = request.GET.get('from_date')
@@ -274,6 +304,7 @@ def transfers_by_date(request):
             
     return JsonResponse({'transfers': transfersData})
 
+@login_required
 def godown_balances_api(request):
     client = getClient(request.user)
     godowns = Godowns.objects.filter(is_active=True, client=client)

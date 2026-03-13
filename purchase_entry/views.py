@@ -5,18 +5,24 @@ from core.models import Purchases,Suppliers,Customers,Godowns
 from django.views import View
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
-from django.db.models import Q
+
 from django.db import transaction
 from django.db.models import F
+from django.views.decorators.cache import never_cache
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
 
 from core.views import getClient, update_ledger, calculate_supplier_balance, calculate_customer_balance
 from core.authorization import get_object_for_user
 from core.utils import validate_positive_decimal
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
+
+@method_decorator(never_cache, name='dispatch')
 class PurchaseEntryView(View):
     def get(self,request):
-        purchases = Purchases.objects.filter(hold=True,is_active=True,client=getClient(request.user))
+        client = getClient(request.user)
+        purchases = Purchases.objects.filter(hold=True,is_active=True,client=client).select_related('supplier', 'customer', 'godown')
         purchaseData = []
         for purchase in purchases:
             purchaseData.append({
@@ -35,16 +41,16 @@ class PurchaseEntryView(View):
                 'description':purchase.description if purchase.description else '', 
                 'type':purchase.which_type if purchase.which_type else '',
             })
-        suppliers = Suppliers.objects.filter(is_active=True,client=getClient(request.user))
-        customers = Customers.objects.filter(is_active=True,client=getClient(request.user))
-        godowns = Godowns.objects.filter(is_active=True,client=getClient(request.user))
+        suppliers = Suppliers.objects.filter(is_active=True,client=client)
+        customers = Customers.objects.filter(is_active=True,client=client)
+        godowns = Godowns.objects.filter(is_active=True,client=client)
         customersData = []
         for customer in customers:
             customersData.append({
                 'id':customer.id,
                 'name':customer.name,
                 'customerId':customer.customerId, 
-                'balance':str(calculate_customer_balance(customer, getClient(request.user))),
+                'balance':str(calculate_customer_balance(customer, client)),
             })
         suppliersData = []
         for supplier in suppliers:
@@ -52,7 +58,7 @@ class PurchaseEntryView(View):
                 'id':supplier.id,
                 'name':supplier.name,
                 'supplierId':supplier.supplierId,
-                'balance':str(calculate_supplier_balance(supplier, getClient(request.user))),
+                'balance':str(calculate_supplier_balance(supplier, client)),
             })
         context = {
             'purchases':purchaseData,
@@ -63,11 +69,12 @@ class PurchaseEntryView(View):
             'suppliers': suppliers,
             'customers': customers,
             'godowns':godowns,
-            'last_purchase_no':getLastPurchaseNo(client=getClient(request.user)),
+            'last_purchase_no':getLastPurchaseNo(client=client),
         }
         return render(request,'purchase_entry/purchase_entry.html',context)
     
     
+@method_decorator(never_cache, name='dispatch')
 class PurchaseAddView(View):
     def post(self,request):
         with transaction.atomic():
@@ -96,11 +103,17 @@ class PurchaseAddView(View):
                 purchase = get_object_for_user(Purchases, request.user, id=id)
                 
                 # Validation
-                qty_val = Decimal(str(qtys[count] or 0))
-                amount_val = Decimal(str(amounts[count] or 0))
-                total_amount_val = qty_val * amount_val
+                try:
+                    qty_val = Decimal(str(qtys[count] or 0))
+                    amount_val = Decimal(str(amounts[count] or 0))
+                    total_amount_val = (qty_val * amount_val).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+                except Exception:
+                    return redirect('purchase')
+
 
                 if purchase.hold:
+                    # Lock godown row to prevent concurrent qty race conditions
+                    godown = Godowns.objects.select_for_update().get(pk=godown.pk)
                     godown.qty = F('qty') + qty_val  
                     godown.save()
                     update_ledger(where=seller,to=None,new_purchase=total_amount_val,new_sale=0) 
@@ -127,6 +140,7 @@ class PurchaseAddView(View):
         return redirect('purchase')
 
 
+@method_decorator(never_cache, name='dispatch')
 class PurchaseHold(View):
     def post(self,request):
         with transaction.atomic():
@@ -135,9 +149,12 @@ class PurchaseHold(View):
             supplier = data.get('supplier')
             godown = data.get('godown')
             date = data.get('date')
-            qty = Decimal(str(data.get('qty', 0)))
-            amount = Decimal(str(data.get('amount', 0)))
-            total_amount = qty * amount
+            try:
+                qty = Decimal(str(data.get('qty', 0)))
+                amount = Decimal(str(data.get('amount', 0)))
+                total_amount = (qty * amount).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            except Exception:
+                return JsonResponse({'status': 'error', 'message': 'Invalid numeric data for qty or amount.'}, status=400)
             description = data.get('description')
             type_value = data.get('type')
             customer = None
@@ -165,6 +182,8 @@ class PurchaseHold(View):
                         new_sale=0
                     )
                     purchase.party.save()
+                    # Lock godown row to prevent concurrent qty race conditions
+                    purchase.godown = Godowns.objects.select_for_update().get(pk=purchase.godown.pk)
                     purchase.godown.qty = F('qty') - purchase.qty
                     purchase.godown.save()
                     purchase.godown.refresh_from_db()
@@ -193,6 +212,8 @@ class PurchaseHold(View):
                         new_purchase=total_amount,
                         new_sale=0,
                     )
+                    # Lock godown row to prevent concurrent qty race conditions
+                    godown = Godowns.objects.select_for_update().get(pk=godown.pk)
                     godown.qty = F('qty') + qty
                     godown.save()
                     godown.refresh_from_db()
@@ -233,11 +254,15 @@ def getLastPurchaseNo(client):
     return 1
 
 
+@login_required
+@never_cache
 def purchase_no(request):
     new_purchase_no = getLastPurchaseNo(client=getClient(request.user))
     return JsonResponse({'purchase_no': new_purchase_no})
 
 
+@login_required
+@never_cache
 def purchases_by_date(request):
     from_date = request.GET.get('from')
     to_date = request.GET.get('to')
@@ -248,7 +273,7 @@ def purchases_by_date(request):
             hold=False,
             is_active=True,
             client=getClient(request.user)
-        )
+        ).select_related('supplier', 'customer', 'godown')
     purchaseData = []
     total_qty = 0
     total_amount = 0
@@ -279,9 +304,17 @@ def purchases_by_date(request):
     return JsonResponse({'purchases': purchaseData, 'total_qty': total_qty, 'total_amount': total_amount, 'rate_avg': rate_avg})
 
 
+@never_cache
 @require_POST
 def delete_purchase(request):
-    pk = request.POST.get('id') or request.GET.get('id') 
+    try:
+        data = json.loads(request.body)
+        pk = data.get('id')
+    except json.JSONDecodeError:
+        pk = request.POST.get('id')
+        
+    if not pk:
+        return JsonResponse({'status': 'error', 'message': 'No ID provided'}, status=400)
     
     with transaction.atomic():
         # Authorization: Ensure purchase belongs to user's client
@@ -296,11 +329,15 @@ def delete_purchase(request):
             new_purchase=0,
             new_sale=0
         )
+            # Lock godown row to prevent concurrent qty race conditions
+            purchase.godown = Godowns.objects.select_for_update().get(pk=purchase.godown.pk)
             purchase.godown.qty = F('qty') - purchase.qty
             purchase.godown.save() 
         purchase.save()
     return JsonResponse({'status':'success','message':'Purchase deleted successfully'})
 
+@login_required
+@never_cache
 def purchase_balances_api(request):
     client = getClient(request.user)
     suppliers = Suppliers.objects.filter(is_active=True, client=client)

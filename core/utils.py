@@ -1,6 +1,8 @@
 from decimal import Decimal, InvalidOperation
 from django.core.exceptions import ValidationError
 from django.db.models import Max
+from django.db import transaction
+
 
 def validate_positive_decimal(value, field_name):
     try:
@@ -11,8 +13,18 @@ def validate_positive_decimal(value, field_name):
     except (ValueError, InvalidOperation):
         raise ValidationError(f"Invalid {field_name}")
 
+
 def get_next_id(model_class, field_name, client, prefix='ID-', separator='-'):
-    last_item = model_class.objects.filter(client=client, is_active=True).order_by(field_name).last()
+    """
+    Generate the next sequential ID for a model field, with row-level locking
+    to prevent race conditions under concurrent access.
+    
+    Must be called within a @transaction.atomic block for select_for_update() to work.
+    """
+    # Lock all matching rows to prevent concurrent reads from generating duplicate IDs
+    locked_qs = model_class.objects.select_for_update().filter(client=client, is_active=True)
+    last_item = locked_qs.order_by(field_name).last()
+
     if last_item and getattr(last_item, field_name):
         try:
             val = str(getattr(last_item, field_name))
@@ -27,19 +39,26 @@ def get_next_id(model_class, field_name, client, prefix='ID-', separator='-'):
             return f"{prefix}1"
     return f"{prefix}1"
 
+
 def get_next_sale_no(client):
+    """Generate next sale number with row-level locking."""
     from core.models import Sales
-    last_sale = Sales.objects.filter(is_active=True, client=client).order_by('-sale_no').first()
+    locked_qs = Sales.objects.select_for_update().filter(is_active=True, client=client)
+    last_sale = locked_qs.order_by('-sale_no').first()
     if last_sale and last_sale.sale_no and str(last_sale.sale_no).isdigit():
         return int(last_sale.sale_no) + 1
     return 1
 
+
 def get_next_purchase_no(client):
+    """Generate next purchase number with row-level locking."""
     from core.models import Purchases
-    last = Purchases.objects.filter(is_active=True, client=client).order_by('-purchase_no').first()
+    locked_qs = Purchases.objects.select_for_update().filter(is_active=True, client=client)
+    last = locked_qs.order_by('-purchase_no').first()
     if last and last.purchase_no and str(last.purchase_no).isdigit():
         return int(last.purchase_no) + 1
     return 1
+
 
 def get_next_id_generic(model_name, client):
     from core.models import Customers, Suppliers, Expenses, Godowns, CashBanks, Collectors, Purchases, Sales, Commissions, NSDs, Cashs, StockTransfers

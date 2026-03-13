@@ -39,7 +39,9 @@ class WhatsAppService:
             raise WhatsAppServiceError("client_id is required for WhatsApp service")
         self.client_id = client_id
         self.base_url = getattr(settings, 'WHATSAPP_NODE_URL', 'http://localhost:3005')
-        self.api_key = getattr(settings, 'WHATSAPP_API_KEY', 'accuflow-wa-dev-key-2024')
+        self.api_key = getattr(settings, 'WHATSAPP_API_KEY', None)
+        if not self.api_key:
+            raise WhatsAppServiceError("WHATSAPP_API_KEY must be set in Django settings")
         self.timeout = getattr(settings, 'WHATSAPP_TIMEOUT', 30)
 
     def _headers(self):

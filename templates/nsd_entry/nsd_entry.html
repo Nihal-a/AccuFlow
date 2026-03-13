@@ -613,11 +613,11 @@
     var count = 0;
     tableBody.querySelectorAll("tr").forEach(function (row) {
       if (row.id === 'totalRow') return;
-      const qty = parseFloat(row.cells[5].innerText) || 0;
-      const sellRate = parseFloat(row.cells[6].innerText) || 0;
-      const sellAmount = parseFloat(row.cells[7].innerText) || 0;
-      const purchaseRate = parseFloat(row.cells[8].innerText) || 0;
-      const purchaseAmount = parseFloat(row.cells[9].innerText) || 0;
+      const qty = parseComma(row.cells[5].innerText);
+      const sellRate = parseComma(row.cells[6].innerText);
+      const sellAmount = parseComma(row.cells[7].innerText);
+      const purchaseRate = parseComma(row.cells[8].innerText);
+      const purchaseAmount = parseComma(row.cells[9].innerText);
       totalQty += qty;
       rateSum += sellRate;
       totalAmount += sellAmount;
@@ -628,13 +628,13 @@
     var rateAvg = count > 0 ? (rateSum / count) : 0;
     var purchaseRateAvg = count > 0 ? (purchaseRateSum / count) : 0;
     const lastRow = `
-      <tr class="bg-blue-200 font-bold text-sm" id="totalRow">
-        <td class="px-1.5 py-1.5 text-left" colspan="5">Totals:</td>
-        <td class="px-1.5 py-1.5 text-right">${formatComma(totalQty)}</td>
-        <td class="px-1.5 py-1.5 text-right">${formatComma(rateAvg)}</td>
-        <td class="px-1.5 py-1.5 text-right">${formatComma(totalAmount)}</td>
-        <td class="px-1.5 py-1.5 text-right">${formatComma(purchaseRateAvg)}</td>
-        <td class="px-1.5 py-1.5 text-right">${formatComma(totalPurchaseAmount)}</td>
+      <tr class="bg-blue-200 font-semibold text-gray-800 border-t-2 border-blue-300" id="totalRow">
+        <td class="px-1.5 py-1.5 text-left text-sm" colspan="5">Totals:</td>
+        <td class="px-1.5 py-1.5 text-right text-sm">${formatComma(totalQty)}</td>
+        <td class="px-1.5 py-1.5 text-right text-sm">${formatComma(rateAvg)}</td>
+        <td class="px-1.5 py-1.5 text-right text-sm">${formatComma(totalAmount)}</td>
+        <td class="px-1.5 py-1.5 text-right text-sm">${formatComma(purchaseRateAvg)}</td>
+        <td class="px-1.5 py-1.5 text-right text-sm">${formatComma(totalPurchaseAmount)}</td>
       </tr>`;
     tableBody.insertAdjacentHTML('beforeend', lastRow);
 
@@ -1013,9 +1013,10 @@
           $('#addGrid').removeClass('bg-green-500 hover:bg-green-600').addClass('bg-blue-500 hover:bg-blue-600');
           $('#addToGridText').text('Add to Grid');
           $('#nsd_name').val(getLastNSDNo());
-          resetSLNo()
-          addLastRow()
-          isUpdate = false
+          isUpdate = false;
+          resetSLNo();
+          addLastRow();
+          
         } else {
           refreshBalances();
           $('#viewNSDDiv').removeClass('hidden');
@@ -1094,6 +1095,7 @@
     } else {
       $('#allSuppliers').prop('checked', false).change();
     }
+
     document.getElementById("supplier").value = inputs.supplier;
 
     if (inputs.receiver_type === 'suppliers') {
@@ -1101,16 +1103,16 @@
     } else {
       $('#allCustomer').prop('checked', false).change();
     }
+
     document.getElementById("customer").value = inputs.customer;
 
-
-    $('#addToGridText').text('Update Grid');
+    // Always change button to Update Grid when editing any row
     $('#addGrid').removeClass('bg-blue-500 hover:bg-blue-600').addClass('bg-green-500 hover:bg-green-600');
+    $('#addToGridText').text('Update Grid');
 
     $('#supplier, #customer').change()
     resetSLNo()
     addLastRow()
-
 
   }
 
@@ -1120,20 +1122,22 @@
     selectedTR = selectedRow;
     const nsdId = selectedRow.querySelector('#nsd_id').value;
 
-
-    deleteUrl = "/nsd/api/delete_nsd/?id=0".replace("0", nsdId);
+    deleteUrl = "{% url 'api-delete-nsd' %}";
     document.getElementById("confirmModal").classList.remove("hidden");
   }
   function deleteItem() {
+    const nsdId = selectedTR.querySelector('#nsd_id').value;
 
     fetch(deleteUrl, {
       method: 'POST',
-      headers: {'X-CSRFToken': getCookie('csrftoken')}
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify({ id: nsdId })
     })
       .then(response => response.json())
       .then(data => {
-
-
         if (data.status === 'success') {
           selectedTR.remove();
           deleteUrl = "";

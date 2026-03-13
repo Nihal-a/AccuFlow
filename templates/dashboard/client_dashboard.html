@@ -220,6 +220,8 @@
 
 {% block externalJS %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/decimal.js@10.5.0/decimal.min.js"></script>
+<script id="chart-data" type="application/json">{{ chart_data_json|safe }}</script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         if (typeof navActive === 'function') {
@@ -227,7 +229,20 @@
         }
 
         // --- Daily Trend Chart ---
-        const chartData = {{ chart_data_json|safe }};
+        const chartDataRaw = JSON.parse(document.getElementById('chart-data').textContent);
+        
+        // Convert string data to Decimal objects then back to numbers for Chart.js 
+        // (Chart.js needs numbers for plotting, but we use Decimal for any local math if needed 
+        // and formatting in tooltips to ensure precision)
+        const formatDecimal = (val) => new Decimal(val).toNumber();
+        const chartData = {
+            labels: chartDataRaw.labels,
+            purchase: chartDataRaw.purchase.map(formatDecimal),
+            sale: chartDataRaw.sale.map(formatDecimal),
+            nsd: chartDataRaw.nsd.map(formatDecimal),
+            cash: chartDataRaw.cash.map(formatDecimal),
+        };
+
         const ctx = document.getElementById('dailyTrendChart').getContext('2d');
 
         const purpleGrad = ctx.createLinearGradient(0, 0, 0, 280);
@@ -311,9 +326,11 @@
                         cornerRadius: 8,
                         padding: 10,
                         callbacks: {
-                            label: function(ctx) {
-                                const v = ctx.raw || 0;
-                                return ctx.dataset.label + ': ' + v.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                            label: function(context) {
+                                const v = context.raw || 0;
+                                // Use Decimal for precise formatting in tooltip
+                                const formatted = new Decimal(v).toFixed(2);
+                                return context.dataset.label + ': ' + formatted;
                             }
                         }
                     }

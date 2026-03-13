@@ -15,6 +15,8 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.decorators import method_decorator
 from django.db.models import Sum
 from core.decorators import admin_action_required
+from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_POST
 
 logger = logging.getLogger(__name__)
 
@@ -303,6 +305,8 @@ class DeleteClientView(View):
 
 @login_required
 @staff_member_required
+@never_cache
+@require_POST
 def toggle_client_block(request, client_id):
     client = get_object_or_404(Clients, id=client_id)
     client.is_blocked = not client.is_blocked
@@ -330,9 +334,21 @@ def last_client_id():
 
 
 
+from django.core.cache import cache
+
 @login_required
 def check_username_availability(request):
     if request.method == 'POST':
+        # MED-11: Simple Rate Limiting (max 10 requests per minute per IP)
+        ip = request.META.get('REMOTE_ADDR')
+        cache_key = f'username_check_rate_limit_{ip}'
+        requests_count = cache.get(cache_key, 0)
+        
+        if requests_count >= 10:
+            return JsonResponse({'error': 'Too many requests. Please try again later.'}, status=429)
+            
+        cache.set(cache_key, requests_count + 1, timeout=60)
+        
         try:
             data = json.loads(request.body.decode('utf-8'))
             username = data.get('username', '').strip()

@@ -217,8 +217,7 @@
             required>
             <option value="" selected>Select Godown</option>
             {% for godown in godowns %}
-            <option value="{{ godown.id }}" data-code="{{ godown.godownId }}" data-balance="{{ godown.get_balance }}">{{
-              godown.name }}</option>
+            <option value="{{ godown.id }}" data-code="{{ godown.godownId }}" data-balance="{{ godown.get_balance }}">{{ godown.name }}</option>
             {% endfor %}
           </select>
           <div id="godownCredit" class="hidden md:block text-xs font-semibold text-gray-700 shrink-0"></div>
@@ -475,11 +474,11 @@
     });
     rateAvg = count > 0 ? (rateSum / count) : 0;
     const lastRow = `
-      <tr class="bg-blue-200 font-bold text-sm" id="totalRow">
-        <td class="px-1.5 py-1.5 text-left" colspan="6">Totals:</td>
-        <td class="px-1.5 py-1.5 text-right">${formatComma(totalQty)}</td>
-        <td class="px-1.5 py-1.5 text-right">${formatComma(rateAvg)}</td>
-        <td class="px-1.5 py-1.5 text-right">${formatComma(totalAmount)}</td>
+      <tr class="bg-blue-200 font-semibold text-gray-800 border-t-2 border-blue-300" id="totalRow">
+        <td class="px-1.5 py-1.5 text-left text-sm" colspan="6">Totals:</td>
+        <td class="px-1.5 py-1.5 text-right text-sm">${formatComma(totalQty)}</td>
+        <td class="px-1.5 py-1.5 text-right text-sm">${formatComma(rateAvg)}</td>
+        <td class="px-1.5 py-1.5 text-right text-sm">${formatComma(totalAmount)}</td>
       </tr>`;
     tableBody.insertAdjacentHTML('beforeend', lastRow);
 

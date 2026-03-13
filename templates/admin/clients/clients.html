@@ -271,8 +271,11 @@
         class="bg-gray-300 text-gray-800 px-6 py-2 rounded hover:bg-gray-400 font-medium transition-all">
         Cancel
       </button>
-      <a id="confirmBlockBtn" href="#" class="px-6 py-2 rounded text-white font-medium transition-all">
-      </a>
+      <form id="blockForm" method="POST" action="#" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" id="confirmBlockBtn" class="px-6 py-2 rounded text-white font-medium transition-all">
+        </button>
+      </form>
     </div>
   </div>
 </div>
@@ -301,11 +304,12 @@
   function openBlockModal(clientId, clientName, isBlocked) {
     const url = "{% url 'toggle-client-block' 0 %}".replace("0", clientId);
     const confirmBtn = document.getElementById("confirmBlockBtn");
+    const blockForm = document.getElementById("blockForm");
     const title = document.getElementById("blockModalTitle");
     const message = document.getElementById("blockModalMessage");
     const iconDiv = document.getElementById("blockModalIcon");
 
-    confirmBtn.setAttribute("href", url);
+    blockForm.setAttribute("action", url);
 
     if (isBlocked) {
       title.textContent = "Unblock Client";

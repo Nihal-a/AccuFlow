@@ -19,6 +19,7 @@ from django.views import View
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
+from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.utils import timezone
@@ -83,6 +84,7 @@ def client_whatsapp_required(view_func):
 # PAGE VIEWS
 # ============================================================
 
+@method_decorator(login_required, name='dispatch')
 class WhatsAppScanView(View):
     """Renders the WhatsApp QR scan / link management page."""
 
@@ -122,6 +124,7 @@ class WhatsAppScanView(View):
         return render(request, 'whatsapp/whatsapp_scan.html', context)
 
 
+@method_decorator(login_required, name='dispatch')
 class BalanceAccountsView(View):
     """Renders the balance accounts page — select and send balance via WhatsApp."""
 
@@ -335,7 +338,7 @@ def send_balance_api(request, client_id=None, client=None):
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
     except Exception as e:
         logger.error(f'send_balance_api error: {e}')
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({'error': 'An unexpected error occurred'}, status=500)
 
 
 @require_POST
@@ -381,7 +384,7 @@ def send_address_rows_api(request, client_id=None, client=None):
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
     except Exception as e:
         logger.error(f'send_address_rows_api error: {e}')
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({'error': 'An unexpected error occurred'}, status=500)
 
 
 @require_GET

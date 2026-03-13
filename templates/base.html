@@ -157,6 +157,12 @@
     </style>
     <script>
         function getCookie(name) {
+            if (name === 'csrftoken') {
+                const tokenElement = document.querySelector('[name=csrfmiddlewaretoken]');
+                if (tokenElement && tokenElement.value) {
+                    return tokenElement.value;
+                }
+            }
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
                 const cookies = document.cookie.split(';');
@@ -854,6 +860,12 @@
     <script src="/static/js/main.js?v=8.9"></script>
     <script>
         function getCookie(name) {
+            if (name === 'csrftoken') {
+                const tokenElement = document.querySelector('[name=csrfmiddlewaretoken]');
+                if (tokenElement && tokenElement.value) {
+                    return tokenElement.value;
+                }
+            }
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
                 const cookies = document.cookie.split(';');

@@ -474,11 +474,11 @@ Purchase Entry
     });
     rateAvg = rateSum / count || 0;
     const lastRow = `
-      <tr class="bg-blue-200 font-bold text-sm" id="totalRow">
-        <td class="px-1.5 py-1.5 text-left" colspan="5">Totals:</td>
-        <td class="px-1.5 py-1.5 text-right">${formatComma(totalQty)}</td>
-        <td class="px-1.5 py-1.5 text-right">${formatComma(rateAvg)}</td>
-        <td class="px-1.5 py-1.5 text-right">${formatComma(totalAmount)}</td>
+      <tr class="bg-blue-200 font-semibold text-gray-800 border-t-2 border-blue-300" id="totalRow">
+        <td class="px-1.5 py-1.5 text-left text-sm" colspan="5">Totals:</td>
+        <td class="px-1.5 py-1.5 text-right text-sm">${formatComma(totalQty)}</td>
+        <td class="px-1.5 py-1.5 text-right text-sm">${formatComma(rateAvg)}</td>
+        <td class="px-1.5 py-1.5 text-right text-sm">${formatComma(totalAmount)}</td>
       </tr>`;
     tableBody.insertAdjacentHTML('beforeend', lastRow);
 
@@ -902,24 +902,24 @@ Purchase Entry
     selectedTR = selectedRow;
     const purchaseId = selectedRow.querySelector('#purchase_id').value;
 
-
-    deleteUrl = "/purchase/api/delete_purchase/?id=0".replace("0", purchaseId);
+    deleteUrl = "{% url 'api-delete-purchase' %}";
     document.getElementById("confirmModal").classList.remove("hidden");
   }
   function deleteItem() {
+    const purchaseId = selectedTR.querySelector('#purchase_id').value;
 
     fetch(deleteUrl, {
       method: 'POST',
-      headers: {'X-CSRFToken': getCookie('csrftoken')}
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify({ id: purchaseId })
     })
       .then(response => response.json())
       .then(data => {
-
-
         if (data.status === 'success') {
           selectedTR.remove();
-          deleteUrl = "";
-          resetSLNo();
           addLastRow();
           refreshBalances();
 

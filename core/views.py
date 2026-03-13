@@ -9,6 +9,12 @@ from .services import FinancialService
 from decimal import Decimal
 from django.views import View
 from django.utils.decorators import method_decorator
+import logging
+
+logger = logging.getLogger(__name__)
+ 
+
+TWOPLACES = Decimal('0.01')
  
 
 
@@ -79,6 +85,7 @@ def user_logout(request):
  
 
 @method_decorator(login_required, name='dispatch')
+@method_decorator(never_cache, name='dispatch')
 class ClientDashboardView(View):
     def get(self, request):
         if not request.user.is_client:
@@ -212,11 +219,11 @@ class ClientDashboardView(View):
                 chart_labels.append(mo_start.strftime('%b'))
 
                 p = Purchases.objects.filter(client=client, is_active=True, hold=False, **mo_filter).aggregate(t=Sum('total_amount'))
-                chart_purchase.append(float(p['t'] or 0))
+                chart_purchase.append(str(p['t'] or Decimal('0.0000')))
                 s = Sales.objects.filter(client=client, is_active=True, hold=False, **mo_filter).aggregate(t=Sum('total_amount'))
-                chart_sale.append(float(s['t'] or 0))
+                chart_sale.append(str(s['t'] or Decimal('0.0000')))
                 n = NSDs.objects.filter(client=client, is_active=True, hold=False, **mo_filter).aggregate(t=Sum('sell_amount'))
-                chart_nsd.append(float(n['t'] or 0))
+                chart_nsd.append(str(n['t'] or Decimal('0.0000')))
                 
                 c_in = Cashs.objects.filter(client=client, is_active=True, hold=False, transaction=TransactionType.RECEIVED, **mo_filter).aggregate(t=Sum('amount'))
                 c_out = Cashs.objects.filter(client=client, is_active=True, hold=False, transaction=TransactionType.PAID, **mo_filter).aggregate(t=Sum('amount'))
@@ -238,7 +245,7 @@ class ClientDashboardView(View):
                     rd = row['date']
                     if hasattr(rd, 'date'):
                         rd = rd.date()
-                    result[rd] = float(row['total'] or 0)
+                    result[rd] = str(row['total'] or Decimal('0.0000'))
                 return result
 
             p_daily = daily_totals(Purchases, 'total_amount')
@@ -251,11 +258,13 @@ class ClientDashboardView(View):
             current_day = month_start
             while current_day <= month_end:
                 chart_labels.append(current_day.strftime('%d'))
-                chart_purchase.append(p_daily.get(current_day, 0))
-                chart_sale.append(s_daily.get(current_day, 0))
-                chart_nsd.append(n_daily.get(current_day, 0))
+                chart_purchase.append(p_daily.get(current_day, "0.0000"))
+                chart_sale.append(s_daily.get(current_day, "0.0000"))
+                chart_nsd.append(n_daily.get(current_day, "0.0000"))
                 
-                net_day_cash = c_in_daily.get(current_day, 0) - c_out_daily.get(current_day, 0)
+                in_val = Decimal(c_in_daily.get(current_day, "0.0000"))
+                out_val = Decimal(c_out_daily.get(current_day, "0.0000"))
+                net_day_cash = str(in_val - out_val)
                 chart_cash.append(net_day_cash)
                 current_day += timedelta(days=1)
 
@@ -282,40 +291,109 @@ class ClientDashboardView(View):
             'selected_month': selected_month,
             'month_display': month_display,
             'available_months': available_months,
-            'chart_data_json': json.dumps(chart_data),
+            'chart_data_json': chart_data,
         }
         return render(request, 'dashboard/client_dashboard.html', context)
 
 
-def getClient(user):
+def getClient(user, request=None):
+    # PERF-10: Cache on request to avoid repeated DB lookups per request
+    cache_attr = '_cached_client'
+    if request and hasattr(request, cache_attr):
+        return getattr(request, cache_attr)
+    
     from .models import Clients, Collectors
+    client = None
     if user.is_client:
         try:
-            return Clients.objects.get(user=user, is_active=True)
+            client = Clients.objects.get(user=user, is_active=True)
         except Clients.DoesNotExist:
-            return None
+            pass
     elif user.is_collector:
         try:
-            collector = Collectors.objects.get(user=user, is_active=True)
-            return collector.client
+            collector = Collectors.objects.select_related('client').get(user=user, is_active=True)
+            client = collector.client
         except Collectors.DoesNotExist:
-            return None
-    return None
+            pass
+    
+    if request:
+        setattr(request, cache_attr, client)
+    return client
        
 
 def update_party(party):
-    FinancialService.update_party_balance(party)
+    if party.debit > 0 and party.credit > 0:
+        cancel = min(party.debit, party.credit)
+        party.debit -= cancel
+        party.credit -= cancel
+    
+    party.balance = (party.debit - party.credit).quantize(TWOPLACES)
 
 
 def calculate_supplier_balance(supplier, client, date_limit=None):
-    return FinancialService.calculate_supplier_balance(supplier, client, date_limit)
+    from core.models import Purchases, Sales, NSDs, Cashs
+    from django.db.models import Sum, Q
+
+    base_filter = Q(is_active=True, hold=False, client=client, supplier=supplier)
+    nsd_base = Q(is_active=True, hold=False, client=client)
+    
+    if date_limit:
+        base_filter &= Q(date__lte=date_limit)
+        nsd_base &= Q(date__lte=date_limit)
+    
+    purchases_sum = Purchases.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+    sales_sum = Sales.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+    sender_sum = NSDs.objects.filter(nsd_base, sender_supplier=supplier).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0.0000')
+    receiver_sum = NSDs.objects.filter(nsd_base, receiver_supplier=supplier).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0.0000')
+    
+    cash_received = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
+    cash_paid = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
+    
+    transaction_balance = (sales_sum + receiver_sum + cash_paid) - (purchases_sum + sender_sum + cash_received)
+    static_ob = supplier.open_debit - supplier.open_credit
+    
+    return (static_ob + transaction_balance).quantize(TWOPLACES)
 
 def calculate_customer_balance(customer, client, date_limit=None):
-    return FinancialService.calculate_customer_balance(customer, client, date_limit)
+    from core.models import Purchases, Sales, NSDs, Cashs
+    from django.db.models import Sum, Q
+
+    base_filter = Q(is_active=True, hold=False, client=client, customer=customer)
+    nsd_base = Q(is_active=True, hold=False, client=client)
+    
+    if date_limit:
+        base_filter &= Q(date__lte=date_limit)
+        nsd_base &= Q(date__lte=date_limit)
+    
+    purchases_sum = Purchases.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+    sales_sum = Sales.objects.filter(base_filter).aggregate(s=Sum('total_amount'))['s'] or Decimal('0.0000')
+    sender_sum = NSDs.objects.filter(nsd_base, sender_customer=customer).aggregate(s=Sum('purchase_amount'))['s'] or Decimal('0.0000')
+    receiver_sum = NSDs.objects.filter(nsd_base, receiver_customer=customer).aggregate(s=Sum('sell_amount'))['s'] or Decimal('0.0000')
+    
+    cash_received = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
+    cash_paid = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
+    
+    transaction_balance = (sales_sum + receiver_sum + cash_paid) - (purchases_sum + sender_sum + cash_received)
+    static_ob = customer.open_debit - customer.open_credit
+    
+    return (static_ob + transaction_balance).quantize(TWOPLACES)
 
 def calculate_cashbank_balance(cashbank, client, date_limit=None):
-    return FinancialService.calculate_cashbank_balance(cashbank, client, date_limit)
+    from core.models import Cashs
+    from django.db.models import Sum, Q
+    from decimal import Decimal
 
+    base_filter = Q(is_active=True, hold=False, client=client, cash_bank=cashbank)
+    if date_limit:
+        base_filter &= Q(date__lte=date_limit)
+        
+    received_sum = Cashs.objects.filter(base_filter, transaction="Received").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
+    paid_sum = Cashs.objects.filter(base_filter, transaction="Paid").aggregate(s=Sum('amount'))['s'] or Decimal('0.0000')
+    
+    return (received_sum - paid_sum).quantize(TWOPLACES)
+
+
+@transaction.atomic
 def update_ledger(where, to=None, old_purchase=0, new_purchase=0, old_sale=0, new_sale=0):
     FinancialService.update_ledger(where, to, old_purchase, new_purchase, old_sale, new_sale)
 
@@ -361,7 +439,9 @@ def verify_admin_action_password(request):
         data = json.loads(request.body)
         password = data.get('password')
         
-        if password == settings.ADMIN_ACTION_PASSWORD:
+        from django.utils.crypto import constant_time_compare
+        
+        if password and constant_time_compare(str(password), str(settings.ADMIN_ACTION_PASSWORD)):
             request.session['admin_action_authorized'] = True
             request.session.modified = True
             request.session.save()
@@ -370,7 +450,8 @@ def verify_admin_action_password(request):
             # Simple comment test
             return JsonResponse({'status': 'error', 'message': 'Invalid secret key'})
     except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)})
+        logger.exception("verify_admin_action_password failed")
+        return JsonResponse({'status': 'error', 'message': 'An unexpected error occurred'})
 
 @login_required
 @require_POST
