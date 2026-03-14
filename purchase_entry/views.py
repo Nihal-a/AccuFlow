@@ -5,7 +5,7 @@ from core.models import Purchases,Suppliers,Customers,Godowns
 from django.views import View
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
-
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import F
 from django.views.decorators.cache import never_cache
