@@ -263,7 +263,7 @@ class CashHold(View):
 
 
 def getLastCashNo(client):
-    last_cash_no = Cashs.objects.filter(is_active=True,client=client).order_by('-cash_no').first() 
+    last_cash_no = Cashs.objects.filter(is_active=True,client=client).order_by('-cash_no').first()
     if last_cash_no and last_cash_no.cash_no.isdigit():
         new_cash_no = str(int(last_cash_no.cash_no) + 1).zfill(len(last_cash_no.cash_no))
     else:

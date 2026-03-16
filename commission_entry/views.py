@@ -163,7 +163,7 @@ class CommissionHold(View):
 
 
 def getLastCommissionNo(client):
-    last_commission_no = Commissions.objects.filter(is_active=True,client=client).order_by('-commission_no').first() 
+    last_commission_no = Commissions.objects.filter(is_active=True,client=client).order_by('-commission_no').first()
     
     if last_commission_no and last_commission_no.commission_no.isdigit():
         new_commission_no = int(last_commission_no.commission_no) + 1

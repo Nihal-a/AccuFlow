@@ -649,8 +649,9 @@ Sales Entry
         <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
           ${formatComma(sale.total_amount)}
           <input type="hidden" name="total_amounts" value="${parseFloat(sale.total_amount).toFixed(2)}">
-          <input type="hidden" name="sale_ids" class="sale-id" value="${sale.id}"> 
-          <input type="hidden" name="type" id="type" value="${sale.type}"> 
+          <input type="hidden" name="sale_ids" class="sale-id" value="${sale.id}">
+          <input type="hidden" name="type" id="type" value="${sale.type}">
+          <input type="hidden" name="sale_nos" value="${sale.sale_no}">
           <input type="date" name="dates" class="hidden" value="${sale.date.split('T')[0]}">
         </td>
       </tr>`;
@@ -765,8 +766,9 @@ Sales Entry
         <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
           ${formatComma(total_amount)}
           <input type="hidden" name="total_amounts" value="${total_amount.toFixed(2)}">
-          <input type="hidden" name="sale_ids" class="sale-id" value="${sale_id}"> 
-          <input type="hidden" name="type" id="type" value="${type_value}"> 
+          <input type="hidden" name="sale_ids" class="sale-id" value="${sale_id}">
+          <input type="hidden" name="type" id="type" value="${type_value}">
+          <input type="hidden" name="sale_nos" value="${sale_no}">
           <input type="date" name="dates" class="hidden" value="${date}">
         </td>
             `);
@@ -806,8 +808,9 @@ Sales Entry
         <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
           ${formatComma(total_amount)}
           <input type="hidden" name="total_amounts" value="${total_amount.toFixed(2)}">
-          <input type="hidden" name="sale_ids" class="sale-id" value="${sale_id}"> 
-          <input type="hidden" name="type" id="type" value="${type_value}"> 
+          <input type="hidden" name="sale_ids" class="sale-id" value="${sale_id}">
+          <input type="hidden" name="type" id="type" value="${type_value}">
+          <input type="hidden" name="sale_nos" value="${sale_no}">
           <input type="date" name="dates" class="hidden" value="${date}">
         </td>
       </tr>`;
@@ -879,6 +882,9 @@ Sales Entry
     if (!isUpdate) {
       selectedTR = row;
       makeRowHighlight(row);
+      if (inputs.sale_nos) {
+        document.getElementById("sale_name").value = inputs.sale_nos;
+      }
     } else {
       document.getElementById("sale_name").value = inputs.sale_nos;
     }

@@ -620,12 +620,13 @@ Purchase Entry
           ${purchase.godown}
           <input type="hidden" name="godowns" value="${purchase.godown_id}">
           <input type="hidden" name="dates" value="${purchase.date.split('T')[0]}">
+          <input type="hidden" name="purchase_nos" value="${purchase.purchase_no}">
         </td>
         <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">
           ${purchase.description}
           <input type="hidden" name="descriptions" value="${purchase.description}">
-          <input type="hidden" name="purchase_ids" id="purchase_id" value="${purchase.id}"> 
-          <input type="hidden" name="type" id="type" value="${purchase.type}"> 
+          <input type="hidden" name="purchase_ids" id="purchase_id" value="${purchase.id}">
+          <input type="hidden" name="type" id="type" value="${purchase.type}">
         </td>
         <td class="px-1.5 py-1.5 text-left text-sm w-40 search-area border-r border-[#B0B0B0]">
           ${purchase.type === 'suppliers' ? purchase.supplier : purchase.customer}
@@ -734,12 +735,13 @@ Purchase Entry
           ${godown}
           <input type="hidden" name="godowns" value="${godownSelect}">
           <input type="hidden" name="dates" value="${date}">
+          <input type="hidden" name="purchase_nos" value="${purchase_no}">
         </td>
         <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">
           ${description}
           <input type="hidden" name="descriptions" value="${description}">
-          <input type="hidden" name="purchase_ids" id="purchase_id" value="${purchase_id}"> 
-          <input type="hidden" name="type" id="type" value="${type_value}"> 
+          <input type="hidden" name="purchase_ids" id="purchase_id" value="${purchase_id}">
+          <input type="hidden" name="type" id="type" value="${type_value}">
         </td>
         <td class="px-1.5 py-1.5 text-left text-sm w-40 search-area border-r border-[#B0B0B0]">
           ${supplier}
@@ -772,12 +774,13 @@ Purchase Entry
           ${godown}
           <input type="hidden" name="godowns" value="${godownSelect}">
           <input type="hidden" name="dates" value="${date}">
+          <input type="hidden" name="purchase_nos" value="${purchase_no}">
         </td>
         <td class="px-1.5 py-1.5 text-left text-sm search-area border-r border-[#B0B0B0]">
           ${description}
           <input type="hidden" name="descriptions" value="${description}">
-          <input type="hidden" name="purchase_ids" id="purchase_id" value="${purchase_id}"> 
-          <input type="hidden" name="type" id="type" value="${type_value}"> 
+          <input type="hidden" name="purchase_ids" id="purchase_id" value="${purchase_id}">
+          <input type="hidden" name="type" id="type" value="${type_value}">
         </td>
         <td class="px-1.5 py-1.5 text-left text-sm w-40 search-area border-r border-[#B0B0B0]">
           ${supplier}
@@ -788,7 +791,7 @@ Purchase Entry
           <input type="hidden" name="qtys" value="${qty}">
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-28 search-area border-r border-[#B0B0B0]">
-          ${formatComma(amount)} 
+          ${formatComma(amount)}
           <input type="hidden" name="amounts" value="${amount}">
         </td>
         <td class="px-1.5 py-1.5 text-right text-sm w-32 search-area">
@@ -871,6 +874,9 @@ Purchase Entry
     } else {
       selectedTR = selectedRow;
       makeRowHighlight(selectedRow);
+      if (inputs.purchase_nos) {
+        document.getElementById("purchase_name").value = inputs.purchase_nos;
+      }
     }
 
     document.getElementById("date").value = inputs.date;

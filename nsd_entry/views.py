@@ -272,7 +272,7 @@ class NSDHold(View):
 
 
 def getLastNSDNo(client):
-    last_nsd_no = NSDs.objects.filter(is_active=True,client=client).order_by('-nsd_no').first() 
+    last_nsd_no = NSDs.objects.filter(is_active=True,client=client).order_by('-nsd_no').first()
     
     if last_nsd_no and last_nsd_no.nsd_no.isdigit():
         new_nsd_no = int(last_nsd_no.nsd_no) + 1

@@ -184,7 +184,7 @@ class TrialBalanceService:
         total_open_debit = Customers.objects.filter(is_active=True, client=client).aggregate(s=Sum('open_debit'))['s'] or Decimal('0')
         total_open_debit += Suppliers.objects.filter(is_active=True, client=client).aggregate(s=Sum('open_debit'))['s'] or Decimal('0')
         
-        obe_balance = total_open_credit - total_open_debit
+        obe_balance = total_open_debit - total_open_credit
         if obe_balance != 0:
             accounts.append({
                 'code': '3000',
@@ -203,7 +203,7 @@ class TrialBalanceService:
             })
 
         # 2. CUSTOMERS (Real)
-        customers = Customers.objects.filter(base_filter_active)
+        customers = Customers.objects.filter(is_active=True, client=client)
         for c in customers:
              bal = TrialBalanceService.calculate_party_balance(c, client, date_limit, is_customer=True)
              if bal != 0:
@@ -215,7 +215,7 @@ class TrialBalanceService:
                  })
 
         # 3. SUPPLIERS (Real)
-        suppliers = Suppliers.objects.filter(base_filter_active)
+        suppliers = Suppliers.objects.filter(is_active=True, client=client)
         for s in suppliers:
              bal = TrialBalanceService.calculate_party_balance(s, client, date_limit, is_customer=False)
              if bal != 0:

@@ -579,16 +579,27 @@
           }
         });
         // Update dropdown data-balance attributes
+        // Both dropdowns can contain a mix of suppliers and customers, so check data-type
         $('#supplier option').each(function () {
           const id = $(this).val();
-          if (id && data.suppliers[id] !== undefined) {
-            $(this).data('balance', data.suppliers[id]);
+          const type = $(this).data('type');
+          if (id) {
+            if (type === 'customers' && data.customers[id] !== undefined) {
+              $(this).data('balance', data.customers[id]);
+            } else if (type === 'suppliers' && data.suppliers[id] !== undefined) {
+              $(this).data('balance', data.suppliers[id]);
+            }
           }
         });
         $('#customer option').each(function () {
           const id = $(this).val();
-          if (id && data.customers[id] !== undefined) {
-            $(this).data('balance', data.customers[id]);
+          const type = $(this).data('type');
+          if (id) {
+            if (type === 'customers' && data.customers[id] !== undefined) {
+              $(this).data('balance', data.customers[id]);
+            } else if (type === 'suppliers' && data.suppliers[id] !== undefined) {
+              $(this).data('balance', data.suppliers[id]);
+            }
           }
         });
 

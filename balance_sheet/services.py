@@ -104,7 +104,7 @@ class BalanceSheetService:
         total_open_debit = Customers.objects.filter(base_filter_active).aggregate(s=Sum('open_debit'))['s'] or Decimal('0')
         total_open_debit += Suppliers.objects.filter(base_filter_active).aggregate(s=Sum('open_debit'))['s'] or Decimal('0')
 
-        obe_balance = total_open_credit - total_open_debit
+        obe_balance = total_open_debit - total_open_credit
         if obe_balance != 0:
             accounts.append({
                 'code': '3000', 'name': 'OPENING BALANCE EQUITY',

@@ -273,7 +273,7 @@ class SaleHold(View):
 
 
 def getLastSaleNo(client):
-    last_sale_no = Sales.objects.filter(is_active=True,client=client).order_by('-sale_no').first() 
+    last_sale_no = Sales.objects.filter(is_active=True,client=client).order_by('-sale_no').first()
     
     if last_sale_no and last_sale_no.sale_no.isdigit():
         new_sale_no = int(last_sale_no.sale_no) + 1

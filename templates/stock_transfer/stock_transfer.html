@@ -628,10 +628,6 @@ Stock Transfer
       return;
     }
 
-    if (qty > availableQty) {
-      showErrorModal(`Transfer quantity (${qty}) cannot exceed the remaining balance (${formatComma(availableQty)}) in ${godownFromText}.`);
-      return;
-    }
 
     const tableBody = $('#stockTransferTableBody');
     const rowCount = tableBody.find('tr').length + 1;
