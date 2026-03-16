@@ -109,6 +109,14 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.username or "Unnamed User"
+    
+    @property
+    def get_client(self):
+        if Clients.objects.filter(user=self).exists():
+            return Clients.objects.get(user=self).name
+        elif Collectors.objects.filter(user=self).exists():
+            return Collectors.objects.get(user=self).client.name
+        return "Admin"
 
     class Meta:
         verbose_name = "User Account"

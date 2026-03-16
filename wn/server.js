@@ -133,7 +133,7 @@ function isValidWhatsAppNumber(number) {
     return cleaned.length >= 10 && cleaned.length <= 15;
 }
 
-function isValidClientId(clientId) {
+function isValidclientId(clientId) {
     // Only allow safe characters: alphanumeric, underscore, hyphen
     return /^[a-zA-Z0-9_-]{3,50}$/.test(clientId);
 }
@@ -293,9 +293,9 @@ function authMiddleware(req, res, next) {
 }
 
 // Validate clientId param
-function validateClientId(req, res, next) {
+function validateclientId(req, res, next) {
     const { clientId } = req.params;
-    if (!clientId || !isValidClientId(clientId)) {
+    if (!clientId || !isValidclientId(clientId)) {
         return res.status(400).json({ error: 'Invalid client ID' });
     }
     next();
@@ -333,7 +333,7 @@ app.get('/api/sessions', authMiddleware, (req, res) => {
 });
 
 // --- QR CODE ENDPOINT ---
-app.get('/api/:clientId/qr.png', authMiddleware, validateClientId, async (req, res) => {
+app.get('/api/:clientId/qr.png', authMiddleware, validateclientId, async (req, res) => {
     try {
         const session = await getOrCreateSession(req.params.clientId);
 
@@ -363,7 +363,7 @@ app.get('/api/:clientId/qr.png', authMiddleware, validateClientId, async (req, r
 });
 
 // --- STATUS ENDPOINT ---
-app.get('/api/:clientId/status', authMiddleware, validateClientId, async (req, res) => {
+app.get('/api/:clientId/status', authMiddleware, validateclientId, async (req, res) => {
     const clientId = req.params.clientId;
     const session = activeSessions.get(clientId);
 
@@ -390,7 +390,7 @@ app.get('/api/:clientId/status', authMiddleware, validateClientId, async (req, r
 });
 
 // --- UNLINK ENDPOINT ---
-app.post('/api/:clientId/unlink', authMiddleware, validateClientId, async (req, res) => {
+app.post('/api/:clientId/unlink', authMiddleware, validateclientId, async (req, res) => {
     const clientId = req.params.clientId;
     const session = activeSessions.get(clientId);
 
@@ -423,7 +423,7 @@ app.post('/api/:clientId/unlink', authMiddleware, validateClientId, async (req, 
 });
 
 // --- SEND LEDGER (single customer with image) ---
-app.post('/api/:clientId/send-ledger', authMiddleware, validateClientId, async (req, res) => {
+app.post('/api/:clientId/send-ledger', authMiddleware, validateclientId, async (req, res) => {
     try {
         const session = await getOrCreateSession(req.params.clientId);
         const { customer_data } = req.body;
@@ -471,7 +471,7 @@ app.post('/api/:clientId/send-ledger', authMiddleware, validateClientId, async (
 });
 
 // --- SEND BALANCE ACCOUNTS (batch with Poisson delays) ---
-app.post('/api/:clientId/send-balance-accounts', authMiddleware, validateClientId, async (req, res) => {
+app.post('/api/:clientId/send-balance-accounts', authMiddleware, validateclientId, async (req, res) => {
     try {
         const clientId = req.params.clientId;
         const session = await getOrCreateSession(clientId);
@@ -635,7 +635,7 @@ function notifySSE(job, data) {
 }
 
 // --- SSE PROGRESS ENDPOINT ---
-app.get('/api/:clientId/send-progress/:jobId', authMiddleware, validateClientId, (req, res) => {
+app.get('/api/:clientId/send-progress/:jobId', authMiddleware, validateclientId, (req, res) => {
     const job = activeJobs.get(req.params.jobId);
     if (!job || job.clientId !== req.params.clientId) {
         return res.status(404).json({ error: 'Job not found' });
@@ -656,7 +656,7 @@ app.get('/api/:clientId/send-progress/:jobId', authMiddleware, validateClientId,
 });
 
 // --- SEND ADDRESS ROW (single text message) ---
-app.post('/api/:clientId/send-address-row', authMiddleware, validateClientId, async (req, res) => {
+app.post('/api/:clientId/send-address-row', authMiddleware, validateclientId, async (req, res) => {
     try {
         const session = await getOrCreateSession(req.params.clientId);
         const { whatsapp_number, row_data } = req.body;
@@ -703,7 +703,7 @@ app.post('/api/:clientId/send-address-row', authMiddleware, validateClientId, as
 });
 
 // --- SEND BATCH ADDRESS ROWS (Smart Context Delay for same-user) ---
-app.post('/api/:clientId/send-address-rows', authMiddleware, validateClientId, async (req, res) => {
+app.post('/api/:clientId/send-address-rows', authMiddleware, validateclientId, async (req, res) => {
     try {
         const clientId = req.params.clientId;
         const session = await getOrCreateSession(clientId);
@@ -810,7 +810,7 @@ app.post('/api/:clientId/send-address-rows', authMiddleware, validateClientId, a
 });
 
 // --- JOB STATUS (polling) ---
-app.get('/api/:clientId/job-status/:jobId', authMiddleware, validateClientId, (req, res) => {
+app.get('/api/:clientId/job-status/:jobId', authMiddleware, validateclientId, (req, res) => {
     const job = activeJobs.get(req.params.jobId);
     if (!job || job.clientId !== req.params.clientId) {
         return res.status(404).json({ error: 'Job not found' });
@@ -830,7 +830,7 @@ app.get('/api/:clientId/job-status/:jobId', authMiddleware, validateClientId, (r
 });
 
 // --- CANCEL JOB ---
-app.post('/api/:clientId/cancel-job/:jobId', authMiddleware, validateClientId, (req, res) => {
+app.post('/api/:clientId/cancel-job/:jobId', authMiddleware, validateclientId, (req, res) => {
     const job = activeJobs.get(req.params.jobId);
     if (!job || job.clientId !== req.params.clientId) {
         return res.status(404).json({ error: 'Job not found' });
@@ -842,7 +842,7 @@ app.post('/api/:clientId/cancel-job/:jobId', authMiddleware, validateClientId, (
 });
 
 // --- CANCEL ALL JOBS (global stop button) ---
-app.post('/api/:clientId/cancel-all-jobs', authMiddleware, validateClientId, (req, res) => {
+app.post('/api/:clientId/cancel-all-jobs', authMiddleware, validateclientId, (req, res) => {
     const clientId = req.params.clientId;
     let cancelled = 0;
     for (const [jobId, job] of activeJobs) {

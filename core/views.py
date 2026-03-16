@@ -293,7 +293,7 @@ class ClientDashboardView(View):
             'selected_month': selected_month,
             'month_display': month_display,
             'available_months': available_months,
-            'chart_data_json': chart_data,
+            'chart_data_json': json.dumps(chart_data),
         }
         return render(request, 'dashboard/client_dashboard.html', context)
 

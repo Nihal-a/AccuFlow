@@ -88,6 +88,11 @@
           title="Override plan duration">
       </div>
       <div>
+        <label class="block text-gray-700">Client ID*</label>
+        <input type="text" name="clientId" value="{{ client.clientId }}"
+          class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+      </div>
+      <div>
         <label class="block text-gray-700">Username*</label>
         <input type="text" id="username" name="username" value="{{ user.username }}"
           class="w-full mt-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" required>

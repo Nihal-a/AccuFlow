@@ -124,7 +124,10 @@ class ClientsView(View):
 class ClientAddView(View):
     def get(self, request):
         plans = SubscriptionPlan.objects.filter(is_active=True)
-        return render(request, 'admin/clients/create.html', {'plans': plans})
+        return render(request, 'admin/clients/create.html', {
+            'plans': plans,
+            'next_id': last_client_id()
+        })
 
     def post(self, request):
         name = request.POST.get('name')
@@ -134,6 +137,7 @@ class ClientAddView(View):
         country_code = request.POST.get('country_code', '+971')
         has_whatsapp_access = request.POST.get('has_whatsapp_access') == 'on'
         username = request.POST.get('username')
+        client_id_val = request.POST.get('clientId')
         password = request.POST.get('password')
         confirm_password = request.POST.get('confirm_password')
 
@@ -143,6 +147,10 @@ class ClientAddView(View):
 
         if UserAccount.objects.filter(username=username).exists():
             messages.error(request, "Username already exists.")
+            return redirect('create-client')
+
+        if client_id_val and Clients.objects.filter(clientId=client_id_val, is_active=True).exists():
+            messages.error(request, "Client ID already taken.")
             return redirect('create-client')
 
         try:
@@ -155,6 +163,13 @@ class ClientAddView(View):
             username=username,
             password=password,
         )
+        # Robustly handle clientId
+        client_id_posted = client_id_val.strip() if client_id_val else ""
+        if not client_id_posted or client_id_posted.lower() in ['none', 'null']:
+            final_client_id = last_client_id()
+        else:
+            final_client_id = client_id_posted
+
         client = Clients.objects.create(
             name=name,
             phone=phone,
@@ -164,7 +179,7 @@ class ClientAddView(View):
             country_code=country_code,
             has_whatsapp_access=has_whatsapp_access,
             is_active=True,
-            clientId=last_client_id()
+            clientId=final_client_id
         )
         
 
@@ -219,6 +234,7 @@ class ClientUpdateView(View):
         phone = request.POST.get('phone')
         wa = request.POST.get('wa')
         country_code = request.POST.get('country_code')
+        client_id_val = request.POST.get('clientId')
         has_whatsapp_access = request.POST.get('has_whatsapp_access') == 'on'
         username = request.POST.get('username')
         password = request.POST.get('password')
@@ -227,23 +243,34 @@ class ClientUpdateView(View):
         
         if password and password != confirm_password:
             messages.error(request, "Passwords do not match.")
-            return redirect('update-client', client_id=client.id)
+            return redirect('update-client', id=client.id)
 
         if UserAccount.objects.exclude(id=user.id).filter(username=username).exists():
             messages.error(request, "Username already taken.")
-            return redirect('update-client', client_id=client.id)
+            return redirect('update-client', id=client.id)
+
+        if client_id_val and Clients.objects.exclude(id=client.id).filter(clientId=client_id_val, is_active=True).exists():
+            messages.error(request, "Client ID already taken by another active client.")
+            return redirect('update-client', id=client.id)
 
         if password:
             try:
                 validate_password(password)
             except ValidationError as e:
                 messages.error(request, ' '.join(e.messages))
-                return redirect('update-client', client_id=client.id)
+                return redirect('update-client', id=client.id)
 
         client.name = name
         client.email = email
         client.phone = phone
         client.country_code = country_code
+
+        # Robustly handle clientId: check for empty, None, or literal null strings
+        client_id_posted = client_id_val.strip() if client_id_val else ""
+        if not client_id_posted or client_id_posted.lower() in ['none', 'null']:
+            client.clientId = last_client_id()
+        else:
+            client.clientId = client_id_posted
         client.has_whatsapp_access = has_whatsapp_access
 
 

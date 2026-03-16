@@ -238,7 +238,7 @@
                 onclick="this.dataset.clicks = (parseInt(this.dataset.clicks || '0') + 1); if(this.dataset.clicks >= 3) { this.dataset.clicks = 0; console.log('Secret Triggered'); openAdminToolsModal(); }"
                 {% endif %}
                 class="font-semibold text-gray-800 {% if request.user.is_admin %}cursor-pointer{% endif %} select-none">
-                NS TRADING</p>
+                {{ request.user.get_client }}</p>
             <button @click="sidebarOpen = false"
                 class="text-gray-700 focus:outline-none text-3xl leading-none px-2">&times;</button>
         </div>
@@ -247,7 +247,7 @@
             <div {% if request.user.is_admin %}
                 onclick="this.dataset.clicks = (parseInt(this.dataset.clicks || '0') + 1); if(this.dataset.clicks >= 3) { this.dataset.clicks = 0; console.log('Secret Triggered'); openAdminToolsModal(); }"
                 {% endif %} class="{% if request.user.is_admin %}cursor-pointer{% endif %} select-none flex-1">
-                <p class="text-blue-500 text-md font-bold">NS TRADING</p>
+                <p class="text-blue-500 text-md font-bold">{{ request.user.get_client }}</p>
             </div>
         </div>
         <nav id="sidebarNav" class="flex-1 overflow-y-auto p-3 space-y-1.5 custom-scrollbar text-sm">
